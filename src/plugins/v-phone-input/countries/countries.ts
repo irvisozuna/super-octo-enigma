@@ -1,0 +1,31 @@
+import { Country } from "v-phone-input/dist/types/countries";
+
+export const countries: Country[] = [
+  { iso2: 'us', dialCode: '1', name: 'United States' },
+  { iso2: 'ca', dialCode: '1', name: 'Canada' },
+  { iso2: 'mx', dialCode: '52', name: 'Mexico' },
+  { iso2: 'ar', dialCode: '54', name: 'Argentina' },
+  { iso2: 'br', dialCode: '55', name: 'Brazil' },
+  { iso2: 'cl', dialCode: '56', name: 'Chile' },
+  { iso2: 'co', dialCode: '57', name: 'Colombia' },
+  { iso2: 've', dialCode: '58', name: 'Venezuela' },
+  { iso2: 'bo', dialCode: '591', name: 'Bolivia' },
+  { iso2: 'gy', dialCode: '592', name: 'Guyana' },
+  { iso2: 'ec', dialCode: '593', name: 'Ecuador' },
+  { iso2: 'py', dialCode: '595', name: 'Paraguay' },
+  { iso2: 'sr', dialCode: '597', name: 'Suriname' },
+  { iso2: 'uy', dialCode: '598', name: 'Uruguay' },
+  { iso2: 'bz', dialCode: '501', name: 'Belize' },
+  { iso2: 'gt', dialCode: '502', name: 'Guatemala' },
+  { iso2: 'sv', dialCode: '503', name: 'El Salvador' },
+  { iso2: 'hn', dialCode: '504', name: 'Honduras' },
+  { iso2: 'ni', dialCode: '505', name: 'Nicaragua' },
+  { iso2: 'cr', dialCode: '506', name: 'Costa Rica' },
+  { iso2: 'pa', dialCode: '507', name: 'Panama' },
+  { iso2: 'pe', dialCode: '51', name: 'Peru' },
+  { iso2: 'jm', dialCode: '1-876', name: 'Jamaica' },
+  { iso2: 'ht', dialCode: '509', name: 'Haiti' },
+  { iso2: 'tt', dialCode: '1-868', name: 'Trinidad and Tobago' },
+  { iso2: 'do', dialCode: '1-809', name: 'Dominican Republic' },
+  { iso2: 'cu', dialCode: '53', name: 'Cuba' }
+];
