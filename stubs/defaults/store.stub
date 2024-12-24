@@ -1,0 +1,16 @@
+import { ENDPOINTS } from '@/services/endpoints';
+import { createCrudStore } from '@/stores/crudFactory';
+import { {{moduleName}} } from '../types/{{moduleNameLower}}';
+
+export const use{{moduleName}}Store = createCrudStore<{{moduleName}}>({
+  id: '{{moduleNameLower}}',
+  baseEndpoint: ENDPOINTS.{{moduleNameUpper}}S || '{{moduleNameLower}}s',
+  transformFetchListResponse(raw) {
+    const data = raw?.data?.data ?? [];
+    const total = raw?.data?.meta?.total ?? 0;
+    return { data, total };
+  },
+  transformFetchItemResponse(raw) {
+    return raw?.data ?? raw;
+  },
+});

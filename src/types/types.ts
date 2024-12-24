@@ -32,3 +32,10 @@ export interface User {
   username: string
   wizardStep: number
 }
+
+export interface WidgetData {
+  title: string;
+  value: string | number;
+  icon: string;
+}
+

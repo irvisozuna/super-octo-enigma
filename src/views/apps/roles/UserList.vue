@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import AddNewUserDrawer from '@/views/apps/user/list/AddNewUserDrawer.vue';
 import type { UserProperties } from '@db/apps/users/types';
+
+// 👉 i18n
+const { t: $t } = useI18n()
 
 // 👉 Store
 const searchQuery = ref('')
@@ -22,56 +24,75 @@ const updateOptions = (options: any) => {
 
 // Headers
 const headers = [
-  { title: 'User', key: 'user' },
-  { title: 'Role', key: 'role' },
-  { title: 'Plan', key: 'plan' },
-  { title: 'Billing', key: 'billing' },
-  { title: 'Status', key: 'status' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: $t('user'), key: 'user' },
+  { title: $t('role_name'), key: 'role' },
+  { title: $t('status'), key: 'status' },
+  { title: $t('actions'), key: 'actions', sortable: false },
 ]
 
 // 👉 Fetching users
-const { data: usersData, execute: fetchUsers } = await useApi<any>(createUrl('/users', {
-  query: {
-    q: searchQuery,
-    status: selectedStatus,
-    plan: selectedPlan,
-    role: selectedRole,
-    itemsPerPage,
-    page,
-    sortBy,
-    orderBy,
-  },
-}))
+const usersData = ref({
+  data: [],
+  meta: { total: 0, current_page: 1, per_page: 15 },
+})
+const fetchUsers = async () => {
+  try {
+    const response = await $api('/users', {
+      method: 'GET',
+      params: {
+        q: searchQuery.value,
+        status: selectedStatus.value,
+        plan: selectedPlan.value,
+        role: selectedRole.value,
+        itemsPerPage: itemsPerPage.value,
+        page: page.value,
+        sortBy: sortBy.value,
+        orderBy: orderBy.value,
+      },
+    })
+    console.log('Users:', response.data.data)
+    if (response.data) {
+      usersData.value = response.data.data // Extrae la estructura de usuarios
+      usersMeta.value = response.data.meta // Meta información
 
-const users = computed((): UserProperties[] => usersData.value.users)
-const totalUsers = computed(() => usersData.value.totalUsers)
+    }
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error)
+  }
+}
+
+// Almacena meta información para la tabla
+const usersMeta = ref({
+  total: 0,
+  current_page: 1,
+  per_page: 15,
+})
+
+// Computed para usuarios
+const users = computed(() => usersData.value.data)
+const totalUsers = computed(() => usersMeta.value.total)
 
 // 👉 search filters
-const roles = [
-  { title: 'Admin', value: 'admin' },
-  { title: 'Author', value: 'author' },
-  { title: 'Editor', value: 'editor' },
-  { title: 'Maintainer', value: 'maintainer' },
-  { title: 'Subscriber', value: 'subscriber' },
-]
+const roles = ref([])
 
-const resolveUserRoleVariant = (role: string) => {
-  const roleLowerCase = role.toLowerCase()
-
-  if (roleLowerCase === 'subscriber')
-    return { color: 'primary', icon: 'tabler-user' }
-  if (roleLowerCase === 'author')
-    return { color: 'warning', icon: 'tabler-settings' }
-  if (roleLowerCase === 'maintainer')
-    return { color: 'success', icon: 'tabler-chart-donut' }
-  if (roleLowerCase === 'editor')
-    return { color: 'info', icon: 'tabler-pencil' }
-  if (roleLowerCase === 'admin')
-    return { color: 'error', icon: 'tabler-device-laptop' }
-
-  return { color: 'primary', icon: 'tabler-user' }
+// Fetch roles desde el backend
+const fetchRoles = async () => {
+  try {
+    const response = await $api('/company/roles', { method: 'GET' })
+    roles.value = response.map((role: { role: string; id: string }) => ({
+      title: role.role,
+      value: role.id,
+    }))
+  } catch (error) {
+    console.error('Error al obtener roles:', error)
+  }
 }
+
+// Llamadas iniciales
+fetchUsers()
+fetchRoles()
+
+
 
 const resolveUserStatusVariant = (stat: string) => {
   const statLowerCase = stat.toLowerCase()
@@ -89,23 +110,22 @@ const isAddNewUserDrawerVisible = ref(false)
 
 // 👉 Add new user
 const addNewUser = async (userData: UserProperties) => {
-  await $api('/apps/users', {
+  await $api('/company/users', {
     method: 'POST',
     body: userData,
   })
 
-  // refetch User
+  // Refetch Users
   fetchUsers()
 }
 
 // 👉 Delete user
 const deleteUser = async (id: number) => {
-  await $api(`/apps/users/${id}`, {
+  await $api(`/users/${id}`, {
     method: 'DELETE',
   })
 
-  // refetch User
-  // TODO: Make this async
+  // Refetch Users
   fetchUsers()
 }
 </script>
@@ -138,14 +158,14 @@ const deleteUser = async (id: number) => {
           <!-- 👉 Search  -->
           <AppTextField
             v-model="searchQuery"
-            placeholder="Search User"
+            :placeholder="$t('search user')"
             style="inline-size: 15.625rem;"
           />
 
           <!-- 👉 Add user button -->
           <AppSelect
             v-model="selectedRole"
-            placeholder="Select Role"
+            :placeholder="$t('select role')"
             :items="roles"
             clearable
             clear-icon="tabler-x"
@@ -173,13 +193,13 @@ const deleteUser = async (id: number) => {
         show-select
         @update:options="updateOptions"
       >
+      
         <!-- User -->
         <template #item.user="{ item }">
           <div class="d-flex align-center gap-x-4">
             <VAvatar
               size="34"
               :variant="!item.avatar ? 'tonal' : undefined"
-              :color="!item.avatar ? resolveUserRoleVariant(item.role).color : undefined"
             >
               <VImg
                 v-if="item.avatar"
@@ -204,29 +224,23 @@ const deleteUser = async (id: number) => {
         </template>
 
         <!-- 👉 Role -->
-        <template #item.role="{ item }">
+        <!-- <template #item.role="{ item }">
           <div class="d-flex align-center gap-x-2">
-            <VIcon
-              :size="22"
-              :icon="resolveUserRoleVariant(item.role).icon"
-              :color="resolveUserRoleVariant(item.role).color"
-            />
-
             <div class="text-capitalize text-high-emphasis text-body-1">
               {{ item.role }}
             </div>
           </div>
-        </template>
+        </template> -->
 
         <!-- Plan -->
-        <template #item.plan="{ item }">
+        <!-- <template #item.plan="{ item }">
           <div class="text-body-1 text-high-emphasis text-capitalize">
             {{ item.currentPlan }}
           </div>
-        </template>
+        </template> -->
 
         <!-- Status -->
-        <template #item.status="{ item }">
+        <!-- <template #item.status="{ item }">
           <VChip
             :color="resolveUserStatusVariant(item.status)"
             size="small"
@@ -235,7 +249,7 @@ const deleteUser = async (id: number) => {
           >
             {{ item.status }}
           </VChip>
-        </template>
+        </template> -->
 
         <!-- Actions -->
         <template #item.actions="{ item }">

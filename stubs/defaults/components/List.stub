@@ -1,0 +1,55 @@
+<template>
+  <VCard>
+    <VCardTitle>
+      <h4>{{ title }}</h4>
+      <p>{{ description }}</p>
+    </VCardTitle>
+    <VCardText>
+      <{{moduleName}}Filters @update:filters="applyFilters" />
+      <VBtn color="primary" @click="openAddDialog">Add {{moduleName}}</VBtn>
+      <{{moduleName}}Table
+        :headers="headers"
+        :items="items"
+        :total="total"
+        :loading="loading"
+        @view="openViewDialog"
+        @edit="openEditDialog"
+        @delete="openDeleteDialog"
+      />
+    </VCardText>
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const title = '{{moduleName}} Management';
+const description = 'Manage your {{moduleNameLower}}s easily.';
+
+const headers = [
+  { title: 'Name', key: 'name' },
+  { title: 'Email', key: 'email' },
+  { title: 'Role', key: 'role' },
+  { title: 'Actions', key: 'actions' },
+];
+
+const items = ref([]);
+const total = ref(0);
+const loading = ref(false);
+
+function openAddDialog() {
+  console.log('Open Add Dialog');
+}
+
+function openViewDialog(item) {
+  console.log('View Item:', item);
+}
+
+function openEditDialog(item) {
+  console.log('Edit Item:', item);
+}
+
+function openDeleteDialog(item) {
+  console.log('Delete Item:', item);
+}
+</script>

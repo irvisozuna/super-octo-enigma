@@ -1,0 +1,51 @@
+<template>
+  <div class="filters-container">
+    <VTextField
+      v-model="filters.search"
+      label="Search {{moduleName}}"
+      dense
+      variant="outlined"
+      @input="applyFilters"
+    />
+    <VSelect
+      v-model="filters.role"
+      :items="roleOptions"
+      label="Role"
+      dense
+      variant="outlined"
+      clearable
+      chips
+      @change="applyFilters"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { defineProps, defineEmits, ref } from 'vue';
+
+const props = defineProps({
+  initialFilters: {
+    type: Object,
+    default: () => ({ search: '', role: '' }),
+  },
+});
+
+const emits = defineEmits(['update:filters']);
+
+const filters = ref({ ...props.initialFilters });
+const roleOptions = ref([
+  { title: 'Admin', value: 'admin' },
+  { title: 'User', value: 'user' },
+]);
+
+function applyFilters() {
+  emits('update:filters', filters.value);
+}
+</script>
+
+<style scoped>
+.filters-container {
+  display: flex;
+  gap: 16px;
+}
+</style>

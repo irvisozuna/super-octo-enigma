@@ -1,0 +1,34 @@
+<template>
+  <VDialog v-model="isOpen" max-width="500">
+    <VCard>
+      <VCardTitle>{{ moduleName }} Details</VCardTitle>
+      <VCardText>
+        <p><strong>Name:</strong> {{ item?.name }}</p>
+        <p><strong>Email:</strong> {{ item?.email }}</p>
+        <p><strong>Role:</strong> {{ item?.role }}</p>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn color="primary" @click="close">Close</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const isOpen = ref(false);
+const item = ref(null);
+
+function open(data) {
+  item.value = { ...data };
+  isOpen.value = true;
+}
+
+function close() {
+  isOpen.value = false;
+}
+
+defineExpose({ open });
+</script>

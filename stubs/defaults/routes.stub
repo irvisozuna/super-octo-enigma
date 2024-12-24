@@ -1,0 +1,12 @@
+import { RouteRecordRaw } from 'vue-router';
+
+const {{moduleNameLower}}Component = () => import('./{{moduleNameLower}}.vue');
+const {{moduleNameLower}}Routes: RouteRecordRaw[] = [
+  {
+    path: '/{{moduleNameLower}}s',
+    name: '{{moduleName}}sList',
+    component: {{moduleNameLower}}Component,
+  },
+];
+
+export default {{moduleNameLower}}Routes;

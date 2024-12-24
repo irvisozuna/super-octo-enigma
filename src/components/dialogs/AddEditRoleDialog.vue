@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { VForm } from 'vuetify/components/VForm'
+import { VForm } from 'vuetify/components/VForm';
 
 interface Permission {
   name: string
   read: boolean
   write: boolean
   create: boolean
+  delete: boolean
 }
 
 interface Roles {
+  id: string,
   name: string
   permissions: Permission[]
 }
@@ -31,63 +33,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
+
 // 👉 Permission List
-const permissions = ref<Permission[]>([
-  {
-    name: 'User Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Content Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Disputes Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Database Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Financial Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Reporting',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'API Control',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Repository Management',
-    read: false,
-    write: false,
-    create: false,
-  },
-  {
-    name: 'Payroll',
-    read: false,
-    write: false,
-    create: false,
-  },
-])
+const permissions = ref<Permission[]>([])
+
+// Fetch roles desde el backend
+const fetchRoles = async () => {
+  try {
+    const { data, error, isFetching } = await useApi<Permission[]>('/company/permissions');
+    permissions.value = data.value ?? [];
+  } catch (error) {
+    console.error('Error al obtener los roles:', error);
+  }
+};
+fetchRoles();
 
 const isSelectAll = ref(false)
 const role = ref('')
@@ -106,7 +65,7 @@ const checkedCount = computed(() => {
   return counter
 })
 
-const isIndeterminate = computed(() => checkedCount.value > 0 && checkedCount.value < (permissions.value.length * 3))
+const isIndeterminate = computed(() => checkedCount.value > 0 && checkedCount.value < (permissions.value.length * 4))
 
 // select all
 watch(isSelectAll, val => {
@@ -115,6 +74,7 @@ watch(isSelectAll, val => {
     read: val,
     write: val,
     create: val,
+    delete: val,
   }))
 })
 
@@ -126,7 +86,7 @@ watch(isIndeterminate, () => {
 
 // if all permissions are checked, then set isSelectAll to true
 watch(permissions, () => {
-  if (checkedCount.value === (permissions.value.length * 3))
+  if (checkedCount.value === (permissions.value.length * 4))
     isSelectAll.value = true
 }, { deep: true })
 
@@ -149,16 +109,35 @@ watch(props, () => {
   }
 })
 
-const onSubmit = () => {
+const onSubmit = async() => {
   const rolePermissions = {
+    id: props.rolePermissions.id,
     name: role.value,
     permissions: permissions.value,
   }
+  try {
 
-  emit('update:rolePermissions', rolePermissions)
-  emit('update:isDialogVisible', false)
-  isSelectAll.value = false
-  refPermissionForm.value?.reset()
+    const METHOD = props.rolePermissions.name ? 'PUT' : 'POST'
+    // Realiza la solicitud al backend
+    const response = await $api('/company/roles', {
+      method: METHOD,
+      body: rolePermissions,
+    });
+
+
+
+    // Emitir el evento para cerrar el diálogo y limpiar el formulario
+    emit('update:isDialogVisible', false);
+    emit('update:rolePermissions', rolePermissions)
+    isSelectAll.value = false;
+    refPermissionForm.value?.reset();
+
+    // Mensaje de éxito o acciones adicionales
+    console.log('Role created successfully!');
+  } catch (err) {
+    console.error('Error inesperado al crear el rol:', err);
+  }
+  
 }
 
 const onReset = () => {
@@ -190,11 +169,12 @@ const onReset = () => {
         <!-- 👉 Form -->
         <VForm ref="refPermissionForm">
           <!-- 👉 Role name -->
-          <AppTextField
+            <AppTextField
             v-model="role"
             label="Role Name"
             placeholder="Enter Role Name"
-          />
+            :disabled="role === 'admin'"
+            />
 
           <h5 class="text-h5 my-6">
             Role Permissions
@@ -210,12 +190,13 @@ const onReset = () => {
                   Administrator Access
                 </h6>
               </td>
-              <td colspan="3">
+              <td colspan="4">
                 <div class="d-flex justify-end">
                   <VCheckbox
                     v-model="isSelectAll"
                     v-model:indeterminate="isIndeterminate"
                     label="Select All"
+                    :disabled="role === 'admin'"
                   />
                 </div>
               </td>
@@ -234,7 +215,7 @@ const onReset = () => {
                 </td>
                 <td>
                   <div class="d-flex justify-end">
-                    <VCheckbox
+                    <VCheckbox :disabled="role === 'admin'"
                       v-model="permission.read"
                       label="Read"
                     />
@@ -242,7 +223,7 @@ const onReset = () => {
                 </td>
                 <td>
                   <div class="d-flex justify-end">
-                    <VCheckbox
+                    <VCheckbox :disabled="role === 'admin'"
                       v-model="permission.write"
                       label="Write"
                     />
@@ -250,9 +231,17 @@ const onReset = () => {
                 </td>
                 <td>
                   <div class="d-flex justify-end">
-                    <VCheckbox
+                    <VCheckbox :disabled="role === 'admin'"
                       v-model="permission.create"
                       label="Create"
+                    />
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-end">
+                    <VCheckbox :disabled="role === 'admin'"
+                      v-model="permission.delete"
+                      label="Delete"
                     />
                   </div>
                 </td>
@@ -261,8 +250,8 @@ const onReset = () => {
           </VTable>
 
           <!-- 👉 Actions button -->
-          <div class="d-flex align-center justify-center gap-4">
-            <VBtn @click="onSubmit">
+          <div class="d-flex align-center justify-center gap-4" v-if="role !== 'admin'">
+            <VBtn @click="onSubmit" >
               Submit
             </VBtn>
 
@@ -271,7 +260,7 @@ const onReset = () => {
               variant="tonal"
               @click="onReset"
             >
-              Cancel
+              {{ $t('cancel') }}
             </VBtn>
           </div>
         </VForm>

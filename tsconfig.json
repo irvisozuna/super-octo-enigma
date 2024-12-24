@@ -56,7 +56,8 @@
     ],
     "skipLibCheck": true,
     "types": [
-      // "vite/client",
+      "vite/client",
+      "vue"
       // "vite-plugin-vue-layouts/client",
       // "@types/google.maps"
     ]

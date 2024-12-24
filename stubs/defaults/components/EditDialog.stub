@@ -1,0 +1,43 @@
+<template>
+  <VDialog v-model="isOpen" max-width="500">
+    <VCard>
+      <VCardTitle>Edit {{moduleName}}</VCardTitle>
+      <VCardText>
+        <VForm ref="form">
+          <VTextField v-model="item.name" label="Name" required />
+          <VTextField v-model="item.email" label="Email" required />
+          <VSelect v-model="item.role" :items="roles" label="Role" required />
+        </VForm>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn color="primary" @click="updateItem">Save</VBtn>
+        <VBtn color="secondary" @click="close">Cancel</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const isOpen = ref(false);
+const item = ref({ name: '', email: '', role: '' });
+const roles = ['admin', 'manager', 'user'];
+
+function open(data) {
+  item.value = { ...data };
+  isOpen.value = true;
+}
+
+function close() {
+  isOpen.value = false;
+}
+
+function updateItem() {
+  console.log('Updating item:', item.value);
+  close();
+}
+
+defineExpose({ open });
+</script>

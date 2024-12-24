@@ -1,0 +1,42 @@
+<template>
+  <VDataTableServer
+    :headers="headers"
+    :items="items"
+    :items-length="total"
+    :page="page"
+    :items-per-page="itemsPerPage"
+    :loading="loading"
+    show-select
+    @update:page="updatePage"
+    @update:items-per-page="updateItemsPerPage"
+  >
+    <template #item.actions="{ item }">
+      <VBtn icon="tabler-eye" @click="$emit('view', item)" variant="text"></VBtn>
+      <VBtn icon="tabler-pencil" @click="$emit('edit', item)" variant="text"></VBtn>
+      <VBtn icon="tabler-trash" @click="$emit('delete', item)" color="error" variant="text"></VBtn>
+    </template>
+  </VDataTableServer>
+</template>
+
+<script setup lang="ts">
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps({
+  headers: { type: Array, required: true },
+  items: { type: Array, required: true },
+  total: { type: Number, required: true },
+  page: { type: Number, required: true },
+  itemsPerPage: { type: Number, required: true },
+  loading: { type: Boolean, required: true },
+});
+
+const emits = defineEmits(['update:page', 'update:items-per-page', 'view', 'edit', 'delete']);
+
+function updatePage(newPage) {
+  emits('update:page', newPage);
+}
+
+function updateItemsPerPage(newItemsPerPage) {
+  emits('update:items-per-page', newItemsPerPage);
+}
+</script>
