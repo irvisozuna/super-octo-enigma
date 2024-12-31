@@ -1,0 +1,10 @@
+// src/modules/{{moduleNameLower}}s/index.ts
+export { default as {{moduleName}}Filters } from './components/{{moduleName}}Filters.vue';
+export { default as {{moduleName}}Table } from './components/{{moduleName}}Table.vue';
+export { default as {{moduleName}}ViewDialog } from './components/{{moduleName}}ViewDialog.vue';
+export { use{{moduleName}}Helpers } from './composables/use{{moduleName}}Helpers';
+export { use{{moduleName}}Store } from './stores/userStore';
+export { default as {{moduleName}}Add } from './views/{{moduleName}}Add.vue';
+export { default as {{moduleName}}Delete } from './views/{{moduleName}}Delete.vue';
+export { default as {{moduleName}}Edit } from './views/{{moduleName}}Edit.vue';
+export { default as {{moduleName}}List } from './views/{{moduleName}}List.vue';

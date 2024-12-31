@@ -1,0 +1,53 @@
+// Prueba para el composable
+import { describe, it, expect } from 'vitest';
+import { use{{moduleName}}Helpers } from '../composables/use{{moduleName}}Helpers';
+
+describe('{{moduleName}} Helpers', () => {
+  it('debería formatear nombres correctamente', () => {
+    const { format{{moduleName}}Name } = use{{moduleName}}Helpers();
+    const result = format{{moduleName}}Name(' ejemplo ');
+    expect(result).toBe('EJEMPLO');
+  });
+
+  it('debería devolver el {{moduleName}} por defecto', () => {
+    const { getDefault{{moduleName}} } = use{{moduleName}}Helpers();
+    const result = getDefault{{moduleName}}();
+    expect(result).toEqual({
+      id: '',
+      name: '',
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
+    });
+  });
+});
+
+// Pruebas para los componentes
+import { mount } from '@vue/test-utils';
+import {{moduleName}}AddDialog from '../components/{{moduleName}}AddDialog.vue';
+import {{moduleName}}EditDialog from '../components/{{moduleName}}EditDialog.vue';
+import {{moduleName}}Table from '../components/{{moduleName}}Table.vue';
+
+describe('{{moduleName}} Components', () => {
+  it('{{moduleName}}AddDialog debería renderizar correctamente', () => {
+    const wrapper = mount({{moduleName}}AddDialog);
+    expect(wrapper.html()).toContain('Add {{moduleName}}');
+  });
+
+  it('{{moduleName}}EditDialog debería renderizar correctamente', () => {
+    const wrapper = mount({{moduleName}}EditDialog, {
+      props: { user: { id: '1', name: 'Test User' } },
+    });
+    expect(wrapper.html()).toContain('Edit {{moduleName}}');
+  });
+
+  it('{{moduleName}}Table debería renderizar columnas correctamente', () => {
+    const wrapper = mount({{moduleName}}Table, {
+      props: {
+        headers: [{ title: 'Name', key: 'name' }],
+        items: [{ id: '1', name: 'Test Item' }],
+      },
+    });
+    expect(wrapper.html()).toContain('Name');
+    expect(wrapper.html()).toContain('Test Item');
+  });
+});

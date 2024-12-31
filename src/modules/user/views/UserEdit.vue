@@ -1,0 +1,89 @@
+<template>
+  <VCard class="pa-sm-10 pa-2">
+    <VCardText>
+      <!-- Título -->
+      <h4 class="text-h4 text-center mb-2">{{ t('editModule', { moduleName: user }) }}</h4>
+      <p class="text-body-1 text-center mb-6">{{ t('editItemDescription') }}</p>
+
+      <!-- Formulario -->
+      <VForm class="mt-6" @submit.prevent="onFormSubmit" v-model="valid">
+        <VRow>
+          <VCol cols="12" md="6">
+            <AppTextField v-model="itemData.name" :label="t('name')" :placeholder="t('placeholderName')"
+              :rules="[rules.required]" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <AppTextField v-model="itemData.email" :label="t('email')" :placeholder="t('placeholderEmail')"
+              :rules="[rules.required, rules.email]" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <AppSelect v-model="itemData.role" :label="t('role')" :placeholder="t('placeholderRole')" :items="roles"
+              :rules="[rules.required]" />
+          </VCol>
+          <VCol cols="12" class="d-flex flex-wrap justify-center gap-4">
+            <VBtn type="submit" :disabled="!valid">{{ t('save') }}</VBtn>
+            <VBtn color="secondary" variant="tonal" @click="close">{{ t('cancel') }}</VBtn>
+          </VCol>
+        </VRow>
+      </VForm>
+    </VCardText>
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { useAppManager } from '@/composables/useAppManager';
+import { useUserStore } from '@/modules/user/stores/userStore';
+import { defineProps, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { User } from '../types/user';
+
+const { closeDialog } = useAppManager();
+// Cargar traducciones
+const { t } = useI18n();
+
+// Definir moduleNameLower
+const moduleNameLower = 'user';
+
+// Props del diálogo
+const props = defineProps({
+  item: {
+    type: Object as () => User,
+    required: true,
+  },
+});
+
+
+
+// Estado del formulario y datos del elemento
+const valid = ref(false);
+const itemData = ref<User>({ ...props.item });
+
+// Opciones estáticas para el rol
+const roles = ['Admin', 'Manager', 'User'];
+
+// Reglas de validación
+const rules = {
+  required: (v: string) => !!v || t('requiredField'),
+  email: (v: string) =>
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || t('invalidEmail'),
+};
+
+
+
+// Método para cerrar el diálogo
+function close() {
+  closeDialog();
+}
+
+// Método para manejar el envío del formulario
+async function onFormSubmit() {
+  try {
+    const userStore = useUserStore();
+    await userStore.updateItem(itemData.value.id, itemData.value);
+    close();
+  } catch (error) {
+    console.error(`Error updating ${moduleNameLower}:`, error);
+  }
+}
+
+</script>

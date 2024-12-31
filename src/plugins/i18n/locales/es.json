@@ -1,4 +1,5 @@
 {
+  "Are you sure you want to delete": "¿Estás seguro de que quieres eliminar a {name}?",
   "Account": "Cuenta",
   "Security": "Seguridad",
   "Billing & Plans": "Facturación y Plan",
@@ -281,8 +282,11 @@
         "delimiter": "delimitador"
       }
     },
+    "dataIterator": {
+      "loadingText": "Cargando..."
+    },
     "dataFooter": {
-      "itemsPerPageText": "Elementos por página:",
+      "itemsPerPageText": "Mostrar:",
       "itemsPerPageAll": "Todos",
       "pageText": "{0}-{1} de {2}",
       "firstPage": "Primera Página",

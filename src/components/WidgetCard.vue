@@ -1,48 +1,39 @@
 <template>
-  <VCard class="mb-6">
-    <VCardText class="px-3">
-      <VRow>
-        <template v-for="(data, id) in widgetData" :key="id">
-          <VCol
-            cols="12"
-            sm="6"
-            md="3"
-            class="px-6"
-          >
-            <div
-              class="d-flex justify-space-between align-center"
-              :class="getDynamicClass(id)"
-            >
-              <div class="d-flex flex-column">
-                <h4 class="text-h4">
-                  {{ data.value }}
-                </h4>
-                <span class="text-body-1 text-capitalize">{{ data.title }}</span>
+  <!-- 👉 Widgets -->
+  <div class="d-flex mb-6">
+    <VRow>
+      <template v-for="(data, id) in widgetData" :key="id">
+        <VCol cols="12" md="3" sm="6">
+          <VCard>
+            <VCardText>
+              <div class="d-flex justify-space-between">
+                <div class="d-flex flex-column gap-y-1">
+                  <div class="text-body-1 text-high-emphasis">
+                    {{ data.title }}
+                  </div>
+                  <div class="d-flex gap-x-2 align-center">
+                    <h4 class="text-h4">
+                      {{ data.value }}
+                    </h4>
+                    <div class="text-base"
+                      :class="data.change && Number(data.change) > 0 ? 'text-success' : 'text-error'">
+                      ({{ data.change ? prefixWithPlus(Number(data.change)) : '0' }}%)
+                    </div>
+                  </div>
+                  <div class="text-sm">
+                    {{ data.desc }}
+                  </div>
+                </div>
+                <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                  <VIcon :icon="data.icon" size="26" />
+                </VAvatar>
               </div>
-
-              <VAvatar
-                variant="tonal"
-                rounded
-                size="42"
-              >
-                <VIcon
-                  :icon="data.icon"
-                  size="26"
-                  color="high-emphasis"
-                />
-              </VAvatar>
-            </div>
-          </VCol>
-          <VDivider
-            v-if="showDivider(id)"
-            vertical
-            inset
-            length="60"
-          />
-        </template>
-      </VRow>
-    </VCardText>
-  </VCard>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </template>
+    </VRow>
+  </div>
 </template>
 
 <script setup lang="ts">

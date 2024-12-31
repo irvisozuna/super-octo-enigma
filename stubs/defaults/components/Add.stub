@@ -1,0 +1,68 @@
+<template>
+  <VCard class="pa-sm-10 pa-2">
+    <VCardText>
+      <!-- Título -->
+      <h4 class="text-h4 text-center mb-2">{{ t('addModule', { moduleName: {{moduleNameLower}}Title }) }}</h4>
+      <p class="text-body-1 text-center mb-6">{{ t('addItemDescription') }}</p>
+
+      <!-- Formulario -->
+      <VForm class="mt-6" @submit.prevent="onFormSubmit" v-model="valid">
+        <VRow>
+          <VCol cols="12" md="6">
+            <AppTextField v-model="itemData.name" :label="t('name')" :placeholder="t('placeholderName')"
+              :rules="[rules.required]" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <AppTextField v-model="itemData.email" :label="t('email')" :placeholder="t('placeholderEmail')"
+              :rules="[rules.required, rules.email]" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <AppSelect v-model="itemData.role" :label="t('role')" :placeholder="t('placeholderRole')"
+              :items="['Admin', 'Manager', 'User']" :rules="[rules.required]" />
+          </VCol>
+          <VCol cols="12" class="d-flex flex-wrap justify-center gap-4">
+            <VBtn type="submit" :disabled="!valid">{{ t('save') }}</VBtn>
+            <VBtn color="secondary" variant="tonal" @click="close">{{ t('cancel') }}</VBtn>
+          </VCol>
+        </VRow>
+      </VForm>
+    </VCardText>
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { useAppManager } from '@/composables/useAppManager';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+const { closeDialog } = useAppManager();
+
+const {{moduleNameLower}}Title = '{{moduleNameLower}}'; // Nombre del módulo
+
+// Estado del formulario y datos del elemento
+const valid = ref(false);
+const itemData = ref({
+  name: '',
+  email: '',
+  role: '',
+});
+
+// Reglas de validación
+const rules = {
+  required: (v: string) => !!v || t('requiredField'),
+  email: (v: string) =>
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || t('invalidEmail'),
+};
+
+// Método para cerrar el diálogo
+function close() {
+  closeDialog();
+}
+
+// Método para manejar el envío del formulario
+function onFormSubmit() {
+  console.log('Formulario enviado:', itemData.value);
+  close();
+}
+</script>

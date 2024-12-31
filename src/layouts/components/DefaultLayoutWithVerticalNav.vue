@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import navItems from '@/navigation/vertical'
+// import navItems from '@/navigation/vertical'
+import { useMenuStore } from '@/stores/menu'
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -16,6 +17,7 @@ import { VerticalNavLayout } from '@layouts'
 // SECTION: Loading Indicator
 const isFallbackStateActive = ref(false)
 const refLoadingIndicator = ref<any>(null)
+const menuStore = useMenuStore()
 
 // watching if the fallback state is active and the refLoadingIndicator component is available
 watch([isFallbackStateActive, refLoadingIndicator], () => {
@@ -25,6 +27,11 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
   if (!isFallbackStateActive.value && refLoadingIndicator.value)
     refLoadingIndicator.value.resolveHandle()
 }, { immediate: true })
+
+const navItems = computed(() => menuStore.navItems)
+
+// console.log('navItems', navItems);
+// console.log('navItemss', navItemss.value);
 // !SECTION
 </script>
 

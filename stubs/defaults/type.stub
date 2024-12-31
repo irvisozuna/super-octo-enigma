@@ -1,0 +1,6 @@
+// src/modules/{{moduleName}}/types/{{moduleName}}.ts
+export interface {{moduleName}} {
+  id: string;
+  createdAt?: string
+  updatedAt?: string
+}

@@ -1,8 +1,10 @@
-import { useStorage } from '@vueuse/core'
-import { useTheme } from 'vuetify'
+import { initializeMenus } from '@/navigation'
 import { useConfigStore } from '@core/stores/config'
 import { cookieRef, namespaceConfig } from '@layouts/stores/config'
 import { themeConfig } from '@themeConfig'
+import { useStorage } from '@vueuse/core'
+import { useTheme } from 'vuetify'
+
 
 const _syncAppRtl = () => {
   const configStore = useConfigStore()
@@ -81,13 +83,15 @@ const _syncInitialLoaderTheme = () => {
   )
 }
 
-const initCore = () => {
+const initCore = async () => {
   _syncInitialLoaderTheme()
   _handleSkinChanges()
 
   // ℹ️ We don't want to trigger i18n in SK
   if (themeConfig.app.i18n.enable)
     _syncAppRtl()
+
+  initializeMenus()
 }
 
 export default initCore

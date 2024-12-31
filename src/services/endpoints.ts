@@ -1,7 +1,7 @@
 // src/services/endpoints.ts
 export const ENDPOINTS = {
-  USERS: '/users',
-  PRODUCTS: '/products',
+  USERS: '/profiles',
+  PRODUCTS: '/users',
   ORDERS: '/orders',
   CATEGORIES: '/categories',
 };

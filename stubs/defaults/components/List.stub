@@ -1,55 +1,180 @@
 <template>
+
   <VCard>
     <VCardTitle>
-      <h4>{{ title }}</h4>
-      <p>{{ description }}</p>
+      <h4 class="text-h4 mb-1">{{ title }}</h4>
+      <p class="text-body-1 mb-4">{{ description }}</p>
     </VCardTitle>
+    <!-- Filtros reutilizables -->
+    <{{moduleName}}Filters :initial-filters="{{moduleNameLower}}Store.filters" @update:filters="applyFilters" />
     <VCardText>
-      <{{moduleName}}Filters @update:filters="applyFilters" />
-      <VBtn color="primary" @click="openAddDialog">Add {{moduleName}}</VBtn>
-      <{{moduleName}}Table
-        :headers="headers"
-        :items="items"
-        :total="total"
-        :loading="loading"
-        @view="openViewDialog"
-        @edit="openEditDialog"
-        @delete="openDeleteDialog"
-      />
+      <!-- Botón para abrir el diálogo de agregar -->
+      <div class=" d-flex align-center flex-wrap gap-4 justify-end">
+        <!-- 👉 Search  -->
+        <div style="inline-size: 15.625rem;">
+
+          <!-- Campo de búsqueda -->
+          <VTextField v-model="{{moduleNameLower}}Store.filters.search" label="Search {{moduleName}}" variant="outlined" dense
+            class="filter-field" @input="applyFilters" />
+        </div>
+
+        <!-- 👉 Export button -->
+        <GlobalMenu :label="$t('export')" :options="menuOptions" color="secondary" variant="tonal"
+          icon="tabler-chevron-down" />
+
+        <!-- 👉 Add user button -->
+        <VBtn prepend-icon="tabler-plus" color="primary" @click="openAddDialog">Add {{moduleName}}</VBtn>
+      </div>
+
     </VCardText>
+    <VDivider />
+    <!-- Tabla de elementos -->
+    <{{moduleName}}Table :headers="headers" :items="{{moduleNameLower}}Store.list" :total="{{moduleNameLower}}Store.total" :page="{{moduleNameLower}}Store.page"
+      :items-per-page="{{moduleNameLower}}Store.itemsPerPage" :loading="{{moduleNameLower}}Store.isLoading" @update:page="onPageChange"
+      @update:items-per-page="onItemsPerPageChange" @view="openViewDialog" @edit="openEditDialog"
+      @delete="openDeleteDialog" />
   </VCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useAppManager } from '@/composables/useAppManager';
+import { useCrud } from '@/composables/useCrud';
+import { use{{moduleName}}Store } from '@/modules/{{moduleNameLower}}/stores/{{moduleNameLower}}Store';
+import debounce from 'lodash/debounce';
 
-const title = '{{moduleName}} Management';
-const description = 'Manage your {{moduleNameLower}}s easily.';
+// Importa los componentes
+import {{moduleName}}Filters from '../components/{{moduleName}}Filters.vue';
+import {{moduleName}}Table from '../components/{{moduleName}}Table.vue';
+import {{moduleName}}Add from './{{moduleName}}Add.vue';
+import {{moduleName}}Delete from './{{moduleName}}Delete.vue';
+import {{moduleName}}Edit from './{{moduleName}}Edit.vue';
 
+
+const { openDialog, closeDialog, getDialogHistory, navigateTo, onDialogOpened, onDialogClosed } =
+  useAppManager();
+
+// Props para personalizar el título y la descripción
+const props = defineProps({
+  title: {
+    type: String,
+    default: '{{moduleName}} Management',
+  },
+  description: {
+    type: String,
+    default: 'Manage your {{moduleNameLower}}s with ease.',
+  },
+});
+
+
+
+// Instancia del store
+const {{moduleNameLower}}Store = use{{moduleName}}Store();
+
+// Sincroniza el CRUD con el store
+useCrud({{moduleNameLower}}Store, { autoFetch: false });
+
+// Cabeceras para la tabla
 const headers = [
   { title: 'Name', key: 'name' },
   { title: 'Email', key: 'email' },
   { title: 'Role', key: 'role' },
-  { title: 'Actions', key: 'actions' },
+  { title: 'Actions', key: 'actions', sortable: false },
 ];
 
-const items = ref([]);
-const total = ref(0);
-const loading = ref(false);
+const menuOptions = [
+  {
+    text: 'Exportar a Excel',
+    icon: 'tabler-file-spreadsheet',
+    actionType: 'api',
+    payload: { url: '/api/{{moduleNameLower}}s?export=excel', method: 'POST', data: { type: '{{moduleNameLower}}' } },
+  },
+  {
+    text: 'Exportar a PDF',
+    icon: 'tabler-file-type-pdf',
+    actionType: 'api',
+    payload: { url: '/api/{{moduleNameLower}}s?export=pdf', method: 'POST', data: { type: '{{moduleNameLower}}' } },
+  }
+];
 
+// Función para manejar el debounce
+
+const debouncedFetchList = debounce(() => {
+  {{moduleNameLower}}Store.fetchList();
+}, 500);
+
+// Método para aplicar filtros
+function applyFilters(newFilters: any) {
+  Object.assign({{moduleNameLower}}Store.filters, newFilters); // Actualizar solo las propiedades específicas
+  debouncedFetchList(); // Aplicar los filtros con debounce para evitar múltiples llamadas
+}
+
+// Métodos para manejar la paginación y otras acciones
+function onPageChange(newPage: number) {
+  {{moduleNameLower}}Store.page = newPage;
+  {{moduleNameLower}}Store.fetchList(); // Actualiza la lista
+}
+
+function onItemsPerPageChange(newItemsPerPage: number) {
+  {{moduleNameLower}}Store.itemsPerPage = newItemsPerPage;
+  {{moduleNameLower}}Store.fetchList(); // Actualiza la lista
+}
+
+// Métodos para abrir los diálogos
 function openAddDialog() {
-  console.log('Open Add Dialog');
+  openDialog({{moduleName}}Add, {}, { width: '900px', persistent: true });
 }
 
-function openViewDialog(item) {
-  console.log('View Item:', item);
+async function openEditDialog(item: any) {
+  const result = await openDialog({{moduleName}}Edit, { item }, { width: '800px' });
+  if (result === 'submit') {
+    console.log('Cambios guardados');
+    // Refrescar la lista o realizar otra acción
+  } else {
+    console.log('Edición cancelada');
+  }
 }
 
-function openEditDialog(item) {
-  console.log('Edit Item:', item);
+
+function openViewDialog(item: any) {
+  navigateTo(`/{{moduleNameLower}}s/${item.id}`);
 }
 
-function openDeleteDialog(item) {
-  console.log('Delete Item:', item);
+function openDeleteDialog(item: any) {
+  openDialog({{moduleName}}Delete, { item }, { width: '900px', persistent: true });
 }
+
+
+//Generame el onMounted
+onMounted(() => {
+  {{moduleNameLower}}Store.fetchList(); // Carga la lista de {{moduleNameLower}}os
+});
+
+// Escucha eventos globales
+onDialogOpened((options) => {
+  console.log('Diálogo abierto:', options);
+});
+
+onDialogClosed((options) => {
+  console.log('Diálogo cerrado:', options);
+});
 </script>
+
+<style scoped>
+.buttons-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  /* Inclina los filtros hacia la derecha */
+  gap: 1rem;
+}
+
+.filter-field {
+  flex: 1;
+
+  /* Hace que los campos sean del mismo tamaño dinámicamente */
+  max-inline-size: 300px;
+
+  /* Limita el ancho máximo de los campos */
+}
+</style>

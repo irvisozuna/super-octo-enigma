@@ -1,15 +1,3 @@
-// services/api.ts
-export interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  params?: Record<string, any>
-  body?: any
-  headers?: Record<string, string>
-}
-
-/**
- * Función genérica para consumir la API.
- * Ajusta la URL base, interceptores y manejo de errores según tu proyecto.
- */
 export async function rawApi(
   url: string,
   { method = 'GET', params = {}, body, headers = {} }: ApiOptions = {},
@@ -55,15 +43,34 @@ export async function rawApi(
 
   try {
     const response = await fetch(finalUrl, fetchOptions)
+
+    // Intenta parsear el JSON independientemente del status
+    let jsonResponse: any
+    try {
+      jsonResponse = await response.json()
+    } catch (parseError) {
+      jsonResponse = null
+    }
+
     // Manejo de error en base al status
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const error = new Error(
+        jsonResponse?.message || `HTTP error! status: ${response.status}`
+      ) as Error & { status?: number; errors?: string[] }
+
+      error.status = response.status
+      error.errors = jsonResponse?.errors || []
+
+      throw error
     }
-    // Retorna JSON parseado
-    return await response.json()
+
+    // Retorna JSON parseado si no hay errores
+    return jsonResponse
   } catch (error) {
     // Manejo de error global: logs, notificaciones, etc.
     console.error(`[rawApi] Error en ${method} ${url}`, error)
+
+    // Re-lanza el error con el formato esperado
     throw error
   }
 }

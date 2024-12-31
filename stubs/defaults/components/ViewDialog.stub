@@ -1,33 +1,29 @@
 <template>
-  <VDialog v-model="isOpen" max-width="500">
-    <VCard>
-      <VCardTitle>{{ moduleName }} Details</VCardTitle>
-      <VCardText>
-        <p><strong>Name:</strong> {{ item?.name }}</p>
-        <p><strong>Email:</strong> {{ item?.email }}</p>
-        <p><strong>Role:</strong> {{ item?.role }}</p>
-      </VCardText>
-      <VCardActions>
-        <VSpacer />
-        <VBtn color="primary" @click="close">Close</VBtn>
-      </VCardActions>
-    </VCard>
-  </VDialog>
+  <VCard>
+    <VCardTitle>{{moduleName}} Details</VCardTitle>
+    <VCardText>
+      <p><strong>Name:</strong> {{ item?.name }}</p>
+      <p><strong>Email:</strong> {{ item?.email }}</p>
+      <p><strong>Role:</strong> {{ item?.role }}</p>
+    </VCardText>
+    <VCardActions>
+      <VSpacer />
+      <VBtn color="primary" @click="close">Close</VBtn>
+    </VCardActions>
+  </VCard>
 </template>
 
 <script setup lang="ts">
+import { useAppManager } from '@/composables/useAppManager';
 import { ref } from 'vue';
 
-const isOpen = ref(false);
-const item = ref(null);
 
-function open(data) {
-  item.value = { ...data };
-  isOpen.value = true;
-}
+const item = ref(null);
+const { closeDialog } = useAppManager();
+
 
 function close() {
-  isOpen.value = false;
+  closeDialog();
 }
 
 defineExpose({ open });

@@ -1,0 +1,20 @@
+export function use{{moduleName}}Helpers() {
+  // Ejemplo de función reutilizable
+  function format{{moduleName}}Name(name: string) {
+    return name.trim().toUpperCase();
+  }
+
+  function getDefault{{moduleName}}() {
+    return {
+      id: '',
+      name: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    format{{moduleName}}Name,
+    getDefault{{moduleName}},
+  };
+}

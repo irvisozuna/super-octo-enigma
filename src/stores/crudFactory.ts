@@ -1,5 +1,5 @@
-// src/stores/crudFactory.ts
 import { rawApi } from '@/services/api';
+import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
@@ -8,6 +8,9 @@ interface CrudStoreConfig<T> {
   baseEndpoint: string;
   transformFetchListResponse?: (rawData: any) => { data: T[]; total: number };
   transformFetchItemResponse?: (rawData: any) => T;
+  createSuffix?: string;
+  updateSuffix?: string;
+  deleteSuffix?: string;
 }
 
 export function createCrudStore<T>(config: CrudStoreConfig<T>) {
@@ -19,10 +22,22 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       total: rawData.total || 0,
     }),
     transformFetchItemResponse = (rawData) => rawData.data ?? rawData,
+    createSuffix = '/add',
+    updateSuffix = '/update',
+    deleteSuffix = '/delete',
   } = config;
 
   return defineStore(id, () => {
-    // STATE
+    const snackbarStore = useGlobalSnackbarStore();
+
+    async function showSuccess(message: string) {
+      snackbarStore.showSnackbar(message, 'success', { position: 'bottom end' });
+    }
+
+    async function showError(message: string) {
+      snackbarStore.showSnackbar(message, 'error', { position: 'bottom end' });
+    }
+
     const items = ref<T[]>([]);
     const total = ref<number>(0);
     const loading = ref(false);
@@ -33,10 +48,11 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     const filters = ref<Record<string, any>>({});
 
     // GETTERS
-    const list = computed(() => items.value);
+    const list = computed(() => {
+      return items.value;
+    });
     const isLoading = computed(() => loading.value);
 
-    // ACTIONS
     async function fetchList() {
       loading.value = true;
       error.value = null;
@@ -52,6 +68,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         total.value = totalItems;
       } catch (err) {
         error.value = err;
+        showError('Failed to fetch items');
       } finally {
         loading.value = false;
       }
@@ -65,57 +82,64 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         return transformFetchItemResponse(responseData);
       } catch (err) {
         error.value = err;
+        showError('Failed to fetch item');
         throw err;
       } finally {
         loading.value = false;
       }
     }
 
-    async function createItem(payload: Partial<T>) {
+    async function createItem(payload: Partial<T>, endpointSuffix: string = createSuffix) {
       loading.value = true;
       error.value = null;
       try {
-        await rawApi(baseEndpoint, { method: 'POST', body: payload });
-        await fetchList(); // Refresca la lista tras crear
+        await rawApi(`${baseEndpoint}${endpointSuffix}`, { method: 'POST', body: payload });
+        await fetchList();
+        showSuccess('Item created successfully');
       } catch (err) {
         error.value = err;
+        showError('Failed to create item');
         throw err;
       } finally {
         loading.value = false;
       }
     }
 
-    async function updateItem(id: string | number, payload: Partial<T>) {
+    async function updateItem(id: string | number, payload: Partial<T>, endpointSuffix: string = updateSuffix) {
       loading.value = true;
       error.value = null;
       try {
-        await rawApi(`${baseEndpoint}/${id}`, { method: 'PUT', body: payload });
-        await fetchList(); // Refresca la lista tras actualizar
+        await rawApi(`${baseEndpoint}/${id}${endpointSuffix}`, { method: 'PUT', body: payload });
+        await fetchList();
+        showSuccess('Item updated successfully');
       } catch (err) {
         error.value = err;
+        showError('Failed to update item');
         throw err;
       } finally {
         loading.value = false;
       }
     }
 
-    async function deleteItem(id: string | number) {
+    async function deleteItem(id: string | number, endpointSuffix: string = deleteSuffix) {
       loading.value = true;
       error.value = null;
       try {
-        await rawApi(`${baseEndpoint}/${id}`, { method: 'DELETE' });
-        await fetchList(); // Refresca la lista tras eliminar
+      await rawApi(`${baseEndpoint}/${id}`, { method: 'DELETE' });
+      await fetchList();
+      showSuccess('Item deleted successfully');
       } catch (err) {
-        error.value = err;
-        throw err;
+      error.value = err;
+      console.log(err);
+      const errorMessage = err.errors ? err.errors.join(', ') : 'Failed to delete item';
+      showError(errorMessage);
+      throw err;
       } finally {
-        loading.value = false;
+      loading.value = false;
       }
     }
 
-    // Devuelve todas las propiedades y acciones del store
     return {
-      // State
       items,
       total,
       loading,

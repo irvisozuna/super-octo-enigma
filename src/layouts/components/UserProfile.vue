@@ -31,10 +31,10 @@ const userProfileList = [
   { type: 'divider' },
   { type: 'navItem', icon: 'tabler-user', title: t('Profile'), to: { name: 'apps-user-view-id', params: { id: 21 } } },
   { type: 'navItem', icon: 'tabler-settings', title: t('Settings'), to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-file-dollar', title: t('Billing Plan'), to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
+  // { type: 'navItem', icon: 'tabler-file-dollar', title: t('Billing Plan'), to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-currency-dollar', title: t('Pricing'), to: { name: 'pages-pricing' } },
-  { type: 'navItem', icon: 'tabler-question-mark', title: t('FAQ'), to: { name: 'pages-faq' } },
+  // { type: 'navItem', icon: 'tabler-currency-dollar', title: t('Pricing'), to: { name: 'pages-pricing' } },
+  // { type: 'navItem', icon: 'tabler-question-mark', title: t('FAQ'), to: { name: 'pages-faq' } },
 ]
 </script>
 

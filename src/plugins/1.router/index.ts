@@ -1,15 +1,16 @@
 import { setupLayouts } from 'virtual:generated-layouts';
+import type { App } from 'vue';
+import type { RouteRecordRaw } from 'vue-router/auto';
 import { createRouter, createWebHistory } from 'vue-router/auto';
-import { routes } from './additional-routes';
+import { redirects, routes } from './additional-routes';
 import { setupGuards } from './guards';
 
 // Cargar rutas de módulos
 const modules = import.meta.glob('@/modules/**/routes.ts', { eager: true });
 const routesModules = Object.values(modules).flatMap((mod: any) => mod.default);
 
-console.log("Rutas de módulos:", routesModules);
 
-function recursiveLayouts(route: any): any {
+function recursiveLayouts(route: RouteRecordRaw): RouteRecordRaw {
   if (route.children) {
     for (let i = 0; i < route.children.length; i++)
       route.children[i] = recursiveLayouts(route.children[i]);
@@ -26,8 +27,7 @@ const router = createRouter({
   },
   extendRoutes: pages => {
     const allRoutes = [...pages, ...routes, ...routesModules];
-    console.log("Rutas combinadas:", allRoutes);
-    return allRoutes.map(route => recursiveLayouts(route));
+    return [...redirects, ... allRoutes.map(route => recursiveLayouts(route))];
   },
 });
 
@@ -35,6 +35,6 @@ setupGuards(router);
 
 export { router };
 
-export default function (app: any) {
+export default function (app: App) {
   app.use(router);
 }
