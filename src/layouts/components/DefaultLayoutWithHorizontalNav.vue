@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import navItems from '@/navigation/horizontal'
-
+import { useMenuStore } from '@/stores/menu'
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -17,6 +16,9 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 // SECTION: Loading Indicator
 const isFallbackStateActive = ref(false)
 const refLoadingIndicator = ref<any>(null)
+const menuStore = useMenuStore()
+
+const navItems = computed(() => menuStore.horizontalNavItems)
 
 // watching if the fallback state is active and the refLoadingIndicator component is available
 watch([isFallbackStateActive, refLoadingIndicator], () => {
@@ -33,10 +35,7 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
   <HorizontalNavLayout :nav-items="navItems">
     <!-- 👉 navbar -->
     <template #navbar>
-      <RouterLink
-        to="/"
-        class="app-logo d-flex align-center gap-x-3"
-      >
+      <RouterLink to="/" class="app-logo d-flex align-center gap-x-3">
         <VNodeRenderer :nodes="themeConfig.app.logo" />
 
         <h1 class="app-title font-weight-bold leading-normal text-xl text-capitalize">
@@ -47,10 +46,8 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
 
       <NavSearchBar trigger-btn-class="ms-lg-n3" />
 
-      <NavBarI18n
-        v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
-        :languages="themeConfig.app.i18n.langConfig"
-      />
+      <NavBarI18n v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
+        :languages="themeConfig.app.i18n.langConfig" />
 
       <NavbarThemeSwitcher />
       <NavbarShortcuts />
@@ -62,11 +59,7 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
 
     <!-- 👉 Pages -->
     <RouterView v-slot="{ Component }">
-      <Suspense
-        :timeout="0"
-        @fallback="isFallbackStateActive = true"
-        @resolve="isFallbackStateActive = false"
-      >
+      <Suspense :timeout="0" @fallback="isFallbackStateActive = true" @resolve="isFallbackStateActive = false">
         <Component :is="Component" />
       </Suspense>
     </RouterView>

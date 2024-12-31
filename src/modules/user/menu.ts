@@ -4,7 +4,9 @@ const userMenu: VerticalNavItems = [
   {
     title: 'Users',
     icon: { icon: 'tabler-calendar' },
-    to: 'UsersList'
+    to: 'UsersList',
+    action: 'read',
+    subject: 'users',
   }
 ]
 

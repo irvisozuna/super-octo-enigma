@@ -28,7 +28,7 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
     refLoadingIndicator.value.resolveHandle()
 }, { immediate: true })
 
-const navItems = computed(() => menuStore.navItems)
+const navItems = computed(() => menuStore.verticalNavItems)
 
 // console.log('navItems', navItems);
 // console.log('navItemss', navItemss.value);

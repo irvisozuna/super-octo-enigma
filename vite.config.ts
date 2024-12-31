@@ -25,8 +25,10 @@ export default defineConfig({
           .toLowerCase()
       },
       beforeWriteFiles: root => {
-        root.insert('/apps/email/:filter', '/src/pages/apps/email/index.vue')
-        root.insert('/apps/email/:label', '/src/pages/apps/email/index.vue')
+        // ℹ️ This is a hook that gets called before writing files
+        // You can use it to modify the generated files
+        // For example, you can add imports to the generated files
+        // or modify the routes
       },
     }),
     vue({

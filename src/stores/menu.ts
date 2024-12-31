@@ -1,22 +1,29 @@
 // stores/menu.ts
-import navItemsIndex from '@/navigation/vertical'
-import type { VerticalNavItems } from '@layouts/types'
+
+import { HorizontalNavItems, VerticalNavItems } from '@/@layouts/types'
 import { defineStore } from 'pinia'
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
-    navItems: navItemsIndex as VerticalNavItems,
+    baseNavItems: [] as VerticalNavItems, // Menú base
   }),
-  actions: {
-    addNavItems(newItems: VerticalNavItems) {
-      // Agrega los elementos nuevos al menú existente
-      this.navItems = [...this.navItems, ...newItems]
+  getters: {
+    // Adaptar el menú base para diseño vertical
+    verticalNavItems(): VerticalNavItems {
+      return this.baseNavItems
     },
+    // Adaptar el menú base para diseño horizontal
+    horizontalNavItems(): HorizontalNavItems {
+      // Ejemplo: Puedes transformar la estructura si es necesario
+      return this.baseNavItems.map((item) => ({
+        ...item,
+        children: (item as any).children || [],
+      })) as HorizontalNavItems
+    },
+  },
+  actions: {
     setNavItems(newItems: VerticalNavItems) {
-      console.log('Adding new items:', newItems)
-      console.log('Existing items:', this.navItems)
-      // Reemplaza el menú completo
-      this.navItems = newItems
+      this.baseNavItems = newItems
     },
   },
 })

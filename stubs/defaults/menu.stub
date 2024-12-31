@@ -4,7 +4,9 @@ const {{moduleNameLower}}Menu: VerticalNavItems = [
   {
     title: '{{moduleName}}s',
     icon: { icon: 'tabler-calendar' },
-    to: '{{moduleNameLower}}sList'
+    to: '{{moduleNameLower}}sList',
+    action: 'read',
+    subject: '{{moduleName}}s',
   }
 ]
 

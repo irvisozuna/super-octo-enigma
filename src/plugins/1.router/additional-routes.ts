@@ -1,6 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router/auto';
 
-const emailRouteComponent = () => import('@/pages/apps/email/index.vue')
 
 // 👉 Redirects
 export const redirects: RouteRecordRaw[] = [
@@ -34,29 +33,6 @@ export const redirects: RouteRecordRaw[] = [
 ]
 
 export const routes: RouteRecordRaw[] = [
-  // Email filter
-  {
-    path: '/apps/email/filter/:filter',
-    name: 'apps-email-filter',
-    component: emailRouteComponent,
-    meta: {
-      navActiveLink: 'apps-email',
-      layoutWrapperClasses: 'layout-content-height-fixed',
-    },
-  },
-
-  // Email label
-  {
-    path: '/apps/email/label/:label',
-    name: 'apps-email-label',
-    component: emailRouteComponent,
-    meta: {
-      // contentClass: 'email-application',
-      navActiveLink: 'apps-email',
-      layoutWrapperClasses: 'layout-content-height-fixed',
-    },
-  },
-
   {
     path: '/dashboards/logistics',
     name: 'dashboards-logistics',

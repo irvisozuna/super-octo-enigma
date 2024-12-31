@@ -12,5 +12,5 @@ export const initializeMenus = () => {
   const combinedMenus: VerticalNavItems = Object.values(menuModules).flatMap((mod: any) => mod.default)
 
   // Registrar los menús en el store
-  menuStore.addNavItems(combinedMenus)
+  menuStore.setNavItems(combinedMenus)
 }
