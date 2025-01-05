@@ -41,7 +41,7 @@ export class AppDatabase extends Dexie {
     if (Object.keys(schema).length === 0) {
       console.error('No se encontraron configuraciones de tablas. Verifica los módulos.');
     } else {
-      console.log('Esquema de IndexedDB aplicado:', schema);
+      // console.log('Esquema de IndexedDB aplicado:', schema);
     }
 
     // 3. Define las tablas en una versión concreta (por ejemplo, 1)

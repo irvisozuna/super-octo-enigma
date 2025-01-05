@@ -1,6 +1,6 @@
 <template>
   <VCardItem class="pb-4">
-    <VCardTitle>Filters</VCardTitle>
+    <VCardTitle>{{ $t('filters') }}</VCardTitle>
   </VCardItem>
   <VCardText>
     <VRow>

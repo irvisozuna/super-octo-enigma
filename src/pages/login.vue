@@ -57,13 +57,15 @@ const login = async () => {
         console.error(errors.value)
       },
     })
-    const { accessToken, userData, userAbilityRules } = res.data
+    const { accessToken, userData, userAbilityRules, profile, company } = res.data
 
     useCookie('userAbilityRules').value = userAbilityRules
     ability.update(userAbilityRules)
 
     useCookie('userData').value = userData
     useCookie('accessToken').value = accessToken
+    useCookie('profile').value = profile
+    useCookie('company').value = company
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect

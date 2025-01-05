@@ -24,9 +24,9 @@ export const redirects: RouteRecordRaw[] = [
     redirect: () => ({ name: 'pages-user-profile-tab', params: { tab: 'profile' } }),
   },
   {
-    path: '/pages/account-settings',
-    name: 'pages-account-settings',
-    redirect: () => ({ name: 'pages-account-settings-tab', params: { tab: 'account' } }),
+    path: '/profile/account-settings',
+    name: 'profile-account-settings',
+    redirect: () => ({ name: 'profile-account-settings-tab', params: { tab: 'account' } }),
   },
 ]
 

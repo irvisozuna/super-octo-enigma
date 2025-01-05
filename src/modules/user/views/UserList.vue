@@ -11,8 +11,8 @@
     <VCardText>
       <div class="d-flex align-center flex-wrap gap-4 justify-end">
         <!-- Campo de búsqueda -->
-        <VTextField v-model="userStore.filters.search" label="Search User" variant="outlined" dense class="filter-field"
-          @input="applyFilters" />
+        <VTextField v-model="userStore.filters.search" :label="$t('Search User')" variant="outlined" dense
+          class="filter-field" @input="applyFilters" />
 
         <!-- Botón para exportar -->
         <GlobalMenu :label="$t('export')" :options="menuOptions" color="secondary" variant="tonal"
@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/modules/user/stores/userStore';
 import debounce from 'lodash/debounce';
+
 
 // Componentes internos
 import UserFilters from '../components/UserFilters.vue';

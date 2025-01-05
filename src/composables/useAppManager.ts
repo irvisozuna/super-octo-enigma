@@ -1,5 +1,6 @@
 import { useAppStore } from '@/stores/appStore';
 import { DialogOptions } from '@/types/types';
+import { markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 
 export function useAppManager() {
@@ -14,6 +15,8 @@ export function useAppManager() {
     options: Partial<DialogOptions> = {}
   ): Promise<'submit' | 'cancel' | 'close'> {
 
+    // Asegurar que el componente no sea reactivo
+    const rawComponent = markRaw(component);
     return appStore.openDialog({
       component,
       props,

@@ -38,19 +38,7 @@ export default [
         to: null,
         icon: { icon: 'tabler-eye-off' },
         disable: true,
-      },
-      {
-        title: 'Raise Support',
-        href: 'https://Donical.ticksy.com/',
-        icon: { icon: 'tabler-headphones' },
-        target: '_blank',
-      },
-      {
-        title: 'Documentation',
-        href: 'https://demos.Donical.com/vuexy-vuejs-admin-template/documentation/',
-        icon: { icon: 'tabler-file-text' },
-        target: '_blank',
-      },
+      }
     ],
   },
 ]

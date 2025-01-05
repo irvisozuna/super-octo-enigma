@@ -104,25 +104,7 @@ export default [
     ],
   },
 
-  {
-    title: 'Pages',
-    icon: { icon: 'tabler-file' },
-    children: [
-      { title: 'User Profile', to: { name: 'pages-user-profile-tab', params: { tab: 'profile' } } },
-      { title: 'Account Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-      { title: 'Pricing', to: 'pages-pricing' },
-      { title: 'FAQ', to: 'pages-faq' },
-      {
-        title: 'Miscellaneous',
-        children: [
-          { title: 'Coming Soon', to: 'pages-misc-coming-soon', target: '_blank' },
-          { title: 'Under Maintenance', to: 'pages-misc-under-maintenance', target: '_blank' },
-          { title: 'Page Not Found - 404', to: { path: '/pages/misc/not-found' }, target: '_blank' },
-          { title: 'Not Authorized - 401', to: { path: '/pages/misc/not-authorized' }, target: '_blank' },
-        ],
-      },
-    ],
-  },
+
   {
     title: 'Authentication',
     icon: { icon: 'tabler-shield-lock' },

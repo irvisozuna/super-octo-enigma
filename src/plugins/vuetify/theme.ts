@@ -3,6 +3,9 @@ import type { ThemeDefinition } from 'vuetify'
 export const staticPrimaryColor = '#4CAF50' // Verde Brillante
 export const staticPrimaryDarkenColor = '#388E3C' // Verde Oscuro
 
+export const staticSecondaryColor = '#FFC107' // Naranja Brillante
+export const staticSecondaryDarkenColor = '#FFA000' // Naranja Oscuro
+
 export const themes: Record<string, ThemeDefinition> = {
   light: {
     dark: false,
@@ -10,9 +13,9 @@ export const themes: Record<string, ThemeDefinition> = {
       'primary': staticPrimaryColor,
       'on-primary': '#fff',
       'primary-darken-1': staticPrimaryDarkenColor,
-      'secondary': '#00838F', // Turquesa Oscuro
+      'secondary': staticSecondaryColor, // Turquesa Oscuro
       'on-secondary': '#fff',
-      'secondary-darken-1': '#006064', // Turquesa Más Oscuro
+      'secondary-darken-1': staticSecondaryDarkenColor, // Turquesa Más Oscuro
       'success': '#28C76F', // Verde Éxito
       'on-success': '#fff',
       'success-darken-1': '#24B364',

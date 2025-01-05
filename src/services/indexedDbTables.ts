@@ -4,4 +4,4 @@ const modules = import.meta.glob('@/modules/**/indexedDbConfig.ts', { eager: tru
 export const tableConfigs = Object.values(modules).map((mod: any) => mod.default);
 
 // Debug para verificar las configuraciones cargadas
-console.log('Configuraciones de tablas cargadas:', tableConfigs);
+// console.log('Configuraciones de tablas cargadas:', tableConfigs);
