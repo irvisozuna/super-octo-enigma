@@ -4,31 +4,44 @@
       <!-- Título -->
       <h4 class="text-h4 text-center mb-2">{{ t('addModule', { moduleName: userTitle }) }}</h4>
       <p class="text-body-1 text-center mb-6">{{ t('addItemDescription') }}</p>
+
       <!-- Formulario -->
-      <VForm class="mt-6" @submit.prevent="onFormSubmit" v-model="valid">
+      <VForm class="mt-6" :onSubmit="handleSubmit(onFormSubmit)">
         <VRow>
           <VCol cols="12" md="6">
-            <AppTextField v-model="itemData.first_name" :label="t('firstName')" :placeholder="t('placeholderFirstName')"
-              :rules="[rules.required]" />
+            <!-- first_name -->
+            <AppTextField v-model="first_name" :label="t('firstName')" :placeholder="t('placeholderFirstName')"
+              :error="!!errors.first_name" :error-messages="errors.first_name ? [errors.first_name] : []" />
           </VCol>
+
           <VCol cols="12" md="6">
-            <AppTextField v-model="itemData.last_name" :label="t('lastName')" :placeholder="t('placeholderLastName')"
-              :rules="[rules.required]" />
+            <!-- last_name -->
+            <AppTextField v-model="last_name" :label="t('lastName')" :placeholder="t('placeholderLastName')"
+              :error="!!errors.last_name" :error-messages="errors.last_name ? [errors.last_name] : []" />
           </VCol>
+
           <VCol cols="12" md="6">
-            <AppTextField v-model="itemData.email" :label="t('email')" :placeholder="t('placeholderEmail')"
-              :rules="[rules.required, rules.email]" />
+            <!-- email -->
+            <AppTextField v-model="email" :label="t('email')" :placeholder="t('placeholderEmail')"
+              :error="!!errors.email" :error-messages="errors.email ? [errors.email] : []" />
           </VCol>
+
           <VCol cols="12" md="6">
-            <AppTextField v-model="itemData.password" :label="t('password')" :placeholder="t('placeholderPassword')"
-              type="password" :rules="[rules.required]" />
+            <!-- password -->
+            <AppTextField v-model="password" :label="t('password')" :placeholder="t('placeholderPassword')"
+              :append-inner-icon="showPassword ? 'tabler-eye-off' : 'tabler-eye'"
+              :type="showPassword ? 'text' : 'password'" :error="!!errors.password"
+              :error-messages="errors.password ? [errors.password] : []"
+              @click:append-inner="showPassword = !showPassword" />
           </VCol>
+
           <VCol cols="12" md="6">
+            <!-- role -->
             <api-data-source api-path="company/roles?onlykeyvalue=true" @loaded="(response) => roleOptions = response">
               <template v-slot="{ loading }">
-                <VSelect v-model="itemData.role" :items="roleOptions" item-text="title" item-value="value"
-                  label="Select Role" variant="outlined" dense clearable chips multiple closable-chips
-                  :loading="loading" :disabled="loading">
+                <VSelect v-model="role" :items="roleOptions" item-title="name" item-value="id" label="Select Role"
+                  variant="outlined" dense clearable chips multiple closable-chips :loading="loading"
+                  :disabled="loading" :error="!!errors.role" :error-messages="errors.role ? [errors.role] : []">
                   <template #prepend-item v-if="loading">
                     <span class="text-secondary text-caption">Loading roles...</span>
                   </template>
@@ -36,8 +49,9 @@
               </template>
             </api-data-source>
           </VCol>
+
           <VCol cols="12" class="d-flex flex-wrap justify-center gap-4">
-            <VBtn type="submit" :disabled="!valid">{{ t('save') }}</VBtn>
+            <VBtn type="submit">{{ t('save') }}</VBtn>
             <VBtn color="secondary" variant="tonal" @click="close">{{ t('cancel') }}</VBtn>
           </VCol>
         </VRow>
@@ -48,52 +62,50 @@
 
 <script setup lang="ts">
 import { useAppManager } from '@/composables/useAppManager';
-import { useCrud } from '@/composables/useCrud';
+import { useUserValidation } from '@/modules/user/composables/useUserValidation';
 import { useUserStore } from '@/modules/user/stores/userStore';
-import { ref, watch } from 'vue';
+import { useField, useForm } from 'vee-validate';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
 const userStore = useUserStore();
-const { createItem } = useCrud(userStore);
 
-const userTitle = 'user'; // Nombre del módulo
+const userTitle = 'user';
 const roleOptions = ref([]);
+const showPassword = ref(false);
 
-// Estado del formulario y datos del elemento
-const valid = ref(false);
-const itemData = ref({
-  first_name: '',
-  last_name: '',
-  email: '',
-  password: '',
-  role: ''
+// Obtenemos el schema
+const { userCreateValidation } = useUserValidation();
+
+// Configuramos el formulario con Vee Validate
+const { handleSubmit, errors } = useForm({
+  validationSchema: userCreateValidation,
+  initialValues: {
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    role: [], // array vacío si tu select es multiple
+  },
 });
 
-// Reglas de validación
-const rules = {
-  required: (v: string) => !!v || t('requiredField'),
-  email: (v: string) =>
-    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || t('invalidEmail'),
-};
+// Campos
+const { value: first_name } = useField('first_name');
+const { value: last_name } = useField('last_name');
+const { value: email } = useField('email');
+const { value: password } = useField('password');
+const { value: role } = useField('role');
 
-// Watch para actualizar la validez del formulario
-watch(itemData, (newValue) => {
-  valid.value = Object.values(newValue).every(field => field !== '');
-}, { deep: true });
-
-// Método para cerrar el diálogo
-function close() {
-  closeDialog();
+function close(result: 'close' | 'submit' | 'cancel' = 'close') {
+  closeDialog(result);
 }
 
-// Método para manejar el envío del formulario
-async function onFormSubmit() {
+async function onFormSubmit(values: any) {
   try {
-    await createItem(itemData.value);
-    console.log('Formulario enviado:', itemData.value);
-    close();
+    await userStore.createItem(values);
+    close('submit');
   } catch (error) {
     console.error('Error al guardar el usuario:', error);
   }

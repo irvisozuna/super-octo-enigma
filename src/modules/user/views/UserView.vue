@@ -2,7 +2,7 @@
   <VRow v-if="itemData">
     <!-- Bio Panel -->
     <VCol cols="12" md="5" lg="4">
-      <BioPanel :item-data="itemData" />
+      <BioPanel :item-data="itemData.profile" />
     </VCol>
 
     <!-- Tabs -->

@@ -1,0 +1,4 @@
+export default {
+  tableName: '{{moduleNameLower}}s',
+  schema: 'id', // Índices de la tabla
+};

@@ -14,3 +14,6 @@ export const use{{moduleName}}Store = createCrudStore<{{moduleName}}>({
     return raw?.data ?? raw;
   },
 });
+
+const {{moduleNameLower}}Store = use{{moduleName}}Store();
+{{moduleNameLower}}Store.listenToWebSocketEvents(); 

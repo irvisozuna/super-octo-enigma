@@ -53,7 +53,7 @@ export async function generateModule(moduleName, regenerate = false) {
   }
 
   // Crea subcarpetas base
-  const subfolders = ['views','components', 'composables', 'stores', 'types', 'tests'];
+  const subfolders = ['views','components', 'composables', 'stores', 'types', 'tests','validations'];
   subfolders.forEach((subfolder) => {
     const subfolderPath = path.join(modulePath, subfolder);
     if (!fs.existsSync(subfolderPath)) {
@@ -67,9 +67,12 @@ export async function generateModule(moduleName, regenerate = false) {
     { stub: 'vue.stub',           output: `views/index.vue` },
     { stub: 'routes.stub',        output: 'routes.ts' },
     { stub: 'index.stub',         output: 'index.ts' },
+    { stub: 'indexedDbConfig.stub',         output: 'inindexedDbConfigdex.ts' },
     { stub: 'store.stub',         output: `stores/${moduleName.moduleNameLower}Store.ts` },
     { stub: 'type.stub',          output: `types/${moduleName.moduleNameLower}.ts` },
     { stub: 'composable.stub',    output: `composables/use${moduleName.moduleName}Helpers.ts` },
+    { stub: 'composableValidation.stub',    output: `composables/use${moduleName.moduleName}Validation.ts` },
+    { stub: 'validation.stub',    output: `validations/${moduleName.moduleName}Validation.ts` },
     { stub: 'components/List.stub',      output: `views/${moduleName.moduleName}List.vue` },
     { stub: 'components/Add.stub',       output: `views/${moduleName.moduleName}Add.vue` },
     { stub: 'components/Edit.stub',      output: `views/${moduleName.moduleName}Edit.vue` },

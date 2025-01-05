@@ -320,6 +320,23 @@
         "item": "ítem"
       }
     }
-  }
+  },
+  "crud": {
+    "itemCreated": "Item created successfully",
+    "itemUpdated": "Item updated successfully",
+    "itemDeleted": "Item deleted successfully",
+    "batchActionSuccess": "Batch action {action} completed successfully",
+    "fetchFailed": "Failed to fetch items",
+    "fetchItemFailed": "Failed to fetch item",
+    "itemCreateFailed": "Failed to create item: {errors}",
+    "itemUpdateFailed": "Failed to update item: {errors}",
+    "itemDeleteFailed": "Failed to delete item: {errors}",
+    "batchActionFailed": "Failed to complete batch action",
+    "apiError": "API error: {message}",
+    "unknownError": "An unknown error occurred",
+    "networkError": "Network error, please check your connection"
+  },
+  "Are you sure you want to delete these items": "¿Estás seguro de que quieres eliminar {count} {module}?",
+  "user": "usuario"
   }
   

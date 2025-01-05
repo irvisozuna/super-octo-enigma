@@ -1,8 +1,18 @@
 <template>
   <VCard>
-    <VCardTitle>{{ $t('delete ') }}</VCardTitle>
+    <VCardTitle>
+      {{ itemData?.id
+        ? $t('delete')
+        : $t('deleteSelected', { count: selectedItems.length }) }}
+    </VCardTitle>
     <VCardText>
-      <p>{{ $t('Are you sure you want to delete') }}<strong>{{ itemData?.id }}</strong>?</p>
+      <p v-if="itemData?.id" v-html="$t('Are you sure you want to delete', { name: itemData.name })"></p>
+      <p v-else>
+        {{ selectedItems.length > 1
+          ? $t('Are you sure you want to delete these items', { count: selectedItems.length, module: $t('{{moduleNameLower}}s') })
+          : $t('Are you sure you want to delete these items', { count: selectedItems.length, module: $t('{{moduleNameLower}}') })
+        }}
+      </p>
     </VCardText>
     <VCardActions>
       <VSpacer />
@@ -17,21 +27,20 @@ import { useAppManager } from '@/composables/useAppManager';
 import { use{{moduleName}}Store } from '@/modules/{{moduleNameLower}}/stores/{{moduleNameLower}}Store';
 import { ref } from 'vue';
 import { {{moduleName}} } from '../types/{{moduleNameLower}}';
+
 const { closeDialog } = useAppManager();
 
-const isOpen = ref(false);
-const item = ref<{{moduleName}}>({
-  id: ''
-});
 // Props del diálogo
 const props = defineProps({
   item: {
     type: Object as () => {{moduleName}},
-    required: true,
+    required: false, // Puede no venir si es eliminación masiva
   },
 });
+
 const {{moduleNameLower}}Store = use{{moduleName}}Store();
-const itemData = ref<{{moduleName}}>({ ...props.item });
+const itemData = ref<{{moduleName}} | null>(props.item ?? null);
+const selectedItems = ref({{moduleNameLower}}Store.selectedItems); // Elementos seleccionados
 
 // Método para cerrar el diálogo
 function close() {
@@ -40,15 +49,19 @@ function close() {
 
 async function deleteItem() {
   try {
-    if (item.value?.id) {
-      await {{moduleNameLower}}Store.deleteItem(item.value.id);
-      close();
+    if (itemData.value?.id) {
+    // Eliminar un solo elemento
+      await {{moduleNameLower}}Store.deleteItem(itemData.value.id);
+    } else if (selectedItems.value.length > 0) {
+      // Eliminar elementos seleccionados
+      const idsToDelete = selectedItems.value.map((item) => item.id);
+      await {{moduleNameLower}}Store.batchAction(idsToDelete, 'delete');
     }
+    close();
   } catch (error) {
-    console.error(`Error deleting {{moduleNameLower}}:`, error);
+    console.error(`Error deleting {{moduleNameLower}}(s):`, error);
   } finally {
     close();
   }
 }
-
 </script>

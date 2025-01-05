@@ -13,6 +13,7 @@ export function useAppManager() {
     props: Record<string, any> = {},
     options: Partial<DialogOptions> = {}
   ): Promise<'submit' | 'cancel' | 'close'> {
+
     return appStore.openDialog({
       component,
       props,

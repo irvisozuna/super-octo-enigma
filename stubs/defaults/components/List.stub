@@ -22,7 +22,7 @@
         <GlobalMenu :label="$t('export')" :options="menuOptions" color="secondary" variant="tonal"
           icon="tabler-chevron-down" />
 
-        <!-- 👉 Add user button -->
+        <!-- 👉 Add {{moduleNameLower}} button -->
         <VBtn prepend-icon="tabler-plus" color="primary" @click="openAddDialog">Add {{moduleName}}</VBtn>
       </div>
 
@@ -30,7 +30,8 @@
     <VDivider />
     <!-- Tabla de elementos -->
     <{{moduleName}}Table :headers="headers" :items="{{moduleNameLower}}Store.list" :total="{{moduleNameLower}}Store.total" :page="{{moduleNameLower}}Store.page"
-      :items-per-page="{{moduleNameLower}}Store.itemsPerPage" :loading="{{moduleNameLower}}Store.isLoading" @update:page="onPageChange"
+      :items-per-page="{{moduleNameLower}}Store.itemsPerPage" :loading="{{moduleNameLower}}Store.isLoading" :selection="{{moduleNameLower}}Store.selectedItems"
+      @update:selection="val => {{moduleNameLower}}Store.selectedItems = val" @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange" @view="openViewDialog" @edit="openEditDialog"
       @delete="openDeleteDialog" />
   </VCard>
@@ -50,8 +51,8 @@ import {{moduleName}}Delete from './{{moduleName}}Delete.vue';
 import {{moduleName}}Edit from './{{moduleName}}Edit.vue';
 
 
-const { openDialog, closeDialog, getDialogHistory, navigateTo, onDialogOpened, onDialogClosed } =
-  useAppManager();
+// Composable para manejar diálogos
+const { openDialog } = useAppManager();
 
 // Props para personalizar el título y la descripción
 const props = defineProps({
@@ -117,6 +118,19 @@ function onPageChange(newPage: number) {
 function onItemsPerPageChange(newItemsPerPage: number) {
   {{moduleNameLower}}Store.itemsPerPage = newItemsPerPage;
   {{moduleNameLower}}Store.fetchList(); // Actualiza la lista
+}
+
+function deleteSelected() {
+  if (confirm(`¿Estás seguro de que deseas eliminar los ${{{moduleNameLower}}Store.selectedItems.length} elementos seleccionados?`)) {
+    const ids = {{moduleNameLower}}Store.selectedItems.map((item) => item.id);
+    {{moduleNameLower}}Store.batchAction(ids, 'delete');
+    {{moduleNameLower}}Store.clearSelection();
+  }
+}
+
+function exportSelected(format: 'pdf' | 'excel') {
+  console.log(`Exportando ${{{moduleNameLower}}Store.selectedItems.length} elementos como ${format.toUpperCase()}:`, {{moduleNameLower}}Store.selectedItems);
+  // Implementa la lógica de exportación aquí (puedes llamar a un endpoint o generar un archivo localmente).
 }
 
 // Métodos para abrir los diálogos

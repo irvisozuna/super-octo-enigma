@@ -3,10 +3,9 @@ import { createCrudStore } from '@/stores/crudFactory';
 import { User } from '../types/user';
 
 export const useUserStore = createCrudStore<User>({
-  id: 'user',
+  id: 'users',
   baseEndpoint: ENDPOINTS.USERS || 'users',
   transformFetchListResponse(raw) {
-    console.log(raw.data)
     const data = raw?.data ?? [];
     const total = raw?.pagination?.total ?? 0;
     return { data, total };
@@ -15,3 +14,6 @@ export const useUserStore = createCrudStore<User>({
     return raw?.data ?? raw;
   },
 });
+
+const userStore = useUserStore();
+userStore.listenToWebSocketEvents(); 

@@ -57,8 +57,6 @@ const login = async () => {
         console.error(errors.value)
       },
     })
-
-    
     const { accessToken, userData, userAbilityRules } = res.data
 
     useCookie('userAbilityRules').value = userAbilityRules
