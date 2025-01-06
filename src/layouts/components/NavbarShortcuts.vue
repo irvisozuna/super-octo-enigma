@@ -30,6 +30,12 @@ const shortcuts = [
     subtitle: 'Dashboard Analytics',
     to: { name: 'dashboards-analytics' },
   },
+  {
+    icon: 'tabler-settings',
+    title: 'Settings',
+    subtitle: 'Account Settings',
+    to: { name: 'pages-account-settings-tab', params: { tab: 'account' } },
+  },
 
 ]
 </script>

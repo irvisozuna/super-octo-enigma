@@ -54,8 +54,8 @@ const userProfileList = [
       <VMenu activator="parent" width="240" location="bottom end" offset="12px">
         <VList>
           <VListItem>
-            <template #prepend>
-              <VListItemAction start>
+            <div class="d-flex gap-2 align-center">
+              <VListItemAction>
                 <VBadge dot location="bottom right" offset-x="3" offset-y="3" color="success" bordered>
                   <VAvatar :color="!(userData && userData.avatar) ? 'primary' : undefined"
                     :variant="!(userData && userData.avatar) ? 'tonal' : undefined">
@@ -64,12 +64,16 @@ const userProfileList = [
                   </VAvatar>
                 </VBadge>
               </VListItemAction>
-            </template>
 
-            <VListItemTitle class="font-weight-medium">
-              {{ userData.name || userData.username }}
-            </VListItemTitle>
-            <VListItemSubtitle>{{ userData.roles[0].name }}</VListItemSubtitle>
+              <div>
+                <h6 class="text-h6 font-weight-medium">
+                  {{ userData.name || userData.username }}
+                </h6>
+                <VListItemSubtitle class="text-capitalize text-disabled">
+                  {{ userData.roles[0].name }}
+                </VListItemSubtitle>
+              </div>
+            </div>
           </VListItem>
 
           <PerfectScrollbar :options="{ wheelPropagation: false }">

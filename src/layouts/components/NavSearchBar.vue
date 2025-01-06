@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useConfigStore } from '@core/stores/config'
-import type { SearchResults } from '@db/app-bar-search/types'
 import Shepherd from 'shepherd.js'
 import { withQuery } from 'ufo'
 import type { RouteLocationRaw } from 'vue-router'
+import type { SearchResults } from '@db/app-bar-search/types'
+import { useConfigStore } from '@core/stores/config'
 
 interface Suggestion {
   icon: string
@@ -43,6 +43,7 @@ const suggestionGroups: SuggestionGroup[] = [
     content: [
       { icon: 'tabler-calendar', title: 'Calendar', url: { name: 'apps-calendar' } },
       { icon: 'tabler-lock', title: 'Roles & Permissions', url: { name: 'apps-roles' } },
+      { icon: 'tabler-settings', title: 'Account Settings', url: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
       { icon: 'tabler-copy', title: 'Dialog Examples', url: { name: 'pages-dialog-examples' } },
     ],
   },
@@ -144,7 +145,7 @@ const LazyAppBarSearch = defineAsyncComponent(() => import('@core/components/App
 
   <!-- 👉 App Bar Search -->
   <LazyAppBarSearch
-    v-model:isDialogVisible="isAppSearchBarVisible"
+    v-model:is-dialog-visible="isAppSearchBarVisible"
     :search-results="searchResult"
     :is-loading="isLoading"
     @search="searchQuery = $event"

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { HorizontalNavGroup, HorizontalNavLink } from '@layouts/components';
-import type { HorizontalNavItems, NavGroup, NavLink } from '@layouts/types';
+import { HorizontalNavGroup, HorizontalNavLink } from '@layouts/components'
+import type { HorizontalNavItems, NavGroup, NavLink } from '@layouts/types'
 
 defineProps<{
   navItems: HorizontalNavItems
@@ -20,6 +20,7 @@ const resolveNavItemComponent = (item: NavLink | NavGroup) => {
       :is="resolveNavItemComponent(item)"
       v-for="(item, index) in navItems"
       :key="index"
+      data-allow-mismatch
       :item="item"
     />
   </ul>

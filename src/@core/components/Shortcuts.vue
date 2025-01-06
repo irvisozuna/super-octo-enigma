@@ -22,10 +22,7 @@ const router = useRouter()
 
 <template>
   <IconBtn>
-    <VIcon
-      size="24"
-      :icon="props.togglerIcon"
-    />
+    <VIcon :icon="props.togglerIcon" />
 
     <VMenu
       activator="parent"

@@ -25,7 +25,7 @@
     }
 
     .v-selection-control__input {
-      transform: translateX(-5px);
+      transform: translateX(-6px) !important;
 
       --v-selection-control-size: 0.875rem;
 
@@ -37,7 +37,7 @@
 
     .v-selection-control--dirty {
       .v-selection-control__input {
-        transform: translateX(6px);
+        transform: translateX(6px) !important;
       }
     }
   }

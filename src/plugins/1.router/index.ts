@@ -9,7 +9,6 @@ import { setupGuards } from './guards';
 const modules = import.meta.glob('@/modules/**/routes.ts', { eager: true });
 const routesModules = Object.values(modules).flatMap((mod: any) => mod.default);
 
-
 function recursiveLayouts(route: RouteRecordRaw): RouteRecordRaw {
   if (route.children) {
     for (let i = 0; i < route.children.length; i++)
