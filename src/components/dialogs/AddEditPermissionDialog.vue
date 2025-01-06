@@ -26,7 +26,7 @@ const onSubmit = () => {
   emit('update:permissionName', currentPermissionName.value)
 }
 
-watch(props, () => {
+watch(() => props, () => {
   currentPermissionName.value = props.permissionName
 })
 </script>
@@ -71,7 +71,7 @@ watch(props, () => {
             />
 
             <VBtn @click="onSubmit">
-              Update
+              {{ props.permissionName ? 'Update' : 'Add' }}
             </VBtn>
           </div>
 

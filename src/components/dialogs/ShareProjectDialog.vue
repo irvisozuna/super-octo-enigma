@@ -174,7 +174,7 @@ const membersList: Member[] = [
               class="me-2"
               size="20"
             />
-            <div>Public to - Donical</div>
+            <div>Public to Vuexy - Pixinvent</div>
           </h6>
 
           <VBtn

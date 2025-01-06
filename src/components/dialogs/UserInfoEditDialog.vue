@@ -2,16 +2,14 @@
 interface UserData {
   id: number | null
   fullName: string
-  firstName: string
-  lastName: string
   company: string
   username: string
   role: string
   country: string
-  contact: string
-  email: string
+  contact: string | undefined
+  email: string | undefined
   currentPlan: string
-  status: string
+  status: string | undefined
   avatar: string
   taskDone: number | null
   projectDone: number | null
@@ -33,8 +31,6 @@ const props = withDefaults(defineProps<Props>(), {
   userData: () => ({
     id: 0,
     fullName: '',
-    firstName: '',
-    lastName: '',
     company: '',
     role: '',
     username: '',
@@ -56,7 +52,7 @@ const emit = defineEmits<Emit>()
 const userData = ref<UserData>(structuredClone(toRaw(props.userData)))
 const isUseAsBillingAddress = ref(false)
 
-watch(props, () => {
+watch(() => props, () => {
   userData.value = structuredClone(toRaw(props.userData))
 })
 
@@ -107,7 +103,7 @@ const dialogModelValueUpdate = (val: boolean) => {
               md="6"
             >
               <AppTextField
-                v-model="userData.firstName"
+                v-model="userData.fullName.split(' ')[0]"
                 label="First Name"
                 placeholder="John"
               />
@@ -119,7 +115,7 @@ const dialogModelValueUpdate = (val: boolean) => {
               md="6"
             >
               <AppTextField
-                v-model="userData.lastName"
+                v-model="userData.fullName.split(' ')[1]"
                 label="Last Name"
                 placeholder="Doe"
               />

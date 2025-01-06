@@ -1,6 +1,6 @@
 import { defineThemeConfig } from '@core'
 import { Skins } from '@core/enums'
-import { breakpointsVuetify } from '@vueuse/core'
+import { breakpointsVuetifyV3 } from '@vueuse/core'
 import { VIcon } from 'vuetify/components/VIcon'
 
 // ❗ Logo SVG must be imported with ?raw suffix
@@ -10,14 +10,14 @@ import { AppContentLayoutNav, ContentWidth, FooterType, NavbarType } from '@layo
 
 export const { themeConfig, layoutConfig } = defineThemeConfig({
   app: {
-    title: 'donical',
+    title: 'vuexy',
     logo: h('div', { innerHTML: logo, style: 'line-height:0; color: rgb(var(--v-global-theme-primary))' }),
     contentWidth: ContentWidth.Boxed,
     contentLayoutNav: AppContentLayoutNav.Vertical,
-    overlayNavFromBreakpoint: breakpointsVuetify.md + 16, // 16 for scrollbar. Docs: https://next.vuetifyjs.com/en/features/display-and-platform/
+    overlayNavFromBreakpoint: breakpointsVuetifyV3.lg - 1, // 1 for matching with vuetify breakpoint. Docs: https://next.vuetifyjs.com/en/features/display-and-platform/
     i18n: {
       enable: true,
-      defaultLocale: 'es',
+      defaultLocale: 'en',
       langConfig: [
         {
           label: 'English',
@@ -25,13 +25,18 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
           isRTL: false,
         },
         {
-          label: 'Español',
-          i18nLang: 'es',
+          label: 'French',
+          i18nLang: 'fr',
           isRTL: false,
+        },
+        {
+          label: 'Arabic',
+          i18nLang: 'ar',
+          isRTL: true,
         },
       ],
     },
-    theme: 'light',
+    theme: 'system',
     skin: Skins.Default,
     iconRenderer: VIcon,
   },
@@ -58,9 +63,9 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
   icons: {
     chevronDown: { icon: 'tabler-chevron-down' },
     chevronRight: { icon: 'tabler-chevron-right', size: 20 },
-    close: { icon: 'tabler-x' },
-    verticalNavPinned: { icon: 'tabler-circle-dot' },
-    verticalNavUnPinned: { icon: 'tabler-circle' },
+    close: { icon: 'tabler-x', size: 20 },
+    verticalNavPinned: { icon: 'tabler-circle-dot', size: 20 },
+    verticalNavUnPinned: { icon: 'tabler-circle', size: 20 },
     sectionTitlePlaceholder: { icon: 'tabler-minus' },
   },
 })

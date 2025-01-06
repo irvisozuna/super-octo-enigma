@@ -9,6 +9,11 @@ export default [
         icon: { icon: 'tabler-user-circle' },
         to: { name: 'pages-user-profile-tab', params: { tab: 'profile' } },
       },
+      {
+        title: 'Account Settings',
+        icon: { icon: 'tabler-settings' },
+        to: { name: 'pages-account-settings-tab', params: { tab: 'account' } },
+      },
       { title: 'FAQ', icon: { icon: 'tabler-help' }, to: 'pages-faq' },
       { title: 'Pricing', icon: { icon: 'tabler-diamond' }, to: 'pages-pricing' },
       {

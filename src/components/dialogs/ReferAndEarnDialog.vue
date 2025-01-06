@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import keyboard from '@images/svg/keyboard.svg';
-import paper from '@images/svg/paper-send.svg';
-import rocket from '@images/svg/rocket.svg';
-import { themeConfig } from '@themeConfig';
+import keyboard from '@images/svg/keyboard.svg'
+import paper from '@images/svg/paper-send.svg'
+import rocket from '@images/svg/rocket.svg'
+import { themeConfig } from '@themeConfig'
 
 interface Props {
   isDialogVisible: boolean
@@ -95,7 +95,7 @@ const referAndEarnSteps = [
         >
           <AppTextField
             placeholder="johnDoe@gmail.com"
-            label="Enter your friend's email address and invite them to join Donical 😍"
+            label="Enter your friend's email address and invite them to join Vuexy 😍"
           />
 
           <VBtn
@@ -115,7 +115,7 @@ const referAndEarnSteps = [
           @submit.prevent="() => {}"
         >
           <AppTextField
-            placeholder="http://Donical.link"
+            placeholder="http://pixinvent.link"
             label="You can also copy and send it or share it on your social media. 🚀"
             class="refer-link-input"
           >

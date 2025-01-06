@@ -1,8 +1,8 @@
 import { User } from '@/types/types'
 import { canNavigate } from '@layouts/plugins/casl'
-import type { Router } from 'vue-router'
+import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 
-export const setupGuards = (router: Router) => {
+export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
   router.beforeEach(to => {
@@ -20,7 +20,6 @@ export const setupGuards = (router: Router) => {
     const isLoggedIn = !!(useCookie('userData').value && useCookie('accessToken').value)
     const user = useCookie('userData').value
     const userData = user as unknown as User;
-
     /*
       If user is logged in and is trying to access login like page, redirect to home
       else allow visiting the page
@@ -32,8 +31,6 @@ export const setupGuards = (router: Router) => {
       else
         return undefined
     }
-
-
 
     if (!canNavigate(to) && to.matched.length) {
       /* eslint-disable indent */
@@ -50,7 +47,7 @@ export const setupGuards = (router: Router) => {
     }
     // Verificar el wizardStep y redirigir si es necesario
     if (isLoggedIn && userData) {
-      
+
       const wizardStep = userData.wizardStep || 0;
       // Si el wizardStep es menor a 3 y no está en una ruta de onboarding, redirigir a onboarding
       if (wizardStep < 3 && !to.path.startsWith('/pages/onboarding')) {

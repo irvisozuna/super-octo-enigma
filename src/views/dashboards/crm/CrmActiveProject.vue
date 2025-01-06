@@ -87,7 +87,7 @@ const moreList = [
               rounded
               class="me-1"
             >
-              <VImg :src="project.avatarImg" />
+              <img :src="project.avatarImg">
             </VAvatar>
           </template>
 

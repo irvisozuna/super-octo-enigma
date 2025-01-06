@@ -2,11 +2,9 @@ import type { VerticalNavItems } from '@layouts/types'
 
 const userMenu: VerticalNavItems = [
   {
-    title: 'Users',
+    title: 'Userssad',
     icon: { icon: 'tabler-calendar' },
-    to: 'UsersList',
-    action: 'read',
-    subject: 'users',
+    to: 'UsersList'
   }
 ]
 
