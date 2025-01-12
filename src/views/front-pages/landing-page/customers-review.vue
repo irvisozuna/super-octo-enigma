@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { register } from 'swiper/element/bundle'
 import { useGenerateImageVariant } from '@/@core/composable/useGenerateImageVariant'
 import logo1dark from '@images/front-pages/branding/logo-1-dark.png'
 import logo1light from '@images/front-pages/branding/logo-1-light.png'
@@ -15,6 +14,7 @@ import logo4light from '@images/front-pages/branding/logo-4-light.png'
 import logo4 from '@images/front-pages/branding/logo-4.png'
 import logo5dark from '@images/front-pages/branding/logo-5-dark.png'
 import logo5light from '@images/front-pages/branding/logo-5-light.png'
+import { register } from 'swiper/element/bundle'
 
 import avatar1 from '@images/avatars/avatar-1.png'
 import avatar2 from '@images/avatars/avatar-2.png'
@@ -33,7 +33,7 @@ const brandLogo5 = useGenerateImageVariant(logo5light, logo5dark)
 // Customer Review Data
 const reviewData = [
   {
-    desc: 'I\'ve never used a theme as versatile and flexible as Vuexy. It\'s my go to for building dashboard sites on almost any project.',
+    desc: 'I\'ve never used a theme as versatile and flexible as nubik. It\'s my go to for building dashboard sites on almost any project.',
     img: logo1,
     rating: 5,
     name: 'Eugenia Moore',
@@ -65,7 +65,7 @@ const reviewData = [
     avatar: avatar4,
   },
   {
-    desc: 'Vuexy is awesome, and I particularly enjoy knowing that if I get stuck on something, there is always a helpful community to assist me.',
+    desc: 'nubik is awesome, and I particularly enjoy knowing that if I get stuck on something, there is always a helpful community to assist me.',
     img: logo3,
     rating: 5,
     name: 'Tommy haffman',
@@ -73,7 +73,7 @@ const reviewData = [
     avatar: avatar5,
   },
   {
-    desc: 'I\'ve never used a theme as versatile and flexible as Vuexy. It\'s my go to for building dashboard sites on almost any project.',
+    desc: 'I\'ve never used a theme as versatile and flexible as nubik. It\'s my go to for building dashboard sites on almost any project.',
     img: logo1,
     rating: 5,
     name: 'Eugenia Moore',
@@ -81,7 +81,7 @@ const reviewData = [
     avatar: avatar1,
   },
   {
-    desc: 'Vuexy is awesome, and I particularly enjoy knowing that if I get stuck on something, there is always a helpful community to assist me.',
+    desc: 'nubik is awesome, and I particularly enjoy knowing that if I get stuck on something, there is always a helpful community to assist me.',
     img: logo2,
     rating: 5,
     name: 'Tommy haffman',

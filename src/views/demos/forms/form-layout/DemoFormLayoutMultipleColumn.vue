@@ -12,98 +12,46 @@ const checkbox = ref(false)
   <VForm @submit.prevent="() => {}">
     <VRow>
       <!-- 👉 First Name -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="firstName"
-          label="First Name"
-          placeholder="John"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="firstName" label="First Name" placeholder="John" />
       </VCol>
 
       <!-- 👉 Last Name -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="lastName"
-          label="Last Name"
-          placeholder="Doe"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="lastName" label="Last Name" placeholder="Doe" />
       </VCol>
 
       <!-- 👉 Email -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="email"
-          label="Email"
-          placeholder="johndoe@email.com"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="email" label="Email" placeholder="johndoe@email.com" />
       </VCol>
 
       <!-- 👉 City -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="city"
-          label="City"
-          placeholder="New York"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="city" label="City" placeholder="New York" />
       </VCol>
 
       <!-- 👉 Country -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="country"
-          label="Country"
-          placeholder="United States"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="country" label="Country" placeholder="United States" />
       </VCol>
 
       <!-- 👉 Company -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <AppTextField
-          v-model="company"
-          label="Company"
-          placeholder="Pixinvent"
-        />
+      <VCol cols="12" md="6">
+        <AppTextField v-model="company" label="Company" placeholder="nubik" />
       </VCol>
 
       <!-- 👉 Remember me -->
       <VCol cols="12">
-        <VCheckbox
-          v-model="checkbox"
-          label="Remember me"
-        />
+        <VCheckbox v-model="checkbox" label="Remember me" />
       </VCol>
 
-      <VCol
-        cols="12"
-        class="d-flex gap-4"
-      >
+      <VCol cols="12" class="d-flex gap-4">
         <VBtn type="submit">
           Submit
         </VBtn>
 
-        <VBtn
-          type="reset"
-          color="secondary"
-          variant="tonal"
-        >
+        <VBtn type="reset" color="secondary" variant="tonal">
           Reset
         </VBtn>
       </VCol>

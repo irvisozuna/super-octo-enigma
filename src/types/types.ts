@@ -91,4 +91,5 @@ export interface UserProfileMenuItem {
   title?: string;
   to?: { name: string; params?: Record<string, any> };
   badgeProps?: { color: string; content: string };
+  onlyAdmin?: boolean;
 }

@@ -16,6 +16,7 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'; /* PartiallyE
 
 const menuStore = useMenuStore()
 const navItems = computed(() => menuStore.horizontalNavItems)
+const { isAdmin } = useCurrentUser();
 </script>
 
 <template>
@@ -51,6 +52,6 @@ const navItems = computed(() => menuStore.horizontalNavItems)
     </template>
 
     <!-- 👉 Customizer -->
-    <TheCustomizer />
+    <Customizer v-if="isAdmin" />
   </HorizontalNavLayout>
 </template>

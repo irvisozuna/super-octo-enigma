@@ -118,10 +118,7 @@ const moreList = [
           </h5>
 
           <div style="inline-size: 250px;">
-            <AppTextField
-              v-model="search"
-              placeholder="Search Project"
-            />
+            <AppTextField v-model="search" placeholder="Search Project" />
           </div>
         </VCardText>
         <VDivider />
@@ -129,24 +126,12 @@ const moreList = [
 
         <!-- SECTION Datatable -->
 
-        <VDataTable
-          v-model:page="options.page"
-          :headers="projectTableHeaders"
-          :items-per-page="options.itemsPerPage"
-          :items="projects"
-          item-value="name"
-          hide-default-footer
-          :search="search"
-          show-select
-          class="text-no-wrap"
-        >
+        <VDataTable v-model:page="options.page" :headers="projectTableHeaders" :items-per-page="options.itemsPerPage"
+          :items="projects" item-value="name" hide-default-footer :search="search" show-select class="text-no-wrap">
           <!-- projects -->
           <template #item.project="{ item }">
             <div class="d-flex align-center gap-x-3">
-              <VAvatar
-                :size="34"
-                :image="item.logo"
-              />
+              <VAvatar :size="34" :image="item.logo" />
               <div>
                 <h6 class="text-h6 text-no-wrap">
                   {{ item.name }}
@@ -168,18 +153,11 @@ const moreList = [
           <template #item.team="{ item }">
             <div class="d-flex">
               <div class="v-avatar-group">
-                <VAvatar
-                  v-for="(data, index) in item.team"
-                  :key="index"
-                  size="26"
-                >
+                <VAvatar v-for="(data, index) in item.team" :key="index" size="26">
                   <VImg :src="data" />
                 </VAvatar>
-                <VAvatar
-                  v-if="item.extraMembers"
-                  :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'"
-                  :size="26"
-                >
+                <VAvatar v-if="item.extraMembers" :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'"
+                  :size="26">
                   <div class="text-caption text-high-emphasis">
                     +{{ item.extraMembers }}
                   </div>
@@ -192,12 +170,7 @@ const moreList = [
           <template #item.progress="{ item }">
             <div class="d-flex align-center gap-3">
               <div class="flex-grow-1">
-                <VProgressLinear
-                  :height="6"
-                  :model-value="item.progress"
-                  color="primary"
-                  rounded
-                />
+                <VProgressLinear :height="6" :model-value="item.progress" color="primary" rounded />
               </div>
               <div class="text-body-1 text-high-emphasis">
                 {{ item.progress }}%
@@ -212,11 +185,8 @@ const moreList = [
 
           <!-- TODO Refactor this after vuetify provides proper solution for removing default footer -->
           <template #bottom>
-            <TablePagination
-              v-model:page="options.page"
-              :items-per-page="options.itemsPerPage"
-              :total-items="projects.length"
-            />
+            <TablePagination v-model:page="options.page" :items-per-page="options.itemsPerPage"
+              :total-items="projects.length" />
           </template>
         </VDataTable>
         <!-- !SECTION -->
@@ -227,18 +197,9 @@ const moreList = [
       <!-- 👉 User Activity timeline -->
       <VCard title="User Activity Timeline">
         <VCardText>
-          <VTimeline
-            side="end"
-            align="start"
-            line-inset="8"
-            truncate-line="start"
-            density="compact"
-          >
+          <VTimeline side="end" align="start" line-inset="8" truncate-line="start" density="compact">
             <!-- SECTION Timeline Item: Flight -->
-            <VTimelineItem
-              dot-color="primary"
-              size="x-small"
-            >
+            <VTimelineItem dot-color="primary" size="x-small">
               <!-- 👉 Header -->
               <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
                 <span class="app-timeline-title">
@@ -253,12 +214,7 @@ const moreList = [
               </div>
 
               <div class="d-inline-flex align-center timeline-chip mt-2">
-                <img
-                  :src="pdf"
-                  height="20"
-                  class="me-2"
-                  alt="img"
-                >
+                <img :src="pdf" height="20" class="me-2" alt="img">
                 <span class="app-timeline-text font-weight-medium">
                   invoice.pdf
                 </span>
@@ -267,10 +223,7 @@ const moreList = [
             <!-- !SECTION -->
 
             <!-- SECTION Timeline Item: Interview Schedule -->
-            <VTimelineItem
-              size="x-small"
-              dot-color="success"
-            >
+            <VTimelineItem size="x-small" dot-color="success">
               <!-- 👉 Header -->
               <div class="d-flex justify-space-between align-center flex-wrap mb-2">
                 <div class="app-timeline-title">
@@ -287,16 +240,12 @@ const moreList = [
               <div class="d-flex justify-space-between align-center flex-wrap">
                 <!-- 👉 Avatar & Personal Info -->
                 <div class="d-flex align-center mt-2">
-                  <VAvatar
-                    size="32"
-                    class="me-2"
-                    :image="avatar1"
-                  />
+                  <VAvatar size="32" class="me-2" :image="avatar1" />
                   <div class="d-flex flex-column">
                     <p class="text-sm font-weight-medium text-medium-emphasis mb-0">
                       Lester McCarthy (Client)
                     </p>
-                    <span class="text-sm">CEO of Pixinvent</span>
+                    <span class="text-sm">CEO of nubik</span>
                   </div>
                 </div>
               </div>
@@ -304,10 +253,7 @@ const moreList = [
             <!-- !SECTION -->
 
             <!-- SECTION Design Review -->
-            <VTimelineItem
-              size="x-small"
-              dot-color="info"
-            >
+            <VTimelineItem size="x-small" dot-color="info">
               <!-- 👉 Header -->
               <div class="d-flex justify-space-between align-center flex-wrap mb-2">
                 <span class="app-timeline-title">
@@ -324,38 +270,26 @@ const moreList = [
               <div class="v-avatar-group demo-avatar-group">
                 <VAvatar :size="40">
                   <VImg :src="avatar1" />
-                  <VTooltip
-                    activator="parent"
-                    location="top"
-                  >
+                  <VTooltip activator="parent" location="top">
                     John Doe
                   </VTooltip>
                 </VAvatar>
 
                 <VAvatar :size="40">
                   <VImg :src="avatar2" />
-                  <VTooltip
-                    activator="parent"
-                    location="top"
-                  >
+                  <VTooltip activator="parent" location="top">
                     Jennie Obrien
                   </VTooltip>
                 </VAvatar>
 
                 <VAvatar :size="40">
                   <VImg :src="avatar3" />
-                  <VTooltip
-                    activator="parent"
-                    location="top"
-                  >
+                  <VTooltip activator="parent" location="top">
                     Peter Harper
                   </VTooltip>
                 </VAvatar>
 
-                <VAvatar
-                  :size="40"
-                  :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'"
-                >
+                <VAvatar :size="40" :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'">
                   +3
                 </VAvatar>
               </div>

@@ -1,25 +1,17 @@
 <script setup lang="ts">
-import avatar1 from '@images/avatars/avatar-1.png'
-import avatar2 from '@images/avatars/avatar-2.png'
-import avatar3 from '@images/avatars/avatar-3.png'
+import avatar1 from '@images/avatars/avatar-1.png';
+import avatar2 from '@images/avatars/avatar-2.png';
+import avatar3 from '@images/avatars/avatar-3.png';
+import pdf from '@images/icons/project-icons/pdf.png'; /* PartiallyEnd: #3632/scriptSetup.vue */
 import pdf from '@images/icons/project-icons/pdf.png'
 </script>
 
 <template>
   <VCard title="Basic Timeline">
     <VCardText>
-      <VTimeline
-        side="end"
-        align="start"
-        line-inset="8"
-        truncate-line="start"
-        density="compact"
-      >
+      <VTimeline side="end" align="start" line-inset="8" truncate-line="start" density="compact">
         <!-- SECTION Timeline Item: Flight -->
-        <VTimelineItem
-          dot-color="primary"
-          size="x-small"
-        >
+        <VTimelineItem dot-color="primary" size="x-small">
           <!-- 👉 Header -->
           <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
             <span class="app-timeline-title">
@@ -34,12 +26,7 @@ import pdf from '@images/icons/project-icons/pdf.png'
           </div>
 
           <div class="d-inline-flex align-center timeline-chip mt-2">
-            <img
-              :src="pdf"
-              height="20"
-              class="me-2"
-              alt="img"
-            >
+            <img :src="pdf" height="20" class="me-2" alt="img">
             <span class="app-timeline-text font-weight-medium">
               invoice.pdf
             </span>
@@ -48,10 +35,7 @@ import pdf from '@images/icons/project-icons/pdf.png'
         <!-- !SECTION -->
 
         <!-- SECTION Timeline Item: Interview Schedule -->
-        <VTimelineItem
-          size="x-small"
-          dot-color="success"
-        >
+        <VTimelineItem size="x-small" dot-color="success">
           <!-- 👉 Header -->
           <div class="d-flex justify-space-between align-center flex-wrap mb-2">
             <div class="app-timeline-title">
@@ -68,16 +52,12 @@ import pdf from '@images/icons/project-icons/pdf.png'
           <div class="d-flex justify-space-between align-center flex-wrap">
             <!-- 👉 Avatar & Personal Info -->
             <div class="d-flex align-center mt-2">
-              <VAvatar
-                size="32"
-                class="me-2"
-                :image="avatar1"
-              />
+              <VAvatar size="32" class="me-2" :image="avatar1" />
               <div class="d-flex flex-column">
                 <p class="text-sm font-weight-medium text-medium-emphasis mb-0">
                   Lester McCarthy (Client)
                 </p>
-                <span class="text-sm">CEO of Pixinvent</span>
+                <span class="text-sm">CEO of nubik</span>
               </div>
             </div>
           </div>
@@ -85,10 +65,7 @@ import pdf from '@images/icons/project-icons/pdf.png'
         <!-- !SECTION -->
 
         <!-- SECTION Design Review -->
-        <VTimelineItem
-          size="x-small"
-          dot-color="info"
-        >
+        <VTimelineItem size="x-small" dot-color="info">
           <!-- 👉 Header -->
           <div class="d-flex justify-space-between align-center flex-wrap mb-2">
             <span class="app-timeline-title">
@@ -105,38 +82,26 @@ import pdf from '@images/icons/project-icons/pdf.png'
           <div class="v-avatar-group demo-avatar-group">
             <VAvatar :size="40">
               <VImg :src="avatar1" />
-              <VTooltip
-                activator="parent"
-                location="top"
-              >
+              <VTooltip activator="parent" location="top">
                 John Doe
               </VTooltip>
             </VAvatar>
 
             <VAvatar :size="40">
               <VImg :src="avatar2" />
-              <VTooltip
-                activator="parent"
-                location="top"
-              >
+              <VTooltip activator="parent" location="top">
                 Jennie Obrien
               </VTooltip>
             </VAvatar>
 
             <VAvatar :size="40">
               <VImg :src="avatar3" />
-              <VTooltip
-                activator="parent"
-                location="top"
-              >
+              <VTooltip activator="parent" location="top">
                 Peter Harper
               </VTooltip>
             </VAvatar>
 
-            <VAvatar
-              :size="40"
-              :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'"
-            >
+            <VAvatar :size="40" :color="$vuetify.theme.current.dark ? '#373b50' : '#eeedf0'">
               +3
             </VAvatar>
           </div>

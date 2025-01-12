@@ -52,15 +52,15 @@ const socialAccounts = ref([
   {
     img: twitter,
     title: 'Twitter',
-    link: 'https://twitter.com/pixinvents',
-    username: '@Pixinvent',
+    link: 'https://twitter.com/nubiks',
+    username: '@nubik',
     connected: true,
   },
   {
     img: linkedin,
     title: 'LinkedIn',
-    link: 'https://www.linkedin.com/company/pixinvent',
-    username: '@Pixinvent',
+    link: 'https://www.linkedin.com/company/nubik',
+    username: '@nubik',
     connected: true,
   },
   {

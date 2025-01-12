@@ -61,7 +61,7 @@ const creditCards: CardDetail[] = [
 ]
 
 const currentAddress = {
-  companyName: 'Pixinvent',
+  companyName: 'nubik',
   billingEmail: 'gertrude@gmail.com',
   taxID: 'TAX-875623',
   vatNumber: 'SDF754K77',

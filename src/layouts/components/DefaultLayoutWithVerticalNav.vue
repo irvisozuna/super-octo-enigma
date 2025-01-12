@@ -16,6 +16,7 @@ import NavBarI18n from '@core/components/I18n.vue'
 import { VerticalNavLayout } from '@layouts'
 const menuStore = useMenuStore()
 const navItems = computed(() => menuStore.verticalNavItems)
+const { isAdmin } = useCurrentUser();
 </script>
 
 <template>
@@ -50,6 +51,6 @@ const navItems = computed(() => menuStore.verticalNavItems)
 
     <!-- 👉 Customizer -->
     <!-- <TheCustomizer /> -->
-    <Customizer />
+    <Customizer v-if="isAdmin" />
   </VerticalNavLayout>
 </template>

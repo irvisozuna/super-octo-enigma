@@ -397,12 +397,12 @@ export const iconOnly = {
 export const link = {
   ts: `<template>
   <div class="demo-space-x">
-    <VBtn href="https://pixinvent.com/">
+    <VBtn href="https://nubik.com/">
       String Literal
     </VBtn>
 
     <VBtn
-      href="https://pixinvent.com/"
+      href="https://nubik.com/"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -413,12 +413,12 @@ export const link = {
 `,
   js: `<template>
   <div class="demo-space-x">
-    <VBtn href="https://pixinvent.com/">
+    <VBtn href="https://nubik.com/">
       String Literal
     </VBtn>
 
     <VBtn
-      href="https://pixinvent.com/"
+      href="https://nubik.com/"
       target="_blank"
       rel="noopener noreferrer"
     >

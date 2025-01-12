@@ -86,11 +86,8 @@ const membersList: Member[] = [
 </script>
 
 <template>
-  <VDialog
-    :model-value="props.isDialogVisible"
-    :width="$vuetify.display.smAndDown ? 'auto' : 900"
-    @update:model-value="dialogVisibleUpdate"
-  >
+  <VDialog :model-value="props.isDialogVisible" :width="$vuetify.display.smAndDown ? 'auto' : 900"
+    @update:model-value="dialogVisibleUpdate">
     <!-- 👉 Dialog close btn -->
     <DialogCloseBtn @click="$emit('update:isDialogVisible', false)" />
 
@@ -103,20 +100,12 @@ const membersList: Member[] = [
           Share project with a team members
         </p>
 
-        <AppAutocomplete
-          label="Add Members"
-          :items="membersList"
-          item-title="name"
-          item-value="name"
-          placeholder="Add project members..."
-        >
+        <AppAutocomplete label="Add Members" :items="membersList" item-title="name" item-value="name"
+          placeholder="Add project members...">
           <template #item="{ props: listItemProp, item }">
             <VListItem v-bind="listItemProp">
               <template #prepend>
-                <VAvatar
-                  :image="item.raw.avatar"
-                  size="30"
-                />
+                <VAvatar :image="item.raw.avatar" size="30" />
               </template>
             </VListItem>
           </template>
@@ -127,10 +116,7 @@ const membersList: Member[] = [
         </h5>
 
         <VList class="card-list">
-          <VListItem
-            v-for="member in membersList"
-            :key="member.name"
-          >
+          <VListItem v-for="member in membersList" :key="member.name">
             <template #prepend>
               <VAvatar :image="member.avatar" />
             </template>
@@ -143,21 +129,14 @@ const membersList: Member[] = [
             </VListItemSubtitle>
 
             <template #append>
-              <VBtn
-                variant="text"
-                color="secondary"
-                :icon="$vuetify.display.xs"
-              >
+              <VBtn variant="text" color="secondary" :icon="$vuetify.display.xs">
                 <span class="d-none d-sm-block me-1">{{ member.permission }}</span>
                 <VIcon icon="tabler-chevron-down" />
 
                 <VMenu activator="parent">
                   <VList :selected="[member.permission]">
-                    <VListItem
-                      v-for="(item, index) in ['Owner', 'Can Edit', 'Can Comment', 'Can View']"
-                      :key="index"
-                      :value="item"
-                    >
+                    <VListItem v-for="(item, index) in ['Owner', 'Can Edit', 'Can Comment', 'Can View']" :key="index"
+                      :value="item">
                       <VListItemTitle>{{ item }}</VListItemTitle>
                     </VListItem>
                   </VList>
@@ -169,18 +148,11 @@ const membersList: Member[] = [
 
         <div class="d-flex align-center justify-center justify-sm-space-between flex-wrap gap-3 mt-6">
           <h6 class="text-h6 font-weight-medium d-flex align-start">
-            <VIcon
-              icon="tabler-users"
-              class="me-2"
-              size="20"
-            />
-            <div>Public to Vuexy - Pixinvent</div>
+            <VIcon icon="tabler-users" class="me-2" size="20" />
+            <div>Public to nubik - nubik</div>
           </h6>
 
-          <VBtn
-            class="text-capitalize"
-            prepend-icon="tabler-link"
-          >
+          <VBtn class="text-capitalize" prepend-icon="tabler-link">
             Copy Project Link
           </VBtn>
         </div>

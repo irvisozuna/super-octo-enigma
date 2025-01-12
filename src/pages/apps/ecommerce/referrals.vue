@@ -79,13 +79,7 @@ const resolveStatus = (status: string) => {
     <!-- 👉 Header -->
     <VRow class="match-height">
       <!-- 👉 Widgets -->
-      <VCol
-        v-for="(data, index) in widgetData"
-        :key="index"
-        cols="12"
-        md="3"
-        sm="6"
-      >
+      <VCol v-for="(data, index) in widgetData" :key="index" cols="12" md="3" sm="6">
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center">
@@ -97,11 +91,7 @@ const resolveStatus = (status: string) => {
                   {{ data.title }}
                 </div>
               </div>
-              <VAvatar
-                size="40"
-                variant="tonal"
-                :color="data.color"
-              >
+              <VAvatar size="40" variant="tonal" :color="data.color">
                 <VIcon :icon="data.icon" />
               </VAvatar>
             </div>
@@ -110,10 +100,7 @@ const resolveStatus = (status: string) => {
       </VCol>
 
       <!-- 👉 Icon Steps -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardItem>
             <VCardTitle class="mb-1">
@@ -125,18 +112,10 @@ const resolveStatus = (status: string) => {
           </VCardItem>
           <VCardText>
             <div class="d-flex flex-column flex-sm-row gap-6 justify-sm-space-between align-center">
-              <div
-                v-for="(step, index) in stepsData"
-                :key="index"
-                class="d-flex flex-column align-center gap-y-2"
-                style="max-inline-size: 185px;"
-              >
+              <div v-for="(step, index) in stepsData" :key="index" class="d-flex flex-column align-center gap-y-2"
+                style="max-inline-size: 185px;">
                 <div class="icon-container">
-                  <VIcon
-                    :icon="step.icon"
-                    color="primary"
-                    size="36"
-                  />
+                  <VIcon :icon="step.icon" color="primary" size="36" />
                 </div>
                 <div class="text-body-1 text-wrap text-center">
                   {{ step.desc }}
@@ -151,10 +130,7 @@ const resolveStatus = (status: string) => {
       </VCol>
 
       <!-- 👉 Invite -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardText>
             <div class="mb-5">
@@ -162,10 +138,7 @@ const resolveStatus = (status: string) => {
                 Invite your friends
               </h5>
               <div class="d-flex align-center flex-wrap gap-4 flex-wrap">
-                <AppTextField
-                  label="Enter friend’s email address and invite them"
-                  placeholder="Email Address"
-                />
+                <AppTextField label="Enter friend’s email address and invite them" placeholder="Email Address" />
                 <VBtn class="align-self-end">
                   Submit
                 </VBtn>
@@ -177,31 +150,14 @@ const resolveStatus = (status: string) => {
                 Share the referral link
               </h5>
               <div class="d-flex gap-4 align-center flex-wrap">
-                <AppTextField
-                  label="Share referral link in social media"
-                  placeholder="pixinvent.com/?ref=6478"
-                />
+                <AppTextField label="Share referral link in social media" placeholder="nubik.com/?ref=6478" />
                 <div class="d-flex align-self-end gap-x-2">
-                  <VBtn
-                    icon
-                    class="rounded"
-                    color="#3B5998"
-                  >
-                    <VIcon
-                      color="white"
-                      icon="tabler-brand-facebook"
-                    />
+                  <VBtn icon class="rounded" color="#3B5998">
+                    <VIcon color="white" icon="tabler-brand-facebook" />
                   </VBtn>
 
-                  <VBtn
-                    icon
-                    class="rounded"
-                    color="#55ACEE"
-                  >
-                    <VIcon
-                      color="white"
-                      icon="tabler-brand-twitter"
-                    />
+                  <VBtn icon class="rounded" color="#55ACEE">
+                    <VIcon color="white" icon="tabler-brand-twitter" />
                   </VBtn>
                 </div>
               </div>
@@ -221,16 +177,8 @@ const resolveStatus = (status: string) => {
               </h5>
               <div class="d-flex flex-wrap gap-4">
                 <div class="d-flex gap-4 align-center flex-wrap">
-                  <AppSelect
-                    v-model="itemsPerPage"
-                    :items="[10, 25, 50, 100]"
-                    style="inline-size: 100px;"
-                  />
-                  <VBtn
-                    prepend-icon="tabler-upload"
-                    color="default"
-                    variant="tonal"
-                  >
+                  <AppSelect v-model="itemsPerPage" :items="[10, 25, 50, 100]" style="inline-size: 100px;" />
+                  <VBtn prepend-icon="tabler-upload" color="default" variant="tonal">
                     Export
                   </VBtn>
                 </div>
@@ -240,34 +188,19 @@ const resolveStatus = (status: string) => {
 
           <VDivider />
 
-          <VDataTableServer
-            v-model:items-per-page="itemsPerPage"
-            v-model:page="page"
-            :items="referrals"
-            :headers="headers"
-            :items-length="totalReferrals"
-            show-select
-            @update:options="updateOptions"
-          >
+          <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:page="page" :items="referrals"
+            :headers="headers" :items-length="totalReferrals" show-select @update:options="updateOptions">
             <template #item.users="{ item }">
               <div class="d-flex align-center gap-x-4">
-                <VAvatar
-                  size="34"
-                  :variant="!item.avatar ? 'tonal' : undefined"
-                  :color="!item.avatar ? resolveAvatarbg(item.status)?.color : undefined"
-                >
-                  <VImg
-                    v-if="item.avatar"
-                    :src="item.avatar"
-                  />
+                <VAvatar size="34" :variant="!item.avatar ? 'tonal' : undefined"
+                  :color="!item.avatar ? resolveAvatarbg(item.status)?.color : undefined">
+                  <VImg v-if="item.avatar" :src="item.avatar" />
                   <span v-else>{{ avatarText(item.user) }}</span>
                 </VAvatar>
                 <div>
                   <div class="font-weight-medium text-high-emphasis">
-                    <RouterLink
-                      :to="{ name: 'apps-ecommerce-customer-details-id', params: { id: 478426 } }"
-                      class="text-link"
-                    >
+                    <RouterLink :to="{ name: 'apps-ecommerce-customer-details-id', params: { id: 478426 } }"
+                      class="text-link">
                       {{ item.user }}
                     </RouterLink>
                   </div>
@@ -283,11 +216,7 @@ const resolveStatus = (status: string) => {
             </template>
 
             <template #item.status="{ item }">
-              <VChip
-                v-bind="resolveStatus(item.status)"
-                label
-                size="small"
-              />
+              <VChip v-bind="resolveStatus(item.status)" label size="small" />
             </template>
 
             <template #item.earning="{ item }">
@@ -298,11 +227,7 @@ const resolveStatus = (status: string) => {
 
             <!-- pagination -->
             <template #bottom>
-              <TablePagination
-                v-model:page="page"
-                :items-per-page="itemsPerPage"
-                :total-items="totalReferrals"
-              />
+              <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalReferrals" />
             </template>
           </VDataTableServer>
         </VCard>

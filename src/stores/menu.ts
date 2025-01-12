@@ -5,7 +5,9 @@ import { defineStore } from 'pinia'
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
-    baseNavItems: [] as VerticalNavItems, // Menú base
+    baseNavItems: [
+      
+    ] as VerticalNavItems, // Menú base
   }),
   getters: {
     // Adaptar el menú base para diseño vertical

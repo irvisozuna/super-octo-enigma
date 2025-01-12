@@ -14,7 +14,7 @@ const userData = {
   id: 110,
   firstName: 'Selena',
   lastName: 'Kyle',
-  company: 'pixinvent',
+  company: 'nubik',
   role: 'Web developer',
   username: 'charwomen1940',
   country: 'United States',

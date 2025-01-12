@@ -9,18 +9,18 @@ import { useStorage } from '@vueuse/core'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { useTheme } from 'vuetify'
 
-  import borderSkin from '@images/customizer-icons/border-light.svg'
+import borderSkin from '@images/customizer-icons/border-light.svg'
 import collapsed from '@images/customizer-icons/collapsed-light.svg'
 import compact from '@images/customizer-icons/compact-light.svg'
 import defaultSkin from '@images/customizer-icons/default-light.svg'
-  import horizontalLight from '@images/customizer-icons/horizontal-light.svg'
-  import ltrSvg from '@images/customizer-icons/ltr-light.svg'
-  import wideSvg from '@images/customizer-icons/wide-light.svg'
+import horizontalLight from '@images/customizer-icons/horizontal-light.svg'
+import ltrSvg from '@images/customizer-icons/ltr-light.svg'
+import wideSvg from '@images/customizer-icons/wide-light.svg'
 
   const isNavDrawerOpen = ref(false)
 
   const configStore = useConfigStore()
-  const { isAdmin } = useCurrentUser();
+
 
   // 👉 Primary Color
   const vuetifyTheme = useTheme()
@@ -297,10 +297,9 @@ import defaultSkin from '@images/customizer-icons/default-light.svg'
 </script>
 
 <template>
-  <div class="d-lg-block d-none" v-if="isAdmin">
+  <div class="d-lg-block d-none">
     <VBtn icon class="app-customizer-toggler rounded-s-lg rounded-0" style="z-index: 1001;"
       @click="isNavDrawerOpen = true">
-      {{ isAdmin }} dsfs
       <VIcon size="22" icon="tabler-settings" />
     </VBtn>
 

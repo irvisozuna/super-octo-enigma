@@ -49,19 +49,10 @@ const earnings = [
         Timeline with icons
       </h5>
     </div>
-    <VTimeline
-      align="start"
-      line-inset="19"
-      truncate-line="start"
-      justify="center"
-      :density="$vuetify.display.smAndDown ? 'compact' : 'default'"
-      class="mt-4"
-    >
+    <VTimeline align="start" line-inset="19" truncate-line="start" justify="center"
+      :density="$vuetify.display.smAndDown ? 'compact' : 'default'" class="mt-4">
       <!-- SECTION Timeline Item: Document -->
-      <VTimelineItem
-        fill-dot
-        size="small"
-      >
+      <VTimelineItem fill-dot size="small">
         <template #opposite>
           <span class="app-timeline-meta">
             2 month's ago
@@ -69,35 +60,25 @@ const earnings = [
         </template>
         <template #icon>
           <div class="v-timeline-avatar-wrapper rounded-circle">
-            <VAvatar
-              size="32"
-              color="error"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-file"
-                size="20"
-              />
+            <VAvatar size="32" color="error" variant="tonal">
+              <VIcon icon="tabler-file" size="20" />
             </VAvatar>
           </div>
         </template>
         <!-- 👉 Header -->
         <VCard class="mb-10 mt-n4">
           <VCardItem class="pb-4">
-            <VCardTitle>You've uploaded doc pdf to the Pixinvent project</VCardTitle>
+            <VCardTitle>You've uploaded doc pdf to the nubik project</VCardTitle>
           </VCardItem>
           <VCardText>
             <!-- 👉 Content -->
             <p class="app-timeline-text mb-3">
-              he process of recording the key project details and producing the documents that are required to implement it successfully. Simply put, it's an umbrella term which includes all the documents created over the course of the project.
+              he process of recording the key project details and producing the documents that are required to implement
+              it successfully. Simply put, it's an umbrella term which includes all the documents created over the
+              course of the project.
             </p>
             <div class="d-inline-flex align-items-center timeline-chip">
-              <img
-                :src="pdf"
-                height="20"
-                class="me-2"
-                alt="img"
-              >
+              <img :src="pdf" height="20" class="me-2" alt="img">
               <span class="app-timeline-text font-weight-medium">
                 documentation.pdf
               </span>
@@ -107,10 +88,7 @@ const earnings = [
       </VTimelineItem>
       <!-- !SECTION -->
       <!-- SECTION Timeline Item: Image Album -->
-      <VTimelineItem
-        fill-dot
-        size="small"
-      >
+      <VTimelineItem fill-dot size="small">
         <template #opposite>
           <span class="app-timeline-meta">
             24 day's ago
@@ -118,15 +96,8 @@ const earnings = [
         </template>
         <template #icon>
           <div class="v-timeline-avatar-wrapper rounded-circle">
-            <VAvatar
-              size="32"
-              color="success"
-              variant="tonal"
-            >
-              <VIcon
-                size="20"
-                icon="tabler-photo"
-              />
+            <VAvatar size="32" color="success" variant="tonal">
+              <VIcon size="20" icon="tabler-photo" />
             </VAvatar>
           </div>
         </template>
@@ -136,13 +107,11 @@ const earnings = [
           </VCardItem>
           <VCardText>
             <p class="mb-3">
-              In the Select Image for Project dialog box, choose one of the following: Under the Upload New Image section
+              In the Select Image for Project dialog box, choose one of the following: Under the Upload New Image
+              section
             </p>
             <div class="d-flex gap-4 flex-wrap">
-              <template
-                v-for="(img, i) in albumImages"
-                :key="i"
-              >
+              <template v-for="(img, i) in albumImages" :key="i">
                 <VImg :src="img" />
               </template>
             </div>
@@ -151,10 +120,7 @@ const earnings = [
       </VTimelineItem>
       <!-- !SECTION -->
       <!-- SECTION Timeline Item: Review -->
-      <VTimelineItem
-        fill-dot
-        size="small"
-      >
+      <VTimelineItem fill-dot size="small">
         <template #opposite>
           <span class="app-timeline-meta">
             6 day's ago
@@ -162,32 +128,21 @@ const earnings = [
         </template>
         <template #icon>
           <div class="v-timeline-avatar-wrapper rounded-circle">
-            <VAvatar
-              size="32"
-              color="warning"
-              variant="tonal"
-            >
-              <VIcon
-                size="20"
-                icon="tabler-star"
-              />
+            <VAvatar size="32" color="warning" variant="tonal">
+              <VIcon size="20" icon="tabler-star" />
             </VAvatar>
           </div>
         </template>
         <VCard class="mb-10 mt-n4">
           <VCardItem class="pb-4">
             <VCardTitle>
-              Loretta write a review on Pixinvent
+              Loretta write a review on nubik
             </VCardTitle>
           </VCardItem>
           <VCardText>
             <div>
               <div class="d-flex align-center mb-3">
-                <VAvatar
-                  size="38"
-                  class="me-4"
-                  :image="avatar8"
-                />
+                <VAvatar size="38" class="me-4" :image="avatar8" />
                 <div>
                   <h6 class="text-h6">
                     Loretta Moore
@@ -198,27 +153,19 @@ const earnings = [
                 </div>
               </div>
               <div class="d-flex align-center justify-space-between flex-wrap mb-3">
-                <VRating
-                  :model-value="5"
-                  class="timeline-rating"
-                />
-                <VChip
-                  color="success"
-                  size="small"
-                  label
-                >
+                <VRating :model-value="5" class="timeline-rating" />
+                <VChip color="success" size="small" label>
                   <template #prepend>
-                    <VAvatar
-                      start
-                      :image="avatar8"
-                      size="16"
-                    />
+                    <VAvatar start :image="avatar8" size="16" />
                   </template>
                   VERIFIED BUYER
                 </VChip>
               </div>
               <div class="text-body-1">
-                I wish I could select more than one main reason for rating this. I love how they constantly work on to make the template better. I am so thankful for this. Also, in the past, they had responded well to my tickets. Thank you for this great theme, for such an amazing support, for the better updates. I wish I could rate this for so many times. I highly recommend this template!
+                I wish I could select more than one main reason for rating this. I love how they constantly work on to
+                make the template better. I am so thankful for this. Also, in the past, they had responded well to my
+                tickets. Thank you for this great theme, for such an amazing support, for the better updates. I wish I
+                could rate this for so many times. I highly recommend this template!
               </div>
             </div>
           </VCardText>
@@ -226,10 +173,7 @@ const earnings = [
       </VTimelineItem>
       <!-- !SECTION -->
       <!-- SECTION Timeline Item: Earning Report -->
-      <VTimelineItem
-        fill-dot
-        size="small"
-      >
+      <VTimelineItem fill-dot size="small">
         <template #opposite>
           <span class="app-timeline-meta">
             2 day's ago
@@ -237,15 +181,8 @@ const earnings = [
         </template>
         <template #icon>
           <div class="v-timeline-avatar-wrapper rounded-circle">
-            <VAvatar
-              size="32"
-              color="info"
-              variant="tonal"
-            >
-              <VIcon
-                size="20"
-                icon="tabler-chart-pie"
-              />
+            <VAvatar size="32" color="info" variant="tonal">
+              <VIcon size="20" icon="tabler-chart-pie" />
             </VAvatar>
           </div>
         </template>
@@ -260,10 +197,7 @@ const earnings = [
                   $24,895
                 </h4>
                 <span class="text-success d-flex">
-                  <VIcon
-                    size="24"
-                    icon="tabler-caret-up-filled"
-                  />
+                  <VIcon size="24" icon="tabler-caret-up-filled" />
                   <div class="align-self-center text-body-2 font-weight-medium text-success">10%</div>
                 </span>
               </div>
@@ -272,15 +206,9 @@ const earnings = [
               </div>
             </div>
             <VList class="card-list">
-              <VListItem
-                v-for="earning in earnings"
-                :key="earning.title"
-              >
+              <VListItem v-for="earning in earnings" :key="earning.title">
                 <template #prepend>
-                  <VAvatar
-                    rounded
-                    :image="earning.avatar"
-                  />
+                  <VAvatar rounded :image="earning.avatar" />
                 </template>
                 <VListItemTitle>
                   <div class="text-body-1 font-weight-medium text-high-emphasis">
@@ -297,11 +225,7 @@ const earnings = [
                     <h6 class="text-h6 mb-2">
                       {{ earning.amount }}
                     </h6>
-                    <VProgressLinear
-                      :color="earning.progress"
-                      model-value="80"
-                      height="4"
-                    />
+                    <VProgressLinear :color="earning.progress" model-value="80" height="4" />
                   </div>
                 </template>
               </VListItem>
@@ -311,21 +235,11 @@ const earnings = [
       </VTimelineItem>
       <!-- !SECTION -->
       <!-- SECTION Timeline Item: Progress Report -->
-      <VTimelineItem
-        fill-dot
-        size="small"
-      >
+      <VTimelineItem fill-dot size="small">
         <template #icon>
           <div class="v-timeline-avatar-wrapper rounded-circle">
-            <VAvatar
-              size="32"
-              color="primary"
-              variant="tonal"
-            >
-              <VIcon
-                size="18"
-                icon="tabler-folder"
-              />
+            <VAvatar size="32" color="primary" variant="tonal">
+              <VIcon size="18" icon="tabler-folder" />
             </VAvatar>
           </div>
         </template>
@@ -340,25 +254,18 @@ const earnings = [
           </VCardItem>
           <VCardText>
             <p class="mb-3">
-              The structure and process are defined in the project organization considering the attainment of the corporate objectives and therefore also project objectives. The components of the project process are
+              The structure and process are defined in the project organization considering the attainment of the
+              corporate objectives and therefore also project objectives. The components of the project process are
             </p>
             <div class="d-inline-flex align-items-center timeline-chip mb-3">
-              <img
-                :src="xls"
-                height="20"
-                class="me-2"
-                alt="img"
-              >
+              <img :src="xls" height="20" class="me-2" alt="img">
               <span class="app-timeline-text font-weight-medium">
                 progress-report.xls
               </span>
             </div>
             <div class="d-flex gap-2 align-center">
               <div class="flex-grow-1">
-                <VProgressLinear
-                  :model-value="34"
-                  color="primary"
-                />
+                <VProgressLinear :model-value="34" color="primary" />
               </div>
               <div class="text-body-2 font-weight-medium">
                 34%

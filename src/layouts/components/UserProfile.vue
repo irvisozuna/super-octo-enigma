@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { UserProfileMenuItem } from '@/types/types'
-import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+import { UserProfileMenuItem } from '@/types/types';
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
 const router = useRouter()
 const ability = useAbility()
+const { isAdmin } = useCurrentUser();
 
 // TODO: Get type from backend
 const userData = useCookie<any>('userData')
@@ -29,12 +30,30 @@ const logout = async () => {
 const userProfileList: UserProfileMenuItem[] = [
   { type: 'divider' },
   { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
+  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } }, onlyAdmin: true },
+  { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' }, onlyAdmin: true },
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'pages-pricing' } },
+  { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'pages-pricing' }, onlyAdmin: true },
   { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'pages-faq' } },
 ]
+
+const filteredUserProfileList = computed(() => {
+  const visibleItems = userProfileList.filter(item => {
+    // Filtra elementos según el rol
+    if (item.onlyAdmin && !isAdmin.value) return false;
+    return true;
+  });
+
+  // Remueve divisores innecesarios
+  return visibleItems.filter((item, index) => {
+    const prev = visibleItems[index - 1];
+    const next = visibleItems[index + 1];
+    if (item.type === 'divider' && (!prev || prev.type === 'divider' || !next || next.type === 'divider')) {
+      return false;
+    }
+    return true;
+  });
+});
 </script>
 
 <template>
@@ -71,7 +90,7 @@ const userProfileList: UserProfileMenuItem[] = [
           </VListItem>
 
           <PerfectScrollbar :options="{ wheelPropagation: false }">
-            <template v-for="item in userProfileList" :key="item.title">
+            <template v-for="item in filteredUserProfileList" :key="item.title || item.type">
               <VListItem v-if="item.type === 'navItem'" :to="item.to">
                 <template #prepend>
                   <VIcon :icon="item.icon" size="22" />

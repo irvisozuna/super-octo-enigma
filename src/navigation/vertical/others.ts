@@ -38,13 +38,13 @@ export default [
   },
   {
     title: 'Raise Support',
-    href: 'https://pixinvent.ticksy.com/',
+    href: 'https://nubik.ticksy.com/',
     icon: { icon: 'tabler-headphones' },
     target: '_blank',
   },
   {
     title: 'Documentation',
-    href: 'https://demos.pixinvent.com/vuexy-vuejs-admin-template/documentation/',
+    href: 'https://demos.nubik.com/nubik-vuejs-admin-template/documentation/',
     icon: { icon: 'tabler-file-text' },
     target: '_blank',
   },

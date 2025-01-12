@@ -50,7 +50,7 @@ const resolveStatus = (status: string) => {
 const userData = {
   id: null,
   fullName: orderData.value?.customer,
-  company: 'Pixinvent',
+  company: 'nubik',
   role: 'Web developer',
   username: 'T1940',
   country: 'United States',
