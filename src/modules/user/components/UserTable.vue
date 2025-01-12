@@ -34,7 +34,7 @@ const props = defineProps({
   page: { type: Number, required: true },
   itemsPerPage: { type: Number, required: true },
   loading: { type: Boolean, required: true },
-  itemsPerPageOptions: { type: Array, default: () => [10, 25, 50, 100] },
+  itemsPerPageOptions: { type: Array, default: () => [5, 10, 25, 50, 100] },
   selection: { type: Array, default: () => [] }, // Lista seleccionada
 });
 

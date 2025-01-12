@@ -67,8 +67,9 @@
   "add_new_role": "Agregar Nuevo Rol",
   "add_role": "Agregar Rol",
   "add_role_if_not_exist": "Añadir un nuevo rol,{break} si no existe.",
+  "add user": "Añadir Usuario",
   "addItemDescription": "Crea un nuevo elemento rellenando el formulario.",
-  "addModule": "Añadir Módulo",
+  "addModule": "Añadir {moduleName}",
   "Address": "Dirección",
   "Advance": "Avanzado",
   "Alert": "Alerta",
@@ -407,6 +408,7 @@
     "saveChanges": "Guardar cambios",
     "reset": "Restablecer"
   },
+  "actionsText": "Acciones",
   "twoStep": {
     "title": "Verificación 2factor",
     "notEnabled": "La autenticación de dos factores aún no está habilitada.",
@@ -439,5 +441,9 @@
       "location": "Ubicación",
       "recentActivity": "Actividad Reciente"
     }
-  }
+  },
+  "select role": "Seleccionar Rol",
+  "role": "Rol",
+  "name": "Nombre",
+  "export to": "Exportar a"
 }

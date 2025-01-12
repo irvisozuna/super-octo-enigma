@@ -31,6 +31,7 @@ export interface User {
   lastName: string
   username: string
   wizardStep: number
+  roles: Role[]
 }
 
 export interface Role {
@@ -70,4 +71,24 @@ export interface DialogAction {
   label: string;
   color?: string;
   action: () => void;
+}
+
+export interface ApiOptions {
+  method?: string
+  params?: Record<string, any>
+  body?: any
+  headers?: Record<string, string>
+  responseType?: 'json' | 'blob' | 'text'
+}
+
+
+
+
+
+export interface UserProfileMenuItem {
+  type: 'divider' | 'navItem';
+  icon?: string;
+  title?: string;
+  to?: { name: string; params?: Record<string, any> };
+  badgeProps?: { color: string; content: string };
 }

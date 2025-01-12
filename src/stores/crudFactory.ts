@@ -246,6 +246,67 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     }
 
     /**
+     * Exporta los ítems según el formato especificado, aplicando los filtros 
+     * y respetando la selección de ítems (si la hubiera).
+     *
+     * @param format 'pdf' | 'excel' | 'csv' etc.
+     */
+    async function exportItems(format: string = 'pdf') {
+      loading.value = true;
+      error.value = null;
+
+      try {
+        // Construimos los parámetros a enviar al backend
+        const queryParams: Record<string, any> = {
+          page: page.value,
+          itemsPerPage: itemsPerPage.value,
+          ...filters.value,
+          type: format,
+        };
+
+        // Si hay ítems seleccionados, pasamos sus IDs para que el backend
+        // exporte únicamente esos registros.
+        if (selectedItems.value && selectedItems.value.length > 0) {
+          queryParams.selectedIds = selectedItems.value.map((item: any) => item.id);
+        }
+
+        // Llamada a la API para obtener el archivo. Asegúrate de que rawApi
+        // permita recibir blobs o archivos en binario (responseType: 'blob').
+        const responseData = await rawApi(`${baseEndpoint}/export`, {
+          method: 'GET',
+          params: queryParams,
+          responseType: 'blob', // Depende de la implementación de rawApi
+        });
+
+        // Determina la extensión del archivo según el formato,
+        // o podrías usar un content-type retornado por el backend.
+        let extension = format;
+        if (format === 'excel') {
+          extension = 'xlsx';
+        }
+        // ...Más lógica si tienes otros formatos
+
+        // Creamos un Blob y un link temporal para descargarlo
+        const blob = new Blob([responseData], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `export.${extension}`);
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpieza del link temporal
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+      } catch (err) {
+        // Manejo de error genérico
+        await handleApiError(err, 'crud.exportFailed');
+      } finally {
+        loading.value = false;
+      }
+    }
+    /**
      * Crea un nuevo ítem en el backend y lo sincroniza con IndexedDB.
      * Si estás offline, encola la operación en offlineQueue.
      */
@@ -564,6 +625,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       // actions
       fetchList,
       fetchItem,
+      exportItems,
       createItem,
       updateItem,
       deleteItem,

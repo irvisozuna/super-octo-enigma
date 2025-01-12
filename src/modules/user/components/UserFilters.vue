@@ -8,11 +8,11 @@
       <VCol cols="12" sm="4">
         <api-data-source api-path="company/roles?onlykeyvalue=true" @loaded="(response) => roleOptions = response">
           <template v-slot="{ loading }">
-            <VSelect v-model="filters.role" :items="roleOptions" item-title="name" item-value="id" label="Select Role"
-              variant="outlined" dense clearable chips multiple closable-chips :loading="loading" :disabled="loading"
-              @update:model-value="emitFilters">
+            <VSelect v-model="filters.role" :items="roleOptions" item-title="name" item-value="id"
+              :label="$t('select role')" variant="outlined" dense clearable chips multiple closable-chips
+              :loading="loading" :disabled="loading" @update:model-value="emitFilters">
               <template #prepend-item v-if="loading">
-                <span class="text-secondary text-caption">Loading roles...</span>
+                <span class="text-secondary text-caption">{{ $t('loading') }}</span>
               </template>
             </VSelect>
           </template>

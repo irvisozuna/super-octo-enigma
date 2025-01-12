@@ -4,7 +4,7 @@
       <WidgetCard :widgetData="widgets" v-if="widgets.length > 0" />
     </template>
   </api-data-source>
-  <{{moduleName}}List />
+  <{{moduleName}}List :title="$t('{{moduleNameLower}}s_list')" :description="$t('{{moduleNameLower}}s_list_description')" />
 </template>
 
 <script setup lang="ts">

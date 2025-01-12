@@ -2,7 +2,7 @@
   <VRow v-if="itemData">
     <!-- Bio Panel -->
     <VCol cols="12" md="5" lg="4">
-      <BioPanel :item-data="itemData.profile" />
+      <BioPanel :item-data="itemData" />
     </VCol>
 
     <!-- Tabs -->
@@ -63,8 +63,8 @@ const activeTab = ref(0);
 
 // Tabs predeterminados
 const tabs = ref<Tab[]>([
-  { icon: 'tabler-user', title: 'Bio', component: BioPanel },
-  { icon: 'tabler-settings', title: 'Account', component: AccountTab },
+  // { icon: 'tabler-user', title: 'info', component: BioPanel },
+  { icon: 'tabler-settings', title: 'account', component: AccountTab },
 ]);
 
 // Obtener datos del elemento

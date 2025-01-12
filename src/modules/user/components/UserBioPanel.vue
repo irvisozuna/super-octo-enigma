@@ -2,66 +2,104 @@
   <VCard>
     <VCardText class="text-center pt-12">
       <!-- Avatar -->
-      <VAvatar rounded :size="100" :color="!itemData.avatar_url ? 'primary' : undefined"
-        :variant="!itemData.avatar_url ? 'tonal' : undefined">
-        <VImg v-if="itemData.avatar_url" :src="itemData.avatar_url" />
+      <VAvatar rounded :size="100" :color="!itemData.profile.avatar_url ? 'primary' : undefined"
+        :variant="!itemData.profile.avatar_url ? 'tonal' : undefined">
+        <VImg v-if="itemData.profile.avatar_url" :src="itemData.profile.avatar_url" />
         <span v-else class="text-5xl font-weight-medium">
-          {{ avatarText(itemData.first_name, itemData.last_name) }}
+
+          {{ avatarText(itemData.profile.first_name, itemData.profile.last_name) }}
         </span>
       </VAvatar>
 
       <!-- Name -->
-      <h5 class="text-h5 mt-4">{{ itemData.first_name }} {{ itemData.last_name }}</h5>
+      <h5 class="text-h5 mt-4">{{ itemData.profile.first_name }} {{ itemData.profile.last_name }}</h5>
 
-      <!-- Nickname -->
-      <h6 class="text-subtitle-2 mt-1">({{ itemData.nickname }})</h6>
+      <!-- role -->
+      <h6 class="text-subtitle-2 mt-1">({{ itemData.roles.map(role => role.name).join(', ') }})</h6>
 
       <!-- Bio -->
-      <p class="mt-4">{{ itemData.bio }}</p>
+      <p class="mt-4">{{ itemData.profile.bio }}</p>
 
       <!-- Role -->
       <VChip v-if="itemData.preferences && itemData.preferences.theme_preference" label
         :color="resolveUserRoleVariant(itemData.preferences.theme_preference).color" size="small" class="mt-4">
         {{ t('theme_preference', { theme: itemData.preferences.theme_preference }) }}
       </VChip>
-    </VCardText>
+      <!-- 👉 Details -->
+      <h5 class="text-h5">
+        Details
+      </h5>
 
-    <VCardText>
-      <!-- Additional Information -->
-      <VList>
+      <VDivider class="my-4" />
+
+      <!-- 👉 User Details list -->
+      <VList class="card-list mt-2">
+
         <VListItem>
           <VListItemTitle>
-            <strong>{{ t('email') }}:</strong> {{ itemData.secondary_email }}
+            <span class="text-h6">
+              Email:
+            </span>
+            <span class="text-body-1">
+              {{ itemData.email }}
+            </span>
           </VListItemTitle>
         </VListItem>
+
+        <!-- <VListItem>
+          <VListItemTitle>
+            <h6 class="text-h6">
+              Status:
+              <div class="d-inline-block text-body-1 text-capitalize">
+                {{ props.userData.status }}
+              </div>
+            </h6>
+          </VListItemTitle>
+        </VListItem> -->
+
+
+
         <VListItem>
           <VListItemTitle>
-            <strong>{{ t('phone') }}:</strong> {{ itemData.phone }}
+            <h6 class="text-h6">
+              {{ $t('tax_id') }}:
+              <div class="d-inline-block text-body-1">
+                {{ itemData.profile.taxId || 'N/A' }}
+              </div>
+            </h6>
           </VListItemTitle>
         </VListItem>
+
         <VListItem>
           <VListItemTitle>
-            <strong>{{ t('address') }}:</strong> {{ itemData.address_line }}, {{ itemData.city }}, {{ itemData.state }},
-            {{ itemData.country }}
+            <h6 class="text-h6">
+              Contact:
+              <div class="d-inline-block text-body-1">
+                <!-- {{ props.userData.contact }} -->
+              </div>
+            </h6>
           </VListItemTitle>
         </VListItem>
-        <VListItem v-if="itemData.social_links">
+
+        <VListItem>
           <VListItemTitle>
-            <strong>{{ t('social_links') }}:</strong>
-            <ul>
-              <li v-if="itemData.social_links.website_url">
-                <a :href="itemData.social_links.website_url" target="_blank">Website</a>
-              </li>
-              <li v-if="itemData.social_links.facebook_url">
-                <a :href="itemData.social_links.facebook_url" target="_blank">Facebook</a>
-              </li>
-              <li v-if="itemData.social_links.linkedin_url">
-                <a :href="itemData.social_links.linkedin_url" target="_blank">LinkedIn</a>
-              </li>
-              <li v-if="itemData.social_links.github_username">
-                <a :href="`https://github.com/${itemData.social_links.github_username}`" target="_blank">GitHub</a>
-              </li>
-            </ul>
+            <h6 class="text-h6">
+              Language:
+              <div class="d-inline-block text-body-1">
+                <!-- {{ props.userData.language }} -->
+              </div>
+            </h6>
+          </VListItemTitle>
+        </VListItem>
+
+        <VListItem>
+          <VListItemTitle>
+            <h6 class="text-h6">
+              Country:
+              <div class="d-inline-block text-body-1">
+                <!-- {{ props.userData.country }} -->
+              </div>
+            </h6>
           </VListItemTitle>
         </VListItem>
       </VList>
@@ -70,33 +108,37 @@
 </template>
 
 <script setup lang="ts">
+import { Role } from '@/types/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
 interface Props {
   itemData: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    nickname: string;
-    bio: string;
-    avatar_url?: string;
-    secondary_email: string;
-    phone: string;
-    address_line: string;
-    city: string;
-    state: string;
-    country: string;
-    preferences: {
-      theme_preference: string;
-    };
-    social_links: {
-      website_url?: string;
-      facebook_url?: string;
-      linkedin_url?: string;
-      github_username?: string;
-    };
+    profile: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      nickname: string;
+      bio: string;
+      avatar_url?: string;
+      secondary_email: string;
+      phone: string;
+      address_line: string;
+      city: string;
+      state: string;
+      country: string;
+      preferences: {
+        theme_preference: string;
+      };
+      social_links: {
+        website_url?: string;
+        facebook_url?: string;
+        linkedin_url?: string;
+        github_username?: string;
+      };
+    },
+    roles: Role[];
   };
 }
 
@@ -112,6 +154,8 @@ const resolveUserRoleVariant = (theme: string) => {
 };
 
 const avatarText = (firstName: string, lastName: string) => {
-  return `Hola`.toUpperCase();
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  const secondInitial = lastName ? lastName.charAt(0).toUpperCase() : firstName.charAt(1).toUpperCase();
+  return `${firstInitial}${secondInitial}`;
 };
 </script>

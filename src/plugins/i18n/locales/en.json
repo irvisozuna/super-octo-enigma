@@ -66,9 +66,10 @@
   "Add": "Add",
   "add_new_role": "Add New Role",
   "add_role": "Add Role",
+  "add user": "add user",
   "add_role_if_not_exist": "Add a new role, {break} if it doesn't exist.",
   "addItemDescription": "Create a new item by filling out the form.",
-  "addModule": "Add Module",
+  "addModule": "Add {moduleName}",
   "Address": "Address",
   "Advance": "Advance",
   "Alert": "Alert",
@@ -402,6 +403,7 @@
     "lowercase": "At least one lowercase character",
     "specialChar": "At least one number, symbol, or whitespace character"
   },
+  "actionsText": "Actions",
   "actions": {
     "saveChanges": "Save changes",
     "reset": "Reset"
@@ -438,5 +440,9 @@
       "location": "Location",
       "recentActivity": "Recent Activity"
     }
-  }
+  },
+  "select role": "Select Role",
+  "role": "Role",
+  "name": "name",
+  "export to": "Exportar a"
 }

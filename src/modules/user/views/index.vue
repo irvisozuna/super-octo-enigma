@@ -4,7 +4,7 @@
       <WidgetCard :widgetData="widgets" v-if="widgets.length > 0" />
     </template>
   </api-data-source>
-  <UserList />
+  <UserList :title="$t('users_list')" :description="$t('users_list_description')" />
 </template>
 
 <script setup lang="ts">

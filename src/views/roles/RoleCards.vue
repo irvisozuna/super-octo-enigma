@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import girlUsingMobile from '@images/pages/girl-using-mobile.png';
+import AddEditRoleDialog from './components/AddEditRoleDialog.vue';
 
 interface Permission {
   name: string
   read: boolean
-  write: boolean
+  update: boolean
   create: boolean,
   delete: boolean
 }

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import navItems from '@/navigation/vertical'
+// import navItems from '@/navigation/vertical'
+import { useMenuStore } from '@/stores/menu'
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -13,6 +14,8 @@ import NavBarI18n from '@core/components/I18n.vue'
 
 // @layouts plugin
 import { VerticalNavLayout } from '@layouts'
+const menuStore = useMenuStore()
+const navItems = computed(() => menuStore.verticalNavItems)
 </script>
 
 <template>

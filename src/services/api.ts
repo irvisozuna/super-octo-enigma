@@ -1,13 +1,39 @@
+/*********************************************************
+ * rawApi.ts
+ * 
+ * Responsable de manejar requests HTTP con las mejores
+ * prácticas para la serialización de parámetros, el manejo
+ * de errores y la descarga de binarios.
+ *********************************************************/
+
+import { ApiOptions } from "@/types/types"
+
+
+
+/**
+ * Función principal para realizar peticiones HTTP.
+ * 
+ * @param url - Ruta parcial o completa al recurso.
+ * @param options - Parámetros de configuración de la petición.
+ * @returns Dependiendo de `responseType`: JSON, Blob, texto, etc.
+ */
 export async function rawApi(
   url: string,
-  { method = 'GET', params = {}, body, headers = {} }: ApiOptions = {},
+  {
+    method = 'GET',
+    params = {},
+    body,
+    headers = {},
+    responseType = 'json', // Por defecto queremos JSON
+  }: ApiOptions = {}
 ) {
-  // Base URL (puedes extraerlo de env variables, etc.)
+  // 1. Construcción de la URL final (base + endpoint)
+  //    Reemplaza con tu lógica para obtener la URL base si no usas import.meta.env.
   let finalUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}${url}`
     : url
 
-  // Manejo básico de query params
+  // 2. Manejo de query params
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null) {
@@ -18,17 +44,21 @@ export async function rawApi(
     finalUrl += `?${query.toString()}`
   }
 
-  const accessToken = useCookie('accessToken').value;
+  // 3. Obtención del token de acceso (si lo hay) desde cookies
+  //    Ajusta la función `useCookie` según tu librería preferida.
+  const accessToken = useCookie('accessToken').value
 
+  // 4. Opciones iniciales del fetch
   const fetchOptions: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', 
       Accept: 'application/json',
-      ...headers,
+      ...headers, // merge con headers adicionales si los hay
     },
   }
 
+  // 5. Si tenemos token, lo añadimos al header
   if (accessToken) {
     fetchOptions.headers = {
       ...fetchOptions.headers,
@@ -36,41 +66,70 @@ export async function rawApi(
     }
   }
 
-  // Serializa body si es objeto
-  if (body && typeof body === 'object') {
+  // 6. Manejo del body:
+  //    - Si es un objeto normal, lo convertimos a JSON.
+  //    - Si es FormData, Blob u otro tipo especial, lo dejamos pasar tal cual.
+  if (body && typeof body === 'object' && !(body instanceof FormData)) {
     fetchOptions.body = JSON.stringify(body)
+  } else {
+    fetchOptions.body = body
   }
 
   try {
+    // 7. Realizamos el fetch
     const response = await fetch(finalUrl, fetchOptions)
 
-    // Intenta parsear el JSON independientemente del status
-    let jsonResponse: any
-    try {
-      jsonResponse = await response.json()
-    } catch (parseError) {
-      jsonResponse = null
-    }
-
-    // Manejo de error en base al status
+    // 8. Validamos si no fue exitoso => parseamos el mensaje de error si se puede
     if (!response.ok) {
+      let errorBody: any = null
+
+      try {
+        // Intentamos leer la respuesta como JSON
+        errorBody = await response.json()
+      } catch (_) {
+        // Si no es JSON, capturamos otro tipo de respuesta (p.ej. texto)
+        try {
+          errorBody = await response.text()
+        } catch (__) {
+          errorBody = null
+        }
+      }
+
       const error = new Error(
-        jsonResponse?.message || `HTTP error! status: ${response.status}`
-      ) as Error & { status?: number; errors?: string[] }
+        errorBody?.message || `HTTP error! status: ${response.status}`
+      ) as Error & {
+        status?: number
+        errors?: string[]
+      }
 
       error.status = response.status
-      error.errors = jsonResponse?.errors || []
+      // Por convención, muchos endpoints devuelven
+      // un array de errors en la propiedad `errors`.
+      error.errors = errorBody?.errors || []
 
       throw error
     }
 
-    // Retorna JSON parseado si no hay errores
-    return jsonResponse
+    // 9. Si la respuesta es exitosa, retornamos en base a `responseType`
+    switch (responseType) {
+      case 'blob': {
+        // Descarga de archivos binarios
+        return await response.blob()
+      }
+      case 'text': {
+        // Respuesta de texto plano
+        return await response.text()
+      }
+      case 'json':
+      default: {
+        // Por defecto, parseamos JSON
+        return await response.json()
+      }
+    }
   } catch (error) {
-    // Manejo de error global: logs, notificaciones, etc.
-    console.error(`[rawApi] Error en ${method} ${url}`, error)
-
-    // Re-lanza el error con el formato esperado
+    // 10. Manejo global de errores (logs, analíticas, etc.)
+    console.error(`[rawApi] Error en ${method} ${finalUrl}`, error)
     throw error
   }
 }
+

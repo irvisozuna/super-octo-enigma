@@ -1,11 +1,9 @@
-import type { VerticalNavItems } from '@layouts/types'
-
-const userMenu: VerticalNavItems = [
+export default [
   {
-    title: 'Userssad',
+    title: 'Users',
     icon: { icon: 'tabler-calendar' },
-    to: 'UsersList'
+    to: 'UsersList',
+    action: 'read',
+    subject: 'users',
   }
 ]
-
-export default userMenu

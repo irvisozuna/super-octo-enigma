@@ -19,11 +19,11 @@
           icon="tabler-chevron-down" />
 
         <!-- Botón para agregar usuario -->
-        <VBtn prepend-icon="tabler-plus" color="primary" @click="openAddDialog">Add User</VBtn>
+        <VBtn prepend-icon="tabler-plus" color="primary" @click="openAddDialog">{{ $t('add user') }}</VBtn>
 
         <!-- Botones para acciones con seleccionados -->
-        <VBtn color="error" v-if="userStore.selectedItems.length > 1" @click="deleteSelected">
-          Eliminar seleccionados
+        <VBtn color="error" v-if="$can('write', 'users') && userStore.selectedItems.length > 1" @click="deleteSelected">
+          {{ $t('delete selected') }}
         </VBtn>
       </div>
     </VCardText>
@@ -40,11 +40,18 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    action: 'read',
+    subject: 'users',
+  },
+})
 import { useUserStore } from '@/modules/user/stores/userStore';
 import debounce from 'lodash/debounce';
 
 
 // Componentes internos
+import { useI18n } from 'vue-i18n';
 import UserFilters from '../components/UserFilters.vue';
 import UserTable from '../components/UserTable.vue';
 import UserAdd from './UserAdd.vue';
@@ -53,16 +60,17 @@ import UserEdit from './UserEdit.vue';
 
 // Composable para manejar diálogos
 const { openDialog, navigateTo } = useAppManager();
+const { t } = useI18n();
 
 // Props para personalizar el título y descripción
 const props = defineProps({
   title: {
     type: String,
-    default: 'User Management',
+    default: 'users management',
   },
   description: {
     type: String,
-    default: 'Manage your users with ease.',
+    default: 'manager your users with ease',
   },
 });
 
@@ -71,23 +79,23 @@ const userStore = useUserStore();
 
 // Headers para la tabla
 const headers = [
-  { title: 'Name', key: 'name' },
-  { title: 'Email', key: 'email' },
-  { title: 'Role', key: 'role' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: t('name'), key: 'name' },
+  { title: t('email'), key: 'email' },
+  { title: t('role'), key: 'role' },
+  { title: t('actionsText'), key: 'actions', sortable: false },
 ];
 
 // Opciones del menú de exportación
 const menuOptions = [
   {
-    text: 'Exportar a Excel',
+    text: t('export to') + ' ' + 'Excel',
     icon: 'tabler-file-spreadsheet',
-    action: () => exportSelected('excel'),
+    action: () => exportItems('excel'),
   },
   {
-    text: 'Exportar a PDF',
+    text: t('export to') + ' ' + 'PDF',
     icon: 'tabler-file-type-pdf',
-    action: () => exportSelected('pdf'),
+    action: () => exportItems('pdf'),
   },
 ];
 
@@ -122,7 +130,7 @@ function deleteSelected() {
 
 
 function openAddDialog() {
-  openDialog(UserAdd, { title: 'Add User' }, { width: '900px', persistent: true }).then((result) => {
+  openDialog(UserAdd, { title: '' }, { width: '900px', persistent: true }).then((result) => {
     if (result === 'submit') {
       userStore.fetchList();
     }
@@ -130,7 +138,7 @@ function openAddDialog() {
 }
 
 function openEditDialog(item: any) {
-  openDialog(UserEdit, { item, title: 'Edit User' }, { width: '800px', persistent: true }).then((result) => {
+  openDialog(UserEdit, { item, title: '' }, { width: '800px', persistent: true }).then((result) => {
     if (result === 'submit') {
       userStore.fetchList();
     }
@@ -142,13 +150,16 @@ function openViewDialog(item: any) {
 }
 
 function openDeleteDialog(item: any) {
-  openDialog(UserDelete, { item, title: 'Delete User' }, { width: '900px', persistent: true }).then((result) => {
+  openDialog(UserDelete, { item, title: '' }, { width: '900px', persistent: true }).then((result) => {
     if (result === 'submit') {
       userStore.fetchList();
     }
   });
 }
 
+function exportItems(type: string) {
+  userStore.exportItems(type);
+}
 // onMounted
 onMounted(() => {
   userStore.fetchList();
