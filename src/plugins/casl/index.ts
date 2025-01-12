@@ -8,7 +8,7 @@ export default function (app: App) {
 
   // Define habilidades globales (por ejemplo, acceso a rutas públicas)
   const globalRules: Rule[] = [
-    { action: 'read', subject: 'Profile' }, // Todos pueden leer el perfil
+    // { action: 'read', subject: 'Profile' }, // Todos pueden leer el perfil
   ];
 
   // Combina las habilidades globales con las habilidades específicas del usuario

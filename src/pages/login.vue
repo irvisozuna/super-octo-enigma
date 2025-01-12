@@ -58,8 +58,10 @@ const login = async () => {
       },
     })
     const { accessToken, userData, userAbilityRules, profile, company } = res.data
-
+    //insert abilities default
     useCookie('userAbilityRules').value = userAbilityRules
+    //insert abilities default
+
     ability.update(userAbilityRules)
 
     useCookie('userData').value = userData
@@ -249,5 +251,5 @@ const onSubmit = () => {
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/page-auth.scss";
+@use "@core/scss/template/pages/page-auth";
 </style>

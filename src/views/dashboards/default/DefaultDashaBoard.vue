@@ -9,6 +9,7 @@ import customCheck from '@images/svg/Check.svg'
 import customLaptop from '@images/svg/laptop.svg'
 import customLightbulb from '@images/svg/lightbulb.svg'
 const { getUserData } = useCurrentUser();
+
 // Donut Chart Colors
 const donutChartColors = {
   donut: {

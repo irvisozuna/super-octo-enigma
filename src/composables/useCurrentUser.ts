@@ -10,8 +10,10 @@ export function useCurrentUser() {
   });
 
   const isAdmin = computed(() => {
-    // Verificamos si entre los roles hay alguno con name === 'admin'
-    return getUserData.value.roles.some((role: { name: string }) => role.name === 'admin');
+    // Verificamos si getUserData tiene valor y si entre los roles hay alguno con name === 'admin'
+    return getUserData.value && getUserData.value.roles 
+      ? getUserData.value.roles.some((role: { name: string }) => role.name === 'admin') 
+      : false;
   });
 
   return {

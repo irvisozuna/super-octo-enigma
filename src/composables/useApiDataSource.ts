@@ -1,56 +1,98 @@
+// useApiDataSource.ts
 import { useApi } from '@/composables/useApi';
 import { computed, ComputedRef, onMounted, ref, watch } from 'vue';
 
-interface ApiDataSourceProps {
+// Interfaces base para diferentes tipos de respuestas
+interface KeyValueOption {
+  id: number | string;
+  name: string;
+  [key: string]: any;
+}
+
+interface ApiDataSourceProps<T = any> {
   apiPath: string;
   queryParams?: Record<string, any>;
   loadOnMount?: boolean;
   firstRecord?: boolean;
+  formatResponse?: (data: any) => T[];
 }
 
-type ApiResponse = Array<Record<string, any>> | Record<string, any>;
-
-export function useApiDataSource(
-  props: ApiDataSourceProps,
-  emit: (event: 'loaded', response: ApiResponse) => void
+export function useApiDataSource<T = any>(
+  props: ApiDataSourceProps<T>,
+  emit: (event: 'loaded', response: T[]) => void
 ) {
-  const { apiPath, queryParams = {}, loadOnMount = true, firstRecord = false } = props;
+  const {
+    apiPath,
+    queryParams = {},
+    loadOnMount = true,
+    firstRecord = false,
+    formatResponse = (data: any) => data
+  } = props;
 
-  const response = ref<ApiResponse>(firstRecord ? {} : []); // Tipado dinámico dependiendo de firstRecord
-  const loading = ref<boolean>(false);
+  const rawResponse = ref<any[]>([]);
+  const loading = ref(false);
+  const error = ref<Error | null>(null);
 
-  // Computed para construir la URL completa
+  // Response computado con formato
+  const response = computed(() => {
+    if (!rawResponse.value) return [];
+    
+    const formattedData = formatResponse(rawResponse.value);
+    return firstRecord && Array.isArray(formattedData) && formattedData.length > 0
+      ? [formattedData[0]]
+      : formattedData;
+  });
+
+  // URL de la API
   const apiUrl: ComputedRef<string> = computed(() => {
     if (!apiPath) return '';
     const queryString = new URLSearchParams(queryParams).toString();
     return queryString ? `${apiPath}?${queryString}` : apiPath;
   });
 
-  // Función para cargar los datos desde la API
   const load = async (): Promise<void> => {
     if (!apiUrl.value) return;
+    
     loading.value = true;
+    error.value = null;
+
     try {
       const { data } = await useApi(apiUrl.value).json();
-      response.value = firstRecord && Array.isArray(data) && data.length ? data[0] : data;
-      emit('loaded', response.value); // Emitir los datos cargados
-    } catch (error) {
-      console.error('[useApiDataSource] Error:', error);
-      response.value = firstRecord ? {} : [];
+      rawResponse.value = Array.isArray(data.value) ? data.value : [data.value];
+      emit('loaded', response.value);
+    } catch (err) {
+      error.value = err instanceof Error ? err : new Error('Unknown error');
+      console.error('[useApiDataSource] Error:', error.value);
+      rawResponse.value = [];
     } finally {
       loading.value = false;
     }
   };
 
-  // Cargar automáticamente si `loadOnMount` es true
+  // Watch para URL
+  watch(
+    () => apiUrl.value,
+    (newUrl, oldUrl) => {
+      if (newUrl && newUrl !== oldUrl) {
+        load();
+      }
+    },
+    { immediate: false }
+  );
+
   onMounted(() => {
     if (loadOnMount) load();
   });
 
-  // Reactividad en la URL
-  watch(apiUrl, () => {
-    if (apiUrl.value) load();
-  });
-
-  return { response, loading, load };
+  return {
+    response,
+    rawResponse,
+    loading,
+    error,
+    load,
+    // Computed helpers para selects
+    isLoading: computed(() => loading.value),
+    hasError: computed(() => error.value !== null),
+    isEmpty: computed(() => response.value.length === 0)
+  };
 }

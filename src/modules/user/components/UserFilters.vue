@@ -6,7 +6,7 @@
     <VRow>
       <!-- 👉 Select Role -->
       <VCol cols="12" sm="4">
-        <api-data-source api-path="company/roles?onlykeyvalue=true" @loaded="(response) => roleOptions = response">
+        <api-data-source api-path="company/roles" :query-params="{ onlykeyvalue: true }" @loaded="roleOptions = $event">
           <template v-slot="{ loading }">
             <VSelect v-model="filters.role" :items="roleOptions" item-title="name" item-value="id"
               :label="$t('select role')" variant="outlined" dense clearable chips multiple closable-chips
@@ -23,21 +23,34 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps, ref } from 'vue';
+interface RoleOption {
+  id: number | string;
+  name: string;
+}
+
+interface Filters {
+  search: string;
+  role: (string | number)[];
+}
 
 const props = defineProps({
   initialFilters: {
-    type: Object,
-    default: () => ({ search: '', role: '' }),
+    type: Object as () => Filters,
+    default: () => ({
+      search: '',
+      role: []
+    }),
   },
 });
 
-const emits = defineEmits(['update:filters']);
+const emit = defineEmits<{
+  'update:filters': [filters: Filters]
+}>();
 
-const roleOptions = ref([]);
-const filters = ref({ ...props.initialFilters });
+const roleOptions = ref<RoleOption[]>([]);
+const filters = ref<Filters>({ ...props.initialFilters });
 
 function emitFilters() {
-  emits('update:filters', { ...filters.value }); // Emitir filtros actualizados al padre
+  emit('update:filters', { ...filters.value });
 }
 </script>

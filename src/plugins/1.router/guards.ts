@@ -57,6 +57,7 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
         return '/'
       }
     }
+    // return 'login'
     
   })
 }
