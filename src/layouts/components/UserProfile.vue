@@ -32,11 +32,11 @@ const logout = async () => {
 const userProfileList: UserProfileMenuItem[] = [
   { type: 'divider' },
   { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } }, onlyAdmin: true },
-  { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' }, onlyAdmin: true },
+  // { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } }, onlyAdmin: true },
+  // { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'profile-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' }, onlyAdmin: true },
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'pages-pricing' }, onlyAdmin: true },
-  { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'pages-faq' } },
+  // { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'profile-account-settings-tab' }, onlyAdmin: true },
+  // { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'profile-account-settings-tab' } },
 ]
 
 const filteredUserProfileList = computed(() => {

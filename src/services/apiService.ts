@@ -17,7 +17,7 @@ const apiService = ofetch.create({
     if (response.status === 401) {
       const authStore = useAuthStore();
       const errorData = await response._data;
-      console.error('Error: jaja', response);
+      console.error('Error: ', response);
       if (errorData.error === 'TokenExpiredError') {
         // Cierra la sesión del usuario
         await authStore.logout();

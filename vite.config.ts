@@ -25,8 +25,6 @@ export default defineConfig({
           .toLowerCase()
       },
       beforeWriteFiles: root => {
-        root.insert('/apps/email/:filter', '/src/pages/apps/email/index.vue')
-        root.insert('/apps/email/:label', '/src/pages/apps/email/index.vue')
       },
     }),
     vue({
@@ -108,13 +106,13 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
-    minify: false, // Desactiva la minimización del código
-    sourcemap: true, // Genera un sourcemap para facilitar la depuración
-    rollupOptions: {
-      output: {
-        manualChunks: undefined, // Evita dividir el código en múltiples archivos
-      },
-    },
+    // minify: false, // Desactiva la minimización del código
+    // sourcemap: true, // Genera un sourcemap para facilitar la depuración
+    // rollupOptions: {
+    //   output: {
+    //     manualChunks: undefined, // Evita dividir el código en múltiples archivos
+    //   },
+    // },
   },
   optimizeDeps: {
     exclude: ['vuetify'],
