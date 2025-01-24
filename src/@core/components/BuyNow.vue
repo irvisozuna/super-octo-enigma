@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 const vm = getCurrentInstance()
 
-const buyNowUrl = ref(vm?.appContext.config.globalProperties.buyNowUrl || 'https://1.envato.market/nubik_admin')
+const buyNowUrl = ref(vm?.appContext.config.globalProperties.buyNowUrl || 'https://1.envato.market/nibuk_admin')
 
 watch(buyNowUrl, val => {
   if (vm)

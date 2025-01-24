@@ -76,7 +76,7 @@ const referAndEarnSteps = [
 
         <VForm class="d-flex align-center flex-wrap gap-4" @submit.prevent="() => { }">
           <AppTextField placeholder="johnDoe@gmail.com"
-            label="Enter your friend's email address and invite them to join nubik 😍" />
+            label="Enter your friend's email address and invite them to join nibuk 😍" />
 
           <VBtn class="align-self-end" type="submit">
             Send
@@ -88,7 +88,7 @@ const referAndEarnSteps = [
         </h5>
 
         <VForm class="d-flex align-center flex-wrap gap-4" @submit.prevent="() => { }">
-          <AppTextField placeholder="http://nubik.link"
+          <AppTextField placeholder="http://nibuk.link"
             label="You can also copy and send it or share it on your social media. 🚀" class="refer-link-input">
             <template #append-inner>
               <VBtn variant="text">

@@ -12,5 +12,5 @@ export const CONFIG = {
 };
 
 // Estas constantes resuelven las rutas absolutas.
-export const STUBS_PATH = path.resolve(__dirname, '../', CONFIG.stubsPath);
-export const MODULES_PATH = path.resolve(__dirname, '../', CONFIG.modulesPath);
+export const STUBS_PATH = path.resolve(__dirname, '../../', CONFIG.stubsPath);
+export const MODULES_PATH = path.resolve(__dirname, '../../', CONFIG.modulesPath);

@@ -273,12 +273,12 @@ const resetPaymentForm = () => {
             <VRow>
               <!-- 👉 Company name -->
               <VCol cols="12" md="6">
-                <AppTextField label="Company Name" placeholder="nubik" />
+                <AppTextField label="Company Name" placeholder="nibuk" />
               </VCol>
 
               <!-- 👉 Billing Email -->
               <VCol cols="12" md="6">
-                <AppTextField label="Billing Email" placeholder="nubik@email.com" />
+                <AppTextField label="Billing Email" placeholder="nibuk@email.com" />
               </VCol>
 
               <!-- 👉 Tax ID -->

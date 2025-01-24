@@ -54,13 +54,13 @@ const socialAccounts = ref([
   {
     logo: twitter,
     name: 'Twitter',
-    links: { username: '@nubik', link: 'https://twitter.com/nubiks' },
+    links: { username: '@nibuk', link: 'https://twitter.com/nibuks' },
     connected: true,
   },
   {
     logo: linkedin,
     name: 'LinkedIn',
-    links: { username: '@nubik', link: 'https://in.linkedin.com/in/nubik-creative-studio-561a4713b' },
+    links: { username: '@nibuk', link: 'https://in.linkedin.com/in/nibuk-creative-studio-561a4713b' },
     connected: true,
   },
   {

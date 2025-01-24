@@ -4,4 +4,5 @@ export const ENDPOINTS = {
   PRODUCTS: '/users',
   ORDERS: '/orders',
   CATEGORIES: '/categories',
+  TEMPLATES: '/templates',
 };

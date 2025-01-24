@@ -183,7 +183,6 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
           itemsPerPage: itemsPerPage.value,
           ...filters.value,
         };
-    
         // Si estás online, consulta al backend
         if (navigator.onLine) {
           const responseData = await rawApi(baseEndpoint, { method: 'GET', params });

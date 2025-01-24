@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { STUBS_PATH } from './generateModule/config.mjs';
+import { STUBS_PATH } from './config.mjs';
 
 /**
  * Convierte una palabra en plural a su forma singular.

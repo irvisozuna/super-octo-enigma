@@ -149,7 +149,7 @@ const membersList: Member[] = [
         <div class="d-flex align-center justify-center justify-sm-space-between flex-wrap gap-3 mt-6">
           <h6 class="text-h6 font-weight-medium d-flex align-start">
             <VIcon icon="tabler-users" class="me-2" size="20" />
-            <div>Public to nubik - nubik</div>
+            <div>Public to nibuk - nibuk</div>
           </h6>
 
           <VBtn class="text-capitalize" prepend-icon="tabler-link">

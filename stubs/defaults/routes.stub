@@ -8,22 +8,22 @@ const {{moduleNameLower}}EditComponent = () => import('./views/{{moduleName}}Edi
 const {{moduleNameLower}}Routes: RouteRecordRaw[] = [
   {
     path: '/{{moduleNameLower}}s',
-    name: '{{moduleName}}sList',
+    name: '{{moduleNameLower}}sList',
     component: {{moduleNameLower}}Component,
   },
   {
     path: '/{{moduleNameLower}}s/:id',
-    name: '{{moduleName}}Detail',
+    name: '{{moduleNameLower}}sDetail',
     component: {{moduleNameLower}}ViewComponent,
   },
   {
     path: '/{{moduleNameLower}}/add',
-    name: '{{moduleName}}Add',
+    name: '{{moduleNameLower}}sAdd',
     component: () => {{moduleNameLower}}AddComponent
   },
   {
     path: '/{{moduleNameLower}}/edit/:id',
-    name: '{{moduleName}}Edit',
+    name: '{{moduleNameLower}}sEdit',
     component: () => {{moduleNameLower}}EditComponent
   }
 ];

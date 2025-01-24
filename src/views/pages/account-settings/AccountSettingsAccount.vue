@@ -6,7 +6,7 @@ const accountData = {
   firstName: 'john',
   lastName: 'Doe',
   email: 'johnDoe@example.com',
-  org: 'nubik',
+  org: 'nibuk',
   phone: '+1 (917) 543-9876',
   address: '123 Main St, New York, NY 10001',
   state: 'New York',
@@ -158,7 +158,7 @@ const currencies = [
 
               <!-- 👉 Organization -->
               <VCol cols="12" md="6">
-                <AppTextField v-model="accountDataLocal.org" label="Organization" placeholder="nubik" />
+                <AppTextField v-model="accountDataLocal.org" label="Organization" placeholder="nibuk" />
               </VCol>
 
               <!-- 👉 Phone -->

@@ -74,7 +74,7 @@ const moreList = [
                 <p class="text-sm font-weight-medium text-medium-emphasis mb-0">
                   Lester McCarthy (Client)
                 </p>
-                <span class="text-sm">CEO of nubik</span>
+                <span class="text-sm">CEO of nibuk</span>
               </div>
             </div>
           </div>

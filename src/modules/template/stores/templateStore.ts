@@ -1,11 +1,11 @@
 import { ENDPOINTS } from '@/services/endpoints';
 import { createCrudStore } from '@/stores/crudFactory';
 import  dbConfig  from '../indexedDbConfig';
-import { {{moduleName}} } from '../types/{{moduleNameLower}}';
+import { Template } from '../types/template';
 
-export const use{{moduleName}}Store = createCrudStore<{{moduleName}}>({
+export const useTemplateStore = createCrudStore<Template>({
   id: dbConfig.tableName,
-  baseEndpoint: ENDPOINTS.{{moduleNameUpper}}S || '{{moduleNameLower}}s',
+  baseEndpoint: ENDPOINTS.TEMPLATES || 'templates',
   transformFetchListResponse(raw) {
     const data = raw?.data ?? [];
     const total = raw?.pagination?.total ?? 0;
@@ -16,5 +16,5 @@ export const use{{moduleName}}Store = createCrudStore<{{moduleName}}>({
   },
 });
 
-const {{moduleNameLower}}Store = use{{moduleName}}Store();
-{{moduleNameLower}}Store.listenToWebSocketEvents(); 
+const templateStore = useTemplateStore();
+templateStore.listenToWebSocketEvents(); 
