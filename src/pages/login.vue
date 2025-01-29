@@ -1,6 +1,5 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
-import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -38,8 +37,8 @@ const errors = ref<Record<string, string | undefined>>({
 const refVForm = ref<VForm>()
 
 const credentials = ref({
-  email: 'prueba@gmail.com',
-  password: '123456',
+  email: 'admin',
+  password: 'Drinker8%..',
 })
 
 const rememberMe = ref(false)
@@ -58,6 +57,11 @@ const login = async () => {
       },
     })
     const { accessToken, userData, userAbilityRules, profile, company } = res.data
+
+    if(res.dolibarrToken !== undefined){
+      useCookie('dolibarrToken').value = res.dolibarrToken 
+    }
+    
     //insert abilities default
     useCookie('userAbilityRules').value = userAbilityRules
     //insert abilities default
@@ -68,6 +72,7 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('profile').value = profile
     useCookie('company').value = company
+    
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
@@ -147,7 +152,7 @@ const onSubmit = () => {
             {{$t('login.Please sign-in to your account and start the adventure')}}
           </p>
         </VCardText>
-        <VCardText>
+        <!-- <VCardText>
           <VAlert
             color="primary"
             variant="tonal"
@@ -159,7 +164,7 @@ const onSubmit = () => {
               Client Email: <strong>client@demo.com</strong> / Pass: <strong>client</strong>
             </p>
           </VAlert>
-        </VCardText>
+        </VCardText> -->
         <VCardText>
           <VForm
             ref="refVForm"
@@ -170,11 +175,11 @@ const onSubmit = () => {
               <VCol cols="12">
                 <AppTextField
                   v-model="credentials.email"
-                  :label="$t('email')"
+                  :label="$t('user')"
                   placeholder="johndoe@email.com"
-                  type="email"
+                  type="text"
                   autofocus
-                  :rules="[requiredValidator, emailValidator]"
+                  :rules="[requiredValidator]"
                   :error-messages="errors.email"
                 />
               </VCol>
@@ -197,12 +202,12 @@ const onSubmit = () => {
                     v-model="rememberMe"
                     :label="$t('login.Remember me')"
                   />
-                  <RouterLink
+                  <!-- <RouterLink
                     class="text-primary ms-2 mb-1"
                     :to="{ name: 'forgot-password' }"
                   >
                     {{$t('login.Forgot password?')}}
-                  </RouterLink>
+                  </RouterLink> -->
                 </div>
 
                 <VBtn
@@ -214,7 +219,7 @@ const onSubmit = () => {
               </VCol>
 
               <!-- create account -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
@@ -225,23 +230,23 @@ const onSubmit = () => {
                 >
                   {{$t('login.Create an account')}}
                 </RouterLink>
-              </VCol>
-              <VCol
+              </VCol> -->
+              <!-- <VCol
                 cols="12"
                 class="d-flex align-center"
               >
                 <VDivider />
                 <span class="mx-4">{{ $t('or')}}</span>
                 <VDivider />
-              </VCol>
+              </VCol> -->
 
               <!-- auth providers -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
                 <AuthProvider />
-              </VCol>
+              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>

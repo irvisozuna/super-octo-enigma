@@ -1,7 +1,7 @@
 import type { ThemeDefinition } from 'vuetify'
 
-export const staticPrimaryColor = '#7367F0'
-export const staticPrimaryDarkenColor = '#675DD8'
+export const staticPrimaryColor = '#2E46F6'
+export const staticPrimaryDarkenColor = '#1A2EB3'
 
 export const staticSecondaryColor = '#FFC107' // Naranja Brillante
 export const staticSecondaryDarkenColor = '#FFA000' // Naranja Oscuro

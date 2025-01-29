@@ -4,14 +4,16 @@ import { breakpointsVuetifyV3 } from '@vueuse/core'
 import { VIcon } from 'vuetify/components/VIcon'
 
 // ❗ Logo SVG must be imported with ?raw suffix
-import logo from '@images/logo.svg?raw'
+// import logo from '@images/logo.svg?raw'
+import logo from '@images/logo-full.png'
 
 import { AppContentLayoutNav, ContentWidth, FooterType, NavbarType } from '@layouts/enums'
 
 export const { themeConfig, layoutConfig } = defineThemeConfig({
   app: {
-    title: 'nibuk',
-    logo: h('div', { innerHTML: logo, style: 'line-height:0; color: rgb(var(--v-global-theme-primary))' }),
+    title: 'aquasoft',
+    // logo: h('div', { innerHTML: logo, style: 'line-height:0; color: rgb(var(--v-global-theme-primary))' }),
+    logo: h('img', { src: logo, alt: 'app-logo' }),
     contentWidth: ContentWidth.Boxed,
     contentLayoutNav: AppContentLayoutNav.Vertical,
     overlayNavFromBreakpoint: breakpointsVuetifyV3.lg - 1, // 1 for matching with vuetify breakpoint. Docs: https://next.vuetifyjs.com/en/features/display-and-platform/
@@ -31,7 +33,7 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
         },
       ],
     },
-    theme: 'system',
+    theme: 'light',
     skin: Skins.Default,
     iconRenderer: VIcon,
   },

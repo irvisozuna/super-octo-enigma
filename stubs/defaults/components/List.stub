@@ -149,7 +149,7 @@ function openDeleteDialog(item: any) {
   });
 }
 function exportItems(type: string) {
-  userStore.exportItems(type);
+  {{moduleNameLower}}Store.exportItems(type);
 }
 
 // onMounted

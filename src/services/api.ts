@@ -52,7 +52,6 @@ export async function rawApi(
   const fetchOptions: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json', 
       Accept: 'application/json',
       ...headers, // merge con headers adicionales si los hay
     },
@@ -69,7 +68,15 @@ export async function rawApi(
   // 6. Manejo del body:
   //    - Si es un objeto normal, lo convertimos a JSON.
   //    - Si es FormData, Blob u otro tipo especial, lo dejamos pasar tal cual.
-  if (body && typeof body === 'object' && !(body instanceof FormData)) {
+  if (body instanceof FormData) {
+    // Cuando es FormData, eliminamos el Content-Type para que fetch lo maneje
+    // y establezca correctamente boundary y multipart/form-data
+    if (fetchOptions.headers && (fetchOptions.headers as Record<string, string>)['Content-Type']) {
+      delete (fetchOptions.headers as Record<string, string>)['Content-Type']
+    }
+    fetchOptions.body = body
+  } else if (body && typeof body === 'object' && !(body instanceof FormData)) {
+    (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json'
     fetchOptions.body = JSON.stringify(body)
   } else {
     fetchOptions.body = body

@@ -7,7 +7,7 @@ export default [
         title: 'Welcome',
         to: 'dashboards-default',
         action: 'read',
-        subject: 'Profile',
+        subject: 'dashboard',
       },
     ]
   },

@@ -83,6 +83,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     // ==========
     // State
     // ==========
+    const item = ref<T | null>(null);
     const items = ref<T[]>([]);
     const total = ref<number>(0);
     const selectedItems = ref<T[]>([]);
@@ -225,7 +226,31 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         loading.value = false;
       }
     }
+    /**
+     * Método genérico para interactuar con un endpoint personalizado.
+     * @param endpoint - Endpoint relativo al baseEndpoint
+     * @param method - Método HTTP (GET, POST, etc.)
+     * @param params - Parámetros de consulta o cuerpo de la solicitud
+     * @returns - Respuesta del servidor
+     */
+    async function customAction(endpoint: string, method = 'GET', params: Record<string, any> = {}) {
+      loading.value = true;
+      error.value = null;
 
+      try {
+        const fullEndpoint = `${baseEndpoint}${endpoint}`;
+        const response = await rawApi(fullEndpoint, {
+          method,
+          ...(method === 'GET' ? { params } : { body: params }),
+        });
+        return response;
+      } catch (err) {
+        await handleApiError(err, 'crud.customActionFailed');
+        throw err;
+      } finally {
+        loading.value = false;
+      }
+    }
     /**
      * Obtiene un ítem individual por su ID.
      */
@@ -309,7 +334,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
      * Crea un nuevo ítem en el backend y lo sincroniza con IndexedDB.
      * Si estás offline, encola la operación en offlineQueue.
      */
-    async function createItem(payload: Partial<T>, endpointSuffix: string = createSuffix) {
+    async function createItem(payload: Partial<T> | FormData, endpointSuffix: string = createSuffix) {
       loading.value = true;
       error.value = null;
       const { showSuccess, showError } = useNotification();
@@ -345,21 +370,37 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
           return offlineItem;
         }
 
+        let bodyToSend: BodyInit;
+        let customHeaders: HeadersInit = {};
+
+        if (payload instanceof FormData) {
+          bodyToSend = payload; // No configuramos "Content-Type", fetch se encarga
+        } else {
+          bodyToSend = JSON.stringify(payload);
+          customHeaders['Content-Type'] = 'application/json';
+        }
+        
         // Conexión online => POST al backend
         const createdItem = await rawApi(`${baseEndpoint}${endpointSuffix}`, {
           method: 'POST',
-          body: payload,
+          body: bodyToSend,
+          headers: customHeaders
         });
 
         // Guardar en IndexedDB
-        const dbTable = db.table<T>(id);
-        await dbTable.add(createdItem);
+        try {
+          const dbTable = db.table<T>(id);
+          await dbTable.put(createdItem);
+        } catch (err) {
+          console.error('Error al guardar en IndexedDB:', err);
+        }
+
 
         // Actualizar estado en memoria
         items.value = [createdItem, ...items.value];
         total.value += 1;
 
-        showSuccess('crud.itemCreated');
+        showSuccess(createdItem.message || 'crud.itemCreated', createdItem.title || 'common.success');
         return createdItem;
       } catch (err) {
         await handleApiError(err, 'crud.itemCreateFailed');
@@ -608,6 +649,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     // ==========
     return {
       // state
+      item,
       items,
       total,
       loading,
@@ -624,6 +666,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       // actions
       fetchList,
       fetchItem,
+      customAction,
       exportItems,
       createItem,
       updateItem,

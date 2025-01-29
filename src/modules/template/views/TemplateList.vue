@@ -150,7 +150,7 @@ function openDeleteDialog(item: any) {
   });
 }
 function exportItems(type: string) {
-  userStore.exportItems(type);
+  templateStore.exportItems(type);
 }
 
 // onMounted

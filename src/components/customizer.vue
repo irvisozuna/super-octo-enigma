@@ -31,7 +31,7 @@ import wideSvg from '@images/customizer-icons/wide-light.svg'
     { main: '#0D9394', darken: '#0C8485' },
     { main: '#FFB400', darken: '#E6A200' },
     { main: '#FF4C51', darken: '#E64449' },
-    { main: '#16B1FF', darken: '#149FE6' },
+    { main: '#2E46F6', darken: '#149FE6' },
   ]
 
   const customPrimaryColor = ref('#663416')
