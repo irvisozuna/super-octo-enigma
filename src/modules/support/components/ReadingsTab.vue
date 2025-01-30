@@ -110,9 +110,17 @@ watch(() => props.activeTab, (newTab) => {
         @update:page="updatePage"
         @update:items-per-page="updateItemsPerPage"
       >
-      <template #consumo="{ item }">
-        {{ item.consumo || 'N/A' }} dsfs
+      <template #Consumo="{ item }">
+        {{ item.Consumo || '0' }} 
       </template>
+      <template #Fecha="{ item }">
+          <div class="">
+            {{ $formatDate(item.Fecha,{ 
+  day: '2-digit', month: '2-digit', year: 'numeric', 
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+}) || 'N/A' }}
+          </div>
+        </template>
       </BaseTable>
 
       <!-- Estado de carga -->

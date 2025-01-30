@@ -446,6 +446,7 @@
   "role": "Rol",
   "name": "Nombre",
   "export to": "Exportar a",
+  "contract_search": "Búsqueda de Contrato",
   "search": {
     "contract": "Contrato",
     "search": "Buscar",
@@ -535,4 +536,11 @@
   "payment_frequency": "Frecuencia de Pago",
   "previous_balance": "Saldo Anterior",
   "advance_type": "Tipo de Anticipo",
+  "type_agreements": "Tipo de Convenios",
+  "description": "Descripción",
+  "reason": "Motivo",
+  "file": "Archivo",
+  "download": "Descargar",
+  "pay_frecuency": "Frecuencia de Pago",
+  "fk_advance_type": "Tipo de Anticipo",
 }

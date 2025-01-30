@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import { onMounted, ref, watch, markRaw } from 'vue';
-import { useRoute } from 'vue-router';
+import { markRaw, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PaymentHistoryTab from '../components/PaymentHistoryTab.vue';
-import BillingHistoryTab from '../components/BillingHistoryTab.vue';
-import ReadingsTab from '../components/ReadingsTab.vue';
-import WorkOrdersTab from '../components/WorkOrdersTab.vue';
-import AgreementsTab from '../components/AgreementsTab.vue';
+import { useRoute } from 'vue-router';
 import AdjustmentsTab from '../components/AdjustmentsTab.vue';
+import AgreementsTab from '../components/AgreementsTab.vue';
+import BillingHistoryTab from '../components/BillingHistoryTab.vue';
 import ContractDetails from '../components/ContractDetails.vue';
 import ContractSearchDialog from '../components/dialog/ContractSearchDialog.vue';
+import PaymentHistoryTab from '../components/PaymentHistoryTab.vue';
+import ReadingsTab from '../components/ReadingsTab.vue';
+import WorkOrdersTab from '../components/WorkOrdersTab.vue';
 
 // Interfaces
 interface Tab {
@@ -123,7 +123,7 @@ onMounted(fetchItemData);
   <VRow>
     <VCol>
       <!-- Card con el buscador -->
-      <AppCardActions :loading="isLoading" title="Buscador de contratos" @refresh="searchContract" no-actions>
+      <AppCardActions :loading="isLoading" :title="$t('contract_search')" @refresh="searchContract" no-actions>
         <VCardText>
           <div class="d-flex justify-center align-center">
             <VTextField

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager';
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
@@ -117,6 +117,14 @@ watch(() => props.activeTab, (newTab) => {
             {{ $formatCurrency(item.consumo) || 'N/A' }}
           </div>
         </template>
+        <template #DATE="{ item }">
+          <div class="text">
+            {{ $formatDate(item.DATE,{ 
+  day: '2-digit', month: '2-digit', year: 'numeric', 
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+}) || 'N/A' }}
+          </div>
+        </template>
         <template #drenaje="{ item }">
           <div class="text-end">
             {{ $formatCurrency(item.drenaje) || 'N/A' }}
@@ -145,6 +153,11 @@ watch(() => props.activeTab, (newTab) => {
         <template #total_concept="{ item }">
           <div class="text-end">
             {{ $formatCurrency(item.total_concept) || 'N/A' }}
+          </div>
+        </template>
+        <template #otros="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.otros) || '0' }}
           </div>
         </template>
       </BaseTable>

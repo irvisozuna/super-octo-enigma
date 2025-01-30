@@ -120,6 +120,9 @@ watch(() => props.activeTab, (newTab) => {
         <template #type_code="{ item }">
           {{ $t(item.type_code) }} 
         </template>
+        <template #datec="{ item }">
+          {{ $formatDate(item.datec)}}
+        </template>
       </BaseTable>
 
       <!-- Estado de carga -->

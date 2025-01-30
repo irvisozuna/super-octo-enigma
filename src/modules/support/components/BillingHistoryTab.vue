@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager';
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
@@ -27,10 +27,10 @@ const props = defineProps({
 
 // Encabezados de la tabla
 const headers = [
+  // { title: t('id lectura'), value: 'ID_LECTURA' },
   { title: t('ref'), value: 'REF' },
   { title: t('period'), value: 'PERIODO' },
   { title: t('billingPeriod'), value: 'FECHA_FACTURACION' },
-  { title: t('date'), value: 'DATE' },
   { title: t('consumo'), value: 'CONSUMO' },
   { title: t('duedate'), value: 'VENCIMIENTO' },
   { title: t('amount'), value: 'MONTO' },
@@ -110,10 +110,24 @@ watch(() => props.activeTab, (newTab) => {
         @update:page="updatePage"
         @update:items-per-page="updateItemsPerPage"
       >
-
+      <template #FECHA_FACTURACION="{ item }">
+          <div class="text-center">
+            {{ new Date(new Date(item.FECHA_FACTURACION)).toLocaleDateString('es-ES') || 'N/A' }}
+          </div>
+        </template>
         <template #MONTO="{ item }">
           <div class="text-end">
             {{ $formatCurrency(item.MONTO) || 'N/A' }}
+          </div>
+        </template>
+        <template #CONSUMO="{ item }">
+          <div class="text-center">
+            {{ item.CONSUMO || '0' }}
+          </div>
+        </template>
+        <template #VENCIMIENTO="{ item }">
+          <div class="text-center">
+            {{ new Date(new Date(item.FECHA_FACTURACION).setDate(new Date(item.FECHA_FACTURACION).getDate() + 10)).toLocaleDateString('es-ES') || 'N/A' }}
           </div>
         </template>
       </BaseTable>

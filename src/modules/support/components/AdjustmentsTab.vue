@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager';
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
@@ -27,16 +27,12 @@ const props = defineProps({
 
 // Encabezados de la tabla
 const headers = [
-  { title: t('billingPeriod'), value: 'billingPeriod' },
-  { title: t('date'), value: 'DATE' },
-  { title: t('consumo'), value: 'consumo' },
-  { title: t('drenaje'), value: 'drenaje' },
-  { title: t('saneamiento'), value: 'saneamiento' },
-  { title: t('recargos'), value: 'recargos' },
-  { title: t('bomberos'), value: 'bomberos' },
-  { title: t('otros'), value: 'otros' },
-  { title: t('total_concept'), value: 'total_concept' },
-  { title: t('totalPaid'), value: 'totalPaid' }
+  { title: t('description'), value: 'label' },
+  { title: t('type'), value: 'adjustment_type' },
+  { title: t('reason'), value: 'adjustment_reason_desc' },
+  { title: t('amount'), value: 'adjustment_amount' },
+  { title: t('date'), value: 'date_creation' },
+  { title: t('file'), value: 'file' }
 ];
 
 // Función para actualizar la página
@@ -112,8 +108,19 @@ watch(() => props.activeTab, (newTab) => {
         @update:page="updatePage"
         @update:items-per-page="updateItemsPerPage"
       >
-      <template #consumo="{ item }">
-        {{ item.consumo || 'N/A' }} dsfs
+      <template #file="{ item }">
+      <VBtn variant="text" v-if="item.file" :href="item.file" target="_blank" color="primary" small>
+        {{ t('download') }}
+      </VBtn>
+      </template>
+      <template #adjustment_amount="{ item }">
+        <div class="text-end">{{ $formatCurrency(item.adjustment_amount) || 'N/A' }}</div>
+      </template>
+      <template #date_creation="{ item }">
+        {{ $formatDate(item.date_creation,{ 
+  day: '2-digit', month: '2-digit', year: 'numeric', 
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+}) || 'N/A' }}
       </template>
       </BaseTable>
 

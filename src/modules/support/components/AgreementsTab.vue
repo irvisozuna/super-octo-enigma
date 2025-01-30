@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager';
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
@@ -28,18 +28,15 @@ const props = defineProps({
 // Encabezados de la tabla
 const headers = [
   { title: t('folio'), value: 'ref' },
-  { title: t('type_agreements'), value: 'fk_type' },
+  { title: t('type_agreement'), value: 'label' },
   { title: t('amount'), value: 'payment_amount' },
   { title: t('advance'), value: 'agreed_balance' },
   { title: t('advance_percentage'), value: 'advance_percentage' },
   { title: t('advance_amount'), value: 'advance_amount' },
-  { title: t('bomberos'), value: 'bomberos' },
-  { title: t('otros'), value: 'otros' },
-  { title: t('total_concept'), value: 'total_concept' },
   { title: t('number_payments'), value: 'number_payments' },
-  { title: t('fk_payment_frequency'), value: 'fk_payment_frequency' },
+  { title: t('pay_frecuency'), value: 'pay_frecuency' },
   { title: t('previous_balance'), value: 'previous_balance' },
-  { title: t('fk_advance_type'), value: 'fk_advance_type' },
+  { title: t('fk_advance_type'), value: 'type' },
 ];
 
 // Función para actualizar la página
@@ -115,8 +112,17 @@ watch(() => props.activeTab, (newTab) => {
         @update:page="updatePage"
         @update:items-per-page="updateItemsPerPage"
       >
-      <template #consumo="{ item }">
-        {{ item.consumo || 'N/A' }} dsfs
+      <template #payment_amount="{ item }">
+        {{ $formatCurrency(item.payment_amount) || '0' }} 
+      </template>
+      <template #agreed_balance="{ item }">
+        {{ $formatCurrency(item.agreed_balance) || '0' }} 
+      </template>
+      <template #advance_amount="{ item }">
+        {{ $formatCurrency(item.advance_amount) || '0' }} 
+      </template>
+      <template #previous_balance="{ item }">
+        {{ $formatCurrency(item.previous_balance) || '0' }} 
       </template>
       </BaseTable>
 
