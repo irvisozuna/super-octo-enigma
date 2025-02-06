@@ -1,8 +1,8 @@
 <template>
   <VCard>
     <VCardTitle>
-      <h4 class="text-h4 mb-1">{{ title }}</h4>
-      <p class="text-body-1 mb-4">{{ description }}</p>
+      <h4 class="text-h4 mb-1">{{ $t('{{moduleNameLower}}.title') }}</h4>
+      <p class="text-body-1 mb-4">{{ $t('{{moduleNameLower}}.description') }}</p>
     </VCardTitle>
 
     <!-- Filtros reutilizables -->
@@ -35,14 +35,18 @@
       :items-per-page="{{moduleNameLower}}Store.itemsPerPage" :loading="{{moduleNameLower}}Store.isLoading" :selection="{{moduleNameLower}}Store.selectedItems"
       @update:selection="val => {{moduleNameLower}}Store.selectedItems = val" @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange" @view="openViewDialog" @edit="openEditDialog"
-      @delete="openDeleteDialog" />
+      @delete="openDeleteDialog" @update:items-update-option="onItemsSortChange" />
   </VCard>
 </template>
 
 <script setup lang="ts">
 import { use{{moduleName}}Store } from '@/modules/{{moduleNameLower}}/stores/{{moduleNameLower}}Store';
 import debounce from 'lodash/debounce';
+import { newOptions } from '@/types/types';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
+const moduleName = '{{moduleNameLower}}';
 
 // Componentes internos
 import {{moduleName}}Filters from '../components/{{moduleName}}Filters.vue';
@@ -71,21 +75,21 @@ const {{moduleNameLower}}Store = use{{moduleName}}Store();
 
 // Headers para la tabla
 const headers = [
-  { title: 'Name', key: 'name' },
-  { title: 'Email', key: 'email' },
-  { title: 'Role', key: 'role' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: t(`${moduleName}.name`), key: 'name' },
+  { title: t(`${moduleName}.email`), key: 'email' },
+  { title: t(`${moduleName}.role`), key: 'role' },
+  { title: t(`${moduleName}.actions`), key: 'actions', sortable: false },
 ];
 
 // Opciones del menú de exportación
 const menuOptions = [
   {
-    text: 'Exportar a Excel',
+    text: t(`export_to`) + ' ' +t(`excel`),
     icon: 'tabler-file-spreadsheet',
     action: () => exportItems('excel'),
   },
   {
-    text: 'Exportar a PDF',
+    text: t(`export_to`) + ' ' +t(`pdf`),
     icon: 'tabler-file-type-pdf',
     action: () => exportItems('pdf'),
   },
@@ -109,6 +113,12 @@ function onPageChange(newPage: number) {
 function onItemsPerPageChange(newItemsPerPage: number) {
   {{moduleNameLower}}Store.itemsPerPage = newItemsPerPage;
   {{moduleNameLower}}Store.fetchList();
+}
+
+function onItemsSortChange(newOptions: newOptions) {
+  templateStore.sortBy = newOptions.sortBy.map(option => option.key);
+  templateStore.sortDesc = newOptions.sortBy.map(option => option.order === 'desc');
+  templateStore.fetchList();
 }
 
 function deleteSelected() {

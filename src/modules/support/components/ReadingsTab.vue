@@ -60,7 +60,7 @@ function onSearchInput() {
 async function fetchData() {
   loading.value = true;
   try {
-    const response = await contractStore.getReadingsByContract(contractStore.item.rowid, pagination.value);
+    const response = await contractStore.getReadingsByContract(contractStore.item.id_account, pagination.value);
     contracts.value = replaceNullWithEmptyString(response.data); // Reemplazar null por ''
     pagination.value = response.pagination;
   } catch (error) {

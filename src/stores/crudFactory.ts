@@ -94,6 +94,8 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     const page = ref(1);
     const itemsPerPage = ref(10);
     const filters = ref<Record<string, any>>({});
+    const sortBy = ref<string[]>([]); // Nombres de las columnas a ordenar
+    const sortDesc = ref<boolean[]>([]); // Orden descendente para cada columna
 
     // ==========
     // Getters
@@ -182,6 +184,8 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         const params = {
           page: page.value,
           itemsPerPage: itemsPerPage.value,
+          sortBy: sortBy.value,
+          sortDesc: sortDesc.value,
           ...filters.value,
         };
         // Si estás online, consulta al backend
@@ -208,7 +212,16 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
               )
             );
           }
-    
+          // Si es necesario, ordena localmente usando sortBy y sortDesc.
+          if (sortBy.value) {
+            localData.sort((a: any, b: any) => {
+              const valueA = a[sortBy.value!];
+              const valueB = b[sortBy.value!];
+              if (valueA < valueB) return sortDesc.value ? 1 : -1;
+              if (valueA > valueB) return sortDesc.value ? -1 : 1;
+              return 0;
+            });
+          }
           items.value = localData;
           total.value = localData.length;
     
@@ -225,6 +238,13 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       } finally {
         loading.value = false;
       }
+    }
+    function updateSorting(newSortBy: string | null, newSortDesc: boolean) {
+      sortBy.value = newSortBy;
+      sortDesc.value = newSortDesc;
+      // Puedes resetear la página a 1 si lo consideras necesario
+      page.value = 1;
+      fetchList();
     }
     /**
      * Método genérico para interactuar con un endpoint personalizado.
@@ -658,6 +678,8 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       itemsPerPage,
       filters,
       selectedItems,
+      sortBy,
+      sortDesc,
 
       // getters
       list,
@@ -665,6 +687,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
 
       // actions
       fetchList,
+      updateSorting,
       fetchItem,
       customAction,
       exportItems,

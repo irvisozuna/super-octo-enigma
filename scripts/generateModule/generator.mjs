@@ -53,7 +53,7 @@ export async function generateModule(moduleName, regenerate = false) {
   }
 
   // Crea subcarpetas base
-  const subfolders = ['views','components', 'composables', 'stores', 'types', 'tests','validations'];
+  const subfolders = ['views','components', 'composables', 'stores', 'types', 'tests','validations','locales'];
   subfolders.forEach((subfolder) => {
     const subfolderPath = path.join(modulePath, subfolder);
     if (!fs.existsSync(subfolderPath)) {
@@ -68,6 +68,8 @@ export async function generateModule(moduleName, regenerate = false) {
     { stub: 'routes.stub',        output: 'routes.ts' },
     { stub: 'index.stub',         output: 'index.ts' },
     { stub: 'menu.stub',         output: 'menu.ts' },
+    { stub: 'es.stub',         output: 'locales/es.json' },
+    { stub: 'en.stub',         output: 'locales/en.json' },
     { stub: 'indexedDbConfig.stub',         output: 'indexedDbConfig.ts' },
     { stub: 'store.stub',         output: `stores/${moduleName.moduleNameLower}Store.ts` },
     { stub: 'type.stub',          output: `types/${moduleName.moduleNameLower}.ts` },

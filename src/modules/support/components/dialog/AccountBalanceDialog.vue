@@ -5,14 +5,17 @@
     </VCardTitle>
     <VCardText>
       <VRow>
-        <VCol cols="12">
+        <VCol cols="12" >
           <!-- Mostrar un spinner mientras carga el PDF -->
-          <VProgressCircular
-            v-if="loading"
-            indeterminate
-            color="primary"
-            size="50"
-          />
+           <div class="text-center" v-if="loading">
+              <VProgressCircular
+              
+              indeterminate
+              color="primary"
+              size="50"
+            />
+           </div>
+
 
           <!-- Una vez cargado, mostrar el PDF dentro de un iframe (o tu método preferido) -->
           <iframe

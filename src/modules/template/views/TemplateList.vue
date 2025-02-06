@@ -35,14 +35,18 @@
       :page="templateStore.page" :items-per-page="templateStore.itemsPerPage" :loading="templateStore.isLoading"
       :selection="templateStore.selectedItems" @update:selection="val => templateStore.selectedItems = val"
       @update:page="onPageChange" @update:items-per-page="onItemsPerPageChange" @view="openViewDialog"
-      @edit="openEditDialog" @delete="openDeleteDialog" />
+      @edit="openEditDialog" @delete="openDeleteDialog" @update:items-update-option="onItemsSortChange"/>
   </VCard>
 </template>
 
 <script setup lang="ts">
 import { useTemplateStore } from '@/modules/template/stores/templateStore';
+import { newOptions } from '@/types/types';
 import debounce from 'lodash/debounce';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
+const moduleName = 'template';
 
 // Componentes internos
 import TemplateFilters from '../components/TemplateFilters.vue';
@@ -71,22 +75,22 @@ const templateStore = useTemplateStore();
 
 // Headers para la tabla
 const headers = [
-  { title: 'Name', key: 'name' },
-  { title: 'Description', key: 'description' },
-  { title: 'is_default', key: 'is_default' },
-  { title: 'is_active', key: 'is_active' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: t(`${moduleName}.name`), key: 'name' },
+  { title: t(`${moduleName}.description`), key: 'description' },
+  { title: t(`${moduleName}.is_default`), key: 'is_default' },
+  { title: t(`${moduleName}.is_active`), key: 'is_active' },
+  { title: t(`${moduleName}.actions`), key: 'actions', sortable: false },
 ];
 
 // Opciones del menú de exportación
 const menuOptions = [
   {
-    text: 'Exportar a Excel',
+    text: t(`export_to`) + ' ' +t(`excel`),
     icon: 'tabler-file-spreadsheet',
     action: () => exportItems('excel'),
   },
   {
-    text: 'Exportar a PDF',
+    text: t(`export_to`) + ' ' +t(`pdf`),
     icon: 'tabler-file-type-pdf',
     action: () => exportItems('pdf'),
   },
@@ -109,6 +113,12 @@ function onPageChange(newPage: number) {
 
 function onItemsPerPageChange(newItemsPerPage: number) {
   templateStore.itemsPerPage = newItemsPerPage;
+  templateStore.fetchList();
+}
+
+function onItemsSortChange(newOptions: newOptions) {
+  templateStore.sortBy = newOptions.sortBy.map(option => option.key);
+  templateStore.sortDesc = newOptions.sortBy.map(option => option.order === 'desc');
   templateStore.fetchList();
 }
 

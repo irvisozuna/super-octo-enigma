@@ -1,10 +1,10 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
+import authV2LoginIllustrationLight from '@images/image_login.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
 import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
-import authV2LoginIllustrationLight from '@images/pages/auth-v2-login-illustration-light.png'
 import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
@@ -37,8 +37,8 @@ const errors = ref<Record<string, string | undefined>>({
 const refVForm = ref<VForm>()
 
 const credentials = ref({
-  email: 'admin',
-  password: 'Drinker8%..',
+  email: '',
+  password: '',
 })
 
 const rememberMe = ref(false)
@@ -99,7 +99,7 @@ const onSubmit = () => {
     <div class="auth-logo d-flex align-center gap-x-3">
       <VNodeRenderer :nodes="themeConfig.app.logo" />
       <h1 class="auth-title">
-        {{ themeConfig.app.title }}
+        <!-- {{ themeConfig.app.title }} -->
       </h1>
     </div>
   </RouterLink>
@@ -176,7 +176,7 @@ const onSubmit = () => {
                 <AppTextField
                   v-model="credentials.email"
                   :label="$t('user')"
-                  placeholder="johndoe@email.com"
+                  placeholder=""
                   type="text"
                   autofocus
                   :rules="[requiredValidator]"

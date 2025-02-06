@@ -39,7 +39,7 @@ const props = defineProps({
 });
 
 // Emits
-const emits = defineEmits(['update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete']);
+const emits = defineEmits(['update:items-update-option','update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete']);
 
 // Local refs para paginación
 const localPage = ref(props.page);
@@ -69,5 +69,9 @@ function updatePage(newPage: number) {
 
 function updateItemsPerPage(newItemsPerPage: number) {
   emits('update:items-per-page', newItemsPerPage);
+}
+
+function updateOptions(newOptions: any) {
+  emits('update:items-update-option', newOptions);
 }
 </script>

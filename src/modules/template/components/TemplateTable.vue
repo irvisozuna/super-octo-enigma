@@ -2,9 +2,13 @@
   <VDataTableServer :headers="headers" :items="items" :items-length="total" :page="localPage" item-value="id"
     return-object :items-per-page="localItemsPerPage" :loading="loading" show-select
     :items-per-page-options="itemsPerPageOptions" v-model="internalSelection" @update:page="updatePage"
-    @update:items-per-page="updateItemsPerPage">
+    @update:items-per-page="updateItemsPerPage" @update:options="updateOptions">
     <template #item.is_active="{ item }">
       <VIcon v-if="item.is_active" icon="tabler-check" color="green" />
+      <VIcon v-else icon="tabler-closed" color="transparent" />
+    </template>
+    <template #item.is_default="{ item }">
+      <VIcon v-if="item.is_default" icon="tabler-check" color="green" />
       <VIcon v-else icon="tabler-closed" color="transparent" />
     </template>
 
@@ -37,7 +41,7 @@ const props = defineProps({
 });
 
 // Emits
-const emits = defineEmits(['update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete']);
+const emits = defineEmits(['update:items-update-option','update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete']);
 
 // Local refs para paginación
 const localPage = ref(props.page);
@@ -67,5 +71,9 @@ function updatePage(newPage: number) {
 
 function updateItemsPerPage(newItemsPerPage: number) {
   emits('update:items-per-page', newItemsPerPage);
+}
+
+function updateOptions(newOptions: any) {
+  emits('update:items-update-option', newOptions);
 }
 </script>

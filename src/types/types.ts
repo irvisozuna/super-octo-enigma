@@ -93,3 +93,12 @@ export interface UserProfileMenuItem {
   badgeProps?: { color: string; content: string };
   onlyAdmin?: boolean;
 }
+
+
+export interface newOptions  {
+  page?: number,
+  itemsPerPage?: number,
+  sortBy: Array<{ key: string, order: string }>,
+  groupBy?: string | null ,
+  search?: string
+}

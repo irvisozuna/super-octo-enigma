@@ -4,7 +4,7 @@
       <WidgetCard :widgetData="widgets" v-if="widgets.length > 0" />
     </template>
   </api-data-source>
-  <TemplateList :title="$t('templates_list')" :description="$t('templates_list_description')" />
+  <TemplateList :title="$t('template.templates_list')" :description="$t('template.templates_list_description')" />
 </template>
 
 <script setup lang="ts">
