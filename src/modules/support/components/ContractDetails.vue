@@ -14,7 +14,7 @@
                 <span class="text-h6 ms-2 "><VChip color="primary">{{ contract?.nameuser }}</VChip></span>
               </v-sheet>
               <v-sheet class="ma-2 pa-2">
-                <VChip color="success">
+                <VChip  v-bind:style="{ color: contract?.color_hex + ' !important' }">
                   {{ contract?.status }}
                 </VChip>
               </v-sheet>
@@ -44,6 +44,12 @@
                     {{ contract?.system }}
                     <span class="text-h6 font-weight-500">{{$t('sector')}}:</span>
                     {{ contract?.sector }}
+                  </span>
+                  <span class="flex-1-0">
+                    <span class="text-h6 font-weight-500">
+                      <VIcon icon="tabler-route-2" class="me-2" />{{$t('route')}}:
+                    </span>
+                    {{ contract?.route }}
                   </span>
                 </div>
               </VCol>

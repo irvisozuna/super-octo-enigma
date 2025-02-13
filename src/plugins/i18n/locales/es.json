@@ -510,6 +510,7 @@
   "resolution": "Resolución",
   "author": "Autor",
   "asignedTo": "Asignado a",
+  "closed_comments": "Comentarios de cierre",
   "closed": "Cerrado",
   "status": "Estado",
   "message": "Mensaje",
@@ -517,6 +518,7 @@
   "Supports": "Atención",
   "support": {
     "add_charge": "Agregar Cargo",
+    "work_order": "Agregar orden de trabajo",
   },
   "last_reading": "Ubicación de la toma",
   "common": {
@@ -544,4 +546,5 @@
   "download": "Descargar",
   "pay_frecuency": "Frecuencia de Pago",
   "fk_advance_type": "Tipo de Anticipo",
+  "route": "Ruta",
 }

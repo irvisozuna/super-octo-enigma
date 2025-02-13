@@ -2,7 +2,7 @@
   <VCard>
     <VForm class="mt-6" :onSubmit="handleSubmit(onFormSubmit)">
     <VCardTitle class="headline">
-      {{ $t('support.add_charge') }}
+      {{ $t('support.work_order') }}
     </VCardTitle>
     <VCardText>
 
@@ -26,14 +26,14 @@
         <VCol cols="12" md="4">
           <api-data-source api-path="supports/getTypeCodes?itemsPerPage=1000&page=1" @loaded="(response) => TypeCodeOptions = response">
               <template v-slot="{ loading }">
-                <VSelect v-model="type_code" :items="TypeCodeOptions" item-title="name" item-value="rowid" label="Tipo" 
+                <v-autocomplete v-model="type_code" :items="TypeCodeOptions" item-title="name" item-value="rowid" label="Tipo" 
                   variant="outlined" dense clearable chips  closable-chips :loading="loading"
                   :error="!!errors.type_code" :error-messages="errors.type_code ? [errors.type_code] : []"
                   :disabled="loading" >
                   <template #prepend-item v-if="loading">
                     <span class="text-secondary text-caption">{{ $t('loading') }}...</span>
                   </template>
-                </VSelect>
+                </v-autocomplete>
               </template>
             </api-data-source>
 

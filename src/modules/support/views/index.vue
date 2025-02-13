@@ -51,6 +51,7 @@ async function searchContract() {
   isLoading.value = true;
   try {
     const result = await contractStore.getContract(searchQuery.value);
+    activeTab.value = 0;
     searchQuery.value = ''; // Limpia el campo de búsqueda
   } catch (error) {
     console.error('Error fetching contract data:', error);
@@ -65,7 +66,9 @@ async function fetchItemData() {
   isLoading.value = true;
   try {
     if (route.params.id) {
+      
       const result = await contractStore.getContracts(route.params.id);
+
       itemData.value = result.data;
     }
   } catch (error) {
@@ -105,7 +108,8 @@ function reloadTabData(tabIndex: number) {
 function openAdvanceSearchDialog() {
   openDialog(ContractSearchDialog, {}, { width: '100%', persistent: true }).then((result) => {
     if (result === 'submit') {
-      console.log('Advanced search completed');
+      // irse al primer tab
+      activeTab.value = 0;
     }
   });
 }
@@ -133,8 +137,9 @@ onMounted(fetchItemData);
               outlined
               dense
               class="me-4"
+              @keyup.enter="searchContract"
             />
-            <VBtn color="success" @click="searchContract" class="me-2">
+            <VBtn color="success" @click="searchContract"  class="me-2">
               <VIcon icon="tabler-search" class="me-2" />
               {{ t('search.search') }}
             </VBtn>

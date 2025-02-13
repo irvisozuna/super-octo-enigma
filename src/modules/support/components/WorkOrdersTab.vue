@@ -35,9 +35,9 @@ const headers = [
   { title: t('resolution'), value: 'resolution' },
   { title: t('author'), value: 'reported_by' },
   { title: t('message'), value: 'message' },
-  // { title: t('asignedTo'), value: 'total_concept' },
+  { title: t('closed_comments'), value: 'closed_comments' },
   // { title: t('closed'), value: 'totalPaid' },
-  // { title: t('status'), value: 'totalPaid' }
+  { title: t('status'), value: 'status' }
 ];
 
 

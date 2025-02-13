@@ -10,7 +10,7 @@
           <VCol cols="12" md="5">
             <api-data-source api-path="supports/getServices" @loaded="(response) => servicesOptions = response">
               <template v-slot="{ loading }">
-                <VSelect
+                <v-autocomplete
                   v-model="selectedService"
                   :items="servicesOptions"
                   item-title="name"
@@ -27,7 +27,7 @@
                   <template #prepend-item v-if="loading">
                     <span class="text-secondary text-caption">{{ $t('loading') }}...</span>
                   </template>
-                </VSelect>
+                </v-autocomplete>
               </template>
             </api-data-source>
           </VCol>
