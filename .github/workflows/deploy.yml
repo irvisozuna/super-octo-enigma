@@ -1,4 +1,4 @@
-name: 🚀 Deploy a Servidor JAPAMA
+name: 🚀 Deploy a Servidor JAPAMA con pnpm
 
 on:
   push:
@@ -13,16 +13,19 @@ jobs:
       - name: 🛠 Clonar el repositorio
         uses: actions/checkout@v3
 
-      - name: 📦 Configurar Node.js y PNPM
+      - name: 📦 Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'pnpm'
+          # Omitimos cache: 'pnpm' para no intentar usar pnpm antes de tenerlo instalado
 
-      - name: 📥 Instalar dependencias
-        run: pnpm install --frozen-lockfile
+      - name: Instalar pnpm globalmente
+        run: npm install -g pnpm
 
-      - name: 🔨 Construir el proyecto
+      - name: 📥 Instalar dependencias con pnpm
+        run: pnpm install
+
+      - name: 🔨 Construir el proyecto con pnpm
         run: pnpm run build
 
       - name: 📤 Subir archivos al servidor
@@ -41,4 +44,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Despliegue completado"
+            echo "Despliegue completado usando pnpm"
