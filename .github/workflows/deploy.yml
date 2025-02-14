@@ -20,6 +20,9 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
 
+      - name: Instalar pnpm
+        run: npm install -g pnpm
+
       - name: 📥 Instalar dependencias con pnpm
         run: pnpm install
 
