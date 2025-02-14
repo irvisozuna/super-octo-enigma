@@ -1,0 +1,44 @@
+name: 🚀 Deploy a Servidor JAPAMA
+
+on:
+  push:
+    branches:
+      - japama  # Se ejecuta solo cuando hagas push a esta rama
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠 Clonar el repositorio
+        uses: actions/checkout@v3
+
+      - name: 📦 Configurar Node.js y PNPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: 📥 Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔨 Construir el proyecto
+        run: pnpm run build
+
+      - name: 📤 Subir archivos al servidor
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/var/www/html/atencion"
+
+      - name: 🔄 Reiniciar Servidor (Opcional)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Despliegue completado"
