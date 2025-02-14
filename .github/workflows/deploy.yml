@@ -1,9 +1,9 @@
-name: 🚀 Deploy a Servidor JAPAMA
+name: 🚀 Deploy a Servidor JAPAMA con npm
 
 on:
   push:
     branches:
-      - japama  # Se ejecuta solo cuando hagas push a esta rama
+      - japama  # Se ejecuta solo cuando haces push a esta rama
 
 jobs:
   deploy:
@@ -13,32 +13,26 @@ jobs:
       - name: 🛠 Clonar el repositorio
         uses: actions/checkout@v3
 
-      - name: 📦 Configurar Node.js y PNPM
+      - name: 📦 Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml  # Asegura que se use el archivo de bloqueo correcto <button class="citation-flag" data-index="5">
+          cache: 'npm'  # Cambiamos el caché a npm
 
-      - name: 📦 Instalar PNPM
-        run: |
-          corepack enable  # Habilita Corepack para gestores de paquetes como PNPM
-          corepack prepare pnpm@latest --activate  # Activa la última versión de PNPM
+      - name: 📥 Instalar dependencias con npm
+        run: npm install  # Usamos npm para instalar las dependencias
 
-      - name: 📥 Instalar dependencias
-        run: pnpm install --frozen-lockfile  # Instala las dependencias congeladas desde pnpm-lock.yaml
-
-      - name: 🔨 Construir el proyecto
-        run: pnpm run build  # Ejecuta el script de construcción definido en package.json
+      - name: 🔨 Construir el proyecto con npm
+        run: npm run build  # Usamos npm para construir el proyecto
 
       - name: 📤 Subir archivos al servidor
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}  # Host del servidor remoto
-          username: ${{ secrets.SSH_USER }}  # Usuario SSH
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Llave privada SSH
-          source: "dist/*"  # Directorio de salida del build
-          target: "/var/www/html/atencion"  # Ruta destino en el servidor
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/var/www/html/atencion"
 
       - name: 🔄 Reiniciar Servidor (Opcional)
         uses: appleboy/ssh-action@master
@@ -47,5 +41,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Despliegue completado"
-            # Aquí podrías añadir comandos adicionales para reiniciar servicios si es necesario
+            echo "Despliegue completado usando npm"
