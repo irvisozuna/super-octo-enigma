@@ -1,4 +1,4 @@
-name: 🚀 Deploy a Servidor JAPAMA con npm
+name: 🚀 Deploy a Servidor JAPAMA con pnpm
 
 on:
   push:
@@ -17,12 +17,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
-      - name: 📥 Instalar dependencias con npm
-        run: npm install  # Usamos npm para instalar las dependencias
+      - name: 📥 Instalar dependencias con pnpm
+        run: pnpm install
 
-      - name: 🔨 Construir el proyecto con npm
-        run: npm run build  # Usamos npm para construir el proyecto
+      - name: 🔨 Construir el proyecto con pnpm
+        run: pnpm run build
 
       - name: 📤 Subir archivos al servidor
         uses: appleboy/scp-action@master
@@ -40,4 +42,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Despliegue completado usando npm"
+            echo "Despliegue completado usando pnpm"
