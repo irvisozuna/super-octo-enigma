@@ -1,14 +1,11 @@
 name: 🚀 Deploy a Servidor JAPAMA
-
 on:
   push:
     branches:
-      - japama  # Se ejecuta solo cuando hagas push a esta rama
-
+      - japama
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: 🛠 Clonar el repositorio
         uses: actions/checkout@v3
@@ -18,6 +15,10 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: 📦 Instalar PNPM
+        run: corepack enable && corepack prepare pnpm@latest --activate
 
       - name: 📥 Instalar dependencias
         run: pnpm install --frozen-lockfile
