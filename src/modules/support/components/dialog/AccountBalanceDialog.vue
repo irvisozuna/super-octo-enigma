@@ -1,4 +1,5 @@
 <template>
+  <DialogCloseBtn @click="closeDialog" />
   <VCard>
     <VCardTitle class="headline">
       {{ $t('account_balance') }}

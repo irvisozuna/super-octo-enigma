@@ -1,4 +1,5 @@
 <template>
+  <DialogCloseBtn @click="closeDialog" />
   <VCard>
     <VForm class="mt-6" :onSubmit="handleSubmit(onFormSubmit)">
       <VCardTitle class="headline">

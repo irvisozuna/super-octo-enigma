@@ -1,5 +1,5 @@
 <template>
-      <DialogCloseBtn @click="close" />
+  <DialogCloseBtn @click="close" />
   <VCard class="pa-sm-10 pa-2">
     <VCardText>
       <!-- Título -->
@@ -52,11 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
+import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager';
 import { useContractStore } from '@/modules/support/stores/contractStore';
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { closeDialog } = useAppManager();
