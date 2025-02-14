@@ -1,0 +1,183 @@
+<template>
+  <VCard>
+    <VCardTitle>
+      <h4 class="text-h4 mb-1">{{ $t('{{moduleNameLower}}.title') }}</h4>
+      <p class="text-body-1 mb-4">{{ $t('{{moduleNameLower}}.description') }}</p>
+    </VCardTitle>
+
+    <!-- Filtros reutilizables -->
+    <{{moduleName}}Filters :initial-filters="{{moduleNameLower}}Store.filters" @update:filters="applyFilters" />
+
+    <VCardText>
+      <div class="d-flex align-center flex-wrap gap-4 justify-end">
+        <!-- Campo de búsqueda -->
+        <VTextField v-model="{{moduleNameLower}}Store.filters.search" :label="$t('Search {{moduleName}}')" variant="outlined" dense
+          class="filter-field" @input="applyFilters" />
+
+        <!-- Botón para exportar -->
+        <GlobalMenu :label="$t('export')" :options="menuOptions" color="secondary" variant="tonal"
+          icon="tabler-chevron-down" />
+
+        <!-- Botón para agregar usuario -->
+        <VBtn prepend-icon="tabler-plus" color="primary" @click="openAddDialog">{{ $t('add {{moduleNameLower}}') }}</VBtn>
+
+        <!-- Botones para acciones con seleccionados -->
+        <VBtn color="error" v-if="{{moduleNameLower}}Store.selectedItems.length > 1" @click="deleteSelected">
+          {{ $t('delete selected') }}
+        </VBtn>
+      </div>
+    </VCardText>
+
+    <VDivider />
+
+    <!-- Tabla de elementos -->
+    <{{moduleName}}Table :headers="headers" :items="{{moduleNameLower}}Store.list" :total="{{moduleNameLower}}Store.total" :page="{{moduleNameLower}}Store.page"
+      :items-per-page="{{moduleNameLower}}Store.itemsPerPage" :loading="{{moduleNameLower}}Store.isLoading" :selection="{{moduleNameLower}}Store.selectedItems"
+      @update:selection="val => {{moduleNameLower}}Store.selectedItems = val" @update:page="onPageChange"
+      @update:items-per-page="onItemsPerPageChange" @view="openViewDialog" @edit="openEditDialog"
+      @delete="openDeleteDialog" @update:items-update-option="onItemsSortChange" />
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { use{{moduleName}}Store } from '@/modules/{{moduleNameLower}}/stores/{{moduleNameLower}}Store';
+import debounce from 'lodash/debounce';
+import { newOptions } from '@/types/types';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+const moduleName = '{{moduleNameLower}}';
+
+// Componentes internos
+import {{moduleName}}Filters from '../components/{{moduleName}}Filters.vue';
+import {{moduleName}}Table from '../components/{{moduleName}}Table.vue';
+import {{moduleName}}Add from './{{moduleName}}Add.vue';
+import {{moduleName}}Delete from './{{moduleName}}Delete.vue';
+import {{moduleName}}Edit from './{{moduleName}}Edit.vue';
+
+// Composable para manejar diálogos
+const { openDialog, navigateTo } = useAppManager();
+
+// Props para personalizar el título y descripción
+const props = defineProps({
+  title: {
+    type: String,
+    default: '{{moduleName}} Management',
+  },
+  description: {
+    type: String,
+    default: 'Manage your {{moduleNameLower}} with ease.',
+  },
+});
+
+// Store
+const {{moduleNameLower}}Store = use{{moduleName}}Store();
+
+// Headers para la tabla
+const headers = [
+  { title: t(`${moduleName}.name`), key: 'name' },
+  { title: t(`${moduleName}.email`), key: 'email' },
+  { title: t(`${moduleName}.role`), key: 'role' },
+  { title: t(`${moduleName}.actions`), key: 'actions', sortable: false },
+];
+
+// Opciones del menú de exportación
+const menuOptions = [
+  {
+    text: t(`export_to`) + ' ' +t(`excel`),
+    icon: 'tabler-file-spreadsheet',
+    action: () => exportItems('excel'),
+  },
+  {
+    text: t(`export_to`) + ' ' +t(`pdf`),
+    icon: 'tabler-file-type-pdf',
+    action: () => exportItems('pdf'),
+  },
+];
+
+// Métodos
+const debouncedFetchList = debounce(() => {
+  {{moduleNameLower}}Store.fetchList();
+}, 500);
+
+function applyFilters(newFilters: any) {
+  Object.assign({{moduleNameLower}}Store.filters, newFilters);
+  debouncedFetchList();
+}
+
+function onPageChange(newPage: number) {
+  {{moduleNameLower}}Store.page = newPage;
+  {{moduleNameLower}}Store.fetchList();
+}
+
+function onItemsPerPageChange(newItemsPerPage: number) {
+  {{moduleNameLower}}Store.itemsPerPage = newItemsPerPage;
+  {{moduleNameLower}}Store.fetchList();
+}
+
+function onItemsSortChange(newOptions: newOptions) {
+  templateStore.sortBy = newOptions.sortBy.map(option => option.key);
+  templateStore.sortDesc = newOptions.sortBy.map(option => option.order === 'desc');
+  templateStore.fetchList();
+}
+
+function deleteSelected() {
+  openDialog({{moduleName}}Delete, {}, { width: '900px', persistent: true }).then((result) => {
+    if (result === 'submit') {
+      {{moduleNameLower}}Store.fetchList();
+    }
+  });
+}
+
+
+
+function openAddDialog() {
+  openDialog({{moduleName}}Add, { title: 'Add {{moduleName}}' }, { width: '900px', persistent: true }).then((result) => {
+    if (result === 'submit') {
+      {{moduleNameLower}}Store.fetchList();
+    }
+  });
+}
+
+function openEditDialog(item: any) {
+  openDialog({{moduleName}}Edit, { item, title: 'Edit {{moduleName}}' }, { width: '800px', persistent: true }).then((result) => {
+    if (result === 'submit') {
+      {{moduleNameLower}}Store.fetchList();
+    }
+  });
+}
+
+function openViewDialog(item: any) {
+  navigateTo(`/{{moduleNameLower}}s/${item.id}`);
+}
+
+function openDeleteDialog(item: any) {
+  openDialog({{moduleName}}Delete, { item, title: 'Delete {{moduleName}}' }, { width: '900px', persistent: true }).then((result) => {
+    if (result === 'submit') {
+      {{moduleNameLower}}Store.fetchList();
+    }
+  });
+}
+function exportItems(type: string) {
+  {{moduleNameLower}}Store.exportItems(type);
+}
+
+// onMounted
+onMounted(() => {
+  {{moduleNameLower}}Store.fetchList();
+});
+</script>
+
+<style scoped>
+.buttons-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.filter-field {
+  flex: 1;
+  max-inline-size: 300px;
+}
+</style>

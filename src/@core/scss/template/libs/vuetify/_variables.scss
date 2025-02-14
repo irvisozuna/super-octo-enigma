@@ -203,7 +203,6 @@ $typography-body-1-line-height: 1.375rem;
   $chip-height: 32px !default,
   $chip-close-size: 1.25rem !default,
   $chip-elevation: 0 !default,
-  $chip-icon-font-size: 1.25rem !default,
 
   // 👉 Button
   $button-height: 38px !default,
@@ -261,13 +260,11 @@ $typography-body-1-line-height: 1.375rem;
   $list-density: ("default": 0, "comfortable": -1.5, "compact": -2.5) !default,
   $list-border-radius: 6px !default,
   $list-item-padding: 8px 20px !default,
-  $list-item-icon-size: 22px !default,
   $list-item-icon-margin-end: 10px !default,
   $list-item-icon-margin-start : 12px !default,
   $list-item-subtitle-line-height: 20px !default,
   $list-subheader-font-size: 13px !default,
   $list-subheader-line-height: 1.25rem !default,
-  $list-subheader-padding-start: 20px !default,
   $list-subheader-padding-end: 20px !default,
   $list-subheader-min-height: 40px !default,
   $list-item-avatar-margin-start: 12px !default,

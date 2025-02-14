@@ -62,7 +62,7 @@ $v-input-density: (
       }
     }
 
-    &:not(.v-field--focused):hover .v-field__outline {
+    &:not(.v-field--focused, .v-field--error):hover .v-field__outline {
       --v-field-border-opacity: 0.6 !important;
     }
 

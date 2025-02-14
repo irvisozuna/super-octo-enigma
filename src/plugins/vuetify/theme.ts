@@ -1,7 +1,10 @@
 import type { ThemeDefinition } from 'vuetify'
 
-export const staticPrimaryColor = '#4CAF50' // Verde Brillante
-export const staticPrimaryDarkenColor = '#388E3C' // Verde Oscuro
+export const staticPrimaryColor = '#2E46F6'
+export const staticPrimaryDarkenColor = '#1A2EB3'
+
+export const staticSecondaryColor = '#FFC107' // Naranja Brillante
+export const staticSecondaryDarkenColor = '#FFA000' // Naranja Oscuro
 
 export const themes: Record<string, ThemeDefinition> = {
   light: {
@@ -9,26 +12,26 @@ export const themes: Record<string, ThemeDefinition> = {
     colors: {
       'primary': staticPrimaryColor,
       'on-primary': '#fff',
-      'primary-darken-1': staticPrimaryDarkenColor,
-      'secondary': '#00838F', // Turquesa Oscuro
+      'primary-darken-1': '#675DD8',
+      'secondary': '#808390',
       'on-secondary': '#fff',
-      'secondary-darken-1': '#006064', // Turquesa Más Oscuro
-      'success': '#28C76F', // Verde Éxito
+      'secondary-darken-1': '#737682',
+      'success': '#28C76F',
       'on-success': '#fff',
       'success-darken-1': '#24B364',
-      'info': '#00BCD4', // Turquesa Brillante
+      'info': '#00BAD1',
       'on-info': '#fff',
-      'info-darken-1': '#0097A7', // Turquesa Más Oscuro
-      'warning': '#FFC107', // Naranja Brillante
+      'info-darken-1': '#00A7BC',
+      'warning': '#FF9F43',
       'on-warning': '#fff',
-      'warning-darken-1': '#FFA000', // Naranja Oscuro
-      'error': '#F44336', // Rojo
+      'warning-darken-1': '#E68F3C',
+      'error': '#FF4C51',
       'on-error': '#fff',
-      'error-darken-1': '#D32F2F', // Rojo Oscuro
-      'background': '#F5F5F5', // Gris Claro
-      'on-background': '#37474F', // Gris Oscuro
-      'surface': '#FFFFFF', // Blanco
-      'on-surface': '#004D40', // Verde Muy Oscuro
+      'error-darken-1': '#E64449',
+      'background': '#F8F7FA',
+      'on-background': '#2F2B3D',
+      'surface': '#fff',
+      'on-surface': '#2F2B3D',
       'grey-50': '#FAFAFA',
       'grey-100': '#F5F5F5',
       'grey-200': '#EEEEEE',
@@ -41,9 +44,9 @@ export const themes: Record<string, ThemeDefinition> = {
       'grey-900': '#212121',
       'grey-light': '#FAFAFA',
       'perfect-scrollbar-thumb': '#DBDADE',
-      'skin-bordered-background': '#FFFFFF',
-      'skin-bordered-surface': '#FFFFFF',
-      'expansion-panel-text-custom-bg': '#FAFAFA',
+      'skin-bordered-background': '#fff',
+      'skin-bordered-surface': '#fff',
+      'expansion-panel-text-custom-bg': '#fafafa',
     },
 
     variables: {
@@ -60,7 +63,7 @@ export const themes: Record<string, ThemeDefinition> = {
       'disabled-opacity': 0.4,
       'border-color': '#2F2B3D',
       'border-opacity': 0.12,
-      'table-header-color': '#E0F2F1',
+      'table-header-color': '#EAEAEC',
       'high-emphasis-opacity': 0.9,
       'medium-emphasis-opacity': 0.7,
       'switch-opacity': 0.2,
@@ -69,7 +72,7 @@ export const themes: Record<string, ThemeDefinition> = {
       'switch-checked-disabled-opacity': 0.3,
       'track-bg': '#F1F0F2',
 
-      // Sombras
+      // Shadows
       'shadow-key-umbra-color': '#2F2B3D',
       'shadow-xs-opacity': 0.10,
       'shadow-sm-opacity': 0.12,
@@ -83,45 +86,45 @@ export const themes: Record<string, ThemeDefinition> = {
     colors: {
       'primary': staticPrimaryColor,
       'on-primary': '#fff',
-      'primary-darken-1': staticPrimaryDarkenColor,
-      'secondary': '#00838F', // Turquesa Oscuro
+      'primary-darken-1': '#675DD8',
+      'secondary': '#808390',
       'on-secondary': '#fff',
-      'secondary-darken-1': '#006064', // Turquesa Más Oscuro
-      'success': '#28C76F', // Verde Éxito
+      'secondary-darken-1': '#737682',
+      'success': '#28C76F',
       'on-success': '#fff',
       'success-darken-1': '#24B364',
-      'info': '#00BCD4', // Turquesa Brillante
+      'info': '#00BAD1',
       'on-info': '#fff',
-      'info-darken-1': '#0097A7', // Turquesa Más Oscuro
-      'warning': '#FFC107', // Naranja Brillante
+      'info-darken-1': '#00A7BC',
+      'warning': '#FF9F43',
       'on-warning': '#fff',
-      'warning-darken-1': '#FFA000', // Naranja Oscuro
-      'error': '#F44336', // Rojo
+      'warning-darken-1': '#E68F3C',
+      'error': '#FF4C51',
       'on-error': '#fff',
-      'error-darken-1': '#D32F2F', // Rojo Oscuro
-      'background': '#1E1E1E', // Gris Oscuro
-      'on-background': '#CFD8DC', // Gris Claro
-      'surface': '#2C2C2C', // Gris Muy Oscuro
-      'on-surface': '#CFD8DC', // Gris Claro
-      'grey-50': '#2E2E2E',
-      'grey-100': '#3C3C3C',
-      'grey-200': '#4A4A4A',
-      'grey-300': '#5E5E5E',
-      'grey-400': '#737373',
-      'grey-500': '#8E8E8E',
-      'grey-600': '#A9A9A9',
-      'grey-700': '#BEBEBE',
-      'grey-800': '#D3D3D3',
-      'grey-900': '#E8E8E8',
-      'grey-light': '#3E3E3E',
-      'perfect-scrollbar-thumb': '#565656',
-      'skin-bordered-background': '#2C2C2C',
-      'skin-bordered-surface': '#2C2C2C',
+      'error-darken-1': '#E64449',
+      'background': '#25293C',
+      'on-background': '#E1DEF5',
+      'surface': '#2F3349',
+      'on-surface': '#E1DEF5',
+      'grey-50': '#26293A',
+      'grey-100': '#2F3349',
+      'grey-200': '#26293A',
+      'grey-300': '#4A5072',
+      'grey-400': '#5E6692',
+      'grey-500': '#7983BB',
+      'grey-600': '#AAB3DE',
+      'grey-700': '#B6BEE3',
+      'grey-800': '#CFD3EC',
+      'grey-900': '#E7E9F6',
+      'grey-light': '#353A52',
+      'perfect-scrollbar-thumb': '#4A5072',
+      'skin-bordered-background': '#2F3349',
+      'skin-bordered-surface': '#2F3349',
     },
     variables: {
       'code-color': '#d400ff',
-      'overlay-scrim-background': '#000000',
-      'tooltip-background': '#2E2E2E',
+      'overlay-scrim-background': '#171925',
+      'tooltip-background': '#F7F4FF',
       'overlay-scrim-opacity': 0.6,
       'hover-opacity': 0.06,
       'focus-opacity': 0.1,
@@ -130,9 +133,9 @@ export const themes: Record<string, ThemeDefinition> = {
       'pressed-opacity': 0.14,
       'dragged-opacity': 0.1,
       'disabled-opacity': 0.4,
-      'border-color': '#CFD8DC',
+      'border-color': '#E1DEF5',
       'border-opacity': 0.12,
-      'table-header-color': '#3C3C3C',
+      'table-header-color': '#535876',
       'high-emphasis-opacity': 0.9,
       'medium-emphasis-opacity': 0.7,
       'switch-opacity': 0.4,
@@ -141,8 +144,8 @@ export const themes: Record<string, ThemeDefinition> = {
       'switch-checked-disabled-opacity': 0.3,
       'track-bg': '#3A3F57',
 
-      // Sombras
-      'shadow-key-umbra-color': '#000000',
+      // Shadows
+      'shadow-key-umbra-color': '#131120',
       'shadow-xs-opacity': 0.16,
       'shadow-sm-opacity': 0.18,
       'shadow-md-opacity': 0.2,

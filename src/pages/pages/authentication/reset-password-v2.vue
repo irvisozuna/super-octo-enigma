@@ -11,6 +11,7 @@ import authV2MaskLight from '@images/pages/misc-mask-light.png'
 definePage({
   meta: {
     layout: 'blank',
+    public: true,
   },
 })
 
@@ -99,6 +100,7 @@ const isConfirmPasswordVisible = ref(false)
                   label="New Password"
                   placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
+                  autocomplete="password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
@@ -109,6 +111,7 @@ const isConfirmPasswordVisible = ref(false)
                 <AppTextField
                   v-model="form.confirmPassword"
                   label="Confirm Password"
+                  autocomplete="confirm-password"
                   placeholder="············"
                   :type="isConfirmPasswordVisible ? 'text' : 'password'"
                   :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
@@ -149,5 +152,5 @@ const isConfirmPasswordVisible = ref(false)
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/page-auth.scss";
+@use "@core/scss/template/pages/page-auth";
 </style>

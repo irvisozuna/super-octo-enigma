@@ -14,8 +14,7 @@ interface Props {
   direction?: Direction
   iconSize?: string | number
   isActiveStepValid?: boolean
-  align?: 'start' | 'center' | 'end' | 'default',
-  isStepDisabled?: (index: number) => boolean;
+  align?: 'start' | 'center' | 'end' | 'default'
 }
 
 interface Emit {
@@ -28,11 +27,8 @@ const props = withDefaults(defineProps<Props>(), {
   iconSize: 60,
   isActiveStepValid: undefined,
   align: 'default',
-  isStepDisabled: () => false,
 })
-const isStepClickable = (index: number) => {
-  return !props.isStepDisabled(index);
-};
+
 const emit = defineEmits<Emit>()
 
 const currentStep = ref(props.currentStep || 0)
@@ -87,7 +83,7 @@ watchEffect(() => {
           (!props.isActiveStepValid && (isValidationEnabled)) && 'stepper-steps-invalid',
           activeOrCompletedStepsClasses(index),
         ]"
-        @click="!isValidationEnabled && isStepClickable(index) && emit('update:currentStep', index)"
+        @click="!isValidationEnabled && emit('update:currentStep', index)"
       >
         <!-- SECTION stepper step with icon -->
         <template v-if="item.icon">

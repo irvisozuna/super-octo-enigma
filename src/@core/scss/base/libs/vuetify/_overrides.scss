@@ -85,8 +85,6 @@ body,
   flex: unset;
 }
 
-
-
 .v-radio-group {
   .v-selection-control-group {
     .v-radio:not(:last-child) {
@@ -174,6 +172,10 @@ body,
   color: rgb(var(--v-border-color));
 }
 
+.v-divider.v-divider--vertical {
+  block-size: inherit;
+}
+
 // 👉 DataTable
 .v-data-table {
   /* stylelint-disable-next-line no-descending-specificity */
@@ -188,10 +190,6 @@ body,
   .v-pagination {
     color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   }
-}
-
-.v-data-table-footer {
-  margin-block-start: 1rem;
 }
 
 // 👉 v-field

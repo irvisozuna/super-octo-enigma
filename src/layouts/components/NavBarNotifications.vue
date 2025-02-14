@@ -82,11 +82,7 @@ const handleNotificationClick = (notification: Notification) => {
 </script>
 
 <template>
-  <Notifications
-    :notifications="notifications"
-    @remove="removeNotification"
-    @read="markRead"
-    @unread="markUnRead"
-    @click:notification="handleNotificationClick"
-  />
+  <!-- ACTIVACION BACKEND SETTINGS -->
+  <Notifications v-if="false" :notifications="notifications" @remove="removeNotification" @read="markRead"
+    @unread="markUnRead" @click:notification="handleNotificationClick" />
 </template>

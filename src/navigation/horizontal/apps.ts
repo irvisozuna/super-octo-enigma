@@ -80,6 +80,11 @@ export default [
         icon: { icon: 'tabler-calendar' },
       },
       {
+        title: 'Kanban',
+        icon: { icon: 'tabler-layout-kanban' },
+        to: 'apps-kanban',
+      },
+      {
         title: 'Invoice',
         icon: { icon: 'tabler-file-dollar' },
         children: [

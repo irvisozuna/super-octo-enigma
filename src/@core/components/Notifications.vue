@@ -21,8 +21,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
-const isAllMarkRead = computed(() => props.notifications.some(item => item.isSeen === false),
-)
+const isAllMarkRead = computed(() => {
+  return props.notifications.some(item => item.isSeen === false)
+})
 
 const markAllReadOrUnread = () => {
   const allNotificationsIds = props.notifications.map(item => item.id)
@@ -55,10 +56,7 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
       offset-x="2"
       offset-y="3"
     >
-      <VIcon
-        size="24"
-        icon="tabler-bell"
-      />
+      <VIcon icon="tabler-bell" />
     </VBadge>
 
     <VMenu
@@ -129,13 +127,18 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
                 <!-- Handles Avatar: Image, Icon, Text -->
                 <div class="d-flex align-start gap-3">
                   <VAvatar
-                    size="40"
-                    :color="notification.color && notification.icon ? notification.color : undefined"
-                    :image="notification.img || undefined"
-                    :icon="notification.icon || undefined"
+                    :color="notification.color && !notification.img ? notification.color : undefined"
                     :variant="notification.img ? undefined : 'tonal' "
                   >
                     <span v-if="notification.text">{{ avatarText(notification.text) }}</span>
+                    <VImg
+                      v-if="notification.img"
+                      :src="notification.img"
+                    />
+                    <VIcon
+                      v-if="notification.icon"
+                      :icon="notification.icon"
+                    />
                   </VAvatar>
 
                   <div>

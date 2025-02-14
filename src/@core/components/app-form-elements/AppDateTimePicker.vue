@@ -123,11 +123,12 @@ watch(() => props, () => {
   immediate: true,
 })
 
-const elementId = computed(() => {
-  // @ts-expect-error id or label will be there
-  const _elementIdToken = fieldProps.id || fieldProps.label
+const elementId = computed (() => {
+  const _elementIdToken = fieldProps.id || fieldProps.label || inputProps.value.id
 
-  return _elementIdToken ? `app-picker-field-${_elementIdToken}-${Math.random().toString(36).slice(2, 7)}` : undefined
+  const _id = useId()
+
+  return _elementIdToken ? `app-picker-field-${_elementIdToken}` : _id
 })
 </script>
 
@@ -153,7 +154,7 @@ const elementId = computed(() => {
       class="position-relative v-text-field"
       :style="props.style"
     >
-      <template #default="{ id, isDirty, isValid, isDisabled, isReadonly }">
+      <template #default="{ id, isDirty, isValid, isDisabled, isReadonly, validate }">
         <!-- v-field -->
         <VField
           v-bind="{ ...fieldProps, label: undefined }"
@@ -179,7 +180,7 @@ const elementId = computed(() => {
                 class="flat-picker-custom-style h-100 w-100"
                 :disabled="isReadonly.value"
                 @on-open="isCalendarOpen = true"
-                @on-close="isCalendarOpen = false"
+                @on-close="isCalendarOpen = false; validate()"
                 @update:model-value="emitModelValue"
               />
 

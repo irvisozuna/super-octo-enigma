@@ -3,7 +3,7 @@
     "target": "esnext",
     "useDefineForClassFields": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "isolatedModules": true,
     "strict": true,
     "jsx": "preserve",
@@ -56,9 +56,9 @@
     ],
     "skipLibCheck": true,
     "types": [
-      // "vite/client",
-      // "vite-plugin-vue-layouts/client",
-      // "@types/google.maps"
+      "vite/client",
+      "unplugin-vue-router/client",
+      "vite-plugin-vue-layouts/client"
     ]
   },
   "include": [

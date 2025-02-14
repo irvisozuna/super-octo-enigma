@@ -1,0 +1,9 @@
+{
+    "templates_list": "Lista de plantillas",
+    "templates_list_description": "Aquí puedes ver todas las plantillas disponibles",
+    "name": "Nombre",
+    "description": "Descripción",
+    "actions": "Acciones",
+    "is_default": "Por defecto",
+    "is_active": "Activa"
+}

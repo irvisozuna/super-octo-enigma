@@ -1,0 +1,13 @@
+import type { VerticalNavItems } from '@layouts/types'
+
+const {{moduleNameLower}}Menu: VerticalNavItems = [
+  {
+    title: '{{moduleName}}s',
+    icon: { icon: 'tabler-calendar' },
+    to: '{{moduleNameLower}}sList',
+    action: 'read',
+    subject: '{{moduleName}}s',
+  }
+]
+
+export default {{moduleNameLower}}Menu

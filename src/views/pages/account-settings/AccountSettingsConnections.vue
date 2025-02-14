@@ -54,13 +54,13 @@ const socialAccounts = ref([
   {
     logo: twitter,
     name: 'Twitter',
-    links: { username: '@Donical', link: 'https://twitter.com/Donicals' },
+    links: { username: '@nibuk', link: 'https://twitter.com/nibuks' },
     connected: true,
   },
   {
     logo: linkedin,
     name: 'LinkedIn',
-    links: { username: '@Donical', link: 'https://in.linkedin.com/in/Donical-creative-studio-561a4713b' },
+    links: { username: '@nibuk', link: 'https://in.linkedin.com/in/nibuk-creative-studio-561a4713b' },
     connected: true,
   },
   {
@@ -98,7 +98,7 @@ const socialAccounts = ref([
                 :key="item.logo"
               >
                 <template #prepend>
-                  <VAvatar start>
+                  <VAvatar>
                     <img
                       :src="item.logo"
                       height="32"
@@ -145,10 +145,7 @@ const socialAccounts = ref([
                 :key="item.logo"
               >
                 <template #prepend>
-                  <VAvatar
-                    rounded
-                    start
-                  >
+                  <VAvatar rounded>
                     <img
                       :src="item.logo"
                       height="32"

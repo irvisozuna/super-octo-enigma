@@ -10,7 +10,7 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 
-const hideCompleted = ref(false)
+const hideCompleted = ref(true)
 const label = ref('All Courses')
 
 const { data: coursesData } = await useApi<any>(createUrl('/apps/academy/courses', {
@@ -81,7 +81,10 @@ const resolveChipColor = (tags: string) => {
       </div>
 
       <!-- 👉 Course List -->
-      <div class="mb-6">
+      <div
+        v-if="courses.length"
+        class="mb-6"
+      >
         <VRow>
           <template
             v-for="course in courses"
@@ -108,7 +111,7 @@ const resolveChipColor = (tags: string) => {
                     <VChip
                       variant="tonal"
                       :color="resolveChipColor(course.tags)"
-                      density="comfortable"
+                      size="small"
                     >
                       {{ course.tags }}
                     </VChip>
@@ -203,6 +206,12 @@ const resolveChipColor = (tags: string) => {
             </VCol>
           </template>
         </VRow>
+      </div>
+
+      <div v-else>
+        <h4 class="text-h4 text-center mb-6">
+          No Course Found
+        </h4>
       </div>
 
       <VPagination

@@ -15,6 +15,7 @@ const registerMultiStepBg = useGenerateImageVariant(registerMultiStepBgLight, re
 definePage({
   meta: {
     layout: 'blank',
+    public: true,
   },
 })
 
@@ -185,6 +186,7 @@ const onSubmit = () => {
                     label="Password"
                     placeholder="············"
                     :type="isPasswordVisible ? 'text' : 'password'"
+                    autocomplete="password"
                     :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                     @click:append-inner="isPasswordVisible = !isPasswordVisible"
                   />
@@ -197,6 +199,7 @@ const onSubmit = () => {
                   <AppTextField
                     v-model="form.confirmPassword"
                     label="Confirm Password"
+                    autocomplete="confirm-password"
                     placeholder="············"
                     :type="isConfirmPasswordVisible ? 'text' : 'password'"
                     :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"

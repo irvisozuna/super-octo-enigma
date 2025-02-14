@@ -8,9 +8,10 @@ defineOptions({
 
 const elementId = computed (() => {
   const attrs = useAttrs()
-  const _elementIdToken = attrs.id || attrs.label
+  const _elementIdToken = attrs.id
+  const _id = useId()
 
-  return _elementIdToken ? `app-textarea-${_elementIdToken}-${Math.random().toString(36).slice(2, 7)}` : undefined
+  return _elementIdToken ? `app-textarea-${_elementIdToken}` : _id
 })
 
 const label = computed(() => useAttrs().label as string | undefined)

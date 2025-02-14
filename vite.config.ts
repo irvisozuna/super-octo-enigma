@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'node:url'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import { fileURLToPath } from 'node:url'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports, getPascalCaseRouteName } from 'unplugin-vue-router'
@@ -25,8 +25,6 @@ export default defineConfig({
           .toLowerCase()
       },
       beforeWriteFiles: root => {
-        root.insert('/apps/email/:filter', '/src/pages/apps/email/index.vue')
-        root.insert('/apps/email/:label', '/src/pages/apps/email/index.vue')
       },
     }),
     vue({
@@ -44,6 +42,7 @@ export default defineConfig({
       styles: {
         configFile: 'src/assets/styles/variables/_vuetify.scss',
       },
+      autoImport: true
     }),
 
     // Docs: https://github.com/johncampionjr/vite-plugin-vue-layouts#vite-plugin-vue-layouts
@@ -107,6 +106,13 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
+    // minify: false, // Desactiva la minimización del código
+    // sourcemap: true, // Genera un sourcemap para facilitar la depuración
+    // rollupOptions: {
+    //   output: {
+    //     manualChunks: undefined, // Evita dividir el código en múltiples archivos
+    //   },
+    // },
   },
   optimizeDeps: {
     exclude: ['vuetify'],

@@ -41,13 +41,13 @@ export default [
       },
       {
         title: 'Raise Support',
-        href: 'https://Donical.ticksy.com/',
+        href: 'https://nibuk.ticksy.com/',
         icon: { icon: 'tabler-headphones' },
         target: '_blank',
       },
       {
         title: 'Documentation',
-        href: 'https://demos.Donical.com/vuexy-vuejs-admin-template/documentation/',
+        href: 'https://demos.nibuk.com/nibuk-vuejs-admin-template/documentation/',
         icon: { icon: 'tabler-file-text' },
         target: '_blank',
       },

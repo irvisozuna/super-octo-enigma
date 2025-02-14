@@ -369,7 +369,7 @@ const isOneTimePasswordDialogVisible = ref(false)
   </VRow>
 
   <!-- SECTION Enable One time password -->
-  <TwoFactorAuthDialog v-model:isDialogVisible="isOneTimePasswordDialogVisible" />
+  <TwoFactorAuthDialog v-model:is-dialog-visible="isOneTimePasswordDialogVisible" />
   <!-- !SECTION -->
 </template>
 

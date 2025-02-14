@@ -71,7 +71,7 @@
   }
 
   @each $color-name in variables.$theme-colors-name {
-    .v-slide-group-item--active.v-tab--selected.text-#{$color-name} {
+    .v-tab--selected.text-#{$color-name} {
       @include templateMixins.custom-elevation(var(--v-theme-#{$color-name}), "sm");
     }
   }
@@ -83,7 +83,7 @@
     margin: -1rem;
   }
 
-  .v-tab.v-btn {
+  .v-tab.v-btn:not(.v-tab--selected) {
     &:hover {
       background-color: rgba(var(--v-theme-primary), var(--v-activated-opacity));
     }

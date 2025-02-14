@@ -1,0 +1,15 @@
+<template>
+  <api-data-source api-path="{{moduleNameLower}}/get_data_widget" @loaded="(response) => widgets = response">
+    <template v-slot="{ loading }">
+      <WidgetCard :widgetData="widgets" v-if="widgets.length > 0" />
+    </template>
+  </api-data-source>
+  <{{moduleName}}List :title="$t('{{moduleNameLower}}s_list')" :description="$t('{{moduleNameLower}}s_list_description')" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import {{moduleName}}List from './{{moduleName}}List.vue';
+
+const widgets = ref([]);
+</script>

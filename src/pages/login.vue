@@ -1,11 +1,10 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
-import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
+import authV2LoginIllustrationLight from '@images/image_login.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
 import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
-import authV2LoginIllustrationLight from '@images/pages/auth-v2-login-illustration-light.png'
 import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
@@ -38,8 +37,8 @@ const errors = ref<Record<string, string | undefined>>({
 const refVForm = ref<VForm>()
 
 const credentials = ref({
-  email: 'prueba@gmail.com',
-  password: '123456',
+  email: '',
+  password: '',
 })
 
 const rememberMe = ref(false)
@@ -57,15 +56,23 @@ const login = async () => {
         console.error(errors.value)
       },
     })
+    const { accessToken, userData, userAbilityRules, profile, company } = res.data
 
+    if(res.dolibarrToken !== undefined){
+      useCookie('dolibarrToken').value = res.dolibarrToken 
+    }
     
-    const { accessToken, userData, userAbilityRules } = res.data
-
+    //insert abilities default
     useCookie('userAbilityRules').value = userAbilityRules
+    //insert abilities default
+
     ability.update(userAbilityRules)
 
     useCookie('userData').value = userData
     useCookie('accessToken').value = accessToken
+    useCookie('profile').value = profile
+    useCookie('company').value = company
+    
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
@@ -92,7 +99,7 @@ const onSubmit = () => {
     <div class="auth-logo d-flex align-center gap-x-3">
       <VNodeRenderer :nodes="themeConfig.app.logo" />
       <h1 class="auth-title">
-        {{ themeConfig.app.title }}
+        <!-- {{ themeConfig.app.title }} -->
       </h1>
     </div>
   </RouterLink>
@@ -145,7 +152,7 @@ const onSubmit = () => {
             {{$t('login.Please sign-in to your account and start the adventure')}}
           </p>
         </VCardText>
-        <VCardText>
+        <!-- <VCardText>
           <VAlert
             color="primary"
             variant="tonal"
@@ -157,7 +164,7 @@ const onSubmit = () => {
               Client Email: <strong>client@demo.com</strong> / Pass: <strong>client</strong>
             </p>
           </VAlert>
-        </VCardText>
+        </VCardText> -->
         <VCardText>
           <VForm
             ref="refVForm"
@@ -168,11 +175,11 @@ const onSubmit = () => {
               <VCol cols="12">
                 <AppTextField
                   v-model="credentials.email"
-                  :label="$t('email')"
-                  placeholder="johndoe@email.com"
-                  type="email"
+                  :label="$t('user')"
+                  placeholder=""
+                  type="text"
                   autofocus
-                  :rules="[requiredValidator, emailValidator]"
+                  :rules="[requiredValidator]"
                   :error-messages="errors.email"
                 />
               </VCol>
@@ -195,12 +202,12 @@ const onSubmit = () => {
                     v-model="rememberMe"
                     :label="$t('login.Remember me')"
                   />
-                  <RouterLink
+                  <!-- <RouterLink
                     class="text-primary ms-2 mb-1"
                     :to="{ name: 'forgot-password' }"
                   >
                     {{$t('login.Forgot password?')}}
-                  </RouterLink>
+                  </RouterLink> -->
                 </div>
 
                 <VBtn
@@ -212,7 +219,7 @@ const onSubmit = () => {
               </VCol>
 
               <!-- create account -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
@@ -223,23 +230,23 @@ const onSubmit = () => {
                 >
                   {{$t('login.Create an account')}}
                 </RouterLink>
-              </VCol>
-              <VCol
+              </VCol> -->
+              <!-- <VCol
                 cols="12"
                 class="d-flex align-center"
               >
                 <VDivider />
                 <span class="mx-4">{{ $t('or')}}</span>
                 <VDivider />
-              </VCol>
+              </VCol> -->
 
               <!-- auth providers -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
                 <AuthProvider />
-              </VCol>
+              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>
@@ -249,5 +256,5 @@ const onSubmit = () => {
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/page-auth.scss";
+@use "@core/scss/template/pages/page-auth";
 </style>
