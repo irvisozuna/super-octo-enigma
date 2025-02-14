@@ -3,7 +3,7 @@ name: 🚀 Deploy a Servidor JAPAMA con pnpm
 on:
   push:
     branches:
-      - japama  # Se ejecuta solo cuando haces push a esta rama
+      - japama  # Se ejecuta solo cuando hagas push a esta rama
 
 jobs:
   deploy:
@@ -17,10 +17,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          # Omitimos cache: 'pnpm' para no intentar usar pnpm antes de tenerlo instalado
 
-      - name: Instalar pnpm
+      - name: Instalar pnpm globalmente
         run: npm install -g pnpm
 
       - name: 📥 Instalar dependencias con pnpm
