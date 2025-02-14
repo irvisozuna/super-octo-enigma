@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import AccountTab from '@/modules/support/components/SupportAccountTab.vue'
-import BioPanel from '@/modules/support/components/SupportBioPanel.vue'
 import { useSupportStore } from '@/modules/support/stores/supportStore'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -32,8 +30,6 @@ const activeTab = ref(0)
 
 // Tabs predeterminados
 const tabs = ref<Tab[]>([
-  { icon: 'tabler-user', title: 'Bio', component: BioPanel },
-  { icon: 'tabler-settings', title: 'Account', component: AccountTab },
 ])
 
 // Obtener datos del elemento
