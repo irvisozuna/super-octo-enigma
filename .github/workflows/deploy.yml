@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: 'npm'  # Cambiamos el caché a npm
 
       - name: 📥 Instalar dependencias con npm
         run: npm install  # Usamos npm para instalar las dependencias
