@@ -3,7 +3,7 @@ name: 🚀 Deploy a Servidor OOMSAPA con pnpm
 on:
   push:
     branches:
-      - oomsapa  # Se ejecuta solo cuando hagas push a esta rama
+      - oomsapas  # Se ejecuta solo cuando hagas push a esta rama
 
 jobs:
   deploy:
