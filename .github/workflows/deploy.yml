@@ -30,10 +30,12 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_JAPAMA }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
           VITE_MAPBOX_KEY: ${{ secrets.VITE_MAPBOX_KEY }}
+          VITE_API_ORGANIZATION: ${{ secrets.VITE_API_ORGANIZATION }}
         run: |
           echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" >> .env.production
           echo "VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY" >> .env.production
           echo "VITE_MAPBOX_KEY=$VITE_MAPBOX_KEY" >> .env.production
+          echo "VITE_API_ORGANIZATION=$VITE_API_ORGANIZATION" >> .env.production
 
       - name: 🔨 Construir el proyecto con pnpm
         run: pnpm run build
