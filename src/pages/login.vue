@@ -50,6 +50,10 @@ const login = async () => {
   try {
     const res = await $api('/auth/login', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Organization': import.meta.env.VITE_API_ORGANIZATION,
+      },
       body: {
         email: credentials.value.email,
         password: credentials.value.password,
