@@ -1,18 +1,16 @@
 /*********************************************************
  * rawApi.ts
- * 
+ *
  * Responsable de manejar requests HTTP con las mejores
  * prácticas para la serialización de parámetros, el manejo
  * de errores y la descarga de binarios.
  *********************************************************/
 
-import { ApiOptions } from "@/types/types"
-
-
+import type { ApiOptions } from '@/types/types'
 
 /**
  * Función principal para realizar peticiones HTTP.
- * 
+ *
  * @param url - Ruta parcial o completa al recurso.
  * @param options - Parámetros de configuración de la petición.
  * @returns Dependiendo de `responseType`: JSON, Blob, texto, etc.
@@ -25,7 +23,7 @@ export async function rawApi(
     body,
     headers = {},
     responseType = 'json', // Por defecto queremos JSON
-  }: ApiOptions = {}
+  }: ApiOptions = {},
 ) {
   // 1. Construcción de la URL final (base + endpoint)
   //    Reemplaza con tu lógica para obtener la URL base si no usas import.meta.env.
@@ -35,14 +33,13 @@ export async function rawApi(
 
   // 2. Manejo de query params
   const query = new URLSearchParams()
+
   Object.entries(params).forEach(([key, val]) => {
-    if (val !== undefined && val !== null) {
+    if (val !== undefined && val !== null)
       query.append(key, String(val))
-    }
   })
-  if (query.toString()) {
+  if (query.toString())
     finalUrl += `?${query.toString()}`
-  }
 
   // 3. Obtención del token de acceso (si lo hay) desde cookies
   //    Ajusta la función `useCookie` según tu librería preferida.
@@ -58,10 +55,13 @@ export async function rawApi(
   }
 
   // 5. Si tenemos token, lo añadimos al header
+  const organization = import.meta.env.VITE_API_ORGANIZATION
+
   if (accessToken) {
     fetchOptions.headers = {
       ...fetchOptions.headers,
-      Authorization: `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${accessToken}`,
+      'X-Organization': `${organization}`,
     }
   }
 
@@ -71,14 +71,16 @@ export async function rawApi(
   if (body instanceof FormData) {
     // Cuando es FormData, eliminamos el Content-Type para que fetch lo maneje
     // y establezca correctamente boundary y multipart/form-data
-    if (fetchOptions.headers && (fetchOptions.headers as Record<string, string>)['Content-Type']) {
+    if (fetchOptions.headers && (fetchOptions.headers as Record<string, string>)['Content-Type'])
       delete (fetchOptions.headers as Record<string, string>)['Content-Type']
-    }
+
     fetchOptions.body = body
-  } else if (body && typeof body === 'object' && !(body instanceof FormData)) {
+  }
+  else if (body && typeof body === 'object' && !(body instanceof FormData)) {
     (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json'
     fetchOptions.body = JSON.stringify(body)
-  } else {
+  }
+  else {
     fetchOptions.body = body
   }
 
@@ -93,23 +95,26 @@ export async function rawApi(
       try {
         // Intentamos leer la respuesta como JSON
         errorBody = await response.json()
-      } catch (_) {
+      }
+      catch (_) {
         // Si no es JSON, capturamos otro tipo de respuesta (p.ej. texto)
         try {
           errorBody = await response.text()
-        } catch (__) {
+        }
+        catch (__) {
           errorBody = null
         }
       }
 
       const error = new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
+        errorBody?.message || `HTTP error! status: ${response.status}`,
       ) as Error & {
         status?: number
         errors?: string[]
       }
 
       error.status = response.status
+
       // Por convención, muchos endpoints devuelven
       // un array de errors en la propiedad `errors`.
       error.errors = errorBody?.errors || []
@@ -120,23 +125,23 @@ export async function rawApi(
     // 9. Si la respuesta es exitosa, retornamos en base a `responseType`
     switch (responseType) {
       case 'blob': {
-        // Descarga de archivos binarios
+      // Descarga de archivos binarios
         return await response.blob()
       }
       case 'text': {
-        // Respuesta de texto plano
+      // Respuesta de texto plano
         return await response.text()
       }
       case 'json':
       default: {
-        // Por defecto, parseamos JSON
+      // Por defecto, parseamos JSON
         return await response.json()
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     // 10. Manejo global de errores (logs, analíticas, etc.)
     console.error(`[rawApi] Error en ${method} ${finalUrl}`, error)
     throw error
   }
 }
-

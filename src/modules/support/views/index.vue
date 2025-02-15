@@ -129,24 +129,25 @@ onMounted(fetchItemData);
       <!-- Card con el buscador -->
       <AppCardActions :loading="isLoading" :title="$t('contract_search')" @refresh="searchContract" no-actions>
         <VCardText>
-          <div class="d-flex justify-center align-center">
-            <VTextField
-              v-model="searchQuery"
-              :label="t('search.contract')"
-              variant="outlined"
-              outlined
-              dense
-              class="me-4"
-              @keyup.enter="searchContract"
-            />
-            <VBtn color="success" @click="searchContract"  class="me-2">
-              <VIcon icon="tabler-search" class="me-2" />
-              {{ t('search.search') }}
-            </VBtn>
-            <VBtn color="primary" @click="openAdvanceSearchDialog">
-              <VIcon icon="tabler-search" class="me-2" />
-              {{ t('search.advanced') }}
-            </VBtn>
+          <div class="d-flex flex-column flex-md-row justify-center align-center">
+        <VTextField
+          v-model="searchQuery"
+          :label="t('search.contract')"
+          variant="outlined"
+          outlined
+          dense
+          class="mb-2 mb-md-0 me-md-4 w-100"
+          @keyup.enter="searchContract"
+          
+        />
+        <VBtn color="success" @click="searchContract" class="mb-2 mb-md-0 me-md-2 w-100 w-md-auto">
+          <VIcon icon="tabler-search" class="me-2" />
+          {{ t('search.search') }}
+        </VBtn>
+        <VBtn color="primary" @click="openAdvanceSearchDialog" class="w-100 w-md-auto">
+          <VIcon icon="tabler-search" class="me-2" />
+          {{ t('search.advanced') }}
+        </VBtn>
           </div>
         </VCardText>
       </AppCardActions>

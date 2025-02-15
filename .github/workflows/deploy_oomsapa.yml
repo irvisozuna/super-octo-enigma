@@ -1,9 +1,9 @@
-name: 🚀 Deploy a Servidor JAPAMA con pnpm
+name: 🚀 Deploy a Servidor OOMSAPA con pnpm
 
 on:
   push:
     branches:
-      - japama  # Se ejecuta solo cuando hagas push a esta rama
+      - oomsapas  # Se ejecuta solo cuando hagas push a esta rama
 
 jobs:
   deploy:
@@ -30,7 +30,7 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_JAPAMA }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
           VITE_MAPBOX_KEY: ${{ secrets.VITE_MAPBOX_KEY }}
-          VITE_API_ORGANIZATION: ${{ secrets.VITE_API_ORGANIZATION }}
+          VITE_API_ORGANIZATION: 'oomsapas'
         run: |
           echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" >> .env.production
           echo "VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY" >> .env.production
@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "dist/*"
-          target: "/var/www/html/atencion"
+          target: "/var/www/html/atencion/oomsapa"
 
       - name: 🔄 Reiniciar Servidor (Opcional)
         uses: appleboy/ssh-action@master
