@@ -12,11 +12,13 @@ export const useApi = createFetch({
     refetch: true,
     async beforeFetch({ options }) {
       const accessToken = useCookie('accessToken').value
+      const organization = import.meta.env.VITE_API_ORGANIZATION ?? ''
 
       if (accessToken) {
         options.headers = {
           ...options.headers,
-          Authorization: `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Organization': `${organization}`,
         }
       }
 
