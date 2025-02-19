@@ -50,6 +50,10 @@ const login = async () => {
   try {
     const res = await $api('/auth/login', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Organization': import.meta.env.VITE_API_ORGANIZATION,
+      },
       body: {
         email: credentials.value.email,
         password: credentials.value.password,
@@ -60,7 +64,7 @@ const login = async () => {
       },
     })
 
-    const { accessToken, userData, userAbilityRules, profile, company } = res.data
+    const { accessToken, userData, userAbilityRules, profile, company, userAquasoft } = res.data
 
     if (res.dolibarrToken !== undefined)
       useCookie('dolibarrToken').value = res.dolibarrToken
@@ -76,6 +80,7 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('profile').value = profile
     useCookie('company').value = company
+    useCookie('userAquasoft').value = userAquasoft
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
