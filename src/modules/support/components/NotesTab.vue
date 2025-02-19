@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager'
+import { useNotification } from '@/helpers/notificationHelper'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AddNoteDialog from './dialog/AddNoteDialog.vue'
 
 // Props para personalizar el título y descripción
 const props = defineProps({
@@ -13,11 +15,12 @@ const props = defineProps({
 const { t } = useI18n()
 const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
+const { showSuccess, showError } = useNotification()
+const { openDialog } = useAppManager()
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
-const searchQuery = ref('')
+const notes = ref([])
+const loading = ref(true)
+const showAddNoteDialog = ref(false)
 const showMessageDialog = ref(false)
 const selectedMessage = ref('')
 
@@ -30,23 +33,16 @@ const pagination = ref({
 
 // Encabezados de la tabla
 const headers = [
-  { title: t('date'), value: 'datec' },
-  { title: t('reference'), value: 'ref' },
-  { title: t('subject'), value: 'subject' },
-  { title: t('priority'), value: 'severity_code' },
-  { title: t('type'), value: 'type_code' },
-  { title: t('resolution'), value: 'resolution' },
-  { title: t('author'), value: 'reported_by' },
-  { title: t('message'), value: 'message' },
-  { title: t('closed_comments'), value: 'closed_comments' },
 
-  // { title: t('closed'), value: 'totalPaid' },
-  { title: t('status'), value: 'status' },
+  { title: t('subject'), value: 'subject' },
+  { title: t('content'), value: 'content' },
+  { title: t('date'), value: 'datec' },
+  { title: t('author'), value: 'author_name' },
 ]
 
 // Función para actualizar la página
 function updatePage(newPage: number) {
-  pagination.value.page = newPage
+  pagination.value.offset = (newPage - 1) * pagination.value.limit
   fetchData()
 }
 
@@ -56,47 +52,34 @@ function updateItemsPerPage(newItemsPerPage: number) {
   fetchData()
 }
 
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
 // Función para cargar los datos
 async function fetchData() {
   loading.value = true
   try {
-    const response = await contractStore.getWorkOrdersByContract(contractStore.item.id_account, pagination.value)
+    const response = await contractStore.getNotesByContract(contractStore.item.id_account, pagination.value)
 
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
+    notes.value = response.data
     pagination.value = response.pagination
   }
   catch (error) {
-    console.error('Error al cargar los Pagos:', error)
+    console.error('Error al cargar las notas:', error)
   }
   finally {
     loading.value = false
   }
 }
 
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
-  })
-}
-
-// Agregar esta nueva función antes del onMounted
 function showFullMessage(message: string) {
   selectedMessage.value = message
   showMessageDialog.value = true
+}
+function openAddNoteDialog() {
+  openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
+    if (result === 'submit') {
+      console.log('Nota creada, refrescando datos...')
+      fetchData()
+    }
+  })
 }
 
 // Montar datos al iniciar el componente
@@ -104,7 +87,7 @@ onMounted(fetchData)
 
 // Escuchar cambios en el tab activo y recargar datos
 watch(() => props.activeTab, newTab => {
-  if (newTab === 4) { // Suponiendo que el tab de BillingHistory es el índice 1
+  if (newTab === 5) { // Ajusta este número según el índice de tu tab de notas
     fetchData()
   }
 })
@@ -113,12 +96,21 @@ watch(() => props.activeTab, newTab => {
 <template>
   <VCard class="pa-sm-10 pa-2">
     <VCardText>
-      <!-- Tabla de contratos -->
+      <div class="d-flex justify-end mb-4">
+        <VBtn
+          color="primary"
+          prepend-icon="tabler-plus"
+          @click="openAddNoteDialog"
+        >
+          {{ t('add_note') }}
+        </VBtn>
+      </div>
+
+      <!-- Tabla de notas -->
       <BaseTable
         v-if="!loading"
-        v-model:selection="selectedContract"
         :headers="headers"
-        :items="contracts"
+        :items="notes"
         :total="pagination.total"
         :page="pagination.offset / pagination.limit + 1"
         :items-per-page="pagination.limit"
@@ -126,27 +118,37 @@ watch(() => props.activeTab, newTab => {
         @update:page="updatePage"
         @update:items-per-page="updateItemsPerPage"
       >
-        <template #message="{ item }">
+        <template #subject="{ item }">
+          <div class="d-flex align-center">
+            {{ $t(item.subject) }}
+          </div>
+        </template>
+        <template #content="{ item }">
           <div class="d-flex align-center">
             <div
               class="text-truncate"
               style="max-inline-size: 200px;"
-              v-html="item.message"
+              v-html="item.content"
             />
             <VIcon
-              v-if="item.message"
+              v-if="item.content"
               icon="tabler-eye"
               size="small"
               class="ms-2 cursor-pointer"
-              @click="showFullMessage(item.message)"
+              @click="showFullMessage(item.content)"
             />
           </div>
         </template>
-        <template #type_code="{ item }">
-          {{ $t(item.type_code) }}
-        </template>
         <template #datec="{ item }">
-          {{ $formatDate(item.datec) }}
+          {{ $formatDate(item.datec, {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          }) || 'N/A' }}
         </template>
       </BaseTable>
 
@@ -164,7 +166,6 @@ watch(() => props.activeTab, newTab => {
         </p>
       </div>
     </VCardText>
-
     <!-- Agregar el diálogo para mostrar el mensaje completo -->
     <VDialog
       v-model="showMessageDialog"
