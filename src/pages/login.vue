@@ -81,7 +81,7 @@ const login = async () => {
     useCookie('profile').value = profile
     useCookie('company').value = company
     useCookie('userAquasoft').value = userAquasoft
-
+    console.log(userAquasoft);
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
     await nextTick(() => {
