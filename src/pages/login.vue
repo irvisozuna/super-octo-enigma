@@ -64,7 +64,7 @@ const login = async () => {
       },
     })
 
-    const { accessToken, userData, userAbilityRules, profile, company } = res.data
+    const { accessToken, userData, userAbilityRules, profile, company, userAquasoft } = res.data
 
     if (res.dolibarrToken !== undefined)
       useCookie('dolibarrToken').value = res.dolibarrToken
@@ -80,6 +80,7 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('profile').value = profile
     useCookie('company').value = company
+    useCookie('userAquasoft').value = userAquasoft
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect

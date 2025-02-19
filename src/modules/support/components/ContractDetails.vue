@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
 import AccountMapDialog from './dialog/AccountMapDialog.vue'
 import AddChargeDialog from './dialog/AddChargeDialog.vue'
+import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
 
 const contractStore = useContractStore()
@@ -23,7 +24,7 @@ const statisticsHorizontal = computed(() => {
       title: 'Orden de trabajo',
       color: 'secondary',
       icon: 'tabler-clipboard',
-      stats: 'N/A', // o lo que necesites
+      stats: contract.value?.ref || 'N/A', // o lo que necesites
     },
   ]
 })
@@ -57,6 +58,14 @@ function openShowLocationDialog() {
   openDialog(AccountMapDialog, {}, { width: '100%', persistent: true }).then(result => {
     if (result === 'submit')
       console.log('AccountMapDialog completed')
+  })
+}
+
+// Función para abrir el diálogo ubicación
+function openAddNoteDialog() {
+  openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
+    if (result === 'submit')
+      console.log('Nota creada, refrescando datos...')
   })
 }
 </script>
@@ -104,7 +113,7 @@ function openShowLocationDialog() {
                         class="me-2"
                       />{{ $t('community') }}:
                     </span>
-                    {{ contract?.community }}
+                    {{ contract?.community ?? contract?.source_entity }}
                   </span>
                   <span class="flex-1-0">
                     <span class="text-h6 font-weight-500">
@@ -117,7 +126,10 @@ function openShowLocationDialog() {
                     <span class="text-h6 font-weight-500">{{ $t('sector') }}:</span>
                     {{ contract?.sector }}
                   </span>
-                  <span class="flex-1-0">
+                  <span
+                    v-if="contract?.route"
+                    class="flex-1-0"
+                  >
                     <span class="text-h6 font-weight-500">
                       <VIcon
                         icon="tabler-route-2"
@@ -168,6 +180,14 @@ function openShowLocationDialog() {
                         icon="tabler-plus"
                         class="me-2"
                       />{{ $t('add_charge') }}
+                    </VBtn>
+                    <VBtn
+                      color="secondary"
+                      variant="outlined"
+                      prepend-icon="tabler-note"
+                      @click="openAddNoteDialog"
+                    >
+                      {{ $t('add_note') }}
                     </VBtn>
                   </VCol>
                 </VRow>
