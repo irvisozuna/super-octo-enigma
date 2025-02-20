@@ -87,7 +87,7 @@ onMounted(fetchData)
 
 // Escuchar cambios en el tab activo y recargar datos
 watch(() => props.activeTab, newTab => {
-  if (newTab === 5) { // Ajusta este número según el índice de tu tab de notas
+  if (newTab === 7) { // Ajusta este número según el índice de tu tab de notas
     fetchData()
   }
 })
