@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager'
-import { useNotification } from '@/helpers/notificationHelper'
-import { useContractStore } from '@/modules/support/stores/contractStore'
-import { onMounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import AddNoteDialog from './dialog/AddNoteDialog.vue'
+import { useAppManager } from '@/composables/useAppManager';
+import { useNotification } from '@/helpers/notificationHelper';
+import { useContractStore } from '@/modules/support/stores/contractStore';
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import AddNoteDialog from './dialog/AddNoteDialog.vue';
 
 // Props para personalizar el título y descripción
 const props = defineProps({
@@ -87,7 +87,7 @@ onMounted(fetchData)
 
 // Escuchar cambios en el tab activo y recargar datos
 watch(() => props.activeTab, newTab => {
-  if (newTab === 5) { // Ajusta este número según el índice de tu tab de notas
+  if (newTab === 7) { // Ajusta este número según el índice de tu tab de notas
     fetchData()
   }
 })
