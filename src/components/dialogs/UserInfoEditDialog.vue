@@ -15,6 +15,7 @@ interface UserData {
   projectDone: number | null
   taxId: string
   language: string
+  aquasoftId: number
 }
 
 interface Props {
