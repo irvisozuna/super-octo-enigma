@@ -1,5 +1,6 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
+import { VForm } from 'vuetify/components/VForm'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2LoginIllustrationLight from '@images/image_login.png'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
@@ -10,7 +11,6 @@ import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { VForm } from 'vuetify/components/VForm'
 
 let authThemeImg = useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
 if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas')
@@ -64,7 +64,7 @@ const login = async () => {
       },
     })
 
-    const { accessToken, userData, userAbilityRules, profile, company, userAquasoft } = res.data
+    const { accessToken, userData, userAbilityRules, profile, company } = res.data
 
     if (res.dolibarrToken !== undefined)
       useCookie('dolibarrToken').value = res.dolibarrToken
@@ -80,8 +80,7 @@ const login = async () => {
     useCookie('accessToken').value = accessToken
     useCookie('profile').value = profile
     useCookie('company').value = company
-    useCookie('userAquasoft').value = userAquasoft
-    console.log(userAquasoft);
+
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
     await nextTick(() => {

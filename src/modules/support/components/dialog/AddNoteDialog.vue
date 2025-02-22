@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useNotification } from '@/helpers/notificationHelper'
-import { useContractStore } from '@/modules/support/stores/contractStore'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useNotification } from '@/helpers/notificationHelper'
+import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const { t } = useI18n()
 const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
-const aquasoft = useCookie('userAquasoft').value
+const { aquasoft_id } = useCookie('userData').value
 
 // Estado interno del diálogo
 const internalDialog = ref(true)
@@ -34,7 +34,7 @@ const noteTypes = [
 // Función que se ejecuta al enviar el formulario
 async function onSubmit() {
   // Validar que si no tiene el aquasoft, no se pueda crear la nota que diga que cierre sesion y vuelva abrir
-  if (!aquasoft) {
+  if (!aquasoft_id) {
     showError(t('error_creating_note'))
 
     return
@@ -45,7 +45,7 @@ async function onSubmit() {
       subject: note.value.subject,
       content: note.value.content,
       account: contractStore.item?.id_account,
-      user_id: aquasoft.id,
+      user_id: aquasoft_id,
     }
 
     await contractStore.createNote(noteData, '/notes')

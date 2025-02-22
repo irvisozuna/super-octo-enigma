@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
+import BaseTable from '@/components/BaseTable.vue'
 import { useAppManager } from '@/composables/useAppManager'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 import { onMounted, ref, watch } from 'vue'

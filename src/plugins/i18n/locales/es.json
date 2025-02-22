@@ -506,7 +506,7 @@
   'origin': 'Origen',
   'actionslabel': 'Acciones',
   'select': 'Seleccionar',
-  'billingPeriod': 'Periodo de Facturación',
+  'billingPeriod': 'Fecha de Facturación',
   'date': 'Fecha',
   'total_concept': 'Total Conceptos',
   'totalPaid': 'Total Pagado',
