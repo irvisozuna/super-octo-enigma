@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useContractStore } from '@/modules/support/stores/contractStore'
 import { computed } from 'vue'
+import type { Account } from '../types/Contract'
 import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
 import AccountMapDialog from './dialog/AccountMapDialog.vue'
 import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
+import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const contractStore = useContractStore()
 const contract = computed<Account | null>(() => contractStore.item)
@@ -377,6 +378,15 @@ function openAddNoteDialog() {
                   icon="tabler-tag"
                   class="me-2"
                 />{{ $t('rate') }}: {{ contract?.rate_type }}
+              </VListItem>
+              <VListItem v-if="contract && contract?.lps.total > 0">
+                <VIcon
+                  icon="tabler-droplet"
+                  class="me-2"
+                /><span class="text-body-1">{{ $t('lps') }}:</span> <span class="text-body-1">{{ contract?.lps.total }}</span>
+                <p class="text-body-2">
+                  {{ contract?.lps.lps_contratados }}
+                </p>
               </VListItem>
             </VList>
           </VCardText>
