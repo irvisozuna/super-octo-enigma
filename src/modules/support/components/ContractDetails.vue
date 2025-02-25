@@ -347,25 +347,25 @@ function openAddNoteDialog() {
                 <VIcon
                   icon="tabler-percentage"
                   class="me-2"
-                />{{ $t('pensionary') }}: N/A
+                />{{ $t('pensionary') }}: {{ contract?.pensionary }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-clock"
                   class="me-2"
-                />{{ $t('validity') }}:
+                />{{ $t('validity') }}: {{ contract?.due_date_pensioner }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-users"
                   class="me-2"
-                />{{ $t('handicapped') }}: N/A
+                />{{ $t('handicapped') }}: {{ contract?.handicapped }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-toggle-left"
                   class="me-2"
-                />{{ $t('validity') }}:
+                />{{ $t('validity') }}: {{ contract?.due_date_handicapped }}
               </VListItem>
               <VListItem>
                 <VIcon

@@ -570,5 +570,6 @@
   "leak": "Reporte de Fuga",
   "debt_letter": "Carta de No adeudo",
   "note_created_successfully": "Nota creada con éxito",
-  "lps": "LPS"
+  "lps": "LPS",
+  "currency_amount": "Monto"
 }
