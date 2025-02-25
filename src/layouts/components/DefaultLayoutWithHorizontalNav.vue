@@ -12,18 +12,21 @@ import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 import NavBarI18n from '@core/components/I18n.vue'
 import { HorizontalNavLayout } from '@layouts'
-import { VNodeRenderer } from '@layouts/components/VNodeRenderer'; /* PartiallyEnd: #3632/scriptSetup.vue */
+import { VNodeRenderer } from '@layouts/components/VNodeRenderer' /* PartiallyEnd: #3632/scriptSetup.vue */
 
 const menuStore = useMenuStore()
 const navItems = computed(() => menuStore.horizontalNavItems)
-const { isAdmin } = useCurrentUser();
+const { isAdmin } = useCurrentUser()
 </script>
 
 <template>
   <HorizontalNavLayout :nav-items="navItems">
     <!-- 👉 navbar -->
     <template #navbar>
-      <RouterLink to="/" class="app-logo d-flex align-center gap-x-3">
+      <RouterLink
+        to="/"
+        class="app-logo d-flex align-center gap-x-3"
+      >
         <VNodeRenderer :nodes="themeConfig.app.logo" />
 
         <h1 class="app-title font-weight-bold leading-normal text-xl text-capitalize">
@@ -34,8 +37,10 @@ const { isAdmin } = useCurrentUser();
 
       <NavSearchBar trigger-btn-class="ms-lg-n3" />
 
-      <NavBarI18n v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
-        :languages="themeConfig.app.i18n.langConfig" />
+      <NavBarI18n
+        v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
+        :languages="themeConfig.app.i18n.langConfig"
+      />
 
       <NavbarThemeSwitcher />
       <NavbarShortcuts />
