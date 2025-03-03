@@ -571,5 +571,6 @@
   "debt_letter": "Carta de No adeudo",
   "note_created_successfully": "Nota creada con éxito",
   "lps": "LPS",
-  "currency_amount": "Monto"
+  "currency_amount": "Monto",
+  "debt": "Adeudo"
 }

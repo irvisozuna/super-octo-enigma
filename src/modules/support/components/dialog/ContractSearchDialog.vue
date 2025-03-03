@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseTable from '@/components/BaseTable.vue'
 import { useAppManager } from '@/composables/useAppManager'
 import { useContractStore } from '@/modules/support/stores/contractStore'
-import { onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const { closeDialog } = useAppManager()
@@ -29,6 +29,7 @@ const headers = [
   { title: t('address'), value: 'address' },
   { title: t('neighborhood'), value: 'neighborhood' },
   { title: t('origin'), value: 'c_system' },
+  { title: t('debt'), value: 'total_debt' },
 
   // { title: t('status'), value: 'status' },
   { title: t('actionslabel'), value: 'actions', align: 'center' },
@@ -141,6 +142,11 @@ async function fetchData() {
         @update:items-per-page="updateItemsPerPage"
       >
         <!-- Sobrescribir el slot de acciones -->
+        <template #total_debt="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.total_debt) || 'N/A' }}
+          </div>
+        </template>
         <template #actions="{ item }">
           <VBtn
             color="primary"
