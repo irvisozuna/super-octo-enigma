@@ -56,7 +56,7 @@ const addCharge = () => {
       tva_tx: tva_tx.value || 16,
       price: Number.parseFloat(price.value),
       quantity: Number.parseInt(quantity.value, 10),
-      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10),
+      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10) ),
     })
     resetFields()
   }
@@ -91,11 +91,7 @@ const onFormSubmit = async () => {
       token: token_dolibarr,
     }
 
-    console.log('Sending payload:', payload) // Add this for debugging
-
     const response = await contractStore.createItem(payload, '/charges')
-
-    console.log('Response received:', response) // Add this for debugging
 
     showSuccess(response.message || 'Cargos guardados correctamente')
     closeDialog()
@@ -227,6 +223,12 @@ const onServiceSelect = (service: any) => {
           hide-default-footer
           class="elevation-1 mt-6"
         >
+          <template #item.price="{ item }">
+            ${{ ((item.price || 0) / (1 + (item.tva_tx / 100))).toFixed(2) }}
+          </template>
+          <template #item.total="{ item }">
+            ${{ item.total.toFixed(2) }}
+          </template>
           <template #item.action="{ item }">
             <VBtn
               icon
