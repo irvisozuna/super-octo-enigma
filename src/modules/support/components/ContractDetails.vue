@@ -379,7 +379,7 @@ function openAddNoteDialog() {
                   class="me-2"
                 />{{ $t('rate') }}: {{ contract?.rate_type }}
               </VListItem>
-              <VListItem v-if="contract && contract?.lps.total > 0">
+              <VListItem v-if="contract && contract?.lps && contract?.lps.total > 0">
                 <VIcon
                   icon="tabler-droplet"
                   class="me-2"
