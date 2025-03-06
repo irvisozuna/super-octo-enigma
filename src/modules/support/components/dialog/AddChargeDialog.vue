@@ -56,7 +56,7 @@ const addCharge = () => {
       tva_tx: tva_tx.value || 16,
       price: Number.parseFloat(price.value),
       quantity: Number.parseInt(quantity.value, 10),
-      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10) * (1 + (tva_tx.value / 100)),
+      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10) ),
     })
     resetFields()
   }
