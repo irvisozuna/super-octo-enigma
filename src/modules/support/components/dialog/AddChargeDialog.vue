@@ -223,6 +223,9 @@ const onServiceSelect = (service: any) => {
           hide-default-footer
           class="elevation-1 mt-6"
         >
+          <template #item.price="{ item }">
+            ${{ ((item.price || 0) / (1 + (item.tva_tx / 100))).toFixed(2) }}
+          </template>
           <template #item.total="{ item }">
             ${{ item.total.toFixed(2) }}
           </template>
