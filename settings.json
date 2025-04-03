@@ -25,7 +25,7 @@
   },
   // Vue
   "[vue]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   // Extension: Volar
   "volar.preview.port": 3000,
@@ -74,7 +74,7 @@
       // This color is taken from "Better Comments" Extension (?)
       "highlightColor": "#3498DB",
       "styleComment": true,
-      "isItalic": false,
+      "isItalic": false
     },
     "👉": {
       "scope": "file",
@@ -88,8 +88,8 @@
       // This color is taken from "Better Comments" Extension (*)
       "highlightColor": "#FF2D00",
       "styleComment": true,
-      "isItalic": false,
-    },
+      "isItalic": false
+    }
   },
   // Extension: fabiospampinato.vscode-highlight
   "highlight.regexFlags": "gi",

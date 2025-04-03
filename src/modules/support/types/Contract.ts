@@ -61,6 +61,7 @@ export interface Account {
   type_services: string
   cadastral_number: string
   clave_loc: string
+  system: string
   sequence: string
   id_measurer: string | null
   measurer: string

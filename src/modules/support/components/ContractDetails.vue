@@ -139,6 +139,18 @@ function openAddNoteDialog() {
                     </span>
                     {{ contract?.route }}
                   </span>
+                  <span
+                    v-if="contract?.clave_loc"
+                    class="flex-1-0"
+                  >
+                    <span class="text-h6 font-weight-500">
+                      <VIcon
+                        icon="tabler-brackets-contain"
+                        class="me-2"
+                      />{{ $t('clave_loc') }}:
+                    </span>
+                    {{ contract?.clave_loc }}
+                  </span>
                 </div>
               </VCol>
 

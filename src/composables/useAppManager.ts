@@ -1,22 +1,23 @@
-import { useAppStore } from '@/stores/appStore';
-import { DialogOptions } from '@/types/types';
-import { markRaw } from 'vue';
-import { useRouter } from 'vue-router';
+import { useAppStore } from '@/stores/appStore'
+import type { DialogOptions } from '@/types/types'
+import { markRaw } from 'vue'
+import { useRouter } from 'vue-router'
 
 export function useAppManager() {
-  const appStore = useAppStore();
-  const router = useRouter();
+  const appStore = useAppStore()
+  const router = useRouter()
+
   /**
    * Abre un diálogo con el componente y opciones especificadas.
    */
   async function openDialog(
     component: any,
     props: Record<string, any> = {},
-    options: Partial<DialogOptions> = {}
+    options: Partial<DialogOptions> = {},
   ): Promise<'submit' | 'cancel' | 'close'> {
-
     // Asegurar que el componente no sea reactivo
-    const rawComponent = markRaw(component);
+    const rawComponent = markRaw(component)
+
     return appStore.openDialog({
       component,
       props,
@@ -30,28 +31,28 @@ export function useAppManager() {
       closeOnEsc: options.closeOnEsc ?? true,
       closeOnBackdropClick: options.closeOnBackdropClick ?? true,
       actions: options.actions || [],
-    });
+    })
   }
 
   /**
    * Cierra el diálogo actual.
    */
   function closeDialog(result: 'submit' | 'cancel' | 'close' = 'close') {
-    appStore.closeDialog(result);
+    appStore.closeDialog(result)
   }
 
   /**
    * Navega a una URL.
    */
   async function navigateTo(route: string, params: Record<string, any> = {}, query: Record<string, any> = {}) {
-    await router.push({ path: route, params, query });
+    await router.push({ path: route, params, query })
   }
 
   /**
    * Obtiene el historial de diálogos.
    */
   function getDialogHistory() {
-    return appStore.dialogHistory;
+    return appStore.dialogHistory
   }
 
   /**
@@ -59,8 +60,8 @@ export function useAppManager() {
    */
   function onDialogOpened(callback: (options: DialogOptions) => void) {
     window.addEventListener('dialog-opened', (event: Event) =>
-      callback((event as CustomEvent).detail)
-    );
+      callback((event as CustomEvent).detail),
+    )
   }
   async function makeApiCall(url: string, method: string = 'GET', data: any = {}) {
     try {
@@ -68,19 +69,22 @@ export function useAppManager() {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: method !== 'GET' ? JSON.stringify(data) : undefined,
-      });
-      return await response.json();
-    } catch (error) {
-      console.error('Error en la llamada a la API:', error);
+      })
+
+      return await response.json()
+    }
+    catch (error) {
+      console.error('Error en la llamada a la API:', error)
     }
   }
+
   /**
    * Escucha cuando un diálogo se cierra.
    */
   function onDialogClosed(callback: (result: { result: string; options: DialogOptions | null }) => void) {
     window.addEventListener('dialog-closed', (event: Event) =>
-      callback((event as CustomEvent).detail)
-    );
+      callback((event as CustomEvent).detail),
+    )
   }
 
   return {
@@ -90,6 +94,6 @@ export function useAppManager() {
     getDialogHistory,
     onDialogOpened,
     onDialogClosed,
-    makeApiCall
-  };
+    makeApiCall,
+  }
 }

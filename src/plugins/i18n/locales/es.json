@@ -572,5 +572,6 @@
   "note_created_successfully": "Nota creada con éxito",
   "lps": "LPS",
   "currency_amount": "Monto",
-  "debt": "Adeudo"
+  "debt": "Adeudo",
+  "clave_loc": "Clave Loc"
 }
