@@ -17,7 +17,7 @@ const statisticsHorizontal = computed(() => {
   return [
     {
       title: 'Convenio Activo',
-      color: 'primary',
+      color: 'secondary',
       icon: 'tabler-edit',
       stats: contract.value?.ref_agreement || 'N/A',
     },

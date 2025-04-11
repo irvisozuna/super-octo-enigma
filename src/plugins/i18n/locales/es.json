@@ -594,5 +594,6 @@
   "date_creation": "Fecha de Creación",
   "paymentId": "ID de Pago",
   "average_consumption": "Consumo Promedio",
-  "last_readings": "Últimas Lecturas"
+  "last_readings": "Últimas Lecturas",
+  "payment_details": "Detalles de Pago"
 }
