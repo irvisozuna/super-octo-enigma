@@ -29,10 +29,13 @@ const noteTypes = [
   { value: 'leak', text: t('leak_report') },
   { value: 'work_order', text: t('work_order') },
   { value: 'debt_letter', text: t('no_debt_letter') },
+  { value: 'error_reading', text: t('error_reading') },
 ]
 
 // Función que se ejecuta al enviar el formulario
 async function onSubmit() {
+  debugger
+
   // Validar que si no tiene el aquasoft, no se pueda crear la nota que diga que cierre sesion y vuelva abrir
   if (!aquasoft_id) {
     showError(t('error_creating_note'))

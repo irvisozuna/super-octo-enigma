@@ -285,33 +285,6 @@ function openAddNoteDialog() {
           </VCol>
         </VRow>
         <VRow>
-          <VCol>
-            <VCard>
-              <VCardText>
-                <div class="d-flex justify-space-between mb-1">
-                  <div class="text-base">
-                    {{ contract?.average || '0 / 0' }} {{ $t('level_completed') }}
-                  </div>
-
-                  <div class="text-disabled text-sm">
-                    <VIcon
-                      color="success"
-                      icon="tabler-checkbox"
-                    />
-                  </div>
-                </div>
-
-                <VProgressLinear
-                  :model-value="(contract?.average || 0) * 20"
-                  color="info"
-                  height="8"
-                  rounded
-                />
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
-        <VRow>
           <VCol
             v-for="statistics in statisticsHorizontal"
             :key="statistics.title"
@@ -320,6 +293,68 @@ function openAddNoteDialog() {
             md="6"
           >
             <CardStatisticsVerticalSimple v-bind="statistics" />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VCard>
+              <VCardText>
+                <VRow>
+                  <VCol
+                    v-if="contract?.average_consumption"
+                    cols="12"
+                    md="6"
+                  >
+                    <div class="d-flex align-center">
+                      <VIcon
+                        icon="tabler-droplet"
+                        class="me-2"
+                      />
+                      <div>
+                        <div class="text-subtitle-2">
+                          {{ $t('average_consumption') }}
+                        </div>
+                        <div class="text-h6">
+                          {{ contract.average_consumption }} m³
+                        </div>
+                      </div>
+                    </div>
+                  </VCol>
+                  <VCol
+                    v-if="contract?.readings?.rows?.length > 0"
+                    cols="12"
+                    md="6"
+                  >
+                    <div>
+                      <div class="text-subtitle-2 mb-2">
+                        {{ $t('last_readings') }}
+                      </div>
+                      <VList>
+                        <VListItem
+                          v-for="reading in contract.readings.rows.slice(0, 3)"
+                          :key="reading.ref"
+                          class="pa-0"
+                        >
+                          <VListItemTitle>
+                            <div class="d-flex align-center">
+                              <VIcon
+                                icon="tabler-gauge"
+                                size="small"
+                                class="me-2"
+                              />
+                              <span>{{ reading.Consumo }} m³</span>
+                            </div>
+                          </VListItemTitle>
+                          <VListItemSubtitle class="text-caption">
+                            {{ reading.Periodo }}
+                          </VListItemSubtitle>
+                        </VListItem>
+                      </VList>
+                    </div>
+                  </VCol>
+                </VRow>
+              </VCardText>
+            </VCard>
           </VCol>
         </VRow>
       </VCol>
@@ -383,7 +418,9 @@ function openAddNoteDialog() {
                 <VIcon
                   icon="tabler-bookmark"
                   class="me-2"
-                />{{ $t('business_activity') }}: {{ contract?.business_activity }}
+                />{{ $t('business_activity') }}: <VChip color="primary">
+                  {{ contract?.business_activity }}
+                </VChip>
               </VListItem>
               <VListItem>
                 <VIcon

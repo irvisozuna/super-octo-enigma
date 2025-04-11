@@ -24,6 +24,7 @@ const pagination = ref({
 // Encabezados de la tabla
 const headers = [
   { title: t('account'), value: 'account' },
+  { title: t('clave'), value: 'clave_loc' },
   { title: t('measurer'), value: 'measurer' },
   { title: t('name'), value: 'nameuser' },
   { title: t('address'), value: 'address' },
