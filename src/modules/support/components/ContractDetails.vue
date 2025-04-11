@@ -342,7 +342,7 @@ function openAddNoteDialog() {
                                 size="small"
                                 class="me-2"
                               />
-                              <span>{{ reading.Consumo }} m³</span>
+                              <span>{{ reading.Actual }} m³</span>
                             </div>
                           </VListItemTitle>
                           <VListItemSubtitle class="text-caption">
