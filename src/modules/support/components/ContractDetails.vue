@@ -6,6 +6,7 @@ import AccountMapDialog from './dialog/AccountMapDialog.vue'
 import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
+import FiscalDataDialog from './dialog/FiscalDataDialog.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const contractStore = useContractStore()
@@ -67,6 +68,19 @@ function openAddNoteDialog() {
   openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
     if (result === 'submit')
       console.log('Nota creada, refrescando datos...')
+  })
+}
+
+// Función para abrir el diálogo de datos fiscales
+function openFiscalDataDialog() {
+  openDialog(FiscalDataDialog, {}, { width: '50%', persistent: true }).then(async result => {
+    if (result === 'submit') {
+      console.log('Datos fiscales actualizados')
+
+      // Recargar los datos del contrato
+      if (contractStore.item?.account)
+        await contractStore.getContract(contractStore.item.account)
+    }
   })
 }
 </script>
@@ -468,8 +482,16 @@ function openAddNoteDialog() {
           </VCardText>
 
           <!-- Datos fiscales -->
-          <VCardTitle class="text-h6 mt-4">
+          <VCardTitle class="text-h6 mt-4 d-flex align-center">
             {{ $t('fiscal_data') }}
+            <VBtn
+              icon
+              variant="plain"
+              class="ms-2"
+              @click="openFiscalDataDialog"
+            >
+              <VIcon icon="tabler-edit" />
+            </VBtn>
           </VCardTitle>
           <VCardText>
             <VList dense>
@@ -477,58 +499,43 @@ function openAddNoteDialog() {
                 <VIcon
                   icon="tabler-star"
                   class="me-2"
-                />{{ $t('business_name') }}:
+                />{{ $t('business_name') }}: {{ contract?.societe?.sat_cname }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-devices-2"
                   class="me-2"
-                />{{ $t('tax_id') }}:
+                />{{ $t('tax_id') }}: {{ contract?.societe?.sat_taxid }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-activity"
                   class="me-2"
-                />{{ $t('postal_code') }}:
+                />{{ $t('postal_code') }}: {{ contract?.societe?.sat_zip }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('cfdi_use') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('regime_fiscal') }}: {{ contract?.societe?.fiscal_regime }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('email') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('cfdi_use') }}: {{ contract?.societe?.usecfdi }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('phone') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('email') }}: {{ contract?.societe?.emails }}
+              </VListItem>
+              <VListItem>
+                <VIcon
+                  icon="tabler-calendar"
+                  class="me-2"
+                />{{ $t('phone') }}: {{ contract?.societe?.phone }}
               </VListItem>
             </VList>
           </VCardText>

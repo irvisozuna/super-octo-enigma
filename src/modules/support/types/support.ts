@@ -1,6 +1,6 @@
 // src/modules/Support/types/Support.ts
 export interface Support {
-  id: string;
+  id: string
   createdAt?: string
   updatedAt?: string
 }
