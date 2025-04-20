@@ -596,5 +596,7 @@
   "average_consumption": "Consumo Promedio",
   "last_readings": "Últimas Lecturas",
   "payment_details": "Detalles de Pago",
-  "imported": "Importado"
+  "imported": "Importado",
+  "fiscal_regime": "Regimen Fiscal",
+  "usecfdi": "Uso de CFDI"
 }

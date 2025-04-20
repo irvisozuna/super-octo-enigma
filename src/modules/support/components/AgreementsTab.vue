@@ -203,7 +203,10 @@ function showAgreementDetails(details: any[]) {
                 <td>{{ $formatCurrency(detail.remaining_balance) }}</td>
                 <td>{{ $formatDate(detail.issue_date) }}</td>
                 <td>{{ $formatDate(detail.due_date) }}</td>
-                <td>{{ $formatDate(detail.payment_date) }}</td>
+                <td v-if="detail.payment_date">
+                  {{ $formatDate(detail.payment_date) }}
+                </td>
+                <td v-if="!detail.payment_date" />
                 <td>
                   <VChip
                     :color="detail.status === 4 ? 'success' : 'warning'"

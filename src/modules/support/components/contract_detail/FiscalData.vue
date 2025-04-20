@@ -19,7 +19,7 @@
           </VBtn>
         </VListItem>
         <VListItem>
-          <VIcon icon="tabler-calendar" class="me-2" />{{ $t('email') }}: {{ contract?.sat_emails || 'N/A' }}
+          <VIcon icon="tabler-calendar" class="me-2" />{{ $t('email') }}: {{ contract?.emails || 'N/A' }}
           <VBtn icon variant="plain" class="ms-2">
             <VIcon icon="tabler-edit-3" />
           </VBtn>
