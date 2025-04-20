@@ -1,3 +1,18 @@
+export interface societe {
+  calle: string | null
+  curp: string | null
+  email: string | null
+  father_lastname: string | null
+  father_name: string | null
+  fiscal_regime: string | null
+  paymentmethod: string | null
+  phone: string | null
+  sat_cname: string | null
+  sat_taxid: string | null
+  sat_zip: string | null
+  emails: string | null
+  usecfdi: string | null
+}
 export interface Account {
   rowid: number
   id_account: number
@@ -61,6 +76,7 @@ export interface Account {
   type_services: string
   cadastral_number: string
   clave_loc: string
+  system: string
   sequence: string
   id_measurer: string | null
   measurer: string
@@ -79,4 +95,5 @@ export interface Account {
   ref: string | null
   latitude: number
   longitude: number
+  societe: societe | null
 }

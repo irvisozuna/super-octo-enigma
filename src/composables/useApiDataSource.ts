@@ -4,11 +4,6 @@ import type { ComputedRef } from 'vue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 // Interfaces base para diferentes tipos de respuestas
-interface KeyValueOption {
-  id: number | string
-  name: string
-  [key: string]: any
-}
 
 interface ApiDataSourceProps<T = any> {
   apiPath: string
