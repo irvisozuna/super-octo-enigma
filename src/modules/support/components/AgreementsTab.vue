@@ -150,6 +150,9 @@ function showAgreementDetails(details: any[]) {
             class="ms-2 cursor-pointer"
             @click="showAgreementDetails(item.details)"
           />
+          <span v-if="item.details && item.details.length === 0">
+            {{ t('imported') }}
+          </span>
         </template>
       </BaseTable>
 
