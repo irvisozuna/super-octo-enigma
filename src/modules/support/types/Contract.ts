@@ -29,7 +29,7 @@ export interface Account {
   id_usecfdi: string | null
   usecfdi: string | null
   sat_zip: string | null
-  sat_emails: string | null
+  emails: string | null
   address: string
   ubicaciontoma: string
   id_neighborhood: number

@@ -62,7 +62,7 @@ const schema = yup.object({
     .string()
     .required('El código postal es requerido')
     .matches(/^\d{5}$/, 'El código postal debe tener 5 dígitos'),
-  sat_emails: yup
+  emails: yup
     .string()
     .required('El email es requerido')
     .test('is-valid-emails', 'Uno o más emails son inválidos', val => {
@@ -91,7 +91,7 @@ const { handleSubmit: submitForm, errors } = useForm({
     sat_zip: contractStore.item?.societe?.sat_zip || '',
     fiscal_regime: contractStore.item?.societe?.fiscal_regime || '',
     usecfdi: String(contractStore.item?.societe?.usecfdi || ''),
-    sat_emails: contractStore.item?.societe?.emails || '',
+    emails: contractStore.item?.societe?.emails || '',
     phone: contractStore.item?.societe?.phone || '',
   },
 })
@@ -101,7 +101,7 @@ const { value: sat_RFC } = useField<string>('sat_RFC')
 const { value: sat_zip } = useField<string>('sat_zip')
 const { value: fiscal_regime } = useField<string>('fiscal_regime')
 const { value: usecfdi } = useField<string>('usecfdi')
-const { value: sat_emails } = useField<string>('sat_emails')
+const { value: emails } = useField<string>('emails')
 const { value: phone } = useField<string>('phone')
 
 // Handlers para cargar y re-asignar valores
@@ -135,7 +135,7 @@ const onSubmit = submitForm(async () => {
         sat_zip: sat_zip.value,
         fiscal_regime: fiscal_regime.value,
         usecfdi: usecfdi.value,
-        sat_emails: sat_emails.value,
+        emails: emails.value,
         phone: phone.value,
       },
     }
@@ -249,11 +249,11 @@ const onSubmit = submitForm(async () => {
           <!-- Emails -->
           <VCol cols="12">
             <VTextField
-              v-model="sat_emails"
+              v-model="emails"
               :label="$t('email')"
               variant="outlined"
               type="email"
-              :error-messages="errors.sat_emails"
+              :error-messages="errors.emails"
             />
           </VCol>
 
