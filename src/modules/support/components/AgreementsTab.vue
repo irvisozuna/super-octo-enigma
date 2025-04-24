@@ -174,7 +174,7 @@ function showAgreementDetails(details: any[]) {
     <!-- Modal de detalles del acuerdo -->
     <VDialog
       v-model="showDetailsDialog"
-      max-width="800"
+      max-width="100%"
     >
       <VCard>
         <VCardTitle>{{ t('agreement_details') }}</VCardTitle>

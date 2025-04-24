@@ -598,5 +598,6 @@
   "payment_details": "Detalles de Pago",
   "imported": "Importado",
   "fiscal_regime": "Regimen Fiscal",
-  "usecfdi": "Uso de CFDI"
+  "usecfdi": "Uso de CFDI",
+  "last_intakes": "Últimas Lecturas"
 }
