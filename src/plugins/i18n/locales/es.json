@@ -452,7 +452,8 @@
   "search": {
     "contract": "Contrato",
     "search": "Buscar",
-    "advanced": "Busqueda Avanzada"
+    "advanced": "Busqueda Avanzada",
+    "searchPlaceholder": "Buscar contrato por número de contrato, nombre del cliente, número de medidor, RFC, o dirección."
   },
   "tabs": {
     "generalInfo": "Información General",
@@ -599,5 +600,23 @@
   "imported": "Importado",
   "fiscal_regime": "Regimen Fiscal",
   "usecfdi": "Uso de CFDI",
-  "last_intakes": "Últimas Lecturas"
+  "last_intakes": "Últimas Lecturas",
+  "enterValue": "Ingrese un valor",
+  "selectColumn": "Seleccionar Columna",
+  "selectOperator": "Seleccionar Operador",
+  "to": "Hasta",
+  "applyFilters": "Aplicar Filtros",
+  "clearFilters": "Limpiar Filtros",
+  "clearAllFilters": "Limpiar Todos los Filtros",
+  "addFilter": "Agregar Filtro",
+  "showAdvancedSearch": "Mostrar Búsqueda Avanzada",
+  "hideAdvancedSearch": "Ocultar Búsqueda Avanzada",
+  "range": "Rango",
+  "contains": "Contiene",
+  "equals": "Igual a",
+  "notEquals": "No es igual a",
+  "greaterThan": "Mayor que",
+  "lessThan": "Menor que",
+  "startsWith": "Comienza con",
+  "endsWith": "Termina con"
 }
