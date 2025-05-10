@@ -341,7 +341,7 @@ function openFiscalDataDialog() {
                   >
                     <div>
                       <div class="text-subtitle-2 mb-2">
-                        {{ $t('last_readings') }}
+                        {{ $t('last_intakes') }}
                       </div>
                       <VList>
                         <VListItem
@@ -356,7 +356,7 @@ function openFiscalDataDialog() {
                                 size="small"
                                 class="me-2"
                               />
-                              <span>{{ reading.Actual }} m³</span>
+                              <span>{{ reading.Consumo }} m³</span>
                             </div>
                           </VListItemTitle>
                           <VListItemSubtitle class="text-caption">
