@@ -1,9 +1,36 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AgreementDetails from './AgreementDetails.vue'
 import BaseTable from '@/components/BaseTable.vue' // Asegúrate de importar correctamente tu componente BaseTable
 import { useAppManager } from '@/composables/useAppManager'
 import { useContractStore } from '@/modules/support/stores/contractStore'
+
+// Define types
+interface Detail {
+  rowid: number
+  fk_agreements: number
+  numpay: number
+  fk_invoice: number | null
+  payment_amount: number
+  paid: number
+  remaining_balance: number
+  issue_date: string
+  due_date: string
+  payment_date: string | null
+  tms: string
+  created_at: string
+  status: number
+}
+
+interface Pagination {
+  limit: number
+  offset: number
+  count: number
+  total: number
+  page?: number
+  search?: string
+}
 
 // Props para personalizar el título y descripción
 const props = defineProps({
@@ -14,12 +41,12 @@ const { t } = useI18n()
 const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
+const contracts = ref<any[]>([])
+const loading = ref(true)
+const selectedContract = ref<any>(null)
 const searchQuery = ref('')
 
-const pagination = ref({
+const pagination = ref<Pagination>({
   limit: 10,
   offset: 0,
   count: 0,
@@ -44,7 +71,36 @@ const headers = [
 ]
 
 const showDetailsDialog = ref(false)
-const selectedDetails = ref([])
+const selectedDetails = ref<Detail[]>([])
+
+// Computed properties for summary
+const summary = computed(() => {
+  if (!selectedDetails.value.length) {
+    return {
+      total: 0,
+      paid: 0,
+      overdue: 0,
+      pending: 0,
+    }
+  }
+
+  const today = new Date()
+
+  return {
+    total: selectedDetails.value.length,
+    paid: selectedDetails.value.filter((detail: Detail) => detail.status === 4).length,
+    overdue: selectedDetails.value.filter((detail: Detail) => {
+      const dueDate = new Date(detail.due_date)
+
+      return detail.status !== 4 && dueDate < today
+    }).length,
+    pending: selectedDetails.value.filter((detail: Detail) => {
+      const dueDate = new Date(detail.due_date)
+
+      return detail.status !== 4 && dueDate >= today
+    }).length,
+  }
+})
 
 // Función para actualizar la página
 function updatePage(newPage: number) {
@@ -69,9 +125,15 @@ function onSearchInput() {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await contractStore.getAgreementsByContract(contractStore.item.id_account, pagination.value)
+    if (!contractStore.item?.id_account)
+      return
 
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
+    const response = await contractStore.getAgreementsByContract(
+      String(contractStore.item.id_account),
+      pagination.value,
+    )
+
+    contracts.value = replaceNullWithEmptyString(response.data)
     pagination.value = response.pagination
   }
   catch (error) {
@@ -105,9 +167,34 @@ watch(() => props.activeTab, newTab => {
   }
 })
 
-function showAgreementDetails(details: any[]) {
+function showAgreementDetails(details: Detail[]) {
   selectedDetails.value = details
   showDetailsDialog.value = true
+}
+
+function isOverdue(detail: Detail): boolean {
+  const today = new Date()
+  const dueDate = new Date(detail.due_date)
+
+  return detail.status !== 4 && dueDate < today
+}
+
+function getStatusColor(detail: Detail): string {
+  if (detail.status === 4)
+    return 'success'
+  if (isOverdue(detail))
+    return 'error'
+
+  return 'warning'
+}
+
+function getStatusText(detail: Detail): string {
+  if (detail.status === 4)
+    return t('paid')
+  if (isOverdue(detail))
+    return t('overdue')
+
+  return t('pending')
 }
 </script>
 
@@ -128,16 +215,16 @@ function showAgreementDetails(details: any[]) {
         @update:items-per-page="updateItemsPerPage"
       >
         <template #payment_amount="{ item }">
-          {{ $formatCurrency(item.payment_amount) || '0' }}
+          {{ $formatCurrency(item?.payment_amount) || '0' }}
         </template>
         <template #agreed_balance="{ item }">
-          {{ $formatCurrency(item.agreed_balance) || '0' }}
+          {{ $formatCurrency(item?.agreed_balance) || '0' }}
         </template>
         <template #advance_amount="{ item }">
-          {{ $formatCurrency(item.advance_amount) || '0' }}
+          {{ $formatCurrency(item?.advance_amount) || '0' }}
         </template>
         <template #previous_balance="{ item }">
-          {{ $formatCurrency(item.previous_balance) || '0' }}
+          {{ $formatCurrency(item?.previous_balance) || '0' }}
         </template>
         <template #date_creation="{ item }">
           {{ $formatDate(item.date_creation) || '0' }}
@@ -172,69 +259,27 @@ function showAgreementDetails(details: any[]) {
     </VCardText>
 
     <!-- Modal de detalles del acuerdo -->
-    <VDialog
+    <AgreementDetails
       v-model="showDetailsDialog"
-      max-width="100%"
-    >
-      <VCard>
-        <VCardTitle>{{ t('agreement_details') }}</VCardTitle>
-        <VCardText>
-          <VTable>
-            <thead>
-              <tr>
-                <th>{{ t('payment_number') }}</th>
-                <th>{{ t('payment_amount') }}</th>
-                <th>{{ t('paid_amount') }}</th>
-                <th>{{ t('remaining_balance') }}</th>
-                <th>{{ t('issue_date') }}</th>
-                <th>{{ t('due_date') }}</th>
-                <th>{{ t('payment_date') }}</th>
-                <th>{{ t('status') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="detail in selectedDetails"
-                :key="detail.rowid"
-              >
-                <td>{{ detail.numpay }}</td>
-                <td>{{ $formatCurrency(detail.payment_amount) }}</td>
-                <td>{{ $formatCurrency(detail.paid) }}</td>
-                <td>{{ $formatCurrency(detail.remaining_balance) }}</td>
-                <td>{{ $formatDate(detail.issue_date) }}</td>
-                <td>{{ $formatDate(detail.due_date) }}</td>
-                <td v-if="detail.payment_date">
-                  {{ $formatDate(detail.payment_date) }}
-                </td>
-                <td v-if="!detail.payment_date" />
-                <td>
-                  <VChip
-                    :color="detail.status === 4 ? 'success' : 'warning'"
-                    size="small"
-                  >
-                    {{ detail.status === 4 ? t('paid') : t('pending') }}
-                  </VChip>
-                </td>
-              </tr>
-            </tbody>
-          </VTable>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="primary"
-            @click="showDetailsDialog = false"
-          >
-            {{ t('close') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+      :details="selectedDetails"
+    />
   </VCard>
 </template>
 
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+
+.text-success {
+  color: rgb(var(--v-theme-success));
+}
+
+.text-error {
+  color: rgb(var(--v-theme-error));
+}
+
+.text-warning {
+  color: rgb(var(--v-theme-warning));
 }
 </style>

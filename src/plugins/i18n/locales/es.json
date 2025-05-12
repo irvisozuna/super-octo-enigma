@@ -619,5 +619,6 @@
   "lessThan": "Menor que",
   "startsWith": "Comienza con",
   "endsWith": "Termina con",
-  "Paymentmandates": "Domiciliación de Pago"
+  "Paymentmandates": "Domiciliación de Pago",
+  "overdue": "Vencido"
 }
