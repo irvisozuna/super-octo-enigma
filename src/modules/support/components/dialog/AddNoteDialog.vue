@@ -1,14 +1,22 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNotification } from '@/helpers/notificationHelper'
 import { useContractStore } from '@/modules/support/stores/contractStore'
+import { useAppManager } from '@/composables/useAppManager'
+
+const props = defineProps<{
+  isMandatory?: boolean
+}>()
 
 const { t } = useI18n()
 const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
-const { aquasoft_id } = useCookie('userData').value
+const { aquasoft_id, name } = useCookie('userData').value
+
+// Computed para determinar si el usuario es admin
+const isAdmin = computed(() => name === 'admin')
 
 // Estado interno del diálogo
 const internalDialog = ref(true)
@@ -34,8 +42,6 @@ const noteTypes = [
 
 // Función que se ejecuta al enviar el formulario
 async function onSubmit() {
-  debugger
-
   // Validar que si no tiene el aquasoft, no se pueda crear la nota que diga que cierre sesion y vuelva abrir
   if (!aquasoft_id) {
     showError(t('error_creating_note'))
@@ -63,21 +69,34 @@ async function onSubmit() {
 
 // Función para cancelar y cerrar el diálogo
 function onCancel() {
+  if (props.isMandatory && !isAdmin.value) {
+    showError(t('note_required'))
+
+    return
+  }
   closeDialog('cancel')
 }
 
 // Opcional: Cierra el diálogo cuando se termine la animación y resuelve la promesa
 watch(internalDialog, val => {
-  if (!val) {
-    // Aquí se podría hacer una limpieza o resolver la promesa, según tu sistema.
-  }
+  if (!val && props.isMandatory && !isAdmin.value)
+    internalDialog.value = true // Forzar a mantener el diálogo abierto
 })
 </script>
 
 <template>
-  <DialogCloseBtn @click="closeDialog" />
+  <DialogCloseBtn
+    v-if="!isMandatory || isAdmin"
+    @click="closeDialog"
+  />
   <VCard>
-    <VCardTitle>{{ t('add_note') }}</VCardTitle>
+    <VCardTitle>
+      {{ t('add_note') }}
+      <span
+        v-if="isMandatory && !isAdmin"
+        class="text-error"
+      >*</span>
+    </VCardTitle>
     <VForm @submit.prevent="onSubmit">
       <VCardText>
         <VSelect
@@ -95,10 +114,17 @@ watch(internalDialog, val => {
           required
           rows="4"
         />
+        <div
+          v-if="isMandatory && !isAdmin"
+          class="text-caption text-error mt-2"
+        >
+          {{ t('note_required_message') }}
+        </div>
       </VCardText>
       <VCardActions>
         <VSpacer />
         <VBtn
+          v-if="!isMandatory || isAdmin"
           color="secondary"
           variant="text"
           @click="onCancel"

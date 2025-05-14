@@ -137,7 +137,9 @@ const triggeredRemove = () => {
             v-show="!isContentCollapsed"
             class="v-card-content"
           >
-            <slot />
+            <template v-if="$slots.default">
+              <slot />
+            </template>
           </div>
         </VExpandTransition>
 

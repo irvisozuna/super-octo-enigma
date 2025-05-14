@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AddNoteDialog from './AddNoteDialog.vue'
 import BaseTable from '@/components/BaseTable.vue'
 import { useAppManager } from '@/composables/useAppManager'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const { t } = useI18n()
-const { closeDialog } = useAppManager()
+const { closeDialog, openDialog } = useAppManager()
 const contractStore = useContractStore()
 
 const contracts = ref([])
@@ -176,10 +177,20 @@ async function selectContract(contract) {
     // Mostrar un loading mientras se selecciona el contrato
     loading.value = true
     await contractStore.getContract(contract.account) // Ejecutar la acción del store con el ID del contrato
-    closeDialog('submit') // Cerrar el diálogo después de la selección
+
+    // Abrir el diálogo de notas obligatorio
+    openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
+      if (result === 'submit') {
+        console.log('Nota creada, cerrando diálogo de búsqueda...')
+        closeDialog('submit') // Cerrar el diálogo después de crear la nota
+      }
+    })
   }
   catch (error) {
     console.error('Error al seleccionar el contrato:', error)
+  }
+  finally {
+    loading.value = false
   }
 }
 
