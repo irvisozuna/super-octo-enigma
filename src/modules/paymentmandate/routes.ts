@@ -12,7 +12,7 @@ const paymentmandateRoutes: RouteRecordRaw[] = [
     component: paymentmandateComponent,
     meta: {
       action: 'read',
-      subject: 'supports',
+      subject: 'paymentmandates',
     },
   },
   {

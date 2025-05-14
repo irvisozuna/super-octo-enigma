@@ -619,5 +619,7 @@
   "lessThan": "Menor que",
   "startsWith": "Comienza con",
   "endsWith": "Termina con",
-  "Paymentmandates": "Domiciliación de Pago"
+  "Paymentmandates": "Domiciliación de Pago",
+  "overdue": "Vencido",
+  "has_rebilling": "Esta lectura tiene una refacturación. Haga clic para ver los detalles."
 }

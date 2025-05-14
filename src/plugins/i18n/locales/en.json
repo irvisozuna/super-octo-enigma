@@ -533,5 +533,6 @@
   "number_payments": "Number of Payments",
   "payment_frequency": "Payment Frequency",
   "previous_balance": "Previous Balance",
-  "advance_type": "Advance Type"
+  "advance_type": "Advance Type",
+  "has_rebilling": "This reading has a rebilling. Click to view details."
 }
