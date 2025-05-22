@@ -21,5 +21,6 @@ export interface TableItem {
   Consumo?: string
   Fecha?: string
   rebilling?: RebillingItem[]
+  PeriodoCode?: string
   [key: string]: any
 }

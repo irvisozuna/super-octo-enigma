@@ -621,5 +621,8 @@
   "endsWith": "Termina con",
   "Paymentmandates": "Domiciliación de Pago",
   "overdue": "Vencido",
-  "has_rebilling": "Esta lectura tiene una refacturación. Haga clic para ver los detalles."
+  "has_rebilling": "Esta lectura tiene una refacturación. Haga clic para ver los detalles.",
+  "view_evidence": "Ver Evidencia",
+  "evidence": "Evidencia",
+  "reading_evidence": "Evidencia de Lectura"
 }

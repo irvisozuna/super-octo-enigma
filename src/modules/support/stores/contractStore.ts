@@ -1,6 +1,6 @@
-import { createCrudStore } from '@/stores/crudFactory'
 import dbConfig from '../indexedDbConfig'
 import type { Account } from '../types/Contract'
+import { createCrudStore } from '@/stores/crudFactory'
 
 // Define el store base
 const baseContractStore = createCrudStore<Account>({
@@ -30,6 +30,7 @@ type ContractStore = ReturnType<typeof baseContractStore> & {
   getNotesByContract: (id: string, filters?: Record<string, any>) => Promise<any>
   getPdFBalance: (account: string) => Promise<any>
   createNote: (note: any, endpoint: string) => Promise<any>
+  getContractImages: (contractId: string, periodId: string) => Promise<any>
   performContractAction: (
     endpoint: string,
     id: string,
@@ -98,6 +99,10 @@ contractStore.getPdFBalance = async function (account: string) {
 
 contractStore.createNote = async function (note: any, endpoint: string) {
   return await this.customAction(endpoint, 'POST', note)
+}
+
+contractStore.getContractImages = async function (contractId: string, periodId: string) {
+  return await this.customAction(`/getContractImages/${contractId}/${periodId}`, 'GET')
 }
 
 // Escucha de eventos en WebSocket
