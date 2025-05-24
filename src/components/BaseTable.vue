@@ -1,9 +1,30 @@
 <script setup lang="ts">
+import type { PropType } from 'vue'
 import { computed, defineEmits, defineProps, ref, watch } from 'vue'
+import { useAbility } from '@casl/vue'
+
+interface Header {
+  title: string
+  value: string
+  permission?: {
+    action: string
+    subject: string
+  }
+}
 
 // Props
 const props = defineProps({
-  headers: { type: Array, required: true }, // Encabezados de la tabla
+  headers: {
+    type: Array as PropType<Header[]>,
+    required: true,
+    validator: (value: Header[]) => {
+      return value.every(header =>
+        typeof header === 'object'
+        && 'title' in header
+        && 'value' in header,
+      )
+    },
+  }, // Encabezados de la tabla
   items: { type: Array, required: true }, // Elementos a mostrar
   total: { type: Number, required: true }, // Total de elementos
   page: { type: Number, required: true }, // Página actual
@@ -22,6 +43,9 @@ const emits = defineEmits([
   'edit',
   'delete',
 ])
+
+// ACL
+const ability = useAbility()
 
 // Computed para verificar si existe la columna de acciones
 const hasActionsColumn = computed(() => {
@@ -57,12 +81,22 @@ function updatePage(newPage: number) {
 function updateItemsPerPage(newItemsPerPage: number) {
   emits('update:items-per-page', newItemsPerPage)
 }
+
+// Computed para filtrar headers basado en permisos
+const filteredHeaders = computed(() => {
+  return props.headers.filter(header => {
+    if (!header.permission)
+      return true
+
+    return ability.can(header.permission.action, header.permission.subject)
+  })
+})
 </script>
 
 <template>
   <VDataTableServer
     v-model="internalSelection"
-    :headers="headers"
+    :headers="filteredHeaders"
     :items="items"
     :items-length="total"
     :page="localPage"
@@ -76,11 +110,9 @@ function updateItemsPerPage(newItemsPerPage: number) {
     @update:items-per-page="updateItemsPerPage"
   >
     <!-- Renderizado de columnas dinámico -->
-    <!-- Renderizado de columnas dinámico para VDataTableServer -->
     <template
-      v-for="header in headers"
+      v-for="header in filteredHeaders"
       :key="header.value"
-      :slot="`item.${header.value}`"
       #[`item.${header.value}`]="{ item }"
     >
       <slot

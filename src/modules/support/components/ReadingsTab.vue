@@ -51,7 +51,14 @@ const headers = [
   { title: t('real_consumo'), value: 'Real_Consumo' },
   { title: t('Consumo'), value: 'Consumo' },
   { title: t('Anomalia'), value: 'Anomalia' },
-  { title: t('view_evidence'), value: 'view_evidence' },
+  {
+    title: t('view_evidence'),
+    value: 'view_evidence',
+    permission: {
+      action: 'read',
+      subject: 'Evidence',
+    },
+  },
 ]
 
 // Función para actualizar la página
@@ -148,6 +155,7 @@ const showImages = (item: TableItem) => {
           >
             <template #activator="{ props }">
               <VBtn
+                v-if="$can('read', 'Rebilling')"
                 v-bind="props"
                 size="small"
                 color="warning"
@@ -173,6 +181,7 @@ const showImages = (item: TableItem) => {
           <VTooltip location="top">
             <template #activator="{ props }">
               <VBtn
+                v-if="$can('read', 'Evidence')"
                 v-bind="props"
                 size="small"
                 color="primary"
