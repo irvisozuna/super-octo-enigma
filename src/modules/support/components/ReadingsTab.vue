@@ -3,8 +3,8 @@ import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RebillingItem, TableItem } from '../types/RebillingItem'
 import RebillingDetailDialog from './dialog/RebillingDetailDialog.vue'
-import BaseTable from '@/components/BaseTable.vue' // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager'
+import ContractImagesDialog from './dialog/ContractImagesDialog.vue'
+import BaseTable from '@/components/BaseTable.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 
 // Props para personalizar el título y descripción
@@ -13,15 +13,23 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
-const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
+interface PaginationState {
+  limit: number
+  offset: number
+  count: number
+  total: number
+  page?: number
+  search?: string
+}
+
+const contracts = ref<TableItem[]>([])
+const loading = ref(true)
+const selectedContract = ref<TableItem[]>([])
 const searchQuery = ref('')
 
-const pagination = ref({
+const pagination = ref<PaginationState>({
   limit: 10,
   offset: 0,
   count: 0,
@@ -30,6 +38,8 @@ const pagination = ref({
 
 const isRebillingDialogVisible = ref(false)
 const selectedRebillingData = ref<RebillingItem[]>([])
+const isImagesDialogVisible = ref(false)
+const selectedReading = ref<TableItem | null>(null)
 
 // Encabezados de la tabla
 const headers = [
@@ -41,6 +51,7 @@ const headers = [
   { title: t('real_consumo'), value: 'Real_Consumo' },
   { title: t('Consumo'), value: 'Consumo' },
   { title: t('Anomalia'), value: 'Anomalia' },
+  { title: t('view_evidence'), value: 'view_evidence' },
 ]
 
 // Función para actualizar la página
@@ -55,20 +66,19 @@ function updateItemsPerPage(newItemsPerPage: number) {
   fetchData()
 }
 
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
 // Función para cargar los datos
 async function fetchData() {
   loading.value = true
   try {
-    const response = await contractStore.getReadingsByContract(contractStore.item.id_account, pagination.value)
+    if (!contractStore.item?.id_account)
+      throw new Error('No contract selected')
 
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
+    const response = await contractStore.getReadingsByContract(
+      String(contractStore.item.id_account),
+      pagination.value,
+    )
+
+    contracts.value = replaceNullWithEmptyString(response.data)
     pagination.value = response.pagination
   }
   catch (error) {
@@ -80,7 +90,7 @@ async function fetchData() {
 }
 
 // Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
+function replaceNullWithEmptyString(data: any[]): TableItem[] {
   return data.map(item => {
     const newItem = { ...item }
     for (const key in newItem) {
@@ -97,9 +107,8 @@ onMounted(fetchData)
 
 // Escuchar cambios en el tab activo y recargar datos
 watch(() => props.activeTab, newTab => {
-  if (newTab === 3) { // Suponiendo que el tab de BillingHistory es el índice 1
+  if (newTab === 3)
     fetchData()
-  }
 })
 
 const showRebillingDetails = (item: TableItem) => {
@@ -107,6 +116,11 @@ const showRebillingDetails = (item: TableItem) => {
     selectedRebillingData.value = item.rebilling
     isRebillingDialogVisible.value = true
   }
+}
+
+const showImages = (item: TableItem) => {
+  selectedReading.value = item
+  isImagesDialogVisible.value = true
 }
 </script>
 
@@ -127,9 +141,9 @@ const showRebillingDetails = (item: TableItem) => {
         @update:items-per-page="updateItemsPerPage"
       >
         <template #Consumo="{ item }">
-          {{ item.Consumo || '0' }}
+          {{ (item as TableItem).Consumo || '0' }}
           <VTooltip
-            v-if="item.rebilling && item.rebilling.length > 0"
+            v-if="(item as TableItem).rebilling && (item as TableItem).rebilling.length > 0"
             location="top"
           >
             <template #activator="{ props }">
@@ -139,7 +153,7 @@ const showRebillingDetails = (item: TableItem) => {
                 color="warning"
                 variant="tonal"
                 icon
-                @click="showRebillingDetails(item)"
+                @click="showRebillingDetails(item as TableItem)"
               >
                 <VIcon
                   icon="tabler-history"
@@ -152,8 +166,28 @@ const showRebillingDetails = (item: TableItem) => {
         </template>
         <template #Fecha="{ item }">
           <div class="">
-            {{ item.Fecha || 'N/A' }}
+            {{ (item as TableItem).Fecha || 'N/A' }}
           </div>
+        </template>
+        <template #view_evidence="{ item }">
+          <VTooltip location="top">
+            <template #activator="{ props }">
+              <VBtn
+                v-bind="props"
+                size="small"
+                color="primary"
+                variant="tonal"
+                icon
+                @click="showImages(item as TableItem)"
+              >
+                <VIcon
+                  icon="tabler-photo"
+                  size="18"
+                />
+              </VBtn>
+            </template>
+            <span>{{ t('view_evidence') }}</span>
+          </VTooltip>
         </template>
       </BaseTable>
 
@@ -177,5 +211,13 @@ const showRebillingDetails = (item: TableItem) => {
   <RebillingDetailDialog
     v-model:is-dialog-visible="isRebillingDialogVisible"
     :rebilling-data="selectedRebillingData"
+  />
+
+  <!-- Diálogo de imágenes -->
+  <ContractImagesDialog
+    v-if="selectedReading && contractStore.item?.id_account"
+    v-model:is-dialog-visible="isImagesDialogVisible"
+    :contract-id="String(contractStore.item!.account)"
+    :period-id="selectedReading.PeriodCode"
   />
 </template>
