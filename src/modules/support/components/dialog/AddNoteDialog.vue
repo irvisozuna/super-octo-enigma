@@ -38,6 +38,7 @@ const noteTypes = [
   { value: 'work_order', text: t('work_order') },
   { value: 'debt_letter', text: t('no_debt_letter') },
   { value: 'error_reading', text: t('error_reading') },
+  { value: 'multas', text: t('multas') },
 ]
 
 // Función que se ejecuta al enviar el formulario
