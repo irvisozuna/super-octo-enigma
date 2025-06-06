@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { UserProfileMenuItem } from '@/types/types';
-import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+import type { UserProfileMenuItem } from '@/types/types'
+import { useAuthStore } from '@/stores/auth.store'
 
 const router = useRouter()
 const ability = useAbility()
-const { isAdmin } = useCurrentUser();
+const { isAdmin } = useCurrentUser()
+const authStore = useAuthStore()
 
 // TODO: Get type from backend
 const userData = useCookie<any>('userData')
 
 const logout = async () => {
+  await authStore.logout()
+
   // Remove "accessToken" from cookie
   useCookie('accessToken').value = null
 
@@ -32,9 +36,11 @@ const logout = async () => {
 const userProfileList: UserProfileMenuItem[] = [
   { type: 'divider' },
   { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
+
   // { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } }, onlyAdmin: true },
   // { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'profile-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' }, onlyAdmin: true },
   { type: 'divider' },
+
   // { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'profile-account-settings-tab' }, onlyAdmin: true },
   // { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'profile-account-settings-tab' } },
 ]
@@ -42,40 +48,80 @@ const userProfileList: UserProfileMenuItem[] = [
 const filteredUserProfileList = computed(() => {
   const visibleItems = userProfileList.filter(item => {
     // Filtra elementos según el rol
-    if (item.onlyAdmin && !isAdmin.value) return false;
-    return true;
-  });
+    if (item.onlyAdmin && !isAdmin.value)
+      return false
+
+    return true
+  })
 
   // Remueve divisores innecesarios
   return visibleItems.filter((item, index) => {
-    const prev = visibleItems[index - 1];
-    const next = visibleItems[index + 1];
-    if (item.type === 'divider' && (!prev || prev.type === 'divider' || !next || next.type === 'divider')) {
-      return false;
-    }
-    return true;
-  });
-});
+    const prev = visibleItems[index - 1]
+    const next = visibleItems[index + 1]
+    if (item.type === 'divider' && (!prev || prev.type === 'divider' || !next || next.type === 'divider'))
+      return false
+
+    return true
+  })
+})
 </script>
 
 <template>
-  <VBadge v-if="userData" dot bordered location="bottom right" offset-x="1" offset-y="2" color="success">
-    <VAvatar size="38" class="cursor-pointer" :color="!(userData && userData.avatar) ? 'primary' : undefined"
-      :variant="!(userData && userData.avatar) ? 'tonal' : undefined">
-      <VImg v-if="userData && userData.avatar" :src="userData.avatar" />
-      <VIcon v-else icon="tabler-user" />
+  <VBadge
+    v-if="userData"
+    dot
+    bordered
+    location="bottom right"
+    offset-x="1"
+    offset-y="2"
+    color="success"
+  >
+    <VAvatar
+      size="38"
+      class="cursor-pointer"
+      :color="!(userData && userData.avatar) ? 'primary' : undefined"
+      :variant="!(userData && userData.avatar) ? 'tonal' : undefined"
+    >
+      <VImg
+        v-if="userData && userData.avatar"
+        :src="userData.avatar"
+      />
+      <VIcon
+        v-else
+        icon="tabler-user"
+      />
 
       <!-- SECTION Menu -->
-      <VMenu activator="parent" width="240" location="bottom end" offset="12px">
+      <VMenu
+        activator="parent"
+        width="240"
+        location="bottom end"
+        offset="12px"
+      >
         <VList>
           <VListItem>
             <div class="d-flex gap-2 align-center">
               <VListItemAction>
-                <VBadge dot location="bottom right" offset-x="3" offset-y="3" color="success" bordered>
-                  <VAvatar :color="!(userData && userData.avatar) ? 'primary' : undefined"
-                    :variant="!(userData && userData.avatar) ? 'tonal' : undefined">
-                    <VImg v-if="userData && userData.avatar" :src="userData.avatar" />
-                    <VIcon v-else icon="tabler-user" />
+                <VBadge
+                  dot
+                  location="bottom right"
+                  offset-x="3"
+                  offset-y="3"
+                  color="success"
+                  bordered
+                >
+                  <VAvatar
+                    :color="!(userData && userData.avatar) ? 'primary' : undefined"
+                    :variant="!(userData && userData.avatar) ? 'tonal' : undefined"
+                  >
+                    <VImg
+                      v-if="userData && userData.avatar"
+                      :src="userData.avatar"
+                    />
+                    <VIcon
+                      v-else
+                      icon="tabler-user"
+                    />
                   </VAvatar>
                 </VBadge>
               </VListItemAction>
@@ -92,24 +138,49 @@ const filteredUserProfileList = computed(() => {
           </VListItem>
 
           <PerfectScrollbar :options="{ wheelPropagation: false }">
-            <template v-for="item in filteredUserProfileList" :key="item.title || item.type">
-              <VListItem v-if="item.type === 'navItem'" :to="item.to">
+            <template
+              v-for="item in filteredUserProfileList"
+              :key="item.title || item.type"
+            >
+              <VListItem
+                v-if="item.type === 'navItem'"
+                :to="item.to"
+              >
                 <template #prepend>
-                  <VIcon :icon="item.icon" size="22" />
+                  <VIcon
+                    :icon="item.icon"
+                    size="22"
+                  />
                 </template>
 
                 <VListItemTitle>{{ $t(item.title || '') }}</VListItemTitle>
 
-                <template v-if="item.badgeProps" #append>
-                  <VBadge rounded="sm" class="me-3" v-bind="item.badgeProps" />
+                <template
+                  v-if="item.badgeProps"
+                  #append
+                >
+                  <VBadge
+                    rounded="sm"
+                    class="me-3"
+                    v-bind="item.badgeProps"
+                  />
                 </template>
               </VListItem>
 
-              <VDivider v-else class="my-2" />
+              <VDivider
+                v-else
+                class="my-2"
+              />
             </template>
 
             <div class="px-4 py-2">
-              <VBtn block size="small" color="error" append-icon="tabler-logout" @click="logout">
+              <VBtn
+                block
+                size="small"
+                color="error"
+                append-icon="tabler-logout"
+                @click="logout"
+              >
                 {{ $t('Logout') }}
               </VBtn>
             </div>
