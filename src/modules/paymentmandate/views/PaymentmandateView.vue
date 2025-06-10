@@ -56,7 +56,13 @@ async function processBankResponse() {
 }
 
 function downloadFile(url: string) {
-  window.open(url, '_blank')
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', '') // Puedes poner un nombre de archivo aquí si lo deseas
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>
 
