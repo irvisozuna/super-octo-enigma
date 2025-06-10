@@ -56,16 +56,24 @@ async function processBankResponse() {
 }
 
 function downloadFile(url: string) {
+  // Forzar https si la url comienza con http://
+  if (url.startsWith('http://'))
+    url = url.replace('http://', 'https://')
+
   const link = document.createElement('a')
 
   link.href = url
-  link.setAttribute('download', '') // Puedes poner un nombre de archivo aquí si lo deseas
+  link.setAttribute('download', '')
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
 }
 
 function forceDownload(url: string) {
+  // Forzar https si la url comienza con http://
+  if (url.startsWith('http://'))
+    url = url.replace('http://', 'https://')
+
   window.location.href = url
 }
 
@@ -113,7 +121,7 @@ function copyToClipboard(text: string) {
                   v-if="mandate.file_path"
                   color="secondary"
                   prepend-icon="tabler-download"
-                  class="ml-2"
+                  class="ms-2"
                   @click="forceDownload(mandate.file_path)"
                 >
                   Forzar descarga (redirigir)
@@ -122,15 +130,31 @@ function copyToClipboard(text: string) {
                   v-if="mandate.file_path"
                   class="mt-2 d-flex align-center"
                 >
-                  <span style="word-break: break-all;">{{ mandate.file_path }}</span>
+                  <VTextField
+                    :model-value="mandate.file_path.startsWith('http://') ? mandate.file_path.replace('http://', 'https://') : mandate.file_path"
+                    readonly
+                    hide-details
+                    density="compact"
+                    style="max-inline-size: 420px;"
+                    class="me-2"
+                  />
                   <VBtn
                     size="small"
                     icon="tabler-copy"
-                    class="ml-2"
+                    class="ms-2"
                     :title="t('paymentmandate.copyUrl')"
-                    @click="copyToClipboard(mandate.file_path)"
+                    @click="copyToClipboard(mandate.file_path.startsWith('http://') ? mandate.file_path.replace('http://', 'https://') : mandate.file_path)"
                   />
                 </div>
+                <VAlert
+                  v-if="mandate.file_path && mandate.file_path.startsWith('http://')"
+                  type="warning"
+                  class="mt-2"
+                  density="compact"
+                  text
+                >
+                  La descarga puede ser bloqueada por el navegador porque el archivo no está en una conexión segura (HTTP). Intenta usar HTTPS o contacta al administrador del sistema.
+                </VAlert>
               </div>
             </VCardText>
           </VCard>
