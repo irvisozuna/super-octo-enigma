@@ -117,44 +117,6 @@ function copyToClipboard(text: string) {
                 >
                   {{ t('paymentmandate.downloadFile') }}
                 </VBtn>
-                <VBtn
-                  v-if="mandate.file_path"
-                  color="secondary"
-                  prepend-icon="tabler-download"
-                  class="ms-2"
-                  @click="forceDownload(mandate.file_path)"
-                >
-                  Forzar descarga (redirigir)
-                </VBtn>
-                <div
-                  v-if="mandate.file_path"
-                  class="mt-2 d-flex align-center"
-                >
-                  <VTextField
-                    :model-value="mandate.file_path.startsWith('http://') ? mandate.file_path.replace('http://', 'https://') : mandate.file_path"
-                    readonly
-                    hide-details
-                    density="compact"
-                    style="max-inline-size: 420px;"
-                    class="me-2"
-                  />
-                  <VBtn
-                    size="small"
-                    icon="tabler-copy"
-                    class="ms-2"
-                    :title="t('paymentmandate.copyUrl')"
-                    @click="copyToClipboard(mandate.file_path.startsWith('http://') ? mandate.file_path.replace('http://', 'https://') : mandate.file_path)"
-                  />
-                </div>
-                <VAlert
-                  v-if="mandate.file_path && mandate.file_path.startsWith('http://')"
-                  type="warning"
-                  class="mt-2"
-                  density="compact"
-                  text
-                >
-                  La descarga puede ser bloqueada por el navegador porque el archivo no está en una conexión segura (HTTP). Intenta usar HTTPS o contacta al administrador del sistema.
-                </VAlert>
               </div>
             </VCardText>
           </VCard>
