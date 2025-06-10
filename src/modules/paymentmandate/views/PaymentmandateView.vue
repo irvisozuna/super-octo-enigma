@@ -64,6 +64,14 @@ function downloadFile(url: string) {
   link.click()
   document.body.removeChild(link)
 }
+
+function forceDownload(url: string) {
+  window.location.href = url
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text)
+}
 </script>
 
 <template>
@@ -101,6 +109,28 @@ function downloadFile(url: string) {
                 >
                   {{ t('paymentmandate.downloadFile') }}
                 </VBtn>
+                <VBtn
+                  v-if="mandate.file_path"
+                  color="secondary"
+                  prepend-icon="tabler-download"
+                  class="ml-2"
+                  @click="forceDownload(mandate.file_path)"
+                >
+                  Forzar descarga (redirigir)
+                </VBtn>
+                <div
+                  v-if="mandate.file_path"
+                  class="mt-2 d-flex align-center"
+                >
+                  <span style="word-break: break-all;">{{ mandate.file_path }}</span>
+                  <VBtn
+                    size="small"
+                    icon="tabler-copy"
+                    class="ml-2"
+                    :title="t('paymentmandate.copyUrl')"
+                    @click="copyToClipboard(mandate.file_path)"
+                  />
+                </div>
               </div>
             </VCardText>
           </VCard>
