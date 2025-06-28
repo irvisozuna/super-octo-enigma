@@ -75,7 +75,12 @@ const isNewStructure = (data: any[]): boolean => {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await contractStore.getPaymentsByContract(contractStore.item?.id_account, pagination.value)
+    const params = {
+      limit: pagination.value.limit,
+      page: pagination.value.page,
+    }
+
+    const response = await contractStore.getPaymentsByContract(contractStore.item?.id_account, params)
 
     contracts.value = replaceNullWithEmptyString(response.data)
     pagination.value = response.pagination
@@ -129,6 +134,17 @@ function openPaymentDetailsDialog(details: any[], title = '') {
   selectedDetailsTitle.value = title
   showDetailsDialog.value = true
 }
+
+// Métodos para paginación
+function handlePageChange(newPage: number) {
+  pagination.value.page = newPage
+  fetchData()
+}
+
+function handleItemsPerPageChange(newLimit: number) {
+  pagination.value.limit = newLimit
+  fetchData()
+}
 </script>
 
 <template>
@@ -143,8 +159,8 @@ function openPaymentDetailsDialog(details: any[], title = '') {
         :page="pagination.offset / pagination.limit + 1"
         :items-per-page="pagination.limit"
         :loading="loading"
-        @update:page="fetchData"
-        @update:items-per-page="fetchData"
+        @update:page="handlePageChange"
+        @update:items-per-page="handleItemsPerPageChange"
       >
         <template #payment_date="{ item }">
           <div>{{ $formatDate(item.payment_date, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) || 'N/A' }}</div>
@@ -195,8 +211,8 @@ function openPaymentDetailsDialog(details: any[], title = '') {
         :page="pagination.offset / pagination.limit + 1"
         :items-per-page="pagination.limit"
         :loading="loading"
-        @update:page="fetchData"
-        @update:items-per-page="fetchData"
+        @update:page="handlePageChange"
+        @update:items-per-page="handleItemsPerPageChange"
       >
         <template #consumo="{ item }">
           <div class="text-end">
@@ -272,6 +288,16 @@ function openPaymentDetailsDialog(details: any[], title = '') {
           {{ t('loading') }}...
         </p>
       </div>
+
+      <template v-if="!loading && contracts.length > 0">
+        <div class="text-center my-4">
+          {{
+            pagination.total === 0
+              ? t('no_data')
+              : `${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} de ${pagination.total}`
+          }}
+        </div>
+      </template>
     </VCardText>
 
     <!-- Dialogo de pagos de folio (nueva estructura) -->
