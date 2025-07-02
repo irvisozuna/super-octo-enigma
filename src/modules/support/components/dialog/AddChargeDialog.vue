@@ -8,6 +8,7 @@ const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
 const isLoading = ref(false)
+const { aquasoft_id, name } = useCookie('userData').value
 
 // Validation and Form
 const { handleSubmit, errors } = useForm({
@@ -84,11 +85,17 @@ const onFormSubmit = async () => {
 
   try {
     isLoading.value = true
+    if (!aquasoft_id) {
+      showError(t('error_creating_note'))
+
+      return
+    }
 
     const payload = {
       charges: addedCharges.value,
       account: contractStore.item.account,
       token: token_dolibarr,
+      user_id: aquasoft_id,
     }
 
     const response = await contractStore.createItem(payload, '/charges')
