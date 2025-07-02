@@ -55,7 +55,7 @@ const addCharge = () => {
       id: selectedService.value.rowid,
       name: selectedService.value.name || 'N/A',
       tva_tx: tva_tx.value || 16,
-      price: Number.parseFloat(price.value),
+      price: Number.parseFloat(((price.value || 0) / (1 + (tva_tx.value / 100))).toFixed(2)),
       quantity: Number.parseInt(quantity.value, 10),
       total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10),
     })
