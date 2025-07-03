@@ -28,7 +28,7 @@ module.exports = {
     'regex',
     'regexp',
   ],
-  ignorePatterns: ['src/plugins/iconify/*.js', 'node_modules', 'dist', '*.d.ts', 'vendor'],
+  ignorePatterns: ['src/plugins/iconify/*.js', 'node_modules', 'dist', '*.d.ts', 'vendor', '*.json', '*.jsonc'],
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -57,7 +57,7 @@ module.exports = {
     'object-curly-spacing': ['error', 'always'],
 
     // Enforce camelCase naming convention
-    'camelcase': 'error',
+    'camelcase': 'off',
 
     // Disable max-len
     'max-len': 'off',
@@ -237,5 +237,6 @@ module.exports = {
       node: true,
       typescript: {},
     },
+    'import/order': 'off',
   },
 }

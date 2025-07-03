@@ -1,8 +1,8 @@
-import { createMongoAbility } from '@casl/ability';
+import { createMongoAbility } from '@casl/ability'
 
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage'
 
-export type Subjects = 'Post' | 'Comment' | 'all' | 'Users' | 'Profile'
+export type Subjects = 'Post' | 'Comment' | 'all' | 'Users' | 'Profile' | 'Rebilling' | 'Evidence'
 
 export interface Rule { action: Actions; subject: Subjects }
 

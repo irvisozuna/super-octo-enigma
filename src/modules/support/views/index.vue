@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useContractStore } from '@/modules/support/stores/contractStore'
 import { markRaw, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -12,6 +11,8 @@ import NotesTab from '../components/NotesTab.vue'
 import PaymentHistoryTab from '../components/PaymentHistoryTab.vue'
 import ReadingsTab from '../components/ReadingsTab.vue'
 import WorkOrdersTab from '../components/WorkOrdersTab.vue'
+import AddNoteDialog from '../components/dialog/AddNoteDialog.vue'
+import { useContractStore } from '@/modules/support/stores/contractStore'
 
 // Interfaces
 interface Tab {
@@ -58,6 +59,9 @@ async function searchContract() {
 
     activeTab.value = 0
     searchQuery.value = '' // Limpia el campo de búsqueda
+
+    // Abrir el diálogo de notas después de cargar el contrato
+    openNoteDialog()
   }
   catch (error) {
     console.error('Error fetching contract data:', error)
@@ -94,6 +98,14 @@ function openAdvanceSearchDialog() {
       // irse al primer tab
       activeTab.value = 0
     }
+  })
+}
+
+// Función para abrir el diálogo de notas
+function openNoteDialog() {
+  openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
+    if (result === 'submit')
+      console.log('Nota creada, refrescando datos...')
   })
 }
 

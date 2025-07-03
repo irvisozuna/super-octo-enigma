@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { useNotification } from '@/helpers/notificationHelper'
 import { useField, useForm } from 'vee-validate'
 import { ref } from 'vue'
 import { useContractStore } from '../../stores/contractStore'
 import { useWorkOrderValidation } from '../../validations/WorkOrderValidation'
+import { useNotification } from '@/helpers/notificationHelper'
 
 const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
 const { showSuccess, showError } = useNotification()
 const workOrderValidation = useWorkOrderValidation()
 
-const { handleSubmit, errors } = useForm({
+// Modificar la configuración del formulario para asegurar la validación
+const { handleSubmit, errors, validate } = useForm({
   validationSchema: workOrderValidation,
+  validateOnMount: false,
+  validateOnBlur: true,
+  validateOnChange: true,
   initialValues: {
     source_entity: null,
     type_code: null,
@@ -50,7 +54,7 @@ const priorities = ref([
 ])
 
 // Función para enviar el formulario
-const onFormSubmit = async (values: any) => {
+const onFormSubmit = handleSubmit(async values => {
   try {
     const token_dolibarr = useCookie('dolibarrToken').value
 
@@ -83,8 +87,6 @@ const onFormSubmit = async (values: any) => {
     // 4. Enviar el FormData a la store
     const response = await contractStore.createItem(formData, '/workOrders')
 
-    // (sin poner endpointSuffix si no lo necesitas, o pasándolo como 2do param)
-
     showSuccess(response.message)
     closeDialog()
   }
@@ -92,7 +94,7 @@ const onFormSubmit = async (values: any) => {
     showError('Error al crear la orden de trabajo')
     console.error(error)
   }
-}
+})
 </script>
 
 <template>
@@ -100,7 +102,7 @@ const onFormSubmit = async (values: any) => {
   <VCard>
     <VForm
       class="mt-6"
-      :on-submit="handleSubmit(onFormSubmit)"
+      @submit.prevent="onFormSubmit"
     >
       <VCardTitle class="headline">
         {{ $t('support.work_order') }}

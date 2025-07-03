@@ -5,4 +5,5 @@ export const ENDPOINTS = {
   ORDERS: '/orders',
   CATEGORIES: '/categories',
   TEMPLATES: '/templates',
-};
+  PAYMENTMANDATES: '/payment_mandates',
+}

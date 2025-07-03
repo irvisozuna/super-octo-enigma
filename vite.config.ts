@@ -42,7 +42,7 @@ export default defineConfig({
       styles: {
         configFile: 'src/assets/styles/variables/_vuetify.scss',
       },
-      autoImport: true
+      autoImport: true,
     }),
 
     // Docs: https://github.com/johncampionjr/vite-plugin-vue-layouts#vite-plugin-vue-layouts
@@ -106,6 +106,7 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
+
     // minify: false, // Desactiva la minimización del código
     // sourcemap: true, // Genera un sourcemap para facilitar la depuración
     // rollupOptions: {

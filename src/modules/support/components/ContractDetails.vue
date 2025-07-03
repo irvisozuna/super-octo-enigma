@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { useContractStore } from '@/modules/support/stores/contractStore'
 import { computed } from 'vue'
+import type { Account } from '../types/Contract'
 import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
 import AccountMapDialog from './dialog/AccountMapDialog.vue'
 import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
+import FiscalDataDialog from './dialog/FiscalDataDialog.vue'
+import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const contractStore = useContractStore()
 const contract = computed<Account | null>(() => contractStore.item)
@@ -16,7 +18,7 @@ const statisticsHorizontal = computed(() => {
   return [
     {
       title: 'Convenio Activo',
-      color: 'primary',
+      color: 'secondary',
       icon: 'tabler-edit',
       stats: contract.value?.ref_agreement || 'N/A',
     },
@@ -66,6 +68,19 @@ function openAddNoteDialog() {
   openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
     if (result === 'submit')
       console.log('Nota creada, refrescando datos...')
+  })
+}
+
+// Función para abrir el diálogo de datos fiscales
+function openFiscalDataDialog() {
+  openDialog(FiscalDataDialog, {}, { width: '50%', persistent: true }).then(async result => {
+    if (result === 'submit') {
+      console.log('Datos fiscales actualizados')
+
+      // Recargar los datos del contrato
+      if (contractStore.item?.account)
+        await contractStore.getContract(contractStore.item.account)
+    }
   })
 }
 </script>
@@ -137,6 +152,18 @@ function openAddNoteDialog() {
                       />{{ $t('route') }}:
                     </span>
                     {{ contract?.route }}
+                  </span>
+                  <span
+                    v-if="contract?.clave_loc"
+                    class="flex-1-0"
+                  >
+                    <span class="text-h6 font-weight-500">
+                      <VIcon
+                        icon="tabler-brackets-contain"
+                        class="me-2"
+                      />{{ $t('clave_loc') }}:
+                    </span>
+                    {{ contract?.clave_loc }}
                   </span>
                 </div>
               </VCol>
@@ -272,33 +299,6 @@ function openAddNoteDialog() {
           </VCol>
         </VRow>
         <VRow>
-          <VCol>
-            <VCard>
-              <VCardText>
-                <div class="d-flex justify-space-between mb-1">
-                  <div class="text-base">
-                    {{ contract?.average || '0 / 0' }} {{ $t('level_completed') }}
-                  </div>
-
-                  <div class="text-disabled text-sm">
-                    <VIcon
-                      color="success"
-                      icon="tabler-checkbox"
-                    />
-                  </div>
-                </div>
-
-                <VProgressLinear
-                  :model-value="(contract?.average || 0) * 20"
-                  color="info"
-                  height="8"
-                  rounded
-                />
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
-        <VRow>
           <VCol
             v-for="statistics in statisticsHorizontal"
             :key="statistics.title"
@@ -307,6 +307,68 @@ function openAddNoteDialog() {
             md="6"
           >
             <CardStatisticsVerticalSimple v-bind="statistics" />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VCard>
+              <VCardText>
+                <VRow>
+                  <VCol
+                    v-if="contract?.average_consumption"
+                    cols="12"
+                    md="6"
+                  >
+                    <div class="d-flex align-center">
+                      <VIcon
+                        icon="tabler-droplet"
+                        class="me-2"
+                      />
+                      <div>
+                        <div class="text-subtitle-2">
+                          {{ $t('average_consumption') }}
+                        </div>
+                        <div class="text-h6">
+                          {{ contract.average_consumption }} m³
+                        </div>
+                      </div>
+                    </div>
+                  </VCol>
+                  <VCol
+                    v-if="contract?.readings?.rows?.length > 0"
+                    cols="12"
+                    md="6"
+                  >
+                    <div>
+                      <div class="text-subtitle-2 mb-2">
+                        {{ $t('last_intakes') }}
+                      </div>
+                      <VList>
+                        <VListItem
+                          v-for="reading in contract.readings.rows.slice(0, 3)"
+                          :key="reading.ref"
+                          class="pa-0"
+                        >
+                          <VListItemTitle>
+                            <div class="d-flex align-center">
+                              <VIcon
+                                icon="tabler-gauge"
+                                size="small"
+                                class="me-2"
+                              />
+                              <span>{{ reading.Consumo }} m³</span>
+                            </div>
+                          </VListItemTitle>
+                          <VListItemSubtitle class="text-caption">
+                            {{ reading.Periodo }}
+                          </VListItemSubtitle>
+                        </VListItem>
+                      </VList>
+                    </div>
+                  </VCol>
+                </VRow>
+              </VCardText>
+            </VCard>
           </VCol>
         </VRow>
       </VCol>
@@ -346,37 +408,48 @@ function openAddNoteDialog() {
                 <VIcon
                   icon="tabler-percentage"
                   class="me-2"
-                />{{ $t('pensionary') }}: N/A
+                />{{ $t('pensionary') }}: {{ contract?.pensionary }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-clock"
                   class="me-2"
-                />{{ $t('validity') }}:
+                />{{ $t('validity') }}: {{ contract?.due_date_pensioner }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-users"
                   class="me-2"
-                />{{ $t('handicapped') }}: N/A
+                />{{ $t('handicapped') }}: {{ contract?.handicapped }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-toggle-left"
                   class="me-2"
-                />{{ $t('validity') }}:
+                />{{ $t('validity') }}: {{ contract?.due_date_handicapped }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-bookmark"
                   class="me-2"
-                />{{ $t('business_activity') }}: {{ contract?.business_activity }}
+                />{{ $t('business_activity') }}: <VChip color="primary">
+                  {{ contract?.business_activity }}
+                </VChip>
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-tag"
                   class="me-2"
                 />{{ $t('rate') }}: {{ contract?.rate_type }}
+              </VListItem>
+              <VListItem v-if="contract && contract?.lps && contract?.lps.total > 0">
+                <VIcon
+                  icon="tabler-droplet"
+                  class="me-2"
+                /><span class="text-body-1">{{ $t('lps') }}:</span> <span class="text-body-1">{{ contract?.lps.total }}</span>
+                <p class="text-body-2">
+                  {{ contract?.lps.lps_contratados }}
+                </p>
               </VListItem>
             </VList>
           </VCardText>
@@ -409,8 +482,16 @@ function openAddNoteDialog() {
           </VCardText>
 
           <!-- Datos fiscales -->
-          <VCardTitle class="text-h6 mt-4">
+          <VCardTitle class="text-h6 mt-4 d-flex align-center">
             {{ $t('fiscal_data') }}
+            <VBtn
+              icon
+              variant="plain"
+              class="ms-2"
+              @click="openFiscalDataDialog"
+            >
+              <VIcon icon="tabler-edit" />
+            </VBtn>
           </VCardTitle>
           <VCardText>
             <VList dense>
@@ -418,58 +499,43 @@ function openAddNoteDialog() {
                 <VIcon
                   icon="tabler-star"
                   class="me-2"
-                />{{ $t('business_name') }}:
+                />{{ $t('business_name') }}: {{ contract?.societe?.sat_cname }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-devices-2"
                   class="me-2"
-                />{{ $t('tax_id') }}:
+                />{{ $t('tax_id') }}: {{ contract?.societe?.sat_taxid }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-activity"
                   class="me-2"
-                />{{ $t('postal_code') }}:
+                />{{ $t('postal_code') }}: {{ contract?.societe?.sat_zip }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('cfdi_use') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('regime_fiscal') }}: {{ contract?.societe?.fiscal_regime }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('email') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('cfdi_use') }}: {{ contract?.societe?.usecfdi }}
               </VListItem>
               <VListItem>
                 <VIcon
                   icon="tabler-calendar"
                   class="me-2"
-                />{{ $t('phone') }}:
-                <VBtn
-                  icon
-                  variant="plain"
-                  class="ms-2"
-                >
-                  <VIcon icon="tabler-edit-3" />
-                </VBtn>
+                />{{ $t('email') }}: {{ contract?.societe?.emails }}
+              </VListItem>
+              <VListItem>
+                <VIcon
+                  icon="tabler-calendar"
+                  class="me-2"
+                />{{ $t('phone') }}: {{ contract?.societe?.phone }}
               </VListItem>
             </VList>
           </VCardText>
