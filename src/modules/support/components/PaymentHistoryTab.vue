@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import BaseTable from '@/components/BaseTable.vue' // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager'
+import PaymentFolioPaymentsDialog from './PaymentFolioPaymentsDialog.vue'
+import PaymentDetailsDialog from './PaymentDetailsDialog.vue'
+import BaseTable from '@/components/BaseTable.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 
-// Props para personalizar el título y descripción
 const props = defineProps({
   activeTab: { type: Number, required: true },
 })
 
 const { t } = useI18n()
-const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
-const searchQuery = ref('')
+// State
+const contracts = ref<any[]>([])
+const loading = ref(true)
+const selectedContract = ref<any | null>(null)
 
 const pagination = ref({
   limit: 10,
@@ -26,8 +25,32 @@ const pagination = ref({
   total: 0,
 })
 
-// Encabezados de la tabla
-const headers = [
+// For new structure
+const showPaymentsDialog = ref(false)
+const selectedFolioPayments = ref<any[]>([])
+const selectedFolioTitle = ref('')
+
+// For payment details (old and new)
+const showDetailsDialog = ref(false)
+const selectedDetails = ref<any[]>([])
+const selectedDetailsTitle = ref('')
+
+// Table headers
+const mainHeaders = [
+  { title: t('payment_folio'), value: 'payment_folio' },
+  { title: t('cashbox_label'), value: 'cashbox_label' },
+  { title: t('cashier_name'), value: 'cashier_name' },
+  { title: t('user_name'), value: 'user_name' },
+  { title: t('prepaid_payment'), value: 'prepaid_payment' },
+  { title: t('other_payment_methods'), value: 'other_payment_methods' },
+  { title: t('credit_applied'), value: 'credit_applied' },
+  { title: t('credit_used'), value: 'credit_used' },
+  { title: t('payment_date'), value: 'payment_date' },
+  { title: t('payment_status'), value: 'payment_status' },
+  { title: t('details'), value: 'details', sortable: false },
+]
+
+const oldHeaders = [
   { title: t('paymentId'), value: 'paymentId' },
   { title: t('billingPeriod'), value: 'billingPeriod' },
   { title: t('date'), value: 'DATE' },
@@ -43,35 +66,23 @@ const headers = [
   { title: t('details'), value: 'details', sortable: false },
 ]
 
-const showDetailsDialog = ref(false)
-const selectedDetails = ref([])
-
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.page = newPage
-  fetchData()
+// Detect structure
+const isNewStructure = (data: any[]): boolean => {
+  return data.length > 0 && 'payment_folio' in data[0]
 }
 
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
-// Función para cargar los datos
+// Fetch data
 async function fetchData() {
   loading.value = true
   try {
-    const response = await contractStore.getPaymentsByContract(contractStore.item.id_account, pagination.value)
+    const params = {
+      limit: pagination.value.limit,
+      page: pagination.value.page,
+    }
 
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
+    const response = await contractStore.getPaymentsByContract(contractStore.item?.id_account, params)
+
+    contracts.value = replaceNullWithEmptyString(response.data)
     pagination.value = response.pagination
   }
   catch (error) {
@@ -82,7 +93,6 @@ async function fetchData() {
   }
 }
 
-// Función para reemplazar valores null por una cadena vacía
 function replaceNullWithEmptyString(data: any[]) {
   return data.map(item => {
     const newItem = { ...item }
@@ -95,54 +105,114 @@ function replaceNullWithEmptyString(data: any[]) {
   })
 }
 
-// Montar datos al iniciar el componente
 onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
 watch(() => props.activeTab, newTab => {
-  if (newTab === 2) { // Suponiendo que el tab de BillingHistory es el índice 1
+  if (newTab === 2)
     fetchData()
-  }
 })
 
-function showPaymentDetails(details: any[]) {
-  if (details && details.length > 0) {
-    // Agrupar los detalles por referencia de factura
-    const groupedDetails = details.reduce((acc, detail) => {
-      if (!acc[detail.ref]) {
-        acc[detail.ref] = {
-          ref: detail.ref,
-          items: [],
-          total: 0,
-        }
-      }
-      acc[detail.ref].items.push(detail)
-      acc[detail.ref].total += detail.total_ttc
+// Main table actions
+function openFolioPaymentsDialog(folio: any) {
+  selectedFolioPayments.value = folio.payments
+  selectedFolioTitle.value = `${t('payment_folio')}: ${folio.payment_folio}`
+  showPaymentsDialog.value = true
+}
 
-      return acc
-    }, {})
+function openPaymentDetailsDialog(details: any[], title = '') {
+  // Group details by ref for dialog
+  const groupedDetails = details.reduce((acc: any, detail: any) => {
+    if (!acc[detail.ref])
+      acc[detail.ref] = { ref: detail.ref, items: [], total: 0 }
 
-    selectedDetails.value = Object.values(groupedDetails)
-    showDetailsDialog.value = true
-  }
+    acc[detail.ref].items.push(detail)
+    acc[detail.ref].total += detail.total_ttc
+
+    return acc
+  }, {})
+
+  selectedDetails.value = Object.values(groupedDetails)
+  selectedDetailsTitle.value = title
+  showDetailsDialog.value = true
+}
+
+// Métodos para paginación
+function handlePageChange(newPage: number) {
+  pagination.value.page = newPage
+  fetchData()
+}
+
+function handleItemsPerPageChange(newLimit: number) {
+  pagination.value.limit = newLimit
+  fetchData()
 }
 </script>
 
 <template>
   <VCard class="pa-sm-10 pa-2">
     <VCardText>
-      <!-- Tabla de contratos -->
+      <!-- Nueva estructura -->
       <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
+        v-if="!loading && isNewStructure(contracts)"
+        :headers="mainHeaders"
         :items="contracts"
         :total="pagination.total"
         :page="pagination.offset / pagination.limit + 1"
         :items-per-page="pagination.limit"
         :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
+        @update:page="handlePageChange"
+        @update:items-per-page="handleItemsPerPageChange"
+      >
+        <template #payment_date="{ item }">
+          <div>{{ $formatDate(item.payment_date, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) || 'N/A' }}</div>
+        </template>
+        <template #details="{ item }">
+          <VIcon
+            v-if="item.payments && item.payments.length > 0"
+            icon="tabler-eye"
+            size="small"
+            class="ms-2 cursor-pointer"
+            @click="openFolioPaymentsDialog(item)"
+          />
+        </template>
+        <template #prepaid_payment="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.prepaid_payment) || 'N/A' }}
+          </div>
+        </template>
+        <template #other_payment_methods="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.other_payment_methods) || 'N/A' }}
+          </div>
+        </template>
+        <template #credit_applied="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.credit_applied) || 'N/A' }}
+          </div>
+        </template>
+        <template #credit_used="{ item }">
+          <div class="text-end">
+            {{ $formatCurrency(item.credit_used) || 'N/A' }}
+          </div>
+        </template>
+        <template #payment_status="{ item }">
+          <div class="text-end">
+            {{ $t(item.payment_status) || '-' }}
+          </div>
+        </template>
+      </BaseTable>
+
+      <!-- Estructura antigua -->
+      <BaseTable
+        v-else-if="!loading && contracts.length > 0"
+        v-model:selection="selectedContract"
+        :headers="oldHeaders"
+        :items="contracts"
+        :total="pagination.total"
+        :page="pagination.offset / pagination.limit + 1"
+        :items-per-page="pagination.limit"
+        :loading="loading"
+        @update:page="handlePageChange"
+        @update:items-per-page="handleItemsPerPageChange"
       >
         <template #consumo="{ item }">
           <div class="text-end">
@@ -151,15 +221,7 @@ function showPaymentDetails(details: any[]) {
         </template>
         <template #DATE="{ item }">
           <div class="text">
-            {{ $formatDate(item.DATE, {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false,
-            }) || 'N/A' }}
+            {{ $formatDate(item.DATE, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) || 'N/A' }}
           </div>
         </template>
         <template #drenaje="{ item }">
@@ -208,7 +270,7 @@ function showPaymentDetails(details: any[]) {
             icon="tabler-eye"
             size="small"
             class="ms-2 cursor-pointer"
-            @click="showPaymentDetails(item.details)"
+            @click="openPaymentDetailsDialog(item.details, `${t('paymentId')}: ${item.paymentId}`)"
           />
         </template>
       </BaseTable>
@@ -226,63 +288,36 @@ function showPaymentDetails(details: any[]) {
           {{ t('loading') }}...
         </p>
       </div>
+
+      <template v-if="!loading && contracts.length > 0">
+        <div class="text-center my-4">
+          {{
+            pagination.total === 0
+              ? t('no_data')
+              : `${pagination.offset + 1}-${Math.min(pagination.offset + pagination.limit, pagination.total)} de ${pagination.total}`
+          }}
+        </div>
+      </template>
     </VCardText>
 
-    <!-- Modal de detalles del pago -->
-    <VDialog
-      v-model="showDetailsDialog"
-      max-width="800"
-    >
-      <VCard>
-        <VCardTitle>{{ t('payment_details') }}</VCardTitle>
-        <VCardText>
-          <div
-            v-for="invoice in selectedDetails"
-            :key="invoice.ref"
-            class="mb-6"
-          >
-            <div class="d-flex justify-space-between align-center mb-2">
-              <h3 class="text-h6">
-                {{ invoice.ref }}
-              </h3>
-              <div class="text-h6">
-                {{ $formatCurrency(invoice.total) }}
-              </div>
-            </div>
-            <VTable>
-              <thead>
-                <tr>
-                  <th>{{ t('concepto') }}</th>
-                  <th class="text-end">
-                    {{ t('amount') }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="detail in invoice.items"
-                  :key="`${invoice.ref}-${detail.label}`"
-                >
-                  <td>{{ detail.label }}</td>
-                  <td class="text-end">
-                    {{ $formatCurrency(detail.total_ttc) }}
-                  </td>
-                </tr>
-              </tbody>
-            </VTable>
-          </div>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="primary"
-            @click="showDetailsDialog = false"
-          >
-            {{ t('close') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Dialogo de pagos de folio (nueva estructura) -->
+    <PaymentFolioPaymentsDialog
+      v-if="showPaymentsDialog"
+      :open="showPaymentsDialog"
+      :payments="selectedFolioPayments"
+      :title="selectedFolioTitle"
+      @close="showPaymentsDialog = false"
+      @show-details="openPaymentDetailsDialog"
+    />
+
+    <!-- Dialogo de detalles de pago (ambas estructuras) -->
+    <PaymentDetailsDialog
+      v-if="showDetailsDialog"
+      :open="showDetailsDialog"
+      :details="selectedDetails"
+      :title="selectedDetailsTitle"
+      @close="showDetailsDialog = false"
+    />
   </VCard>
 </template>
 

@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import { useRouter } from 'vue-router';
+import { defineStore } from 'pinia'
+import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -8,24 +8,30 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     async logout() {
-      // Remove "accessToken" from cookie
-      useCookie('accessToken').value = null;
+      try {
+        // Make logout request to backend
+        await $api('/auth/logout', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'X-Organization': import.meta.env.VITE_API_ORGANIZATION,
+          },
+        })
+      }
+      catch (error) {
+        console.error('Error during logout:', error)
+      }
+      finally {
+        // Remove "accessToken" from cookie
+        useCookie('accessToken').value = null
 
-      // Remove "userData" from cookie
-      useCookie('userData').value = null;
+        // Remove "userData" from cookie
+        useCookie('userData').value = null
 
-      // Remove "userAbilities" from cookie
-      useCookie('userAbilityRules').value = null;
-      useCookie('dolibarrToken').value = null;
-
-
-      // Reset ability to initial ability
-      const ability = useAbility(); // Asegúrate de importar useAbility si no está ya definido en tu archivo
-      ability.update([]);
-
-      // Redirect to login page
-      const router = useRouter();
-      await router.push('/login');
+        // Remove "userAbilities" from cookie
+        useCookie('userAbilityRules').value = null
+        useCookie('dolibarrToken').value = null
+      }
     },
   },
-});
+})

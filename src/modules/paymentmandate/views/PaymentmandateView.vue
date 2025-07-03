@@ -56,7 +56,29 @@ async function processBankResponse() {
 }
 
 function downloadFile(url: string) {
-  window.open(url, '_blank')
+  // Forzar https si la url comienza con http://
+  if (url.startsWith('http://'))
+    url = url.replace('http://', 'https://')
+
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', '')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+function forceDownload(url: string) {
+  // Forzar https si la url comienza con http://
+  if (url.startsWith('http://'))
+    url = url.replace('http://', 'https://')
+
+  window.location.href = url
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text)
 }
 </script>
 

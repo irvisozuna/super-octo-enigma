@@ -624,5 +624,14 @@
   "has_rebilling": "Esta lectura tiene una refacturación. Haga clic para ver los detalles.",
   "view_evidence": "Ver Evidencia",
   "evidence": "Evidencia",
-  "reading_evidence": "Evidencia de Lectura"
+  "reading_evidence": "Evidencia de Lectura",
+  "payment_folio": "Folio de Pago",
+  "cashbox_label": "Caja",
+  "cashier_name": "Cajero",
+  "user_name": "Usuario",
+  "prepaid_payment": "Pago Prepagado",
+  "other_payment_methods": "Otros Métodos de Pago",
+  "credit_applied": "Crédito Aplicado",
+  "credit_used": "Crédito Utilizado",
+  "applied": "Aplicado"
 }

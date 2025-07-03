@@ -6,7 +6,7 @@ const paymentmandateMenu: VerticalNavItems = [
     icon: { icon: 'tabler-calendar' },
     to: 'paymentmandatesList',
     action: 'read',
-    subject: 'paymentmandates',
+    subject: 'PaymentMandates',
   },
 ]
 

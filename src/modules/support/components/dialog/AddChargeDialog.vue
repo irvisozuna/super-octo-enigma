@@ -90,6 +90,11 @@ const onFormSubmit = async () => {
       return
     }
     isLoading.value = true
+    if (!aquasoft_id) {
+      showError(t('error_creating_note'))
+
+      return
+    }
 
     const payload = {
       charges: addedCharges.value,
