@@ -1,16 +1,16 @@
 // scripts/config.mjs
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Aquí defines lo que antes tenías en "config"
 export const CONFIG = {
-  stubsPath: 'stubs',       // Ruta relativa a la raíz del proyecto
-  modulesPath: 'src/modules'
-};
+  stubsPath: 'stubs', // Ruta relativa a la raíz del proyecto
+  modulesPath: 'src/modules',
+}
 
 // Estas constantes resuelven las rutas absolutas.
-export const STUBS_PATH = path.resolve(__dirname, '../../', CONFIG.stubsPath);
-export const MODULES_PATH = path.resolve(__dirname, '../../', CONFIG.modulesPath);
+export const STUBS_PATH = path.resolve(__dirname, '../../', CONFIG.stubsPath)
+export const MODULES_PATH = path.resolve(__dirname, '../../', CONFIG.modulesPath)
