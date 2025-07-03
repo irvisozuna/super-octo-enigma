@@ -5,7 +5,9 @@ import { defineStore } from 'pinia'
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
-    baseNavItems: [] as VerticalNavItems, // Menú base
+    baseNavItems: [
+      
+    ] as VerticalNavItems, // Menú base
   }),
   getters: {
     // Adaptar el menú base para diseño vertical
@@ -15,10 +17,13 @@ export const useMenuStore = defineStore('menu', {
     // Adaptar el menú base para diseño horizontal
     horizontalNavItems(): HorizontalNavItems {
       // Ejemplo: Puedes transformar la estructura si es necesario
-      return this.baseNavItems.map((item) => ({
-        ...item,
-        children: (item as any).children || [],
-      })) as HorizontalNavItems
+      return this.baseNavItems.map((item) => {
+        const newItem = { ...item } as any
+        if (!('children' in newItem) || (newItem.children && newItem.children.length === 0)) {
+          delete newItem.children
+        }
+        return newItem
+      }) as HorizontalNavItems
     },
   },
   actions: {

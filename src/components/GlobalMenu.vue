@@ -41,7 +41,8 @@ const props = defineProps({
     type: Array as () => Array<{
       text: string;
       icon: string;
-      actionType: 'api' | 'dialog' | 'url';
+      actionType?: 'api' | 'dialog' | 'url' | 'custom';
+      action?: () => void;
       payload?: any;
     }>,
     default: () => [],
@@ -62,6 +63,16 @@ const { navigateTo, openDialog, makeApiCall } = useAppManager();
 
 async function handleOptionClick(option: any) {
   menuVisible.value = false; // Cierra el menú
+
+  // Si la opción tiene una función personalizada, la ejecuta directamente.
+  // Puedes hacer esto antes o después de tu switch,
+  // dependiendo de cuál comportamiento sea prioritario.
+  if (option.action) {
+    // Si no quieres que se ejecute la lógica del switch cuando hay `action`,
+    // simplemente haz un `return` luego de llamar a la función.
+    option.action()
+    return
+  }
 
   switch (option.actionType) {
     case 'api':

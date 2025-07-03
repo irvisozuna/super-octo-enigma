@@ -22,10 +22,7 @@ watch(
 
 <template>
   <IconBtn color="rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity))">
-    <VIcon
-      :icon="props.themes.find(t => t.name === configStore.theme)?.icon"
-      size="24"
-    />
+    <VIcon :icon="props.themes.find(t => t.name === configStore.theme)?.icon" />
 
     <VTooltip
       activator="parent"
@@ -36,6 +33,7 @@ watch(
     </VTooltip>
 
     <VMenu
+
       activator="parent"
       offset="12px"
       :width="180"
@@ -50,10 +48,11 @@ watch(
           :value="name"
           :prepend-icon="icon"
           color="primary"
-          class="text-capitalize"
           @click="() => { configStore.theme = name }"
         >
-          {{ name }}
+          <VListItemTitle class="text-capitalize">
+            {{ name }}
+          </VListItemTitle>
         </VListItem>
       </VList>
     </VMenu>

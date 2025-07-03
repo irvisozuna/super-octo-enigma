@@ -10,21 +10,19 @@ const userRoutes: RouteRecordRaw[] = [
     path: '/users',
     name: 'UsersList',
     component: userComponent,
+    meta:{
+      action: 'read',
+      subject: 'users'
+    }
   },
   {
     path: '/users/:id',
     name: 'UserDetail',
     component: userViewComponent,
-  },
-  {
-    path: '/user/add',
-    name: 'UserAdd',
-    component: () => userAddComponent
-  },
-  {
-    path: '/user/edit/:id',
-    name: 'UserEdit',
-    component: () => userEditComponent
+    meta:{
+      action: 'read',
+      subject: 'users'
+    }
   }
 ];
 

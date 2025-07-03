@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router/auto';
+import type { RouteRecordRaw } from 'vue-router/auto'
 
 
 // 👉 Redirects
@@ -11,39 +11,22 @@ export const redirects: RouteRecordRaw[] = [
     redirect: to => {
       // TODO: Get type from backend
       const userData = useCookie<Record<string, unknown> | null | undefined>('userData')
-      if (userData)
-        return { name: 'dashboards-crm' }
+      const userRole = userData.value?.roles[0].name as string
 
+      if (userRole === 'admin')
+        return { name: 'dashboards-crm' }
+      if (userRole === 'user')
+        return { name: 'supportsList' }
+      // if (userRole !== 'client')
+      //   return { name: 'dashboards-default' }
 
       return { name: 'login', query: to.query }
     },
-  },
-  {
-    path: '/pages/user-profile',
-    name: 'pages-user-profile',
-    redirect: () => ({ name: 'pages-user-profile-tab', params: { tab: 'profile' } }),
-  },
-  {
-    path: '/profile/account-settings',
-    name: 'profile-account-settings',
-    redirect: () => ({ name: 'profile-account-settings-tab', params: { tab: 'account' } }),
-  },
+  }
 ]
 
 export const routes: RouteRecordRaw[] = [
-  {
-    path: '/dashboards/logistics',
-    name: 'dashboards-logistics',
-    component: () => import('@/pages/apps/logistics/dashboard.vue'),
-  },
-  {
-    path: '/dashboards/academy',
-    name: 'dashboards-academy',
-    component: () => import('@/pages/apps/academy/dashboard.vue'),
-  },
-  {
-    path: '/apps/ecommerce/dashboard',
-    name: 'apps-ecommerce-dashboard',
-    component: () => import('@/pages/dashboards/ecommerce.vue'),
-  },
+
+
+
 ]

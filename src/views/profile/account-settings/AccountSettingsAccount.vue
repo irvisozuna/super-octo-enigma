@@ -26,9 +26,9 @@ const accountData = {
   email: userData.value?.email,
   org: company.value?.name,
   phone: profile.value?.phone ?? '',
-  address: profile.value?.address ?? '',
+  address_line: profile.value?.address_line ?? '',
   state: profile.value?.state ?? '',
-  zip: profile.value?.zip ?? '',
+  postal_code: profile.value?.postal_code ?? '',
   country: profile.value?.country ?? 'México',
   language: profile.value?.language ?? 'Spanish',
   timezone: profile.value?.timezone ?? company.value?.timezone ?? '(GMT-04:00) Eastern Time (US & Canada)',
@@ -47,9 +47,9 @@ const { value: first_name } = useField('first_name');
 const { value: last_name } = useField('last_name');
 const { value: email } = useField('email');
 const { value: phone } = useField('phone');
-const { value: address } = useField('address');
+const { value: address_line } = useField('address_line');
 const { value: state } = useField('state');
-const { value: zip } = useField('zip');
+const { value: postal_code } = useField('postal_code');
 const { value: country } = useField('country');
 const { value: language } = useField('language');
 const { value: timezone } = useField('timezone');
@@ -85,9 +85,17 @@ const resetAvatar = () => {
 
 // Enviar el formulario
 async function onFormSubmit(values: any) {
-  console.log('Form values:', values);
+  //quitar del values el correo electrinico
+  delete values.email;
   try {
-
+    const uuid = profile.value.id;
+    debugger
+    const response = await $api(`/profiles/update/${uuid}`, {
+      method: 'PUT',
+      body: values,
+    });
+    //actualizar el perfil en cookies
+    useCookie('profile').value = response;
   } catch (error) {
     console.error('Error al editar el usuario:', error);
   }
@@ -136,7 +144,7 @@ async function onFormSubmit(values: any) {
               </VCol>
 
               <VCol cols="12" md="6">
-                <AppTextField v-model="email" :label="t('email')" :placeholder="t('placeholderEmail')"
+                <AppTextField v-model="email" :label="t('email')" :placeholder="t('placeholderEmail')" disabled
                   :error="!!errors.email" :error-messages="errors.email ? [errors.email] : []" />
               </VCol>
 
@@ -146,8 +154,8 @@ async function onFormSubmit(values: any) {
               </VCol>
 
               <VCol cols="12" md="6">
-                <AppTextField v-model="address" :label="t('address')" placeholder="123 Main St, New York, NY 10001"
-                  :error="!!errors.address" :error-messages="errors.address ? [errors.address] : []" />
+                <AppTextField v-model="address_line" :label="t('address')" placeholder="123 Main St, New York, NY 10001"
+                  :error="!!errors.address_line" :error-messages="errors.address_line ? [errors.address_line] : []" />
               </VCol>
 
               <VCol cols="12" md="6">
@@ -156,8 +164,8 @@ async function onFormSubmit(values: any) {
               </VCol>
 
               <VCol cols="12" md="6">
-                <AppTextField v-model="zip" :label="t('zip')" placeholder="10001" :error="!!errors.zip"
-                  :error-messages="errors.zip ? [errors.zip] : []" />
+                <AppTextField v-model="postal_code" :label="t('zip')" placeholder="10001" :error="!!errors.postal_code"
+                  :error-messages="errors.postal_code ? [errors.postal_code] : []" />
               </VCol>
 
               <VCol cols="12" md="6">

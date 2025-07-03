@@ -18,6 +18,8 @@ const tabs = [
 definePage({
   meta: {
     navActiveLink: 'profile-account-settings-tab',
+    action: 'read',
+    subject: 'Profile',
   },
 })
 </script>

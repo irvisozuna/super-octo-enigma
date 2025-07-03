@@ -43,7 +43,7 @@ self.addEventListener('install', (event) => {
   
   async function openDatabase() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('nubik', 1);
+      const request = indexedDB.open('nibuk', 1);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

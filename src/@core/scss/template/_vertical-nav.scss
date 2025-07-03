@@ -44,4 +44,14 @@
       }
     }
   }
+
+  &.layout-vertical-nav-collapsed {
+    .layout-vertical-nav:not(.hovered) {
+      .nav-header {
+        .header-action {
+          opacity: 0;
+        }
+      }
+    }
+  }
 }

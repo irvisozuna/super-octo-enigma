@@ -25,10 +25,6 @@ export default defineConfig({
           .toLowerCase()
       },
       beforeWriteFiles: root => {
-        // ℹ️ This is a hook that gets called before writing files
-        // You can use it to modify the generated files
-        // For example, you can add imports to the generated files
-        // or modify the routes
       },
     }),
     vue({
@@ -46,6 +42,7 @@ export default defineConfig({
       styles: {
         configFile: 'src/assets/styles/variables/_vuetify.scss',
       },
+      autoImport: true
     }),
 
     // Docs: https://github.com/johncampionjr/vite-plugin-vue-layouts#vite-plugin-vue-layouts
@@ -107,12 +104,15 @@ export default defineConfig({
       '@api-utils': fileURLToPath(new URL('./src/plugins/fake-api/utils/', import.meta.url)),
     },
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-  },
   build: {
     chunkSizeWarningLimit: 5000,
+    // minify: false, // Desactiva la minimización del código
+    // sourcemap: true, // Genera un sourcemap para facilitar la depuración
+    // rollupOptions: {
+    //   output: {
+    //     manualChunks: undefined, // Evita dividir el código en múltiples archivos
+    //   },
+    // },
   },
   optimizeDeps: {
     exclude: ['vuetify'],

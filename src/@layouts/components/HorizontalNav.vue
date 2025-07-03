@@ -9,19 +9,14 @@ defineProps<{
 const resolveNavItemComponent = (item: NavLink | NavGroup) => {
   if ('children' in item)
     return HorizontalNavGroup
-
   return HorizontalNavLink
 }
 </script>
 
 <template>
   <ul class="nav-items">
-    <Component
-      :is="resolveNavItemComponent(item)"
-      v-for="(item, index) in navItems"
-      :key="index"
-      :item="item"
-    />
+    <Component :is="resolveNavItemComponent(item)" v-for="(item, index) in navItems" :key="index" data-allow-mismatch
+      :item="item" />
   </ul>
 </template>
 

@@ -41,7 +41,7 @@ export function useOnboarding() {
     try {
       onboardingStore.propertyListingData.wizardStep = 6;
       const response = await ApiService.put('/company/onboarding', onboardingStore.propertyListingData);
-      const responseData = response.data as OnboardingResponse;
+      const responseData = response as OnboardingResponse;
       // Aquí puedes manejar la lógica después de enviar los datos, como redirigir a otra página o mostrar un mensaje de éxito.
       const  user = useCookie('userData').value;
       const userData = user as unknown as User;

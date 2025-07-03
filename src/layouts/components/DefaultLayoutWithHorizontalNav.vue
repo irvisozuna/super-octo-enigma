@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useMenuStore } from '@/stores/menu'
+
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -11,24 +12,11 @@ import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 import NavBarI18n from '@core/components/I18n.vue'
 import { HorizontalNavLayout } from '@layouts'
-import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
+import { VNodeRenderer } from '@layouts/components/VNodeRenderer'; /* PartiallyEnd: #3632/scriptSetup.vue */
 
-// SECTION: Loading Indicator
-const isFallbackStateActive = ref(false)
-const refLoadingIndicator = ref<any>(null)
 const menuStore = useMenuStore()
-
 const navItems = computed(() => menuStore.horizontalNavItems)
-
-// watching if the fallback state is active and the refLoadingIndicator component is available
-watch([isFallbackStateActive, refLoadingIndicator], () => {
-  if (isFallbackStateActive.value && refLoadingIndicator.value)
-    refLoadingIndicator.value.fallbackHandle()
-
-  if (!isFallbackStateActive.value && refLoadingIndicator.value)
-    refLoadingIndicator.value.resolveHandle()
-}, { immediate: true })
-// !SECTION
+const { isAdmin } = useCurrentUser();
 </script>
 
 <template>
@@ -55,14 +43,8 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
       <UserProfile />
     </template>
 
-    <AppLoadingIndicator ref="refLoadingIndicator" />
-
     <!-- 👉 Pages -->
-    <RouterView v-slot="{ Component }">
-      <Suspense :timeout="0" @fallback="isFallbackStateActive = true" @resolve="isFallbackStateActive = false">
-        <Component :is="Component" />
-      </Suspense>
-    </RouterView>
+    <slot />
 
     <!-- 👉 Footer -->
     <template #footer>
@@ -70,6 +52,6 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
     </template>
 
     <!-- 👉 Customizer -->
-    <TheCustomizer />
+    <Customizer v-if="isAdmin" />
   </HorizontalNavLayout>
 </template>

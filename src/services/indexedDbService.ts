@@ -16,7 +16,7 @@ export class AppDatabase extends Dexie {
   public offlineQueue!: Table<OfflineOperation, number>;
 
   constructor() {
-    super('nubik'); // Nombre de la base de datos
+    super('nibuk'); // Nombre de la base de datos
     this.initializeTables();
   }
 

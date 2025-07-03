@@ -83,6 +83,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     // ==========
     // State
     // ==========
+    const item = ref<T | null>(null);
     const items = ref<T[]>([]);
     const total = ref<number>(0);
     const selectedItems = ref<T[]>([]);
@@ -93,6 +94,8 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     const page = ref(1);
     const itemsPerPage = ref(10);
     const filters = ref<Record<string, any>>({});
+    const sortBy = ref<string[]>([]); // Nombres de las columnas a ordenar
+    const sortDesc = ref<boolean[]>([]); // Orden descendente para cada columna
 
     // ==========
     // Getters
@@ -181,9 +184,10 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         const params = {
           page: page.value,
           itemsPerPage: itemsPerPage.value,
+          sortBy: sortBy.value,
+          sortDesc: sortDesc.value,
           ...filters.value,
         };
-    
         // Si estás online, consulta al backend
         if (navigator.onLine) {
           const responseData = await rawApi(baseEndpoint, { method: 'GET', params });
@@ -208,7 +212,16 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
               )
             );
           }
-    
+          // Si es necesario, ordena localmente usando sortBy y sortDesc.
+          if (sortBy.value) {
+            localData.sort((a: any, b: any) => {
+              const valueA = a[sortBy.value!];
+              const valueB = b[sortBy.value!];
+              if (valueA < valueB) return sortDesc.value ? 1 : -1;
+              if (valueA > valueB) return sortDesc.value ? -1 : 1;
+              return 0;
+            });
+          }
           items.value = localData;
           total.value = localData.length;
     
@@ -226,7 +239,38 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
         loading.value = false;
       }
     }
+    function updateSorting(newSortBy: string | null, newSortDesc: boolean) {
+      sortBy.value = newSortBy;
+      sortDesc.value = newSortDesc;
+      // Puedes resetear la página a 1 si lo consideras necesario
+      page.value = 1;
+      fetchList();
+    }
+    /**
+     * Método genérico para interactuar con un endpoint personalizado.
+     * @param endpoint - Endpoint relativo al baseEndpoint
+     * @param method - Método HTTP (GET, POST, etc.)
+     * @param params - Parámetros de consulta o cuerpo de la solicitud
+     * @returns - Respuesta del servidor
+     */
+    async function customAction(endpoint: string, method = 'GET', params: Record<string, any> = {}) {
+      loading.value = true;
+      error.value = null;
 
+      try {
+        const fullEndpoint = `${baseEndpoint}${endpoint}`;
+        const response = await rawApi(fullEndpoint, {
+          method,
+          ...(method === 'GET' ? { params } : { body: params }),
+        });
+        return response;
+      } catch (err) {
+        await handleApiError(err, 'crud.customActionFailed');
+        throw err;
+      } finally {
+        loading.value = false;
+      }
+    }
     /**
      * Obtiene un ítem individual por su ID.
      */
@@ -246,10 +290,71 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     }
 
     /**
+     * Exporta los ítems según el formato especificado, aplicando los filtros 
+     * y respetando la selección de ítems (si la hubiera).
+     *
+     * @param format 'pdf' | 'excel' | 'csv' etc.
+     */
+    async function exportItems(format: string = 'pdf') {
+      loading.value = true;
+      error.value = null;
+
+      try {
+        // Construimos los parámetros a enviar al backend
+        const queryParams: Record<string, any> = {
+          page: page.value,
+          itemsPerPage: itemsPerPage.value,
+          ...filters.value,
+          type: format,
+        };
+
+        // Si hay ítems seleccionados, pasamos sus IDs para que el backend
+        // exporte únicamente esos registros.
+        if (selectedItems.value && selectedItems.value.length > 0) {
+          queryParams.selectedIds = selectedItems.value.map((item: any) => item.id);
+        }
+
+        // Llamada a la API para obtener el archivo. Asegúrate de que rawApi
+        // permita recibir blobs o archivos en binario (responseType: 'blob').
+        const responseData = await rawApi(`${baseEndpoint}/export`, {
+          method: 'GET',
+          params: queryParams,
+          responseType: 'blob', // Depende de la implementación de rawApi
+        });
+
+        // Determina la extensión del archivo según el formato,
+        // o podrías usar un content-type retornado por el backend.
+        let extension = format;
+        if (format === 'excel') {
+          extension = 'xlsx';
+        }
+        // ...Más lógica si tienes otros formatos
+
+        // Creamos un Blob y un link temporal para descargarlo
+        const blob = new Blob([responseData], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `export.${extension}`);
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpieza del link temporal
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+      } catch (err) {
+        // Manejo de error genérico
+        await handleApiError(err, 'crud.exportFailed');
+      } finally {
+        loading.value = false;
+      }
+    }
+    /**
      * Crea un nuevo ítem en el backend y lo sincroniza con IndexedDB.
      * Si estás offline, encola la operación en offlineQueue.
      */
-    async function createItem(payload: Partial<T>, endpointSuffix: string = createSuffix) {
+    async function createItem(payload: Partial<T> | FormData, endpointSuffix: string = createSuffix) {
       loading.value = true;
       error.value = null;
       const { showSuccess, showError } = useNotification();
@@ -285,21 +390,37 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
           return offlineItem;
         }
 
+        let bodyToSend: BodyInit;
+        let customHeaders: HeadersInit = {};
+
+        if (payload instanceof FormData) {
+          bodyToSend = payload; // No configuramos "Content-Type", fetch se encarga
+        } else {
+          bodyToSend = JSON.stringify(payload);
+          customHeaders['Content-Type'] = 'application/json';
+        }
+        
         // Conexión online => POST al backend
         const createdItem = await rawApi(`${baseEndpoint}${endpointSuffix}`, {
           method: 'POST',
-          body: payload,
+          body: bodyToSend,
+          headers: customHeaders
         });
 
         // Guardar en IndexedDB
-        const dbTable = db.table<T>(id);
-        await dbTable.add(createdItem);
+        try {
+          const dbTable = db.table<T>(id);
+          await dbTable.put(createdItem);
+        } catch (err) {
+          console.error('Error al guardar en IndexedDB:', err);
+        }
+
 
         // Actualizar estado en memoria
         items.value = [createdItem, ...items.value];
         total.value += 1;
 
-        showSuccess('crud.itemCreated');
+        showSuccess(createdItem.message || 'crud.itemCreated', createdItem.title || 'common.success');
         return createdItem;
       } catch (err) {
         await handleApiError(err, 'crud.itemCreateFailed');
@@ -548,6 +669,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     // ==========
     return {
       // state
+      item,
       items,
       total,
       loading,
@@ -556,6 +678,8 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       itemsPerPage,
       filters,
       selectedItems,
+      sortBy,
+      sortDesc,
 
       // getters
       list,
@@ -563,7 +687,10 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
 
       // actions
       fetchList,
+      updateSorting,
       fetchItem,
+      customAction,
+      exportItems,
       createItem,
       updateItem,
       deleteItem,

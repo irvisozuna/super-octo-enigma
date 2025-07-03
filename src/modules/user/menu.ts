@@ -1,6 +1,16 @@
-import type { VerticalNavItems } from '@layouts/types'
-
-const userMenu: VerticalNavItems = [
+export default [
+  {
+    title: 'Dashboards',
+    icon: { icon: 'tabler-smart-home' },
+    children: [
+      {
+        title: 'Welcome',
+        to: 'dashboards-default',
+        action: 'read',
+        subject: 'dashboard',
+      },
+    ]
+  },
   {
     title: 'Users',
     icon: { icon: 'tabler-calendar' },
@@ -9,5 +19,3 @@ const userMenu: VerticalNavItems = [
     subject: 'users',
   }
 ]
-
-export default userMenu

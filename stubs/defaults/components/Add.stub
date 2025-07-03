@@ -43,7 +43,7 @@
                   variant="outlined" dense clearable chips multiple closable-chips :loading="loading"
                   :disabled="loading" :error="!!errors.role" :error-messages="errors.role ? [errors.role] : []">
                   <template #prepend-item v-if="loading">
-                    <span class="text-secondary text-caption">Loading roles...</span>
+                    <span class="text-secondary text-caption">{{$t('loading')}}...</span>
                   </template>
                 </VSelect>
               </template>
@@ -72,7 +72,7 @@ const { t } = useI18n();
 const { closeDialog } = useAppManager();
 const {{moduleNameLower}}Store = use{{moduleName}}Store();
 
-const {{moduleNameLower}}Title = '{{moduleNameLower}}';
+const {{moduleNameLower}}Title = t('{{moduleNameLower}}');
 const roleOptions = ref([]);
 const showPassword = ref(false);
 

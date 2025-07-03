@@ -2,7 +2,7 @@
   <!-- 👉 Widgets -->
   <div class="d-flex mb-6">
     <VRow>
-      <template v-for="(data, id) in widgetData" :key="id">
+      <template v-for="(data, id) in filteredWidgetData" :key="id">
         <VCol cols="12" md="3" sm="6">
           <VCard>
             <VCardText>
@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
 import { WidgetData } from '@/types/types';
+import { computed } from 'vue';
 import { useDisplay } from 'vuetify'; // Importa el composable para los breakpoints
 
 // Props
@@ -49,6 +50,11 @@ const props = defineProps({
   },
 });
 
+// Propiedad computada para filtrar los valores null
+const filteredWidgetData = computed(() => {
+  return props.widgetData.filter(widget => widget !== null);
+});
+
 // Usa los breakpoints de Vuetify
 const display = useDisplay();
 
@@ -56,7 +62,7 @@ const display = useDisplay();
 function getDynamicClass(id: number): string {
   const isXs = display.xs.value; // `xs` como valor reactivo
   const isSm = display.sm.value; // `sm` como valor reactivo
-  const length = props.widgetData.length;
+  const length = filteredWidgetData.value.length;
 
   if (isXs) {
     return id !== length - 1 ? 'border-b pb-4' : '';
@@ -70,7 +76,7 @@ function getDynamicClass(id: number): string {
 function showDivider(id: number): boolean {
   const isMdAndUp = display.mdAndUp.value; // `mdAndUp` como valor reactivo
   const isSmAndUp = display.smAndUp.value; // `smAndUp` como valor reactivo
-  const length = props.widgetData.length;
+  const length = filteredWidgetData.value.length;
 
   if (isMdAndUp) {
     return id !== length - 1;

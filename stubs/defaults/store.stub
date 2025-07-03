@@ -1,13 +1,14 @@
 import { ENDPOINTS } from '@/services/endpoints';
 import { createCrudStore } from '@/stores/crudFactory';
+import  dbConfig  from '../indexedDbConfig';
 import { {{moduleName}} } from '../types/{{moduleNameLower}}';
 
 export const use{{moduleName}}Store = createCrudStore<{{moduleName}}>({
-  id: '{{moduleNameLower}}',
+  id: dbConfig.tableName,
   baseEndpoint: ENDPOINTS.{{moduleNameUpper}}S || '{{moduleNameLower}}s',
   transformFetchListResponse(raw) {
-    const data = raw?.data?.data ?? [];
-    const total = raw?.data?.meta?.total ?? 0;
+    const data = raw?.data ?? [];
+    const total = raw?.pagination?.total ?? 0;
     return { data, total };
   },
   transformFetchItemResponse(raw) {

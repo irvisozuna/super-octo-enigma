@@ -62,7 +62,6 @@ export default {
   },
   VMenu: {
     offset: '2px',
-    scrollStrategy: 'block',
   },
   VPagination: {
     density: 'comfortable',

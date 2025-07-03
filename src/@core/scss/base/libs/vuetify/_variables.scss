@@ -37,7 +37,7 @@ $card-transition-property-custom: box-shadow, opacity;
   $list-item-subtitle-opacity: 1 !default,
 
   // 👉 Navigation Drawer
-  $navigation-drawer-transition-duration: 0.5s !default,
+  $navigation-drawer-content-overflow-y: hidden !default,
 
   // 👉 Tooltip
   $tooltip-background-color: rgba(59, 55, 68, 0.9) !default,

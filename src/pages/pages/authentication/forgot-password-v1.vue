@@ -7,6 +7,7 @@ import { themeConfig } from '@themeConfig'
 definePage({
   meta: {
     layout: 'blank',
+    public: true,
   },
 })
 
@@ -38,12 +39,14 @@ const form = ref({
       >
         <VCardItem class="justify-center">
           <VCardTitle>
-            <div class="app-logo">
-              <VNodeRenderer :nodes="themeConfig.app.logo" />
-              <h1 class="app-logo-title">
-                {{ themeConfig.app.title }}
-              </h1>
-            </div>
+            <RouterLink to="/">
+              <div class="app-logo">
+                <VNodeRenderer :nodes="themeConfig.app.logo" />
+                <h1 class="app-logo-title">
+                  {{ themeConfig.app.title }}
+                </h1>
+              </div>
+            </RouterLink>
           </VCardTitle>
         </VCardItem>
 
@@ -103,5 +106,5 @@ const form = ref({
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/page-auth.scss";
+@use "@core/scss/template/pages/page-auth";
 </style>

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import { UserProfileMenuItem } from '@/types/types';
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar';
 
 const router = useRouter()
 const ability = useAbility()
+const { isAdmin } = useCurrentUser();
 
 // TODO: Get type from backend
-const userData = useCookie<any>('userData');
-const { t } = useI18n();
+const userData = useCookie<any>('userData')
 
 const logout = async () => {
   // Remove "accessToken" from cookie
@@ -22,25 +22,40 @@ const logout = async () => {
   // ℹ️ We had to remove abilities in then block because if we don't nav menu items mutation is visible while redirecting user to login page
   // Remove "userAbilities" from cookie
   useCookie('userAbilityRules').value = null
+  useCookie('profile').value = null
+  useCookie('company').value = null
 
   // Reset ability to initial ability
   ability.update([])
 }
 
-const userProfileList = [
+const userProfileList: UserProfileMenuItem[] = [
   { type: 'divider' },
-  // { type: 'navItem', icon: 'tabler-user', title: t('Profile'), to: { name: 'apps-user-view-id', params: { id: 21 } } },
-  { type: 'navItem', icon: 'tabler-settings', title: t('Profile'), to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
+  { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
+  // { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'profile-account-settings-tab', params: { tab: 'account' } }, onlyAdmin: true },
+  // { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'profile-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' }, onlyAdmin: true },
   { type: 'divider' },
-  // { type: 'navItem', icon: 'tabler-currency-dollar', title: t('Pricing'), to: { name: 'pages-pricing' } },
-  // { type: 'navItem', icon: 'tabler-question-mark', title: t('FAQ'), to: { name: 'pages-faq' } },
-];
+  // { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'profile-account-settings-tab' }, onlyAdmin: true },
+  // { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'profile-account-settings-tab' } },
+]
 
-// if (userData.value && userData.value.roles.some(role => role.name === 'admin')) {
-//   userProfileList.push(
-//     { type: 'navItem', icon: 'tabler-settings', title: t('Company Settings'), to: { name: 'profile-account-settings-tab', params: { tab: 'account' } } },
-//   );
-// }
+const filteredUserProfileList = computed(() => {
+  const visibleItems = userProfileList.filter(item => {
+    // Filtra elementos según el rol
+    if (item.onlyAdmin && !isAdmin.value) return false;
+    return true;
+  });
+
+  // Remueve divisores innecesarios
+  return visibleItems.filter((item, index) => {
+    const prev = visibleItems[index - 1];
+    const next = visibleItems[index + 1];
+    if (item.type === 'divider' && (!prev || prev.type === 'divider' || !next || next.type === 'divider')) {
+      return false;
+    }
+    return true;
+  });
+});
 </script>
 
 <template>
@@ -54,8 +69,8 @@ const userProfileList = [
       <VMenu activator="parent" width="240" location="bottom end" offset="12px">
         <VList>
           <VListItem>
-            <template #prepend>
-              <VListItemAction start>
+            <div class="d-flex gap-2 align-center">
+              <VListItemAction>
                 <VBadge dot location="bottom right" offset-x="3" offset-y="3" color="success" bordered>
                   <VAvatar :color="!(userData && userData.avatar) ? 'primary' : undefined"
                     :variant="!(userData && userData.avatar) ? 'tonal' : undefined">
@@ -64,22 +79,26 @@ const userProfileList = [
                   </VAvatar>
                 </VBadge>
               </VListItemAction>
-            </template>
 
-            <VListItemTitle class="font-weight-medium">
-              {{ userData.name || userData.username }}
-            </VListItemTitle>
-            <VListItemSubtitle>{{ userData.roles[0].name }}</VListItemSubtitle>
+              <div>
+                <h6 class="text-h6 font-weight-medium">
+                  {{ userData.name || userData.username }}
+                </h6>
+                <VListItemSubtitle class="text-capitalize text-disabled">
+                  {{ userData.roles[0].name }}
+                </VListItemSubtitle>
+              </div>
+            </div>
           </VListItem>
 
           <PerfectScrollbar :options="{ wheelPropagation: false }">
-            <template v-for="item in userProfileList" :key="item.title">
+            <template v-for="item in filteredUserProfileList" :key="item.title || item.type">
               <VListItem v-if="item.type === 'navItem'" :to="item.to">
                 <template #prepend>
                   <VIcon :icon="item.icon" size="22" />
                 </template>
 
-                <VListItemTitle>{{ item.title }}</VListItemTitle>
+                <VListItemTitle>{{ $t(item.title || '') }}</VListItemTitle>
 
                 <template v-if="item.badgeProps" #append>
                   <VBadge rounded="sm" class="me-3" v-bind="item.badgeProps" />
@@ -91,7 +110,7 @@ const userProfileList = [
 
             <div class="px-4 py-2">
               <VBtn block size="small" color="error" append-icon="tabler-logout" @click="logout">
-                {{ t('Logout') }}
+                {{ $t('Logout') }}
               </VBtn>
             </div>
           </PerfectScrollbar>

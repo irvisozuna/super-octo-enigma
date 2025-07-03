@@ -16,6 +16,8 @@ export const useAuthStore = defineStore('auth', {
 
       // Remove "userAbilities" from cookie
       useCookie('userAbilityRules').value = null;
+      useCookie('dolibarrToken').value = null;
+
 
       // Reset ability to initial ability
       const ability = useAbility(); // Asegúrate de importar useAbility si no está ya definido en tu archivo

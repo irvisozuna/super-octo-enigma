@@ -90,7 +90,6 @@ const initCore = async () => {
   // ℹ️ We don't want to trigger i18n in SK
   if (themeConfig.app.i18n.enable)
     _syncAppRtl()
-
   initializeMenus()
 }
 

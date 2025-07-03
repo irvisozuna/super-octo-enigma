@@ -3,8 +3,8 @@
     <VAlert :type="currentSnackbar.color" :border="currentSnackbar.variant || 'left'" prominent closable dismissible
       @click:close="snackbarStore.closeSnackbar()">
       <div class="alert-content">
-        <h6 class="alert-title">{{ currentSnackbar.title }}</h6>
-        <p class="alert-message">{{ translatedMessage }}</p>
+        <h6 class="alert-title">{{ $t(currentSnackbar.title) }}</h6>
+        <p class="alert-message">{{ $t(translatedMessage) }}</p>
       </div>
     </VAlert>
   </div>

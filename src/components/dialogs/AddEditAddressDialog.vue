@@ -3,8 +3,8 @@ import home from '@images/svg/home.svg'
 import office from '@images/svg/office.svg'
 
 interface BillingAddress {
-  firstName: string
-  lastName: string
+  firstName: string | undefined
+  lastName: string | undefined
   selectedCountry: string | null
   addressLine1: string
   addressLine2: string

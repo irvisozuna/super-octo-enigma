@@ -2,14 +2,21 @@
 interface Props {
   menuList?: unknown[]
   itemProps?: boolean
+  iconSize?: string
+  class?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  class: 'text-disabled',
+})
 </script>
 
 <template>
-  <IconBtn color="disabled">
-    <VIcon icon="tabler-dots-vertical" />
+  <IconBtn :class="props.class">
+    <VIcon
+      :size="iconSize"
+      icon="tabler-dots-vertical"
+    />
 
     <VMenu
       v-if="props.menuList"

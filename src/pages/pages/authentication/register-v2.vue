@@ -14,6 +14,7 @@ import authV2MaskLight from '@images/pages/misc-mask-light.png'
 definePage({
   meta: {
     layout: 'blank',
+    public: true,
   },
 })
 
@@ -123,6 +124,7 @@ const isPasswordVisible = ref(false)
                   label="Password"
                   placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
+                  autocomplete="password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
@@ -192,5 +194,5 @@ const isPasswordVisible = ref(false)
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/page-auth.scss";
+@use "@core/scss/template/pages/page-auth";
 </style>

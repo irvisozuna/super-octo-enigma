@@ -30,10 +30,17 @@ const shortcuts = [
     subtitle: 'Dashboard Analytics',
     to: { name: 'dashboards-analytics' },
   },
+  {
+    icon: 'tabler-settings',
+    title: 'Settings',
+    subtitle: 'Account Settings',
+    to: { name: 'pages-account-settings-tab', params: { tab: 'account' } },
+  },
 
 ]
 </script>
 
 <template>
-  <Shortcuts :shortcuts="shortcuts" />
+  <!-- ACTIVACION POR BACKEND EN SETTINGS -->
+  <Shortcuts :shortcuts="shortcuts" v-if="false" />
 </template>

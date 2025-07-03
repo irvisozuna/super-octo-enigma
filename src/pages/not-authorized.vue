@@ -12,7 +12,30 @@ definePage({
     public: true,
   },
 })
+const router = useRouter()
+const ability = useAbility()
 
+// TODO: Get type from backend
+const userData = useCookie<any>('userData')
+const logout = async () => {
+  // Remove "accessToken" from cookie
+  useCookie('accessToken').value = null
+
+  // Remove "userData" from cookie
+  userData.value = null
+
+  // Redirect to login page
+  await router.push('/login')
+
+  // ℹ️ We had to remove abilities in then block because if we don't nav menu items mutation is visible while redirecting user to login page
+  // Remove "userAbilities" from cookie
+  useCookie('userAbilityRules').value = null
+  useCookie('profile').value = null
+  useCookie('company').value = null
+
+  // Reset ability to initial ability
+  ability.update([])
+}
 const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
 </script>
 
@@ -47,9 +70,16 @@ const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
       alt="misc-footer-img"
       height="320"
     >
+    <VBtn
+      class="mb-11"
+      @click="logout"
+    >
+      {{ $t('logout') }}
+    </VBtn>
   </div>
+
 </template>
 
 <style lang="scss">
-@use "@core/scss/template/pages/misc.scss";
+@use "@core/scss/template/pages/misc";
 </style>
