@@ -1,0 +1,43 @@
+import { {{moduleName}}Id } from './{{moduleName}}Id'
+import { {{moduleName}}Name } from '../valueObjects/{{moduleName}}Name'
+import { {{moduleName}}Status } from '../valueObjects/{{moduleName}}Status'
+import { AggregateRoot } from '@/shared/domain/AggregateRoot'
+import { {{moduleName}}Created } from '../events/{{moduleName}}Created'
+import { {{moduleName}}Updated } from '../events/{{moduleName}}Updated'
+import { {{moduleName}}ValidationError } from '../exceptions/{{moduleName}}ValidationError'
+
+export interface {{moduleName}}Props {
+  id: {{moduleName}}Id
+  name: {{moduleName}}Name
+  status: {{moduleName}}Status
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date
+}
+
+export class {{entityName}} {
+  // Properties will be added here
+
+  constructor(init: Partial<{{entityName}}>) {
+    Object.assign(this, init)
+  }
+
+  private generateId(): string {
+    return crypto.randomUUID();
+  }
+
+  // Métodos de negocio específicos de la entidad
+  public update(props: Partial<{{entityName}}>): {{entityName}} {
+    return new {{entityName}}({
+      id: this.id,
+      // Add any other properties that need to be updated
+    });
+  }
+
+  public toJSON() {
+    return {
+      id: this.id,
+      // Add any other properties that need to be included in the JSON
+    };
+  }
+} 

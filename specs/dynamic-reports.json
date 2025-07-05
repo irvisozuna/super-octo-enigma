@@ -1,0 +1,2121 @@
+{
+    "moduleName": "DynamicReports",
+    "version": "1.0.0",
+    "description": "Módulo de reportes dinámicos configurables",
+    "author": "Development Team",
+    "framework": "vue",
+    "language": "typescript",
+    
+    "entities": {
+      "Connection": {
+        "table": "dynamic_report_connections",
+        "properties": {
+          "id": {
+            "type": "uuid",
+            "primary": true,
+            "generated": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "driver": {
+            "type": "enum",
+            "values": ["mysql", "pgsql", "sqlsrv", "oracle", "sqlite"],
+            "required": true
+          },
+          "host": {
+            "type": "string",
+            "required": true
+          },
+          "port": {
+            "type": "integer",
+            "required": true
+          },
+          "database_name": {
+            "type": "string",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "required": true,
+            "encrypted": true
+          },
+          "status": {
+            "type": "enum",
+            "values": ["active", "inactive", "testing", "error"],
+            "default": "inactive"
+          },
+          "created_at": {
+            "type": "datetime",
+            "generated": true
+          },
+          "updated_at": {
+            "type": "datetime",
+            "generated": true
+          }
+        },
+        "indexes": [
+          "name",
+          "driver"
+        ]
+      },
+      "DataSource": {
+        "table": "dynamic_report_data_sources",
+        "properties": {
+          "id": {
+            "type": "uuid",
+            "primary": true,
+            "generated": true
+          },
+          "connection_id": {
+            "type": "uuid",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "type": {
+            "type": "enum",
+            "values": ["custom_sql", "visual_builder", "hybrid"],
+            "required": true
+          },
+          "custom_sql": {
+            "type": "text",
+            "required": false
+          },
+          "available_fields": {
+            "type": "json",
+            "required": true
+          },
+          "created_at": {
+            "type": "datetime",
+            "generated": true
+          },
+          "updated_at": {
+            "type": "datetime",
+            "generated": true
+          }
+        },
+        "indexes": [
+          "connection_id",
+          "name",
+          "type"
+        ]
+      },
+      "Report": {
+        "table": "dynamic_reports",
+        "properties": {
+          "id": {
+            "type": "uuid",
+            "primary": true,
+            "generated": true
+          },
+          "data_source_id": {
+            "type": "uuid",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "description": {
+            "type": "text",
+            "required": false
+          },
+          "selected_fields": {
+            "type": "json",
+            "required": true
+          },
+          "export_formats": {
+            "type": "json",
+            "required": true
+          },
+          "default_filters": {
+            "type": "json",
+            "required": false
+          },
+          "is_public": {
+            "type": "boolean",
+            "default": false
+          },
+          "created_at": {
+            "type": "datetime",
+            "generated": true
+          },
+          "updated_at": {
+            "type": "datetime",
+            "generated": true
+          }
+        },
+        "indexes": [
+          "data_source_id",
+          "name"
+        ]
+      },
+      "Execution": {
+        "table": "dynamic_report_executions",
+        "properties": {
+          "id": {
+            "type": "uuid",
+            "primary": true,
+            "generated": true
+          },
+          "report_id": {
+            "type": "uuid",
+            "required": true
+          },
+          "export_format": {
+            "type": "enum",
+            "values": ["table", "excel", "pdf", "csv", "json"],
+            "required": true
+          },
+          "filters": {
+            "type": "json",
+            "required": false
+          },
+          "status": {
+            "type": "enum",
+            "values": ["pending", "running", "completed", "failed"],
+            "default": "pending"
+          },
+          "result_count": {
+            "type": "integer",
+            "required": false
+          },
+          "execution_time": {
+            "type": "integer",
+            "required": false
+          },
+          "error_message": {
+            "type": "text",
+            "required": false
+          },
+          "download_url": {
+            "type": "string",
+            "required": false
+          },
+          "created_at": {
+            "type": "datetime",
+            "generated": true
+          }
+        },
+        "indexes": [
+          "report_id",
+          "export_format",
+          "status"
+        ]
+      }
+    },
+  
+    "relationships": {
+      "Connection": {
+        "hasMany": ["DataSource"]
+      },
+      "DataSource": {
+        "belongsTo": "Connection",
+        "hasMany": ["Report"]
+      },
+      "Report": {
+        "belongsTo": "DataSource",
+        "hasMany": ["Execution"]
+      },
+      "Execution": {
+        "belongsTo": "Report"
+      }
+    },
+  
+    "types": {
+      "entities": {
+        "Connection": {
+          "interface": "IConnection",
+          "createDto": "CreateConnectionDto",
+          "updateDto": "UpdateConnectionDto",
+          "response": "ConnectionResponse",
+          "testResult": "ConnectionTestResult"
+        },
+        "DataSource": {
+          "interface": "IDataSource",
+          "createDto": "CreateDataSourceDto",
+          "updateDto": "UpdateDataSourceDto",
+          "response": "DataSourceResponse",
+          "fieldsResponse": "DataSourceFieldsResponse"
+        },
+        "Report": {
+          "interface": "IReport",
+          "createDto": "CreateReportDto",
+          "updateDto": "UpdateReportDto",
+          "response": "ReportResponse",
+          "executeDto": "ExecuteReportDto"
+        },
+        "Execution": {
+          "interface": "IExecution",
+          "response": "ExecutionResponse",
+          "result": "ExecutionResult"
+        }
+      },
+      "enums": {
+        "DatabaseDriver": ["mysql", "pgsql", "sqlsrv", "oracle", "sqlite"],
+        "ExportFormat": ["table", "excel", "pdf", "csv", "json"],
+        "DataSourceType": ["custom_sql", "visual_builder", "hybrid"],
+        "ConnectionStatus": ["active", "inactive", "testing", "error"],
+        "ExecutionStatus": ["pending", "running", "completed", "failed"]
+      },
+      "shared": {
+        "ApiResponse": "ApiResponse<T>",
+        "PaginatedResponse": "PaginatedResponse<T>",
+        "FilterOptions": "FilterOptions",
+        "SortOptions": "SortOptions"
+      }
+    },
+  
+    "stores": {
+      "connectionStore": {
+        "state": [
+          "connections",
+          "selectedConnection",
+          "loading",
+          "error",
+          "testingConnection"
+        ],
+        "actions": [
+          "fetchConnections",
+          "fetchConnectionById",
+          "createConnection",
+          "updateConnection",
+          "deleteConnection",
+          "testConnection",
+          "clearError"
+        ],
+        "getters": [
+          "activeConnections",
+          "connectionsByDriver",
+          "connectionOptions",
+          "isLoading",
+          "hasError"
+        ]
+      },
+      "dataSourceStore": {
+        "state": [
+          "dataSources",
+          "selectedDataSource",
+          "availableFields",
+          "loading",
+          "error"
+        ],
+        "actions": [
+          "fetchDataSources",
+          "fetchDataSourceById",
+          "createDataSource",
+          "updateDataSource",
+          "deleteDataSource",
+          "fetchFields",
+          "clearError"
+        ],
+        "getters": [
+          "dataSourcesByConnection",
+          "dataSourceOptions",
+          "fieldsByType",
+          "isLoading"
+        ]
+      },
+      "reportStore": {
+        "state": [
+          "reports",
+          "selectedReport",
+          "currentExecution",
+          "executions",
+          "loading",
+          "executing",
+          "error"
+        ],
+        "actions": [
+          "fetchReports",
+          "fetchReportById",
+          "createReport",
+          "updateReport",
+          "deleteReport",
+          "executeReport",
+          "fetchExecutions",
+          "downloadExecution",
+          "clearError"
+        ],
+        "getters": [
+          "reportsByDataSource",
+          "publicReports",
+          "recentExecutions",
+          "isExecuting",
+          "executionHistory"
+        ]
+      },
+      "uiStore": {
+        "state": [
+          "sidebar",
+          "theme",
+          "notifications",
+          "loading",
+          "breadcrumbs"
+        ],
+        "actions": [
+          "toggleSidebar",
+          "setTheme",
+          "addNotification",
+          "removeNotification",
+          "setLoading",
+          "setBreadcrumbs"
+        ],
+        "getters": [
+          "sidebarCollapsed",
+          "currentTheme",
+          "activeNotifications",
+          "isGlobalLoading"
+        ]
+      }
+    },
+  
+    "composables": {
+      "useConnections": {
+        "functions": [
+          "createConnection",
+          "updateConnection",
+          "deleteConnection",
+          "testConnection",
+          "refreshConnections"
+        ],
+        "reactive": [
+          "connections",
+          "loading",
+          "error",
+          "testResult"
+        ]
+      },
+      "useDataSources": {
+        "functions": [
+          "createDataSource",
+          "updateDataSource",
+          "deleteDataSource",
+          "fetchFields",
+          "validateSql"
+        ],
+        "reactive": [
+          "dataSources",
+          "fields",
+          "loading",
+          "error"
+        ]
+      },
+      "useReports": {
+        "functions": [
+          "createReport",
+          "executeReport",
+          "exportReport",
+          "applyFilters",
+          "downloadResult"
+        ],
+        "reactive": [
+          "reports",
+          "currentExecution",
+          "filters",
+          "executing",
+          "results"
+        ]
+      },
+      "useApi": {
+        "functions": [
+          "get",
+          "post",
+          "put",
+          "delete",
+          "handleError",
+          "setLoading"
+        ],
+        "reactive": [
+          "loading",
+          "error",
+          "response"
+        ]
+      },
+      "useForm": {
+        "functions": [
+          "handleSubmit",
+          "resetForm",
+          "setFieldValue",
+          "validateField",
+          "clearErrors"
+        ],
+        "reactive": [
+          "values",
+          "errors",
+          "touched",
+          "isValid",
+          "isSubmitting"
+        ]
+      },
+      "useModal": {
+        "functions": [
+          "openModal",
+          "closeModal",
+          "toggleModal"
+        ],
+        "reactive": [
+          "isOpen",
+          "data"
+        ]
+      },
+      "useNotifications": {
+        "functions": [
+          "showSuccess",
+          "showError",
+          "showWarning",
+          "showInfo",
+          "dismiss"
+        ],
+        "reactive": [
+          "notifications"
+        ]
+      },
+      "usePermissions": {
+        "functions": [
+          "can",
+          "cannot",
+          "defineAbility",
+          "updateAbility",
+          "hasRole",
+          "canAccess",
+          "canCreate",
+          "canEdit",
+          "canDelete",
+          "canExecute",
+          "canExport",
+          "canViewField",
+          "filterByPermissions"
+        ],
+        "reactive": [
+          "ability",
+          "userRoles",
+          "userPermissions",
+          "isLoading"
+        ]
+      }
+    },
+  
+    "components": {
+      "smart": {
+        "ConnectionForm": {
+          "props": [
+            "connection",
+            "mode"
+          ],
+          "emits": [
+            "submit",
+            "cancel",
+            "test"
+          ],
+          "slots": [
+            "actions",
+            "footer"
+          ]
+        },
+        "DataSourceBuilder": {
+          "props": [
+            "dataSource",
+            "connection",
+            "mode"
+          ],
+          "emits": [
+            "fieldsChanged",
+            "queryChanged",
+            "submit"
+          ],
+          "slots": [
+            "preview",
+            "toolbar"
+          ]
+        },
+        "ReportExecutor": {
+          "props": [
+            "report",
+            "initialFilters"
+          ],
+          "emits": [
+            "executed",
+            "exported",
+            "filterChanged"
+          ],
+          "slots": [
+            "toolbar",
+            "results",
+            "actions"
+          ]
+        },
+        "FieldSelector": {
+          "props": [
+            "availableFields",
+            "selectedFields",
+            "multiple"
+          ],
+          "emits": [
+            "selectionChanged"
+          ],
+          "slots": [
+            "field",
+            "empty"
+          ]
+        }
+      },
+      "dumb": {
+        "ConnectionCard": {
+          "props": [
+            "connection",
+            "showActions"
+          ],
+          "emits": [
+            "edit",
+            "delete",
+            "test",
+            "select"
+          ]
+        },
+        "DataSourceCard": {
+          "props": [
+            "dataSource",
+            "showActions"
+          ],
+          "emits": [
+            "edit",
+            "delete",
+            "select",
+            "viewFields"
+          ]
+        },
+        "ReportCard": {
+          "props": [
+            "report",
+            "showActions"
+          ],
+          "emits": [
+            "edit",
+            "delete",
+            "execute",
+            "clone"
+          ]
+        },
+        "ExecutionStatus": {
+          "props": [
+            "execution",
+            "showProgress"
+          ],
+          "emits": [
+            "download",
+            "retry"
+          ]
+        },
+        "ExportButton": {
+          "props": [
+            "format",
+            "disabled",
+            "loading"
+          ],
+          "emits": [
+            "export"
+          ]
+        },
+        "FilterInput": {
+          "props": [
+            "field",
+            "value",
+            "operator"
+          ],
+          "emits": [
+            "valueChanged",
+            "operatorChanged"
+          ]
+        }
+      },
+      "layout": {
+        "DynamicReportsLayout": {
+          "props": [],
+          "slots": [
+            "header",
+            "sidebar",
+            "main",
+            "footer"
+          ]
+        },
+        "Sidebar": {
+          "props": [
+            "collapsed",
+            "items"
+          ],
+          "emits": [
+            "toggle",
+            "navigate"
+          ]
+        },
+        "Header": {
+          "props": [
+            "title",
+            "breadcrumbs"
+          ],
+          "slots": [
+            "actions",
+            "notifications"
+          ]
+        }
+      }
+    },
+  
+    "validation": {
+      "schemas": {
+        "connectionSchema": {
+          "name": "required|min:3|max:255|unique",
+          "driver": "required|in:mysql,pgsql,sqlsrv,oracle,sqlite",
+          "host": "required|hostname_or_ip",
+          "port": "required|numeric|min:1|max:65535",
+          "database_name": "required|min:1|max:255",
+          "username": "required|min:1|max:255",
+          "password": "required|min:1"
+        },
+        "dataSourceSchema": {
+          "name": "required|min:3|max:255",
+          "connection_id": "required|uuid|exists:connections",
+          "type": "required|in:custom_sql,visual_builder,hybrid",
+          "custom_sql": "required_if:type,custom_sql|contains:SELECT|sql_syntax"
+        },
+        "reportSchema": {
+          "name": "required|min:3|max:255",
+          "data_source_id": "required|uuid|exists:data_sources",
+          "selected_fields": "required|array|min:1",
+          "export_formats": "required|array|min:1"
+        },
+        "executionSchema": {
+          "report_id": "required|uuid|exists:reports",
+          "export_format": "required|in:table,excel,pdf,csv,json",
+          "filters": "array"
+        }
+      },
+      "rules": {
+        "hostname_or_ip": "^(?:[a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+$|^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$",
+        "sql_syntax": "^SELECT\\s+.*\\s+FROM\\s+.*$",
+        "unique": "Must be unique across the system"
+      }
+    },
+  
+    "services": {
+      "connectionService": {
+        "baseUrl": "/api/dynamic-reports/connections",
+        "methods": {
+          "getAll": {
+            "method": "GET",
+            "path": "/",
+            "params": ["page", "limit", "search", "driver"]
+          },
+          "getById": {
+            "method": "GET",
+            "path": "/:id"
+          },
+          "create": {
+            "method": "POST",
+            "path": "/",
+            "body": "CreateConnectionDto"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/:id",
+            "body": "UpdateConnectionDto"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/:id"
+          },
+          "test": {
+            "method": "POST",
+            "path": "/:id/test"
+          }
+        }
+      },
+      "dataSourceService": {
+        "baseUrl": "/api/dynamic-reports/data-sources",
+        "methods": {
+          "getAll": {
+            "method": "GET",
+            "path": "/",
+            "params": ["connection_id", "type"]
+          },
+          "getById": {
+            "method": "GET",
+            "path": "/:id"
+          },
+          "create": {
+            "method": "POST",
+            "path": "/",
+            "body": "CreateDataSourceDto"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/:id",
+            "body": "UpdateDataSourceDto"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/:id"
+          },
+          "getFields": {
+            "method": "GET",
+            "path": "/:id/fields"
+          },
+          "validateSql": {
+            "method": "POST",
+            "path": "/validate-sql",
+            "body": { "sql": "string", "connection_id": "string" }
+          }
+        }
+      },
+      "reportService": {
+        "baseUrl": "/api/dynamic-reports/reports",
+        "methods": {
+          "getAll": {
+            "method": "GET",
+            "path": "/",
+            "params": ["data_source_id", "is_public"]
+          },
+          "getById": {
+            "method": "GET",
+            "path": "/:id"
+          },
+          "create": {
+            "method": "POST",
+            "path": "/",
+            "body": "CreateReportDto"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/:id",
+            "body": "UpdateReportDto"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/:id"
+          },
+          "clone": {
+            "method": "POST",
+            "path": "/:id/clone"
+          }
+        }
+      },
+      "executionService": {
+        "baseUrl": "/api/dynamic-reports/executions",
+        "methods": {
+          "execute": {
+            "method": "POST",
+            "path": "/execute",
+            "body": "ExecuteReportDto"
+          },
+          "getStatus": {
+            "method": "GET",
+            "path": "/:id/status"
+          },
+          "download": {
+            "method": "GET",
+            "path": "/:id/download",
+            "responseType": "blob"
+          },
+          "getHistory": {
+            "method": "GET",
+            "path": "/history/:reportId"
+          }
+        }
+      },
+      "exportService": {
+        "baseUrl": "/api/dynamic-reports/export",
+        "methods": {
+          "toExcel": {
+            "method": "POST",
+            "path": "/excel",
+            "body": "ExportDto",
+            "responseType": "blob"
+          },
+          "toPdf": {
+            "method": "POST",
+            "path": "/pdf",
+            "body": "ExportDto",
+            "responseType": "blob"
+          },
+          "toCsv": {
+            "method": "POST",
+            "path": "/csv",
+            "body": "ExportDto",
+            "responseType": "blob"
+          },
+          "toJson": {
+            "method": "POST",
+            "path": "/json",
+            "body": "ExportDto"
+          }
+        }
+      }
+    },
+  
+    "routing": {
+      "basePath": "/dynamic-reports",
+      "routes": [
+        {
+          "path": "/",
+          "name": "DynamicReports",
+          "component": "DynamicReportsLayout",
+          "meta": {
+            "requiresAuth": true,
+            "permission": "dynamic_reports.view",
+            "title": "Dynamic Reports"
+          },
+          "children": [
+            {
+              "path": "",
+              "name": "Dashboard",
+              "component": "Dashboard",
+              "meta": {
+                "title": "Dashboard",
+                "icon": "dashboard"
+              }
+            },
+            {
+              "path": "connections",
+              "name": "Connections",
+              "component": "ConnectionsList",
+              "meta": {
+                "permission": "dynamic_reports.connection.view",
+                "title": "Conexiones",
+                "icon": "database"
+              }
+            },
+            {
+              "path": "connections/create",
+              "name": "CreateConnection",
+              "component": "ConnectionForm",
+              "meta": {
+                "permission": "dynamic_reports.connection.create",
+                "title": "Nueva Conexión"
+              }
+            },
+            {
+              "path": "connections/:id/edit",
+              "name": "EditConnection",
+              "component": "ConnectionForm",
+              "meta": {
+                "permission": "dynamic_reports.connection.edit",
+                "title": "Editar Conexión"
+              }
+            },
+            {
+              "path": "data-sources",
+              "name": "DataSources",
+              "component": "DataSourcesList",
+              "meta": {
+                "permission": "dynamic_reports.data_source.view",
+                "title": "Fuentes de Datos",
+                "icon": "table"
+              }
+            },
+            {
+              "path": "data-sources/create",
+              "name": "CreateDataSource",
+              "component": "DataSourceForm",
+              "meta": {
+                "permission": "dynamic_reports.data_source.create",
+                "title": "Nueva Fuente de Datos"
+              }
+            },
+            {
+              "path": "data-sources/:id/edit",
+              "name": "EditDataSource",
+              "component": "DataSourceForm",
+              "meta": {
+                "permission": "dynamic_reports.data_source.edit",
+                "title": "Editar Fuente de Datos"
+              }
+            },
+            {
+              "path": "reports",
+              "name": "Reports",
+              "component": "ReportsList",
+              "meta": {
+                "permission": "dynamic_reports.report.view",
+                "title": "Reportes",
+                "icon": "report"
+              }
+            },
+            {
+              "path": "reports/create",
+              "name": "CreateReport",
+              "component": "ReportForm",
+              "meta": {
+                "permission": "dynamic_reports.report.create",
+                "title": "Nuevo Reporte"
+              }
+            },
+            {
+              "path": "reports/:id/edit",
+              "name": "EditReport",
+              "component": "ReportForm",
+              "meta": {
+                "permission": "dynamic_reports.report.edit",
+                "title": "Editar Reporte"
+              }
+            },
+            {
+              "path": "reports/:id/execute",
+              "name": "ExecuteReport",
+              "component": "ReportExecutor",
+              "meta": {
+                "permission": "dynamic_reports.execution.run",
+                "title": "Ejecutar Reporte"
+              }
+            },
+            {
+              "path": "executions",
+              "name": "Executions",
+              "component": "ExecutionsList",
+              "meta": {
+                "permission": "dynamic_reports.execution.view",
+                "title": "Historial de Ejecuciones",
+                "icon": "history"
+              }
+            }
+          ]
+        }
+      ]
+    },
+  
+    "errorHandling": {
+      "globalErrorHandler": {
+        "apiErrors": [
+          "NetworkError",
+          "ValidationError",
+          "AuthError",
+          "NotFoundError",
+          "ServerError"
+        ],
+        "userFriendlyMessages": {
+          "NetworkError": "No se pudo conectar al servidor. Verifica tu conexión a internet.",
+          "ValidationError": "Los datos ingresados no son válidos. Por favor, revisa los campos marcados.",
+          "AuthError": "No tienes permisos para realizar esta acción.",
+          "NotFoundError": "El recurso solicitado no fue encontrado.",
+          "ServerError": "Ocurrió un error interno del servidor. Intenta nuevamente más tarde."
+        }
+      },
+      "loadingStates": {
+        "global": [
+          "connections",
+          "dataSources",
+          "reports",
+          "executions"
+        ],
+        "local": [
+          "testing",
+          "executing",
+          "exporting",
+          "validating"
+        ]
+      },
+      "retryConfig": {
+        "maxRetries": 3,
+        "retryDelay": 1000,
+        "exponentialBackoff": true
+      }
+    },
+  
+    "ui": {
+      "theme": {
+        "primary": "teal",
+        "secondary": "gray",
+        "success": "green",
+        "warning": "yellow",
+        "error": "red",
+        "info": "blue"
+      },
+      "icon": "tabler-report-analytics",
+      "color": "teal",
+      "menuPosition": "main",
+      "menuOrder": 20,
+      "layout": {
+        "sidebar": {
+          "collapsible": true,
+          "defaultCollapsed": false,
+          "width": "256px",
+          "collapsedWidth": "64px",
+          "items": [
+            {
+              "name": "Dashboard",
+              "route": "Dashboard",
+              "icon": "dashboard",
+              "permission": "dynamic_reports.view"
+            },
+            {
+              "name": "Conexiones",
+              "route": "Connections",
+              "icon": "database",
+              "permission": "dynamic_reports.connection.view"
+            },
+            {
+              "name": "Fuentes de Datos",
+              "route": "DataSources",
+              "icon": "table",
+              "permission": "dynamic_reports.data_source.view"
+            },
+            {
+              "name": "Reportes",
+              "route": "Reports",
+              "icon": "report",
+              "permission": "dynamic_reports.report.view"
+            },
+            {
+              "name": "Historial",
+              "route": "Executions",
+              "icon": "history",
+              "permission": "dynamic_reports.execution.view"
+            }
+          ]
+        },
+        "header": {
+          "height": "64px",
+          "showBreadcrumbs": true,
+          "showUserMenu": true,
+          "showNotifications": true
+        }
+      },
+      "tables": {
+        "connections": {
+          "columns": [
+            "name",
+            "driver",
+            "host",
+            "status",
+            "created_at",
+            "actions"
+          ],
+          "sortable": [
+            "name",
+            "driver",
+            "created_at"
+          ],
+          "searchable": [
+            "name",
+            "host"
+          ],
+          "filters": [
+            "driver",
+            "status"
+          ]
+        },
+        "dataSources": {
+          "columns": [
+            "name",
+            "connection",
+            "type",
+            "created_at",
+            "actions"
+          ],
+          "sortable": [
+            "name",
+            "type",
+            "created_at"
+          ],
+          "searchable": [
+            "name"
+          ],
+          "filters": [
+            "connection_id",
+            "type"
+          ]
+        },
+        "reports": {
+          "columns": [
+            "name",
+            "dataSource",
+            "lastExecution",
+            "is_public",
+            "created_at",
+            "actions"
+          ],
+          "sortable": [
+            "name",
+            "created_at"
+          ],
+          "searchable": [
+            "name",
+            "description"
+          ],
+          "filters": [
+            "data_source_id",
+            "is_public"
+          ]
+        },
+        "executions": {
+          "columns": [
+            "report",
+            "export_format",
+            "status",
+            "result_count",
+            "execution_time",
+            "created_at",
+            "actions"
+          ],
+          "sortable": [
+            "created_at",
+            "execution_time"
+          ],
+          "filters": [
+            "report_id",
+            "export_format",
+            "status"
+          ]
+        }
+      },
+      "views": {
+        "list": {
+          "pagination": {
+            "pageSize": 20,
+            "showSizeChanger": true,
+            "showTotal": true
+          },
+          "selection": {
+            "multiple": true,
+            "showSelectAll": true
+          },
+          "actions": [
+            "create",
+            "edit",
+            "delete",
+            "bulk_delete"
+          ]
+        },
+        "form": {
+          "layout": "vertical",
+          "showRequired": true,
+          "submitText": "Guardar",
+          "cancelText": "Cancelar"
+        }
+      }
+    },
+  
+    "permissions": {
+      "casl": {
+        "enabled": true,
+        "subjects": [
+          "Connection",
+          "DataSource", 
+          "Report",
+          "Execution"
+        ],
+        "actions": [
+          "manage",
+          "create",
+          "read",
+          "update",
+          "delete",
+          "execute",
+          "export",
+          "test"
+        ],
+        "abilities": [
+          {
+            "action": "manage",
+            "subject": "all",
+            "conditions": {},
+            "reason": "Super admin can do everything"
+          },
+          {
+            "action": "read",
+            "subject": "Connection",
+            "conditions": {},
+            "reason": "Can view all connections"
+          },
+          {
+            "action": "create",
+            "subject": "Connection",
+            "conditions": {},
+            "reason": "Can create connections"
+          },
+          {
+            "action": "update",
+            "subject": "Connection",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only edit own connections"
+          },
+          {
+            "action": "delete",
+            "subject": "Connection",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only delete own connections"
+          },
+          {
+            "action": "test",
+            "subject": "Connection",
+            "conditions": {},
+            "reason": "Can test any connection"
+          },
+          {
+            "action": "read",
+            "subject": "DataSource",
+            "conditions": {},
+            "reason": "Can view all data sources"
+          },
+          {
+            "action": "create",
+            "subject": "DataSource",
+            "conditions": {},
+            "reason": "Can create data sources"
+          },
+          {
+            "action": "update",
+            "subject": "DataSource",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only edit own data sources"
+          },
+          {
+            "action": "delete",
+            "subject": "DataSource",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only delete own data sources"
+          },
+          {
+            "action": "read",
+            "subject": "Report",
+            "conditions": {
+              "$or": [
+                { "created_by": "${user.id}" },
+                { "is_public": true },
+                { "shared_with": { "$in": ["${user.id}"] } }
+              ]
+            },
+            "reason": "Can view own reports, public reports, or shared reports"
+          },
+          {
+            "action": "create",
+            "subject": "Report",
+            "conditions": {},
+            "reason": "Can create reports"
+          },
+          {
+            "action": "update",
+            "subject": "Report",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only edit own reports"
+          },
+          {
+            "action": "delete",
+            "subject": "Report",
+            "conditions": { "created_by": "${user.id}" },
+            "reason": "Can only delete own reports"
+          },
+          {
+            "action": "execute",
+            "subject": "Report",
+            "conditions": {
+              "$or": [
+                { "created_by": "${user.id}" },
+                { "is_public": true },
+                { "shared_with": { "$in": ["${user.id}"] } }
+              ]
+            },
+            "reason": "Can execute own reports, public reports, or shared reports"
+          },
+          {
+            "action": "export",
+            "subject": "Report",
+            "conditions": {
+              "$and": [
+                {
+                  "$or": [
+                    { "created_by": "${user.id}" },
+                    { "is_public": true },
+                    { "shared_with": { "$in": ["${user.id}"] } }
+                  ]
+                },
+                { "export_formats": { "$in": ["${requested_format}"] } }
+              ]
+            },
+            "reason": "Can export accessible reports in allowed formats"
+          },
+          {
+            "action": "read",
+            "subject": "Execution",
+            "conditions": {
+              "report": {
+                "$or": [
+                  { "created_by": "${user.id}" },
+                  { "is_public": true },
+                  { "shared_with": { "$in": ["${user.id}"] } }
+                ]
+              }
+            },
+            "reason": "Can view executions of accessible reports"
+          }
+        ],
+        "roles": {
+          "super_admin": {
+            "abilities": [
+              { "action": "manage", "subject": "all" }
+            ]
+          },
+          "admin": {
+            "abilities": [
+              { "action": ["create", "read", "update", "delete", "test"], "subject": "Connection" },
+              { "action": ["create", "read", "update", "delete"], "subject": "DataSource" },
+              { "action": ["create", "read", "update", "delete", "execute", "export"], "subject": "Report" },
+              { "action": "read", "subject": "Execution" }
+            ]
+          },
+          "manager": {
+            "abilities": [
+              { "action": "read", "subject": "Connection" },
+              { "action": "test", "subject": "Connection" },
+              { "action": ["create", "read", "update"], "subject": "DataSource", "conditions": { "created_by": "${user.id}" } },
+              { "action": ["create", "read", "update", "execute", "export"], "subject": "Report" },
+              { "action": "read", "subject": "Execution" }
+            ]
+          },
+          "user": {
+            "abilities": [
+              { "action": "read", "subject": "Connection" },
+              { "action": "read", "subject": "DataSource" },
+              { 
+                "action": ["read", "execute", "export"], 
+                "subject": "Report",
+                "conditions": {
+                  "$or": [
+                    { "created_by": "${user.id}" },
+                    { "is_public": true },
+                    { "shared_with": { "$in": ["${user.id}"] } }
+                  ]
+                }
+              },
+              { "action": "read", "subject": "Execution" }
+            ]
+          },
+          "viewer": {
+            "abilities": [
+              { 
+                "action": "read", 
+                "subject": "Report",
+                "conditions": { "is_public": true }
+              },
+              { 
+                "action": "execute", 
+                "subject": "Report",
+                "conditions": { 
+                  "$and": [
+                    { "is_public": true },
+                    { "export_formats": { "$in": ["table"] } }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "fieldLevelPermissions": {
+          "Connection": {
+            "password": {
+              "read": false,
+              "conditions": { "role": { "$in": ["super_admin", "admin"] } }
+            },
+            "username": {
+              "read": true,
+              "conditions": { "role": { "$in": ["super_admin", "admin", "manager"] } }
+            }
+          },
+          "Report": {
+            "created_by": {
+              "read": true,
+              "conditions": { "role": { "$in": ["super_admin", "admin"] } }
+            }
+          }
+        }
+      },
+      "legacy": [
+        "dynamic_reports.view",
+        "dynamic_reports.connection.view",
+        "dynamic_reports.connection.create",
+        "dynamic_reports.connection.edit",
+        "dynamic_reports.connection.delete",
+        "dynamic_reports.connection.test",
+        "dynamic_reports.data_source.view",
+        "dynamic_reports.data_source.create",
+        "dynamic_reports.data_source.edit",
+        "dynamic_reports.data_source.delete",
+        "dynamic_reports.report.view",
+        "dynamic_reports.report.create",
+        "dynamic_reports.report.edit",
+        "dynamic_reports.report.delete",
+        "dynamic_reports.report.clone",
+        "dynamic_reports.execution.view",
+        "dynamic_reports.execution.run",
+        "dynamic_reports.execution.download",
+        "dynamic_reports.export.excel",
+        "dynamic_reports.export.pdf",
+        "dynamic_reports.export.csv",
+        "dynamic_reports.export.json"
+      ]
+    },
+  
+    "dependencies": {
+      "core": [
+        "vue@^3.4.0",
+        "vue-router@^4.2.0",
+        "pinia@^2.1.0",
+        "axios@^1.6.0",
+        "@vueuse/core@^10.5.0"
+      ],
+      "ui": [
+        "@headlessui/vue@^1.7.0",
+        "@heroicons/vue@^2.0.0",
+        "tailwindcss@^3.3.0",
+        "@tailwindcss/forms@^0.5.0",
+        "@tailwindcss/typography@^0.5.0"
+      ],
+      "validation": [
+        "vee-validate@^4.11.0",
+        "yup@^1.3.0",
+        "@vee-validate/yup@^4.11.0"
+      ],
+      "utilities": [
+        "lodash-es@^4.17.0",
+        "date-fns@^2.30.0",
+        "file-saver@^2.0.0",
+        "uuid@^9.0.0",
+        "@casl/ability@^6.5.0",
+        "@casl/vue@^2.2.0"
+      ],
+      "charts": [
+        "chart.js@^4.4.0",
+        "vue-chartjs@^5.2.0"
+      ],
+      "dev": [
+        "@types/lodash-es@^4.17.0",
+        "@types/file-saver@^2.0.0",
+        "@types/uuid@^9.0.0",
+        "typescript@^5.2.0",
+        "vite@^4.5.0",
+        "vitest@^0.34.0",
+        "@vue/test-utils@^2.4.0"
+      ]
+    },
+  
+    "fileStructure": {
+      "src/": {
+        "modules/": {
+          "dynamic-reports/": {
+            "components/": {
+              "smart/": [
+                "ConnectionForm.vue",
+                "DataSourceBuilder.vue",
+                "ReportExecutor.vue",
+                "FieldSelector.vue"
+              ],
+              "dumb/": [
+                "ConnectionCard.vue",
+                "DataSourceCard.vue",
+                "ReportCard.vue",
+                "ExecutionStatus.vue",
+                "ExportButton.vue",
+                "FilterInput.vue"
+              ],
+              "layout/": [
+                "DynamicReportsLayout.vue",
+                "Sidebar.vue",
+                "Header.vue"
+              ]
+            },
+            "composables/": [
+              "useConnections.ts",
+              "useDataSources.ts",
+              "useReports.ts",
+              "useApi.ts",
+              "useForm.ts",
+              "useModal.ts",
+              "useNotifications.ts",
+              "usePermissions.ts"
+            ],
+            "stores/": [
+              "connectionStore.ts",
+              "dataSourceStore.ts",
+              "reportStore.ts",
+              "uiStore.ts"
+            ],
+            "services/": [
+              "connectionService.ts",
+              "dataSourceService.ts",
+              "reportService.ts",
+              "executionService.ts",
+              "exportService.ts",
+              "apiClient.ts"
+            ],
+            "types/": [
+              "entities.ts",
+              "dtos.ts",
+              "enums.ts",
+              "api.ts",
+              "ui.ts"
+            ],
+            "views/": [
+              "Dashboard.vue",
+              "ConnectionsList.vue",
+              "DataSourcesList.vue",
+              "ReportsList.vue",
+              "ExecutionsList.vue"
+            ],
+            "router/": [
+              "index.ts",
+              "guards.ts"
+            ],
+            "constants/": [
+              "permissions.ts",
+              "routes.ts",
+              "validation.ts"
+            ],
+            "utils/": [
+              "formatters.ts",
+              "validators.ts",
+              "exportHelpers.ts"
+            ]
+          }
+        },
+        "shared/": {
+          "components/": [
+            "BaseTable.vue",
+            "BaseForm.vue",
+            "BaseModal.vue",
+            "BaseButton.vue",
+            "BaseInput.vue",
+            "BaseSelect.vue",
+            "LoadingSpinner.vue",
+            "Toast.vue"
+          ],
+          "composables/": [
+            "useAuth.ts",
+            "useTheme.ts",
+            "useLocalStorage.ts",
+            "useDebounce.ts"
+          ],
+          "types/": [
+            "common.ts",
+            "auth.ts"
+          ],
+          "utils/": [
+            "http.ts",
+            "storage.ts",
+            "format.ts",
+            "validation.ts"
+          ],
+          "constants/": [
+            "common.ts",
+            "api.ts"
+          ]
+        },
+        "assets/": {
+          "css/": [
+            "main.css",
+            "components.css"
+          ],
+          "icons/": [],
+          "images/": []
+        }
+      }
+    },
+  
+    "buildConfig": {
+      "vite": {
+        "plugins": [
+          "vue",
+          "typescript",
+          "tailwindcss"
+        ],
+        "alias": {
+          "@": "./src",
+          "@shared": "./src/shared",
+          "@modules": "./src/modules"
+        },
+        "env": {
+          "development": {
+            "API_BASE_URL": "http://localhost:3000/api",
+            "DEBUG": true
+          },
+          "production": {
+            "API_BASE_URL": "/api",
+            "DEBUG": false
+          }
+        }
+      },
+      "typescript": {
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true
+      },
+      "tailwind": {
+        "content": [
+          "./src/**/*.{js,ts,jsx,tsx,vue}"
+        ],
+        "theme": {
+          "extend": {
+            "colors": {
+              "primary": "teal",
+              "secondary": "gray"
+            }
+          }
+        }
+      }
+    },
+  
+    "testing": {
+      "unit": {
+        "framework": "vitest",
+        "coverage": {
+          "provider": "c8",
+          "threshold": {
+            "global": {
+              "branches": 80,
+              "functions": 80,
+              "lines": 80,
+              "statements": 80
+            }
+          }
+        },
+        "testFiles": {
+          "components": "**/*.spec.ts",
+          "composables": "**/*.test.ts",
+          "stores": "**/*.test.ts",
+          "utils": "**/*.test.ts"
+        }
+      },
+      "e2e": {
+        "framework": "cypress",
+        "scenarios": [
+          "create-connection-flow",
+          "test-connection-flow",
+          "create-data-source-flow",
+          "create-report-flow",
+          "execute-report-flow",
+          "export-report-flow",
+          "permissions-flow"
+        ],
+        "pageObjects": [
+          "ConnectionsPage",
+          "DataSourcesPage",
+          "ReportsPage",
+          "ExecutionsPage"
+        ]
+      }
+    },
+  
+    "responsive": {
+      "breakpoints": {
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px",
+        "2xl": "1536px"
+      },
+      "mobileFirst": true,
+      "components": {
+        "sidebar": {
+          "mobile": "drawer",
+          "desktop": "fixed"
+        },
+        "tables": {
+          "mobile": "cards",
+          "desktop": "table"
+        },
+        "forms": {
+          "mobile": "single-column",
+          "desktop": "multi-column"
+        }
+      }
+    },
+  
+    "accessibility": {
+      "standards": "WCAG 2.1 AA",
+      "features": {
+        "ariaLabels": true,
+        "keyboardNavigation": true,
+        "screenReader": true,
+        "colorContrast": true,
+        "focusManagement": true
+      },
+      "testing": {
+        "tool": "@axe-core/vue",
+        "automated": true
+      }
+    },
+  
+    "security": {
+      "authentication": {
+        "required": true,
+        "method": "jwt",
+        "refreshToken": true
+      },
+      "authorization": {
+        "method": "casl",
+        "library": "@casl/ability",
+        "roleHierarchy": true,
+        "conditionsSupport": true,
+        "fieldLevelSecurity": true,
+        "subjectDetection": "automatic",
+        "config": {
+          "detectSubjectType": "(subject) => subject.__type || subject.constructor.name",
+          "conditionsMatcher": "mongo",
+          "fieldMatcher": "default"
+        }
+      },
+      "dataProtection": {
+        "sensitiveFields": [
+          "password",
+          "connection_string"
+        ],
+        "encryption": "client-side-masking"
+      },
+      "csp": {
+        "enabled": true,
+        "directives": {
+          "default-src": "'self'",
+          "script-src": "'self' 'unsafe-inline'",
+          "style-src": "'self' 'unsafe-inline'"
+        }
+      }
+    },
+  
+    "performance": {
+      "optimization": {
+        "lazyLoading": true,
+        "codesplitting": true,
+        "treeshaking": true,
+        "bundleAnalyzer": true
+      },
+      "caching": {
+        "api": {
+          "strategy": "stale-while-revalidate",
+          "ttl": 300000
+        },
+        "assets": {
+          "strategy": "cache-first",
+          "ttl": 86400000
+        }
+      },
+      "monitoring": {
+        "metrics": [
+          "page_load_time",
+          "api_response_time",
+          "bundle_size",
+          "memory_usage"
+        ],
+        "tools": ["web-vitals"]
+      }
+    },
+  
+    "i18n": {
+      "enabled": true,
+      "defaultLocale": "es",
+      "supportedLocales": [
+        "es",
+        "en"
+      ],
+      "messages": {
+        "es": {
+          "module": {
+            "title": "Reportes Dinámicos",
+            "description": "Gestiona conexiones, fuentes de datos y reportes"
+          },
+          "connections": {
+            "title": "Conexiones",
+            "create": "Nueva Conexión",
+            "edit": "Editar Conexión",
+            "test": "Probar Conexión",
+            "delete": "Eliminar Conexión"
+          },
+          "dataSources": {
+            "title": "Fuentes de Datos",
+            "create": "Nueva Fuente de Datos",
+            "edit": "Editar Fuente de Datos"
+          },
+          "reports": {
+            "title": "Reportes",
+            "create": "Nuevo Reporte",
+            "edit": "Editar Reporte",
+            "execute": "Ejecutar Reporte",
+            "export": "Exportar Reporte"
+          }
+        },
+        "en": {
+          "module": {
+            "title": "Dynamic Reports",
+            "description": "Manage connections, data sources and reports"
+          },
+          "connections": {
+            "title": "Connections",
+            "create": "New Connection",
+            "edit": "Edit Connection",
+            "test": "Test Connection",
+            "delete": "Delete Connection"
+          },
+          "dataSources": {
+            "title": "Data Sources",
+            "create": "New Data Source",
+            "edit": "Edit Data Source"
+          },
+          "reports": {
+            "title": "Reports",
+            "create": "New Report",
+            "edit": "Edit Report",
+            "execute": "Execute Report",
+            "export": "Export Report"
+          }
+        }
+      }
+    },
+  
+    "features": {
+      "crud": true,
+      "websocket": false,
+      "cache": true,
+      "export": [
+        "excel",
+        "pdf",
+        "csv",
+        "json",
+        "table"
+      ],
+      "import": [],
+      "audit": true,
+      "search": true,
+      "filters": [
+        "custom_filters",
+        "date_range",
+        "text_search",
+        "dropdown_filters"
+      ],
+      "sorting": [
+        "name",
+        "created_at",
+        "updated_at"
+      ],
+      "pagination": true,
+      "bulkActions": [
+        "delete",
+        "export"
+      ],
+      "realTime": false,
+      "offline": false
+    },
+  
+    "api": {
+      "baseUrl": "/api/dynamic-reports",
+      "version": "v1",
+      "timeout": 30000,
+      "retries": 3,
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      "interceptors": {
+        "request": [
+          "authInterceptor",
+          "loggingInterceptor"
+        ],
+        "response": [
+          "errorInterceptor",
+          "responseInterceptor"
+        ]
+      },
+      "endpoints": {
+        "connections": {
+          "list": {
+            "method": "GET",
+            "path": "/connections",
+            "cache": true
+          },
+          "create": {
+            "method": "POST",
+            "path": "/connections"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/connections/{id}"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/connections/{id}"
+          },
+          "test": {
+            "method": "POST",
+            "path": "/connections/{id}/test"
+          }
+        },
+        "dataSources": {
+          "list": {
+            "method": "GET",
+            "path": "/data-sources",
+            "cache": true
+          },
+          "create": {
+            "method": "POST",
+            "path": "/data-sources"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/data-sources/{id}"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/data-sources/{id}"
+          },
+          "fields": {
+            "method": "GET",
+            "path": "/data-sources/{id}/fields",
+            "cache": true
+          }
+        },
+        "reports": {
+          "list": {
+            "method": "GET",
+            "path": "/reports",
+            "cache": true
+          },
+          "create": {
+            "method": "POST",
+            "path": "/reports"
+          },
+          "update": {
+            "method": "PUT",
+            "path": "/reports/{id}"
+          },
+          "delete": {
+            "method": "DELETE",
+            "path": "/reports/{id}"
+          },
+          "clone": {
+            "method": "POST",
+            "path": "/reports/{id}/clone"
+          }
+        },
+        "executions": {
+          "execute": {
+            "method": "POST",
+            "path": "/executions/execute"
+          },
+          "status": {
+            "method": "GET",
+            "path": "/executions/{id}/status"
+          },
+          "download": {
+            "method": "GET",
+            "path": "/executions/{id}/download"
+          },
+          "history": {
+            "method": "GET",
+            "path": "/executions/history/{reportId}"
+          }
+        },
+        "export": {
+          "excel": {
+            "method": "POST",
+            "path": "/export/excel"
+          },
+          "pdf": {
+            "method": "POST",
+            "path": "/export/pdf"
+          },
+          "csv": {
+            "method": "POST",
+            "path": "/export/csv"
+          },
+          "json": {
+            "method": "POST",
+            "path": "/export/json"
+          }
+        },
+        "health": {
+          "check": {
+            "method": "GET",
+            "path": "/health"
+          }
+        }
+      }
+    },
+  
+    "valueObjects": {
+      "ConnectionName": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "maxLength": 255
+          }
+        },
+        "validations": [
+          "required",
+          "minLength:3",
+          "maxLength:255"
+        ]
+      },
+      "DatabaseCredentials": {
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "encrypted": true
+          }
+        },
+        "validations": [
+          "required"
+        ]
+      },
+      "SqlQuery": {
+        "properties": {
+          "query": {
+            "type": "text"
+          }
+        },
+        "validations": [
+          "required",
+          "mustContain:SELECT"
+        ]
+      },
+      "ExportFormat": {
+        "properties": {
+          "format": {
+            "type": "enum",
+            "values": [
+              "table",
+              "excel",
+              "pdf",
+              "csv",
+              "json"
+            ]
+          }
+        },
+        "validations": [
+          "required",
+          "in:table,excel,pdf,csv,json"
+        ]
+      },
+      "DateRange": {
+        "properties": {
+          "start": {
+            "type": "date"
+          },
+          "end": {
+            "type": "date"
+          }
+        },
+        "validations": [
+          "required",
+          "startBefore:end"
+        ]
+      }
+    }
+  }

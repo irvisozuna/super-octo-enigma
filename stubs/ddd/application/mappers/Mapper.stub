@@ -1,0 +1,132 @@
+import { injectable } from 'inversify'
+import { {{entityName}} } from '../../domain/entities/{{entityName}}'
+import { {{entityName}}DTO } from '../dtos/{{entityName}}DTO'
+import type { Create{{entityName}}DTO } from '../dtos/Create{{entityName}}DTO'
+import type { Update{{entityName}}DTO } from '../dtos/Update{{entityName}}DTO'
+
+@injectable()
+export class {{entityName}}Mapper {
+  toEntity(dto: Create{{entityName}}DTO): {{entityName}} {
+    return new {{entityName}}({
+{{#each properties}}
+      {{@key}}: dto.{{@key}},
+{{/each}}
+    })
+  }
+
+  toDTO(entity: {{entityName}}): Create{{entityName}}DTO {
+    return {
+{{#each properties}}
+      {{@key}}: entity.{{@key}},
+{{/each}}
+    }
+  }
+
+  updateEntity(entity: {{entityName}}, updateData: Partial<{{entityName}}>): {{entityName> {
+    return new {{entityName}}({
+      ...entity,
+      ...updateData,
+    });
+  }
+
+  toCreateDTO(entity: {{entityName}}): Create{{entityName}}DTO {
+    return {
+{{#each properties}}
+      {{@key}}: entity.{{@key}},
+{{/each}}
+    };
+  }
+
+  toUpdateDTO(entity: {{entityName}}): Update{{entityName}}DTO {
+    return {
+      id: entity.id,
+{{#each properties}}
+      {{@key}}: entity.{{@key}},
+{{/each}}
+    };
+  }
+
+  toDTOList(domainEntities: {{moduleName}}[]): {{moduleName}}DTO[] {
+    return domainEntities.map(entity => this.toDTO(entity))
+  }
+
+  toDomainList(dtos: Create{{moduleName}}DTO[]): Partial<{{moduleName}}>[] {
+    return dtos.map(dto => this.toDomain(dto))
+  }
+
+  // Método para mapear datos parciales (para updates)
+  toPartialDomain(dto: Partial<Update{{moduleName}}DTO>): Partial<{{moduleName}}> {
+    const domain: Partial<{{moduleName}}> = {}
+    
+    if (dto.name !== undefined) {
+      domain.name = dto.name
+    }
+    if (dto.status !== undefined) {
+      domain.status = dto.status
+    }
+    if (dto.description !== undefined) {
+      domain.description = dto.description
+    }
+    if (dto.metadata !== undefined) {
+      domain.metadata = dto.metadata
+    }
+
+    return domain
+  }
+
+  // Método para validar DTOs
+  validateCreateDTO(dto: any): dto is Create{{moduleName}}DTO {
+    return (
+      typeof dto === 'object' &&
+      dto !== null &&
+      typeof dto.name === 'string' &&
+      dto.name.trim().length > 0 &&
+      typeof dto.status === 'string' &&
+      (dto.description === undefined || typeof dto.description === 'string') &&
+      (dto.metadata === undefined || typeof dto.metadata === 'object')
+    )
+  }
+
+  validateUpdateDTO(dto: any): dto is Update{{moduleName}}DTO {
+    return (
+      typeof dto === 'object' &&
+      dto !== null &&
+      typeof dto.id === 'string' &&
+      dto.id.trim().length > 0 &&
+      (dto.name === undefined || (typeof dto.name === 'string' && dto.name.trim().length > 0)) &&
+      (dto.status === undefined || typeof dto.status === 'string') &&
+      (dto.description === undefined || typeof dto.description === 'string') &&
+      (dto.metadata === undefined || typeof dto.metadata === 'object')
+    )
+  }
+
+  // Método para limpiar DTOs
+  sanitizeCreateDTO(dto: any): Create{{moduleName}}DTO {
+    return {
+      name: dto.name?.trim(),
+      status: dto.status || 'ACTIVE',
+      description: dto.description?.trim(),
+      metadata: dto.metadata || {}
+    }
+  }
+
+  sanitizeUpdateDTO(dto: any): Update{{moduleName}}DTO {
+    return {
+      id: dto.id?.trim(),
+      name: dto.name?.trim(),
+      status: dto.status,
+      description: dto.description?.trim(),
+      metadata: dto.metadata || {}
+    }
+  }
+
+  static toEntity(dto: Create{{entityName}}DTO | Update{{entityName}}DTO): any {
+    // Mapear DTO a entidad
+    return { ...dto };
+  }
+
+  static toDTO(entity: any): Create{{entityName}}DTO {
+    // Mapear entidad a DTO
+    return { ...entity };
+  }
+} 

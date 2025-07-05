@@ -1,0 +1,141 @@
+<template>
+  <VCard class="{{moduleNameKebab}}-list">
+    <!-- Header -->
+    <VCardTitle class="d-flex justify-space-between align-center">
+      <div>
+        <h2 class="text-h4">{{ $t('{{moduleNameLower}}.list.title') }}</h2>
+        <p class="text-body-1 text-medium-emphasis">
+          {{ $t('{{moduleNameLower}}.list.description') }}
+        </p>
+      </div>
+      <VBtn
+        color="primary"
+        prepend-icon="tabler-plus"
+        @click="openCreateDialog"
+      >
+        {{ $t('{{moduleNameLower}}.actions.create') }}
+      </VBtn>
+    </VCardTitle>
+
+    <!-- Filtros -->
+    <{{moduleName}}Filters
+      v-model:filters="filters"
+      @update:filters="handleFiltersUpdate"
+    />
+
+    <VDivider />
+
+    <!-- Tabla -->
+    <{{moduleName}}Table
+      :items="{{moduleNameLower}}Store.items"
+      :loading="{{moduleNameLower}}Store.isLoading"
+      :total="{{moduleNameLower}}Store.pagination.total"
+      v-model:page="{{moduleNameLower}}Store.pagination.page"
+      v-model:items-per-page="{{moduleNameLower}}Store.pagination.itemsPerPage"
+      v-model:sort-by="{{moduleNameLower}}Store.sorting.sortBy"
+      v-model:sort-order="{{moduleNameLower}}Store.sorting.sortOrder"
+      @view="handleView"
+      @edit="handleEdit"
+      @delete="handleDelete"
+    />
+  </VCard>
+
+  <!-- Diálogos -->
+  <{{moduleName}}CreateDialog
+    v-model="dialogs.create"
+    @success="handleCreateSuccess"
+  />
+
+  <{{moduleName}}EditDialog
+    v-model="dialogs.edit"
+    :{{moduleNameLower}}="selected{{moduleName}}"
+    @success="handleEditSuccess"
+  />
+
+  <ConfirmDialog
+    v-model="dialogs.delete"
+    :title="$t('{{moduleNameLower}}.delete.title')"
+    :message="$t('{{moduleNameLower}}.delete.message', { name: selected{{moduleName}}?.name })"
+    @confirm="handleDeleteConfirm"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { use{{moduleName}}Store } from '../stores/{{moduleNameLower}}Store'
+import { {{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/{{moduleName}}DTO'
+import {{moduleName}}Filters from '../components/organisms/{{moduleName}}Filters.vue'
+import {{moduleName}}Table from '../components/organisms/{{moduleName}}Table.vue'
+import {{moduleName}}CreateDialog from './{{moduleName}}Create.vue'
+import {{moduleName}}EditDialog from './{{moduleName}}Edit.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+
+const router = useRouter()
+const {{moduleNameLower}}Store = use{{moduleName}}Store()
+
+// Estado local
+const filters = ref({{moduleNameLower}}Store.filters)
+const selected{{moduleName}} = ref<{{moduleName}}DTO | null>(null)
+
+const dialogs = reactive({
+  create: false,
+  edit: false,
+  delete: false,
+})
+
+// Watchers
+watch(filters, (newFilters) => {
+  {{moduleNameLower}}Store.setFilters(newFilters)
+}, { deep: true })
+
+// Métodos
+const openCreateDialog = () => {
+  dialogs.create = true
+}
+
+const handleView = (item: {{moduleName}}DTO) => {
+  router.push({
+    name: '{{moduleNameLower}}-detail',
+    params: { id: item.id },
+  })
+}
+
+const handleEdit = (item: {{moduleName}}DTO) => {
+  selected{{moduleName}}.value = item
+  dialogs.edit = true
+}
+
+const handleDelete = (item: {{moduleName}}DTO) => {
+  selected{{moduleName}}.value = item
+  dialogs.delete = true
+}
+
+const handleFiltersUpdate = () => {
+  {{moduleNameLower}}Store.loadItems()
+}
+
+const handleCreateSuccess = () => {
+  dialogs.create = false
+  {{moduleNameLower}}Store.loadItems()
+}
+
+const handleEditSuccess = () => {
+  dialogs.edit = false
+  selected{{moduleName}}.value = null
+  {{moduleNameLower}}Store.loadItems()
+}
+
+const handleDeleteConfirm = async () => {
+  if (selected{{moduleName}}.value) {
+    await {{moduleNameLower}}Store.deleteItem(selected{{moduleName}}.value.id)
+    dialogs.delete = false
+    selected{{moduleName}}.value = null
+  }
+}
+
+// Cargar datos al montar
+onMounted(() => {
+  {{moduleNameLower}}Store.loadItems()
+})
+</script> 

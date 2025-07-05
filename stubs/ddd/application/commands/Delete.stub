@@ -1,0 +1,17 @@
+import { Command } from '../Command'
+
+export interface Delete{{entityName}}Command extends Command {
+  id: string;
+}
+
+export class Delete{{entityName}}CommandImpl implements Delete{{entityName}}Command {
+  constructor(public id: string) {
+    this.validate();
+  }
+
+  private validate(): void {
+    if (!this.id) {
+      throw new Error('id is required');
+    }
+  }
+} 

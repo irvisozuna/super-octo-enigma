@@ -1,0 +1,249 @@
+import { ref, computed } from 'vue'
+import { use{{entityName}}Store } from '@/stores/{{entityNameLower}}Store'
+import { useNotifications } from '@/composables/useNotifications'
+import type { 
+  {{entityName}}, 
+  Create{{entityName}}Dto, 
+  Update{{entityName}}Dto, 
+  {{entityName}}Filters,
+  PaginationParams,
+  ApiResponse 
+} from '@/types'
+
+export function use{{entityName}}Api() {
+  // Store
+  const {{entityNameLower}}Store = use{{entityName}}Store()
+  
+  // Notifications
+  const { showSuccess, showError, showWarning } = useNotifications()
+  
+  // Reactive state
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const lastOperation = ref<'create' | 'update' | 'delete' | 'fetch' | null>(null)
+
+  // Computed
+  const entities = computed(() => {{entityNameLower}}Store.entities)
+  const selectedEntity = computed(() => {{entityNameLower}}Store.selectedEntity)
+  const totalItems = computed(() => {{entityNameLower}}Store.totalItems)
+  const isLoading = computed(() => loading.value || {{entityNameLower}}Store.loading)
+
+  // Methods
+  const fetchEntities = async (params?: PaginationParams & { filters?: {{entityName}}Filters }) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'fetch'
+      
+      await {{entityNameLower}}Store.fetchEntities(params)
+      
+      showSuccess(`{{entityName}}s cargados correctamente`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar {{entityNameLower}}s'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchEntityById = async (id: string) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'fetch'
+      
+      await {{entityNameLower}}Store.fetchEntityById(id)
+      
+      return {{entityNameLower}}Store.selectedEntity
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al cargar {{entityNameLower}}'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const createEntity = async (data: Create{{entityName}}Dto) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'create'
+      
+      const result = await {{entityNameLower}}Store.createEntity(data)
+      
+      showSuccess('{{entityName}} creado correctamente')
+      return result
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al crear {{entityNameLower}}'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateEntity = async (id: string, data: Update{{entityName}}Dto) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'update'
+      
+      const result = await {{entityNameLower}}Store.updateEntity(id, data)
+      
+      showSuccess('{{entityName}} actualizado correctamente')
+      return result
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar {{entityNameLower}}'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteEntity = async (id: string) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'delete'
+      
+      await {{entityNameLower}}Store.deleteEntity(id)
+      
+      showSuccess('{{entityName}} eliminado correctamente')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar {{entityNameLower}}'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const bulkDeleteEntities = async (ids: string[]) => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'delete'
+      
+      await {{entityNameLower}}Store.bulkDeleteEntities(ids)
+      
+      showSuccess(`${ids.length} {{entityNameLower}}s eliminados correctamente`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar {{entityNameLower}}s'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const exportEntities = async (params: { format: string; filters?: {{entityName}}Filters }) => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const result = await {{entityNameLower}}Store.exportEntities(params)
+      
+      showSuccess(`Exportación completada en formato ${params.format.toUpperCase()}`)
+      return result
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al exportar {{entityNameLower}}s'
+      error.value = message
+      showError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const refreshEntities = async () => {
+    try {
+      loading.value = true
+      error.value = null
+      lastOperation.value = 'fetch'
+      
+      await {{entityNameLower}}Store.refreshEntities()
+      
+      showSuccess('Datos actualizados correctamente')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar datos'
+      error.value = message
+      showWarning(message)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const clearError = () => {
+    error.value = null
+  }
+
+  const clearSelectedEntity = () => {
+    {{entityNameLower}}Store.clearSelectedEntity()
+  }
+
+  const setSelectedEntity = (entity: {{entityName}} | null) => {
+    {{entityNameLower}}Store.setSelectedEntity(entity)
+  }
+
+  // Utility methods
+  const getEntityById = (id: string) => {
+    return entities.value.find(entity => entity.id === id)
+  }
+
+  const isEntitySelected = (id: string) => {
+    return selectedEntity.value?.id === id
+  }
+
+  const selectEntity = (entity: {{entityName}}) => {
+    setSelectedEntity(entity)
+  }
+
+  const deselectEntity = () => {
+    setSelectedEntity(null)
+  }
+
+  return {
+    // State
+    loading,
+    error,
+    lastOperation,
+    
+    // Computed
+    entities,
+    selectedEntity,
+    totalItems,
+    isLoading,
+    
+    // CRUD operations
+    fetchEntities,
+    fetchEntityById,
+    createEntity,
+    updateEntity,
+    deleteEntity,
+    bulkDeleteEntities,
+    
+    // Export operations
+    exportEntities,
+    
+    // Utility operations
+    refreshEntities,
+    clearError,
+    clearSelectedEntity,
+    setSelectedEntity,
+    
+    // Selection helpers
+    getEntityById,
+    isEntitySelected,
+    selectEntity,
+    deselectEntity
+  }
+} 

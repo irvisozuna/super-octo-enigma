@@ -1,0 +1,63 @@
+<template>
+  <VCard class="{{moduleNameKebab}}-create">
+    <VCardTitle>
+      <h2 class="text-h4">{{ $t('{{moduleNameLower}}.create.title') }}</h2>
+      <p class="text-body-1 text-medium-emphasis">
+        {{ $t('{{moduleNameLower}}.create.description') }}
+      </p>
+    </VCardTitle>
+
+    <VCardText>
+      <{{moduleName}}Form
+        ref="formRef"
+        v-model="formData"
+        :loading="isLoading"
+        @submit="handleSubmit"
+        @cancel="handleCancel"
+      />
+    </VCardText>
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { use{{moduleName}}Store } from '../stores/{{moduleNameLower}}Store'
+import { Create{{moduleName}}Command } from '@/modules/{{moduleNameLower}}/application/commands/Create{{moduleName}}Command'
+import {{moduleName}}Form from '../components/organisms/{{moduleName}}Form.vue'
+import { useNotification } from '@/composables/useNotification'
+
+const router = useRouter()
+const {{moduleNameLower}}Store = use{{moduleName}}Store()
+const { showSuccess, showError } = useNotification()
+
+const formRef = ref()
+const isLoading = ref(false)
+
+const formData = reactive({
+  name: '',
+  description: '',
+  // Agregar más campos según la entidad
+})
+
+const handleSubmit = async () => {
+  try {
+    isLoading.value = true
+    
+    const command = new Create{{moduleName}}Command(formData)
+    await {{moduleNameLower}}Store.createItem(command)
+    
+    showSuccess($t('{{moduleNameLower}}.create.success'))
+    router.push({ name: '{{moduleNameLower}}-list' })
+  } catch (error) {
+    showError($t('{{moduleNameLower}}.create.error'))
+    console.error('Error creating {{moduleNameLower}}:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleCancel = () => {
+  router.push({ name: '{{moduleNameLower}}-list' })
+}
+</script> 

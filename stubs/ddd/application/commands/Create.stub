@@ -1,0 +1,35 @@
+import { Command } from '../Command'
+
+export interface Create{{entityName}}Command {
+  // Properties will be added here
+}
+
+export class Create{{entityName}}CommandImpl implements Create{{entityName}}Command {
+  constructor(
+    {{#each properties}}
+    public {{@key}}{{#unless required}}?{{/unless}}: {{type}},
+    {{/each}}
+  ) {
+    this.validate();
+  }
+
+  private validate(): void {
+    // Ejemplo de validación básica
+    {{#if properties.name}}
+    if (!this.name || this.name.trim().length === 0) {
+      throw new Error('Name is required');
+    }
+    if (this.name.length > 255) {
+      throw new Error('Name must be less than 255 characters');
+    }
+    {{/if}}
+    {{#each properties}}
+    {{#if required}}
+    if (!this.{{@key}}) {
+      throw new Error('{{@key}} is required');
+    }
+    {{/if}}
+    // Puedes agregar más validaciones según el tipo aquí
+    {{/each}}
+  }
+} 

@@ -1,0 +1,44 @@
+import type { MenuItem } from '@/types/menu'
+
+export const {{moduleNameLower}}Menu: MenuItem[] = [
+  {
+    title: '{{spec.ui.title}}',
+    icon: '{{spec.ui.icon}}',
+    color: '{{spec.ui.color}}',
+    to: '/{{moduleNameLower}}',
+    children: [
+      {
+        title: 'Dashboard',
+        icon: 'mdi-view-dashboard',
+        to: '/{{moduleNameLower}}',
+        permission: '{{moduleNameLower}}.view'
+      },
+      {{#each entities}}
+      {
+        title: '{{this}}s',
+        icon: 'mdi-{{thisLower}}',
+        to: '/{{../moduleNameLower}}/{{thisLower}}s',
+        permission: '{{../moduleNameLower}}.{{thisLower}}.view'
+      },
+      {{/each}}
+      {{#if spec.features.audit}}
+      {
+        title: 'Audit Log',
+        icon: 'mdi-history',
+        to: '/{{moduleNameLower}}/audit',
+        permission: '{{moduleNameLower}}.audit.view'
+      },
+      {{/if}}
+      {{#if spec.features.export}}
+      {
+        title: 'Exports',
+        icon: 'mdi-download',
+        to: '/{{moduleNameLower}}/exports',
+        permission: '{{moduleNameLower}}.export.view'
+      },
+      {{/if}}
+    ]
+  }
+]
+
+export default {{moduleNameLower}}Menu 

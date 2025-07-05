@@ -1,0 +1,16 @@
+import { {{moduleName}}Repository } from '@/modules/{{moduleNameLower}}/domain/contracts/repositories/{{moduleName}}Repository'
+import { Delete{{moduleName}}Command } from '../commands/Delete{{moduleName}}Command'
+import { injectable, inject } from 'inversify'
+import { TYPES } from '@/modules/{{moduleNameLower}}/types'
+
+@injectable()
+export class Delete{{entityName}}UseCase {
+  constructor(
+    @inject(TYPES.{{moduleName}}Repository)
+    private readonly repository: {{moduleName}}Repository
+  ) {}
+
+  async execute(id: string): Promise<void> {
+    // Implementa la lógica para eliminar la entidad aquí
+  }
+} 

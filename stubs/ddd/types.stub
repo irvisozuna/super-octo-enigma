@@ -1,0 +1,223 @@
+export const TYPES = {
+  // Domain Layer
+  {{#each entities}}
+  {{@key}}Repository: Symbol.for('{{@key}}Repository'),
+  {{/each}}
+
+  // Application Layer
+  {{#each entities}}
+  Create{{@key}}Handler: Symbol.for('Create{{@key}}Handler'),
+  Update{{@key}}Handler: Symbol.for('Update{{@key}}Handler'),
+  Delete{{@key}}Handler: Symbol.for('Delete{{@key}}Handler'),
+  Get{{@key}}ByIdHandler: Symbol.for('Get{{@key}}ByIdHandler'),
+  Get{{@key}}ListHandler: Symbol.for('Get{{@key}}ListHandler'),
+  {{@key}}Mapper: Symbol.for('{{@key}}Mapper'),
+  {{/each}}
+
+  // Infrastructure Layer
+  {{#each entities}}
+  {{@key}}ApiService: Symbol.for('{{@key}}ApiService'),
+  {{@key}}Endpoints: Symbol.for('{{@key}}Endpoints'),
+  {{@key}}Transformer: Symbol.for('{{@key}}Transformer'),
+  {{/each}}
+
+  {{#if hasCache}}
+  // Cache Layer
+  {{#each entities}}
+  {{@key}}CacheService: Symbol.for('{{@key}}CacheService'),
+  {{/each}}
+  {{/if}}
+
+  {{#if hasWebSocket}}
+  // WebSocket Layer
+  {{#each entities}}
+  {{@key}}WebSocketHandler: Symbol.for('{{@key}}WebSocketHandler'),
+  {{@key}}WebSocketEvents: Symbol.for('{{@key}}WebSocketEvents'),
+  {{/each}}
+  {{/if}}
+
+  // Presentation Layer
+  {{#each entities}}
+  {{@key}}Store: Symbol.for('{{@key}}Store'),
+  {{/each}}
+} as const
+
+export type TYPES = typeof TYPES
+
+// Entity Types
+{{#each entities}}
+export interface {{@key}} {
+  id: string
+  {{#each properties}}
+  {{@key}}{{required}}: {{type}}
+  {{/each}}
+}
+
+export interface Create{{@key}}Dto {
+  {{#each properties}}
+  {{@key}}{{required}}: {{type}}
+  {{/each}}
+}
+
+export interface Update{{@key}}Dto {
+  id: string
+  {{#each properties}}
+  {{@key}}?: {{type}}
+  {{/each}}
+}
+
+export interface {{@key}}Filters {
+  search?: string
+  {{#each properties}}
+  {{#if (eq type "enum")}}
+  {{@key}}?: {{@key}}Enum
+  {{/if}}
+  {{#if (eq type "datetime")}}
+  {{@key}}_from?: string
+  {{@key}}_to?: string
+  {{/if}}
+  {{/each}}
+}
+{{/each}}
+
+// Module types
+export interface {{moduleName}}Module {
+  name: string
+  version: string
+  description: string
+  entities: string[]
+  features: string[]
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data: T
+  message?: string
+  success: boolean
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: {
+    currentPage: number
+    perPage: number
+    total: number
+    totalPages: number
+  }
+}
+
+// Export types
+{{#if hasExport}}
+export type ExportFormat = {{#each exportFormats}}'{{this}}'{{#unless @last}} | {{/unless}}{{/each}}
+
+export interface ExportOptions {
+  format: ExportFormat
+  filters?: FilterOptions
+  fields?: string[]
+}
+{{/if}}
+
+// Permission types
+export interface {{moduleName}}Permissions {
+  view: boolean
+  create: boolean
+  edit: boolean
+  delete: boolean
+  {{#if hasExecute}}
+  execute: boolean
+  {{/if}}
+  {{#if hasExport}}
+  export: boolean
+  {{/if}}
+  {{#if hasTest}}
+  test: boolean
+  {{/if}}
+}
+
+// Filter Types
+export interface FilterOptions {
+  search?: string
+  {{#each entities}}
+  {{#each properties}}
+  {{#if (eq type "enum")}}
+  {{@key}}?: {{@key}}Enum
+  {{/if}}
+  {{#if (eq type "datetime")}}
+  {{@key}}_from?: string
+  {{@key}}_to?: string
+  {{/if}}
+  {{/each}}
+  {{/each}}
+  sortBy?: string
+  sortDesc?: boolean
+  page?: number
+  limit?: number
+}
+
+// UI Types
+export interface TableColumn {
+  key: string
+  title: string
+  sortable?: boolean
+  align?: 'start' | 'center' | 'end'
+  width?: string
+}
+
+export interface TableAction {
+  label: string
+  icon: string
+  color?: string
+  action: string
+  permission?: string
+}
+
+// Form Types
+export interface FormField {
+  name: string
+  label: string
+  type: 'text' | 'textarea' | 'number' | 'select' | 'switch' | 'date' | 'datetime' | 'json'
+  required?: boolean
+  options?: Array<{ text: string; value: any }>
+  validation?: string[]
+}
+
+// Permission Types
+export interface Permission {
+  action: string
+  subject: string
+  conditions?: Record<string, any>
+}
+
+export interface Role {
+  name: string
+  permissions: Permission[]
+}
+
+// Cache Types
+{{#if hasCache}}
+export interface CacheConfig {
+  ttl: number
+  key: string
+  tags?: string[]
+}
+
+export interface CacheItem<T> {
+  data: T
+  timestamp: number
+  ttl: number
+}
+{{/if}}
+
+// WebSocket Types
+{{#if hasWebSocket}}
+export interface WebSocketMessage {
+  type: string
+  payload: any
+  timestamp: number
+}
+
+export interface WebSocketEvent {
+  event: string
+  data: any
+}
+{{/if}} 

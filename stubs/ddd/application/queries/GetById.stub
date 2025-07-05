@@ -1,0 +1,17 @@
+import { Query } from '../Query'
+
+export interface Get{{entityName}}ByIdQuery extends Query {
+  id: string
+}
+
+export class Get{{entityName}}ByIdQueryImpl implements Get{{entityName}}ByIdQuery {
+  constructor(public readonly id: string) {
+    this.validate()
+  }
+
+  private validate(): void {
+    if (!this.id || this.id.trim().length === 0) {
+      throw new Error('ID is required')
+    }
+  }
+} 

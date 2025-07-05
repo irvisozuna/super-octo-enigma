@@ -1,0 +1,15 @@
+export interface {{entityName}}DTO {
+  id: string;
+{{#each properties}}
+  {{@key}}: {{type}};
+{{/each}}
+}
+
+export interface {{moduleName}}ListDTO {
+  data: {{moduleName}}DTO[]
+  total: number
+  page: number
+  limit: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+} 

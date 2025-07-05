@@ -1,0 +1,451 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { {{entityName}}ApiService } from '@/modules/{{moduleNameLower}}/infrastructure/api/services/{{entityName}}ApiService'
+import { {{entityName}}Transformer } from '@/modules/{{moduleNameLower}}/infrastructure/api/transformers/{{entityName}}Transformer'
+import { usePermissions } from '@/modules/{{moduleNameLower}}/composables/usePermissions'
+import type { {{entityName}} } from '@/modules/{{moduleNameLower}}/types/entities'
+import type { Create{{entityName}}Dto, Update{{entityName}}Dto } from '@/modules/{{moduleNameLower}}/types/dtos'
+
+export const use{{entityName}}Store = defineStore('{{entityNameLower}}', () => {
+  // State
+  const {{entityNameLower}}s = ref<{{entityName}}[]>([])
+  const selected{{entityName}} = ref<{{entityName}} | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const total = ref(0)
+  const currentPage = ref(1)
+  const itemsPerPage = ref(20)
+  const search = ref('')
+  const filters = ref<Record<string, any>>({})
+  const sortBy = ref('createdAt')
+  const sortDesc = ref(true)
+
+  // Services
+  const apiService = new {{entityName}}ApiService()
+  const transformer = new {{entityName}}Transformer()
+  const { can } = usePermissions()
+
+  // Getters
+  const isLoading = computed(() => loading.value)
+  const hasError = computed(() => !!error.value)
+  const errorMessage = computed(() => error.value)
+
+  const {{entityNameLower}}List = computed(() => {{entityNameLower}}s.value)
+  
+  const {{entityNameLower}}ById = computed(() => (id: string) => 
+    {{entityNameLower}}s.value.find(item => item.id === id)
+  )
+
+  const selected{{entityName}}Data = computed(() => selected{{entityName}}.value)
+
+  const paginationInfo = computed(() => ({
+    currentPage: currentPage.value,
+    itemsPerPage: itemsPerPage.value,
+    total: total.value,
+    totalPages: Math.ceil(total.value / itemsPerPage.value)
+  }))
+
+  const filtered{{entityName}}s = computed(() => {
+    let items = {{entityNameLower}}s.value
+
+    // Apply search filter
+    if (search.value) {
+      const searchLower = search.value.toLowerCase()
+      items = items.filter(item => 
+        {{#each entitySpec.properties}}
+        {{#unless primary}}
+        {{#unless type === 'json'}}
+        {{#unless type === 'boolean'}}
+        {{#unless type === 'integer'}}
+        (item.{{@key}} && item.{{@key}}.toString().toLowerCase().includes(searchLower)) ||
+        {{/unless}}
+        {{/unless}}
+        {{/unless}}
+        {{/unless}}
+        {{/each}}
+        false
+      )
+    }
+
+    // Apply enum filters
+    {{#each entitySpec.properties}}
+    {{#if type === 'enum'}}
+    if (filters.value.{{@key}}) {
+      items = items.filter(item => item.{{@key}} === filters.value.{{@key}})
+    }
+    {{/if}}
+    {{/each}}
+
+    // Apply date range filters
+    {{#each entitySpec.properties}}
+    {{#if type === 'datetime'}}
+    if (filters.value.{{@key}}_from) {
+      items = items.filter(item => new Date(item.{{@key}}) >= new Date(filters.value.{{@key}}_from))
+    }
+    if (filters.value.{{@key}}_to) {
+      items = items.filter(item => new Date(item.{{@key}}) <= new Date(filters.value.{{@key}}_to))
+    }
+    {{/if}}
+    {{/each}}
+
+    return items
+  })
+
+  const {{entityNameLower}}Options = computed(() => 
+    {{entityNameLower}}s.value.map(item => ({
+      text: item.name,
+      value: item.id
+    }))
+  )
+
+  {{#each entitySpec.properties}}
+  {{#if type === 'enum'}}
+  const {{@key}}Options = computed(() => [
+    {{#each values}}
+    { text: `{{../moduleNameLower}}.{{@key}}.{{this}}`, value: '{{this}}' },
+    {{/each}}
+  ])
+
+  const {{@key}}Counts = computed(() => {
+    const counts: Record<string, number> = {}
+    {{entityNameLower}}s.value.forEach(item => {
+      counts[item.{{@key}}] = (counts[item.{{@key}}] || 0) + 1
+    })
+    return counts
+  })
+  {{/if}}
+  {{/each}}
+
+  // Actions
+  const clearError = () => {
+    error.value = null
+  }
+
+  const setLoading = (value: boolean) => {
+    loading.value = value
+  }
+
+  const setSearch = (value: string) => {
+    search.value = value
+  }
+
+  const setFilters = (newFilters: Record<string, any>) => {
+    filters.value = { ...filters.value, ...newFilters }
+  }
+
+  const clearFilters = () => {
+    filters.value = {}
+  }
+
+  const setSorting = (field: string, desc: boolean = true) => {
+    sortBy.value = field
+    sortDesc.value = desc
+  }
+
+  const setPagination = (page: number, limit: number) => {
+    currentPage.value = page
+    itemsPerPage.value = limit
+  }
+
+  const select{{entityName}} = ({{entityNameLower}}: {{entityName}} | null) => {
+    selected{{entityName}}.value = {{entityNameLower}}
+  }
+
+  const fetch{{entityName}}List = async (params?: {
+    page?: number
+    limit?: number
+    search?: string
+    sortBy?: string
+    sortDesc?: boolean
+    filters?: Record<string, any>
+  }) => {
+    if (!can('read', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      const queryParams = {
+        page: params?.page || currentPage.value,
+        limit: params?.limit || itemsPerPage.value,
+        search: params?.search || search.value,
+        sortBy: params?.sortBy || sortBy.value,
+        sortDesc: params?.sortDesc !== undefined ? params.sortDesc : sortDesc.value,
+        ...params?.filters,
+        ...filters.value
+      }
+
+      const response = await apiService.getAll(queryParams)
+      
+      {{entityNameLower}}s.value = response.data.map((item: any) => transformer.toEntity(item))
+      total.value = response.meta?.total || response.data.length
+      
+      if (params?.page) currentPage.value = params.page
+      if (params?.limit) itemsPerPage.value = params.limit
+      if (params?.search !== undefined) search.value = params.search
+      if (params?.sortBy) sortBy.value = params.sortBy
+      if (params?.sortDesc !== undefined) sortDesc.value = params.sortDesc
+      if (params?.filters) setFilters(params.filters)
+
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch {{entityNameLower}} list'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetch{{entityName}}ById = async (id: string) => {
+    if (!can('read', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      const response = await apiService.getById(id)
+      const {{entityNameLower}} = transformer.toEntity(response.data)
+      
+      // Update in list if exists
+      const index = {{entityNameLower}}s.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{entityNameLower}}s.value[index] = {{entityNameLower}}
+      }
+
+      return {{entityNameLower}}
+    } catch (err: any) {
+      error.value = err.message || 'Failed to fetch {{entityNameLower}}'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const create{{entityName}} = async (data: Create{{entityName}}Dto) => {
+    if (!can('create', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      const response = await apiService.create(data)
+      const {{entityNameLower}} = transformer.toEntity(response.data)
+      
+      {{entityNameLower}}s.value.unshift({{entityNameLower}})
+      total.value++
+
+      return {{entityNameLower}}
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create {{entityNameLower}}'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const update{{entityName}} = async (id: string, data: Update{{entityName}}Dto) => {
+    if (!can('update', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      const response = await apiService.update(id, data)
+      const {{entityNameLower}} = transformer.toEntity(response.data)
+      
+      // Update in list
+      const index = {{entityNameLower}}s.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{entityNameLower}}s.value[index] = {{entityNameLower}}
+      }
+
+      // Update selected if it's the same item
+      if (selected{{entityName}}.value?.id === id) {
+        selected{{entityName}}.value = {{entityNameLower}}
+      }
+
+      return {{entityNameLower}}
+    } catch (err: any) {
+      error.value = err.message || 'Failed to update {{entityNameLower}}'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const delete{{entityName}} = async (id: string) => {
+    if (!can('delete', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      await apiService.delete(id)
+      
+      // Remove from list
+      const index = {{entityNameLower}}s.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{entityNameLower}}s.value.splice(index, 1)
+        total.value--
+      }
+
+      // Clear selected if it's the same item
+      if (selected{{entityName}}.value?.id === id) {
+        selected{{entityName}}.value = null
+      }
+
+    } catch (err: any) {
+      error.value = err.message || 'Failed to delete {{entityNameLower}}'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const bulkDelete{{entityName}}s = async (ids: string[]) => {
+    if (!can('delete', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      // Delete each item
+      await Promise.all(ids.map(id => apiService.delete(id)))
+      
+      // Remove from list
+      {{entityNameLower}}s.value = {{entityNameLower}}s.value.filter(item => !ids.includes(item.id))
+      total.value -= ids.length
+
+      // Clear selected if it's in the deleted items
+      if (selected{{entityName}}.value && ids.includes(selected{{entityName}}.value.id)) {
+        selected{{entityName}}.value = null
+      }
+
+    } catch (err: any) {
+      error.value = err.message || 'Failed to delete {{entityNameLower}}s'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  {{#if entitySpec.properties.status}}
+  const update{{entityName}}Status = async (id: string, status: string) => {
+    if (!can('update', '{{entityName}}')) {
+      throw new Error('Insufficient permissions')
+    }
+
+    try {
+      setLoading(true)
+      clearError()
+
+      const response = await apiService.update(id, { status })
+      const {{entityNameLower}} = transformer.toEntity(response.data)
+      
+      // Update in list
+      const index = {{entityNameLower}}s.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{entityNameLower}}s.value[index] = {{entityNameLower}}
+      }
+
+      // Update selected if it's the same item
+      if (selected{{entityName}}.value?.id === id) {
+        selected{{entityName}}.value = {{entityNameLower}}
+      }
+
+      return {{entityNameLower}}
+    } catch (err: any) {
+      error.value = err.message || 'Failed to update {{entityNameLower}} status'
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+  {{/if}}
+
+  const refresh{{entityName}}List = async () => {
+    await fetch{{entityName}}List()
+  }
+
+  const resetStore = () => {
+    {{entityNameLower}}s.value = []
+    selected{{entityName}}.value = null
+    loading.value = false
+    error.value = null
+    total.value = 0
+    currentPage.value = 1
+    itemsPerPage.value = 20
+    search.value = ''
+    filters.value = {}
+    sortBy.value = 'createdAt'
+    sortDesc.value = true
+  }
+
+  return {
+    // State
+    {{entityNameLower}}s,
+    selected{{entityName}},
+    loading,
+    error,
+    total,
+    currentPage,
+    itemsPerPage,
+    search,
+    filters,
+    sortBy,
+    sortDesc,
+
+    // Getters
+    isLoading,
+    hasError,
+    errorMessage,
+    {{entityNameLower}}List,
+    {{entityNameLower}}ById,
+    selected{{entityName}}Data,
+    paginationInfo,
+    filtered{{entityName}}s,
+    {{entityNameLower}}Options,
+    {{#each entitySpec.properties}}
+    {{#if type === 'enum'}}
+    {{@key}}Options,
+    {{@key}}Counts,
+    {{/if}}
+    {{/each}}
+
+    // Actions
+    clearError,
+    setLoading,
+    setSearch,
+    setFilters,
+    clearFilters,
+    setSorting,
+    setPagination,
+    select{{entityName}},
+    fetch{{entityName}}List,
+    fetch{{entityName}}ById,
+    create{{entityName}},
+    update{{entityName}},
+    delete{{entityName}},
+    bulkDelete{{entityName}}s,
+    {{#if entitySpec.properties.status}}
+    update{{entityName}}Status,
+    {{/if}}
+    refresh{{entityName}}List,
+    resetStore
+  }
+}) 
+
+    select{{entityName}}
+  }
+}) 

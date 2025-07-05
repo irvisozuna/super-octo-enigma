@@ -1,0 +1,13 @@
+import * as yup from 'yup'
+
+export interface Update{{entityName}}DTO {
+  id: string;
+{{#each properties}}
+  {{@key}}?: {{type}};
+{{/each}}
+}
+
+export const update{{moduleName}}Schema = yup.object({
+  name: yup.string().min(2).max(100).optional(),
+  status: yup.string().oneOf(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED']).optional(),
+}) 

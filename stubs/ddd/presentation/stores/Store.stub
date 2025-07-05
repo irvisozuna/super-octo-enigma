@@ -1,0 +1,254 @@
+import { defineStore } from 'pinia'
+import { ref, reactive, computed, readonly } from 'vue'
+import { {{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/{{moduleName}}DTO'
+import { Create{{moduleName}}Command } from '@/modules/{{moduleNameLower}}/application/commands/Create{{moduleName}}Command'
+import { Update{{moduleName}}Command } from '@/modules/{{moduleNameLower}}/application/commands/Update{{moduleName}}Command'
+import { Delete{{moduleName}}Command } from '@/modules/{{moduleNameLower}}/application/commands/Delete{{moduleName}}Command'
+import { Get{{moduleName}}sQuery } from '@/modules/{{moduleNameLower}}/application/queries/Get{{moduleName}}sQuery'
+import { Get{{moduleName}}ByIdQuery } from '@/modules/{{moduleNameLower}}/application/queries/Get{{moduleName}}ByIdQuery'
+import { {{moduleName}}Service } from '@/modules/{{moduleNameLower}}/application/services/{{moduleName}}Service'
+import type { {{entityName}} } from '@/modules/{{moduleNameLower}}/domain/entities/{{entityName}}'
+import type { Create{{entityName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Create{{entityName}}DTO'
+import type { Update{{entityName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Update{{entityName}}DTO'
+
+export interface {{moduleName}}Filters {
+  search?: string
+  status?: string
+  // Agregar más filtros según la entidad
+}
+
+export interface {{moduleName}}Sorting {
+  sortBy: string
+  sortOrder: 'asc' | 'desc'
+}
+
+export interface {{moduleName}}Pagination {
+  page: number
+  itemsPerPage: number
+  total: number
+}
+
+interface {{entityName}}State {
+  {{entityNameLower}}s: {{entityName}}[]
+  current{{entityName}}: {{entityName}} | null
+  loading: boolean
+  error: string | null
+}
+
+export const use{{moduleName}}Store = defineStore('{{moduleNameLower}}', () => {
+  // Estado
+  const items = ref<{{moduleName}}DTO[]>([])
+  const currentItem = ref<{{moduleName}}DTO | null>(null)
+  const isLoading = ref(false)
+  const isSubmitting = ref(false)
+
+  const filters = reactive<{{moduleName}}Filters>({
+    search: '',
+    status: '',
+  })
+
+  const sorting = reactive<{{moduleName}}Sorting>({
+    sortBy: 'name',
+    sortOrder: 'asc',
+  })
+
+  const pagination = reactive<{{moduleName}}Pagination>({
+    page: 1,
+    itemsPerPage: 10,
+    total: 0,
+  })
+
+  // Servicios
+  const {{moduleNameLower}}Service = new {{moduleName}}Service()
+
+  // Getters
+  const hasItems = computed(() => items.value.length > 0)
+  const isEmpty = computed(() => !isLoading.value && items.value.length === 0)
+
+  // Actions
+  const setFilters = (newFilters: {{moduleName}}Filters) => {
+    Object.assign(filters, newFilters)
+    pagination.page = 1 // Resetear a la primera página
+  }
+
+  const setSorting = (newSorting: {{moduleName}}Sorting) => {
+    Object.assign(sorting, newSorting)
+  }
+
+  const setPagination = (newPagination: Partial<{{moduleName}}Pagination>) => {
+    Object.assign(pagination, newPagination)
+  }
+
+  const loadItems = async () => {
+    try {
+      isLoading.value = true
+      
+      const query = new Get{{moduleName}}sQuery({
+        filters,
+        sorting,
+        pagination: {
+          page: pagination.page,
+          limit: pagination.itemsPerPage,
+        },
+      })
+      
+      const result = await {{moduleNameLower}}Service.getItems(query)
+      items.value = result.items
+      pagination.total = result.total
+    } catch (error) {
+      console.error('Error loading {{moduleNameLower}}s:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const getItem = async (id: string): Promise<{{moduleName}}DTO> => {
+    try {
+      isLoading.value = true
+      
+      const query = new Get{{moduleName}}ByIdQuery(id)
+      const item = await {{moduleNameLower}}Service.getItem(query)
+      currentItem.value = item
+      return item
+    } catch (error) {
+      console.error('Error loading {{moduleNameLower}}:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const createItem = async (command: Create{{moduleName}}Command): Promise<{{moduleName}}DTO> => {
+    try {
+      isSubmitting.value = true
+      
+      const item = await {{moduleNameLower}}Service.createItem(command)
+      
+      // Agregar el nuevo item a la lista si estamos en la primera página
+      if (pagination.page === 1) {
+        items.value.unshift(item)
+        pagination.total++
+      }
+      
+      return item
+    } catch (error) {
+      console.error('Error creating {{moduleNameLower}}:', error)
+      throw error
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  const updateItem = async (command: Update{{moduleName}}Command): Promise<{{moduleName}}DTO> => {
+    try {
+      isSubmitting.value = true
+      
+      const item = await {{moduleNameLower}}Service.updateItem(command)
+      
+      // Actualizar en la lista
+      const index = items.value.findIndex(i => i.id === item.id)
+      if (index !== -1) {
+        items.value[index] = item
+      }
+      
+      // Actualizar currentItem si es el mismo
+      if (currentItem.value?.id === item.id) {
+        currentItem.value = item
+      }
+      
+      return item
+    } catch (error) {
+      console.error('Error updating {{moduleNameLower}}:', error)
+      throw error
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  const deleteItem = async (id: string): Promise<void> => {
+    try {
+      isSubmitting.value = true
+      
+      const command = new Delete{{moduleName}}Command(id)
+      await {{moduleNameLower}}Service.deleteItem(command)
+      
+      // Remover de la lista
+      const index = items.value.findIndex(i => i.id === id)
+      if (index !== -1) {
+        items.value.splice(index, 1)
+        pagination.total--
+      }
+      
+      // Limpiar currentItem si es el mismo
+      if (currentItem.value?.id === id) {
+        currentItem.value = null
+      }
+    } catch (error) {
+      console.error('Error deleting {{moduleNameLower}}:', error)
+      throw error
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  const reset = () => {
+    items.value = []
+    currentItem.value = null
+    isLoading.value = false
+    isSubmitting.value = false
+    
+    Object.assign(filters, {
+      search: '',
+      status: '',
+    })
+    
+    Object.assign(sorting, {
+      sortBy: 'name',
+      sortOrder: 'asc',
+    })
+    
+    Object.assign(pagination, {
+      page: 1,
+      itemsPerPage: 10,
+      total: 0,
+    })
+  }
+
+  return {
+    // Estado
+    items: readonly(items),
+    currentItem: readonly(currentItem),
+    isLoading: readonly(isLoading),
+    isSubmitting: readonly(isSubmitting),
+    filters: readonly(filters),
+    sorting: readonly(sorting),
+    pagination: readonly(pagination),
+    
+    // Getters
+    hasItems,
+    isEmpty,
+    
+    // Actions
+    setFilters,
+    setSorting,
+    setPagination,
+    loadItems,
+    getItem,
+    createItem,
+    updateItem,
+    deleteItem,
+    reset,
+  }
+})
+
+export const use{{entityName}}Store = defineStore('{{entityNameLower}}', {
+  state: () => ({
+{{#each properties}}
+    {{@key}}: null as {{type}},
+{{/each}}
+  }),
+  actions: {
+    // ...
+  }
+}) 

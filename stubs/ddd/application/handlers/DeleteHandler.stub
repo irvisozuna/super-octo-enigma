@@ -1,0 +1,7 @@
+import type { Delete{{entityName}}Command } from '../commands/Delete{{entityName}}Command'
+
+export class Delete{{entityName}}Handler {
+  async execute(command: Delete{{entityName}}Command): Promise<void> {
+    // Implementa la lógica para eliminar la entidad aquí
+  }
+} 

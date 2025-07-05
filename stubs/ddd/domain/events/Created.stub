@@ -1,0 +1,15 @@
+import { DomainEvent } from '@/shared/domain/DomainEvent'
+
+export interface {{moduleName}}CreatedPayload {
+  aggregateId: string
+  name: string
+  status: string
+}
+
+export class {{moduleName}}Created extends DomainEvent<{{moduleName}}CreatedPayload> {
+  static eventName = '{{moduleNameLower}}.created'
+
+  constructor(payload: {{moduleName}}CreatedPayload) {
+    super({{moduleName}}Created.eventName, payload)
+  }
+} 

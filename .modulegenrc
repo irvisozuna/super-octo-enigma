@@ -1,0 +1,22 @@
+{
+  "Connection": {
+    "store": true,
+    "endpoints": true,
+    "screens": true
+  },
+  "DataSource": {
+    "store": true,
+    "endpoints": true,
+    "screens": true
+  },
+  "Report": {
+    "store": true,
+    "endpoints": true,
+    "screens": true
+  },
+  "Execution": {
+    "store": true,
+    "endpoints": true,
+    "screens": true
+  }
+}

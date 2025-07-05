@@ -1,0 +1,8 @@
+import { DomainException } from '@/shared/domain/DomainException'
+
+export class {{moduleName}}NotFound extends DomainException {
+  constructor(id: string) {
+    super(`{{moduleName}} with id ${id} not found`)
+    this.name = '{{moduleName}}NotFound'
+  }
+} 

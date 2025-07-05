@@ -1,0 +1,57 @@
+import { QueryHandler } from '@/shared/application/QueryHandler'
+import { Get{{moduleName}}ListQuery, Get{{moduleName}}ListQueryImpl } from '../queries/Get{{moduleName}}ListQuery'
+import { {{moduleName}}DTO } from '../dtos/{{moduleName}}DTO'
+import { {{moduleName}}ApplicationService } from '../services/{{moduleName}}ApplicationService'
+import { {{moduleName}}Mapper } from '../mappers/{{moduleName}}Mapper'
+import { inject, injectable } from 'inversify'
+import { TYPES } from '../../types'
+
+export interface {{moduleName}}ListResult {
+  items: {{moduleName}}DTO[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+@injectable()
+export class Get{{moduleName}}ListHandler implements QueryHandler<Get{{moduleName}}ListQuery, {{moduleName}}ListResult> {
+  constructor(
+    @inject(TYPES.{{moduleName}}ApplicationService)
+    private readonly service: {{moduleName}}ApplicationService,
+    @inject(TYPES.{{moduleName}}Mapper)
+    private readonly mapper: {{moduleName}}Mapper
+  ) {}
+
+  async execute(query: Get{{moduleName}}ListQuery): Promise<{{moduleName}}ListResult> {
+    try {
+      // Validar la query
+      const validatedQuery = new Get{{moduleName}}ListQueryImpl(
+        query.page,
+        query.limit,
+        query.search,
+        query.status,
+        query.sortBy,
+        query.sortOrder,
+        query.includeDeleted,
+        query.filters
+      )
+
+      // Ejecutar el caso de uso
+      const result = await this.service.getList(validatedQuery)
+      
+      // Mapear a DTOs
+      const items = result.items.map(item => this.mapper.toDTO(item))
+      
+      return {
+        items,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.ceil(result.total / result.limit)
+      }
+    } catch (error) {
+      throw new Error(`Failed to get {{moduleName}} list: ${error.message}`)
+    }
+  }
+} 

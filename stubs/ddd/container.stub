@@ -1,0 +1,91 @@
+import { Container } from 'inversify'
+import { TYPES } from './types'
+
+// Domain Layer
+{{#each entities}}
+import { {{@key}}Repository } from './domain/{{@key}}/contracts/{{@key}}Repository'
+{{/each}}
+
+// Application Layer
+{{#each entities}}
+import { Create{{@key}}Handler } from './application/{{@key}}/handlers/Create{{@key}}Handler'
+import { Update{{@key}}Handler } from './application/{{@key}}/handlers/Update{{@key}}Handler'
+import { Delete{{@key}}Handler } from './application/{{@key}}/handlers/Delete{{@key}}Handler'
+import { Get{{@key}}ByIdHandler } from './application/{{@key}}/handlers/Get{{@key}}ByIdHandler'
+import { Get{{@key}}ListHandler } from './application/{{@key}}/handlers/Get{{@key}}ListHandler'
+import { {{@key}}Mapper } from './application/{{@key}}/mappers/{{@key}}Mapper'
+{{/each}}
+
+// Infrastructure Layer
+{{#each entities}}
+import { {{@key}}RepositoryImpl } from './infrastructure/{{@key}}/repositories/{{@key}}RepositoryImpl'
+import { {{@key}}ApiService } from './infrastructure/{{@key}}/services/{{@key}}ApiService'
+import { {{@key}}Endpoints } from './infrastructure/{{@key}}/services/{{@key}}Endpoints'
+import { {{@key}}Transformer } from './infrastructure/{{@key}}/transformers/{{@key}}Transformer'
+{{/each}}
+
+{{#if hasCache}}
+// Cache Layer
+{{#each entities}}
+import { {{@key}}CacheService } from './infrastructure/{{@key}}/cache/{{@key}}CacheService'
+{{/each}}
+{{/if}}
+
+{{#if hasWebSocket}}
+// WebSocket Layer
+{{#each entities}}
+import { {{@key}}WebSocketHandler } from './infrastructure/{{@key}}/websocket/handlers/{{@key}}WebSocketHandler'
+import { {{@key}}WebSocketEvents } from './infrastructure/{{@key}}/websocket/events/{{@key}}WebSocketEvents'
+{{/each}}
+{{/if}}
+
+// Presentation Layer
+{{#each entities}}
+import { use{{@key}}Store } from './presentation/{{@key}}/stores/{{@key}}Store'
+{{/each}}
+
+export const container = new Container()
+
+// Domain Layer Bindings
+{{#each entities}}
+container.bind<{{@key}}Repository>(TYPES.{{@key}}Repository).to({{@key}}RepositoryImpl)
+{{/each}}
+
+// Application Layer Bindings
+{{#each entities}}
+container.bind<Create{{@key}}Handler>(TYPES.Create{{@key}}Handler).to(Create{{@key}}Handler)
+container.bind<Update{{@key}}Handler>(TYPES.Update{{@key}}Handler).to(Update{{@key}}Handler)
+container.bind<Delete{{@key}}Handler>(TYPES.Delete{{@key}}Handler).to(Delete{{@key}}Handler)
+container.bind<Get{{@key}}ByIdHandler>(TYPES.Get{{@key}}ByIdHandler).to(Get{{@key}}ByIdHandler)
+container.bind<Get{{@key}}ListHandler>(TYPES.Get{{@key}}ListHandler).to(Get{{@key}}ListHandler)
+container.bind<{{@key}}Mapper>(TYPES.{{@key}}Mapper).to({{@key}}Mapper)
+{{/each}}
+
+// Infrastructure Layer Bindings
+{{#each entities}}
+container.bind<{{@key}}ApiService>(TYPES.{{@key}}ApiService).to({{@key}}ApiService)
+container.bind<{{@key}}Endpoints>(TYPES.{{@key}}Endpoints).to({{@key}}Endpoints)
+container.bind<{{@key}}Transformer>(TYPES.{{@key}}Transformer).to({{@key}}Transformer)
+{{/each}}
+
+{{#if hasCache}}
+// Cache Layer Bindings
+{{#each entities}}
+container.bind<{{@key}}CacheService>(TYPES.{{@key}}CacheService).to({{@key}}CacheService)
+{{/each}}
+{{/if}}
+
+{{#if hasWebSocket}}
+// WebSocket Layer Bindings
+{{#each entities}}
+container.bind<{{@key}}WebSocketHandler>(TYPES.{{@key}}WebSocketHandler).to({{@key}}WebSocketHandler)
+container.bind<{{@key}}WebSocketEvents>(TYPES.{{@key}}WebSocketEvents).to({{@key}}WebSocketEvents)
+{{/each}}
+{{/if}}
+
+// Presentation Layer Bindings
+{{#each entities}}
+container.bind<ReturnType<typeof use{{@key}}Store>>(TYPES.{{@key}}Store).toDynamicValue(() => use{{@key}}Store())
+{{/each}}
+
+export default container 

@@ -1,0 +1,94 @@
+import { injectable } from 'inversify'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+import { {{moduleName}}ApiData } from './services/{{moduleName}}ApiService'
+
+@injectable()
+export class {{moduleName}}Transformer {
+  toDomain(apiData: {{moduleName}}ApiData): {{moduleName}} {
+    return {{moduleName}}.create({
+      id: apiData.id,
+      name: apiData.name,
+      status: apiData.status,
+      description: apiData.description,
+      metadata: apiData.metadata
+    })
+  }
+
+  toApi(domainEntity: {{moduleName}}): {{moduleName}}ApiData {
+    return {
+      id: domainEntity.id.value,
+      name: domainEntity.name.value,
+      status: domainEntity.status.value,
+      description: domainEntity.description?.value,
+      metadata: domainEntity.metadata || {},
+      createdAt: domainEntity.createdAt.toISOString(),
+      updatedAt: domainEntity.updatedAt.toISOString(),
+      deletedAt: domainEntity.deletedAt?.toISOString()
+    }
+  }
+
+  toApiData(apiData: any): {{moduleName}}ApiData {
+    return {
+      id: apiData.id,
+      name: apiData.name,
+      status: apiData.status,
+      description: apiData.description,
+      metadata: apiData.metadata || {},
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      deletedAt: apiData.deletedAt
+    }
+  }
+
+  toDomainList(apiDataList: {{moduleName}}ApiData[]): {{moduleName}}[] {
+    return apiDataList.map(apiData => this.toDomain(apiData))
+  }
+
+  toApiList(domainEntities: {{moduleName}}[]): {{moduleName}}ApiData[] {
+    return domainEntities.map(entity => this.toApi(entity))
+  }
+
+  // Métodos para transformar datos parciales (para updates)
+  toPartialApi(domainEntity: {{moduleName}}, fields?: (keyof {{moduleName}}ApiData)[]): Partial<{{moduleName}}ApiData> {
+    const apiData = this.toApi(domainEntity)
+    
+    if (!fields) {
+      return apiData
+    }
+
+    const partial: Partial<{{moduleName}}ApiData> = {}
+    fields.forEach(field => {
+      if (apiData[field] !== undefined) {
+        partial[field] = apiData[field]
+      }
+    })
+
+    return partial
+  }
+
+  // Método para validar datos de API
+  validateApiData(apiData: any): apiData is {{moduleName}}ApiData {
+    return (
+      typeof apiData === 'object' &&
+      apiData !== null &&
+      typeof apiData.name === 'string' &&
+      typeof apiData.status === 'string' &&
+      (apiData.description === undefined || typeof apiData.description === 'string') &&
+      (apiData.metadata === undefined || typeof apiData.metadata === 'object')
+    )
+  }
+
+  // Método para limpiar datos de API (remover campos innecesarios)
+  sanitizeApiData(apiData: any): {{moduleName}}ApiData {
+    return {
+      id: apiData.id,
+      name: apiData.name?.trim(),
+      status: apiData.status,
+      description: apiData.description?.trim(),
+      metadata: apiData.metadata || {},
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      deletedAt: apiData.deletedAt
+    }
+  }
+} 

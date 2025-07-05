@@ -1,0 +1,195 @@
+import { {{moduleName}}Id } from './{{moduleName}}Id'
+import { AggregateRoot } from '@/shared/domain/AggregateRoot'
+import { {{moduleName}}Created } from '../events/{{moduleName}}Created'
+import { {{moduleName}}Updated } from '../events/{{moduleName}}Updated'
+import { {{moduleName}}Deleted } from '../events/{{moduleName}}Deleted'
+import { {{moduleName}}ValidationError } from '../exceptions/{{moduleName}}ValidationError'
+
+{{#each entitySpec.properties}}
+{{#if type === 'enum'}}
+export enum {{../entityName}}{{@key}} {
+  {{#each values}}
+  {{this}} = '{{this}}',
+  {{/each}}
+}
+{{/if}}
+{{/each}}
+
+export interface {{entityName}}Props {
+  id: {{moduleName}}Id
+  {{#each entitySpec.properties}}
+  {{#unless primary}}
+  {{@key}}: {{#if type === 'enum'}}{{../entityName}}{{@key}}{{else if type === 'uuid'}}string{{else if type === 'datetime'}}Date{{else if type === 'json'}}Record<string, any>{{else if type === 'text'}}string{{else if type === 'integer'}}number{{else if type === 'boolean'}}boolean{{else}}string{{/if}}{{#unless required}}?{{/unless}}
+  {{/unless}}
+  {{/each}}
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date
+}
+
+export class {{entityName}} extends AggregateRoot<{{entityName}}Props> {
+  private constructor(props: {{entityName}}Props) {
+    super(props, props.id.value)
+  }
+
+  public static create(params: {
+    id?: string
+    {{#each entitySpec.properties}}
+    {{#unless primary}}
+    {{@key}}{{#unless required}}?{{/unless}}: {{#if type === 'enum'}}{{../entityName}}{{@key}}{{else if type === 'uuid'}}string{{else if type === 'datetime'}}Date{{else if type === 'json'}}Record<string, any>{{else if type === 'text'}}string{{else if type === 'integer'}}number{{else if type === 'boolean'}}boolean{{else}}string{{/if}}
+    {{/unless}}
+    {{/each}}
+  }): {{entityName}} {
+    const id = new {{moduleName}}Id(params.id)
+    
+    // Validate required fields
+    {{#each entitySpec.properties}}
+    {{#if required}}
+    {{#unless primary}}
+    if (!params.{{@key}}) {
+      throw new {{../entityName}}ValidationError('{{@key}} is required')
+    }
+    {{/unless}}
+    {{/if}}
+    {{/each}}
+
+    const {{entityNameLower}} = new {{entityName}}({
+      id,
+      {{#each entitySpec.properties}}
+      {{#unless primary}}
+      {{@key}}: params.{{@key}}{{#if default}}{{#unless required}} || {{default}}{{/unless}}{{/if}}{{#if type === 'datetime'}}{{#unless required}} || new Date(){{/unless}}{{/if}},
+      {{/unless}}
+      {{/each}}
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    {{entityNameLower}}.addDomainEvent(
+      new {{moduleName}}Created({
+        aggregateId: id.value,
+        {{#each entitySpec.properties}}
+        {{#unless primary}}
+        {{@key}}: {{entityNameLower}}.props.{{@key}},
+        {{/unless}}
+        {{/each}}
+      })
+    )
+
+    return {{entityNameLower}}
+  }
+
+  public update(params: {
+    {{#each entitySpec.properties}}
+    {{#unless primary}}
+    {{@key}}?: {{#if type === 'enum'}}{{../entityName}}{{@key}}{{else if type === 'uuid'}}string{{else if type === 'datetime'}}Date{{else if type === 'json'}}Record<string, any>{{else if type === 'text'}}string{{else if type === 'integer'}}number{{else if type === 'boolean'}}boolean{{else}}string{{/if}}
+    {{/unless}}
+    {{/each}}
+  }): void {
+    const hasChanges = {{#each entitySpec.properties}}{{#unless primary}}{{#unless @first}} || {{/unless}}params.{{@key}} !== undefined{{/unless}}{{/each}}
+
+    if (!hasChanges) {
+      return
+    }
+
+    {{#each entitySpec.properties}}
+    {{#unless primary}}
+    if (params.{{@key}} !== undefined) {
+      this.props.{{@key}} = params.{{@key}}
+    }
+    {{/unless}}
+    {{/each}}
+
+    this.props.updatedAt = new Date()
+
+    this.addDomainEvent(
+      new {{moduleName}}Updated({
+        aggregateId: this.id,
+        {{#each entitySpec.properties}}
+        {{#unless primary}}
+        {{@key}}: this.props.{{@key}},
+        {{/unless}}
+        {{/each}}
+      })
+    )
+  }
+
+  public delete(): void {
+    if (this.isDeleted()) {
+      throw new {{moduleName}}ValidationError('{{entityName}} is already deleted')
+    }
+
+    this.props.deletedAt = new Date()
+    this.props.updatedAt = new Date()
+
+    this.addDomainEvent(
+      new {{moduleName}}Deleted({
+        aggregateId: this.id,
+      })
+    )
+  }
+
+  public isDeleted(): boolean {
+    return !!this.props.deletedAt
+  }
+
+  {{#each entitySpec.properties}}
+  {{#if type === 'enum'}}
+  public is{{@key}}(status: {{../entityName}}{{@key}}): boolean {
+    return this.props.{{@key}} === status
+  }
+  {{/if}}
+  {{/each}}
+
+  // Getters
+  get id(): {{moduleName}}Id {
+    return this.props.id
+  }
+
+  {{#each entitySpec.properties}}
+  {{#unless primary}}
+  get {{@key}}(): {{#if type === 'enum'}}{{../entityName}}{{@key}}{{else if type === 'uuid'}}string{{else if type === 'datetime'}}Date{{else if type === 'json'}}Record<string, any>{{else if type === 'text'}}string{{else if type === 'integer'}}number{{else if type === 'boolean'}}boolean{{else}}string{{/if}} {
+    return this.props.{{@key}}
+  }
+  {{/unless}}
+  {{/each}}
+
+  get createdAt(): Date {
+    return this.props.createdAt
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt
+  }
+
+  get deletedAt(): Date | undefined {
+    return this.props.deletedAt
+  }
+
+  public toPrimitives(): Record<string, any> {
+    return {
+      id: this.id.value,
+      {{#each entitySpec.properties}}
+      {{#unless primary}}
+      {{@key}}: {{#if type === 'datetime'}}this.{{@key}}.toISOString(){{else if type === 'json'}}JSON.stringify(this.{{@key}}){{else}}this.{{@key}}{{/if}},
+      {{/unless}}
+      {{/each}}
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      deletedAt: this.deletedAt?.toISOString(),
+    }
+  }
+
+  public static fromPrimitives(primitives: Record<string, any>): {{entityName}} {
+    return new {{entityName}}({
+      id: new {{moduleName}}Id(primitives.id),
+      {{#each entitySpec.properties}}
+      {{#unless primary}}
+      {{@key}}: {{#if type === 'datetime'}}new Date(primitives.{{@key}}){{else if type === 'json'}}JSON.parse(primitives.{{@key}}){{else if type === 'integer'}}Number(primitives.{{@key}}){{else if type === 'boolean'}}Boolean(primitives.{{@key}}){{else}}primitives.{{@key}}{{/if}},
+      {{/unless}}
+      {{/each}}
+      createdAt: new Date(primitives.createdAt),
+      updatedAt: new Date(primitives.updatedAt),
+      deletedAt: primitives.deletedAt ? new Date(primitives.deletedAt) : undefined,
+    })
+  }
+} 

@@ -1,0 +1,64 @@
+import { {{moduleName}} } from '../entities/{{moduleName}}'
+import { {{moduleName}}Id } from '../entities/{{moduleName}}Id'
+import { {{moduleName}}Repository } from '../contracts/repositories/{{moduleName}}Repository'
+import { {{moduleName}}Specification } from '../specifications/{{moduleName}}Specification'
+import { {{moduleName}}NotFound } from '../exceptions/{{moduleName}}NotFound'
+
+export class {{moduleName}}Aggregate {
+  constructor(
+    private readonly repository: {{moduleName}}Repository,
+    private readonly specification: {{moduleName}}Specification
+  ) {}
+
+  public async create(params: {
+    name: string
+    status?: string
+  }): Promise<{{moduleName}}> {
+    // Validar reglas de negocio antes de crear
+    await this.specification.ensureCanCreate(params)
+
+    const {{moduleNameLower}} = {{moduleName}}.create(params)
+    await this.repository.save({{moduleNameLower}})
+
+    return {{moduleNameLower}}
+  }
+
+  public async update(
+    id: string,
+    params: {
+      name?: string
+      status?: string
+    }
+  ): Promise<{{moduleName}}> {
+    const {{moduleNameLower}} = await this.findById(id)
+    
+    // Validar reglas de negocio antes de actualizar
+    await this.specification.ensureCanUpdate({{moduleNameLower}}, params)
+
+    {{moduleNameLower}}.update(params)
+    await this.repository.save({{moduleNameLower}})
+
+    return {{moduleNameLower}}
+  }
+
+  public async delete(id: string): Promise<void> {
+    const {{moduleNameLower}} = await this.findById(id)
+    
+    // Validar reglas de negocio antes de eliminar
+    await this.specification.ensureCanDelete({{moduleNameLower}})
+
+    {{moduleNameLower}}.delete()
+    await this.repository.save({{moduleNameLower}})
+  }
+
+  private async findById(id: string): Promise<{{moduleName}}> {
+    const {{moduleNameLower}}Id = new {{moduleName}}Id(id)
+    const {{moduleNameLower}} = await this.repository.findById({{moduleNameLower}}Id)
+
+    if (!{{moduleNameLower}}) {
+      throw new {{moduleName}}NotFound(id)
+    }
+
+    return {{moduleNameLower}}
+  }
+} 

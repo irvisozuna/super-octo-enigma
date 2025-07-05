@@ -1,0 +1,373 @@
+<template>
+  <div class="entity-list-view">
+    <!-- Header -->
+    <v-card class="mb-4">
+      <v-card-title class="d-flex align-center justify-space-between">
+        <div>
+          <h2 class="text-h4">{{ title }}</h2>
+          <p class="text-body-2 text-medium-emphasis">{{ description }}</p>
+        </div>
+        <div class="d-flex gap-2">
+          <v-btn
+            v-if="canCreate"
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="handleCreate"
+          >
+            Crear {{ entityNameLower }}
+          </v-btn>
+          <v-btn
+            v-if="canExport"
+            variant="outlined"
+            prepend-icon="mdi-download"
+            @click="handleExport"
+            :loading="exporting"
+          >
+            Exportar
+          </v-btn>
+        </div>
+      </v-card-title>
+    </v-card>
+
+    <!-- Filters and Search -->
+    <v-card class="mb-4">
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="searchQuery"
+              label="Buscar..."
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="compact"
+              clearable
+              @update:model-value="handleSearch"
+            />
+          </v-col>
+          <v-col cols="12" md="6">
+            <div class="d-flex gap-2">
+              <v-btn
+                variant="outlined"
+                @click="showFilters = !showFilters"
+                prepend-icon="mdi-filter"
+              >
+                Filtros
+              </v-btn>
+              <v-btn
+                variant="outlined"
+                @click="clearFilters"
+                :disabled="!hasActiveFilters"
+              >
+                Limpiar
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+
+        <!-- Advanced Filters -->
+        <v-expand-transition>
+          <div v-if="showFilters">
+            <v-divider class="my-4"></v-divider>
+            <v-row>
+              {{#each properties}}
+              {{#if searchable}}
+              <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="filters.{{@key}}"
+                  label="{{@key}}"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+              {{/if}}
+              {{#if type === 'enum'}}
+              <v-col cols="12" md="4">
+                <v-select
+                  v-model="filters.{{@key}}"
+                  :items="{{@key}}Options"
+                  label="{{@key}}"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+              {{/if}}
+              {{/each}}
+            </v-row>
+          </div>
+        </v-expand-transition>
+      </v-card-text>
+    </v-card>
+
+    <!-- Content -->
+    <v-card>
+      <v-card-text>
+        <!-- Loading State -->
+        <div v-if="loading" class="d-flex justify-center align-center py-8">
+          <v-progress-circular indeterminate size="64" />
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="text-center py-8">
+          <v-icon size="64" color="error" class="mb-4">mdi-alert-circle</v-icon>
+          <h3 class="text-h6 mb-2">Error al cargar datos</h3>
+          <p class="text-body-2 text-medium-emphasis mb-4">{{ error }}</p>
+          <v-btn color="primary" @click="loadData">Reintentar</v-btn>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="!entities.length" class="text-center py-8">
+          <v-icon size="64" color="grey" class="mb-4">mdi-inbox-outline</v-icon>
+          <h3 class="text-h6 mb-2">No hay {{ entityNameLower }}s</h3>
+          <p class="text-body-2 text-medium-emphasis mb-4">
+            {{ canCreate ? `Crea tu primer ${entityNameLower} para comenzar` : 'No hay datos disponibles' }}
+          </p>
+          <v-btn
+            v-if="canCreate"
+            color="primary"
+            @click="handleCreate"
+          >
+            Crear {{ entityNameLower }}
+          </v-btn>
+        </div>
+
+        <!-- Data Table -->
+        <div v-else>
+          <{{entityName}}Table
+            :entities="entities"
+            :loading="loading"
+            :selected="selectedEntities"
+            @selection-change="handleSelectionChange"
+            @edit="handleEdit"
+            @view="handleView"
+            @delete="handleDelete"
+          />
+
+          <!-- Pagination -->
+          <div class="d-flex justify-space-between align-center mt-4">
+            <div class="text-body-2">
+              Mostrando {{ paginationInfo.from }} - {{ paginationInfo.to }} de {{ paginationInfo.total }}
+            </div>
+            <v-pagination
+              v-model="currentPage"
+              :length="totalPages"
+              :total-visible="7"
+              @update:model-value="handlePageChange"
+            />
+          </div>
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="400">
+      <v-card>
+        <v-card-title>Confirmar eliminación</v-card-title>
+        <v-card-text>
+          ¿Estás seguro de que quieres eliminar este {{ entityNameLower }}?
+          Esta acción no se puede deshacer.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="showDeleteDialog = false">Cancelar</v-btn>
+          <v-btn
+            color="error"
+            @click="confirmDelete"
+            :loading="deleting"
+          >
+            Eliminar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { use{{entityName}}Store } from '@/stores/{{entityNameLower}}Store'
+import { usePermissions } from '@/composables/usePermissions'
+import { useNotifications } from '@/composables/useNotifications'
+import {{entityName}}Table from '@/components/organisms/{{entityName}}Table.vue'
+import type { {{entityName}}, {{entityName}}Filters } from '@/types'
+
+// Router
+const router = useRouter()
+
+// Stores
+const {{entityNameLower}}Store = use{{entityName}}Store()
+
+// Composables
+const { can } = usePermissions()
+const { showSuccess, showError } = useNotifications()
+
+// Reactive data
+const loading = ref(false)
+const exporting = ref(false)
+const deleting = ref(false)
+const error = ref<string | null>(null)
+const searchQuery = ref('')
+const showFilters = ref(false)
+const showDeleteDialog = ref(false)
+const selectedEntities = ref<{{entityName}}[]>([])
+const entityToDelete = ref<{{entityName}} | null>(null)
+
+// Filters
+const filters = ref<{{entityName}}Filters>({
+  {{#each properties}}
+  {{#if searchable}}
+  {{@key}}: '',
+  {{/if}}
+  {{/each}}
+})
+
+// Pagination
+const currentPage = ref(1)
+const pageSize = ref(20)
+
+// Computed
+const title = computed(() => '{{entityName}}s')
+const description = computed(() => 'Gestiona los {{entityNameLower}}s del sistema')
+const entityNameLower = computed(() => '{{entityNameLower}}')
+
+const entities = computed(() => {{entityNameLower}}Store.entities)
+const totalItems = computed(() => {{entityNameLower}}Store.totalItems)
+const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value))
+
+const paginationInfo = computed(() => {
+  const from = (currentPage.value - 1) * pageSize.value + 1
+  const to = Math.min(currentPage.value * pageSize.value, totalItems.value)
+  return { from, to, total: totalItems.value }
+})
+
+const hasActiveFilters = computed(() => {
+  return Object.values(filters.value).some(value => value !== '')
+})
+
+// Permissions
+const canCreate = computed(() => can('create', '{{entityName}}'))
+const canEdit = computed(() => can('update', '{{entityName}}'))
+const canDelete = computed(() => can('delete', '{{entityName}}'))
+const canExport = computed(() => can('export', '{{entityName}}'))
+
+// Methods
+const loadData = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    await {{entityNameLower}}Store.fetchEntities({
+      page: currentPage.value,
+      limit: pageSize.value,
+      search: searchQuery.value,
+      filters: filters.value
+    })
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Error desconocido'
+    showError('Error al cargar los datos')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSearch = () => {
+  currentPage.value = 1
+  loadData()
+}
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  loadData()
+}
+
+const clearFilters = () => {
+  filters.value = {
+    {{#each properties}}
+    {{#if searchable}}
+    {{@key}}: '',
+    {{/if}}
+    {{/each}}
+  }
+  currentPage.value = 1
+  loadData()
+}
+
+const handleCreate = () => {
+  router.push({ name: '{{entityName}}Create' })
+}
+
+const handleEdit = (entity: {{entityName}}) => {
+  router.push({ name: '{{entityName}}Edit', params: { id: entity.id } })
+}
+
+const handleView = (entity: {{entityName}}) => {
+  router.push({ name: '{{entityName}}Detail', params: { id: entity.id } })
+}
+
+const handleDelete = (entity: {{entityName}}) => {
+  entityToDelete.value = entity
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = async () => {
+  if (!entityToDelete.value) return
+  
+  try {
+    deleting.value = true
+    await {{entityNameLower}}Store.deleteEntity(entityToDelete.value.id)
+    showSuccess('{{entityName}} eliminado correctamente')
+    loadData()
+  } catch (err) {
+    showError('Error al eliminar el {{entityNameLower}}')
+  } finally {
+    deleting.value = false
+    showDeleteDialog.value = false
+    entityToDelete.value = null
+  }
+}
+
+const handleExport = async () => {
+  try {
+    exporting.value = true
+    await {{entityNameLower}}Store.exportEntities({
+      format: 'excel',
+      filters: filters.value
+    })
+    showSuccess('Exportación completada')
+  } catch (err) {
+    showError('Error al exportar los datos')
+  } finally {
+    exporting.value = false
+  }
+}
+
+const handleSelectionChange = (selected: {{entityName}}[]) => {
+  selectedEntities.value = selected
+}
+
+// Watchers
+watch([searchQuery, filters], () => {
+  if (!loading.value) {
+    handleSearch()
+  }
+}, { deep: true })
+
+// Lifecycle
+onMounted(() => {
+  loadData()
+})
+</script>
+
+<style scoped>
+.entity-list-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+</style> 

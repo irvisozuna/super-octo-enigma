@@ -1,0 +1,58 @@
+import { ValueObject } from '@/shared/domain/ValueObject'
+import { {{moduleName}}ValidationError } from '../exceptions/{{moduleName}}ValidationError'
+
+export enum {{moduleName}}StatusEnum {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  PENDING = 'PENDING',
+  SUSPENDED = 'SUSPENDED',
+}
+
+export class {{moduleName}}Status extends ValueObject<{{moduleName}}StatusEnum> {
+  private static readonly VALID_STATUSES = Object.values({{moduleName}}StatusEnum)
+
+  constructor(value: string) {
+    super(value as {{moduleName}}StatusEnum)
+    this.ensureIsValid()
+  }
+
+  private ensureIsValid(): void {
+    if (!{{moduleName}}Status.VALID_STATUSES.includes(this.value)) {
+      throw new {{moduleName}}ValidationError(
+        `Invalid {{moduleName}} status: ${this.value}. Valid statuses are: ${{{moduleName}}Status.VALID_STATUSES.join(', ')}`
+      )
+    }
+  }
+
+  public isActive(): boolean {
+    return this.value === {{moduleName}}StatusEnum.ACTIVE
+  }
+
+  public isInactive(): boolean {
+    return this.value === {{moduleName}}StatusEnum.INACTIVE
+  }
+
+  public isPending(): boolean {
+    return this.value === {{moduleName}}StatusEnum.PENDING
+  }
+
+  public isSuspended(): boolean {
+    return this.value === {{moduleName}}StatusEnum.SUSPENDED
+  }
+
+  public canTransitionTo(newStatus: {{moduleName}}Status): boolean {
+    // Define las reglas de transición de estados
+    const transitions: Record<{{moduleName}}StatusEnum, {{moduleName}}StatusEnum[]> = {
+      [{{moduleName}}StatusEnum.PENDING]: [{{moduleName}}StatusEnum.ACTIVE, {{moduleName}}StatusEnum.INACTIVE],
+      [{{moduleName}}StatusEnum.ACTIVE]: [{{moduleName}}StatusEnum.INACTIVE, {{moduleName}}StatusEnum.SUSPENDED],
+      [{{moduleName}}StatusEnum.INACTIVE]: [{{moduleName}}StatusEnum.ACTIVE, {{moduleName}}StatusEnum.PENDING],
+      [{{moduleName}}StatusEnum.SUSPENDED]: [{{moduleName}}StatusEnum.ACTIVE, {{moduleName}}StatusEnum.INACTIVE],
+    }
+
+    return transitions[this.value]?.includes(newStatus.value) || false
+  }
+
+  public equals(other: {{moduleName}}Status): boolean {
+    return this.value === other.value
+  }
+} 

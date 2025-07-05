@@ -1,0 +1,10 @@
+import { UseCase } from '../UseCase'
+import { Create{{entityName}}Command } from '../commands/Create{{entityName}}Command'
+import { Create{{entityName}}Handler } from '../handlers/Create{{entityName}}Handler'
+import { {{entityName}} } from '../../domain/entities/{{entityName}}'
+
+export class Create{{entityName}}UseCase {
+  execute(command: Create{{entityName}}Command): void {
+    // Implementación aquí
+  }
+} 

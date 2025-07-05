@@ -1,0 +1,103 @@
+import { injectable } from 'inversify'
+import { {{moduleName}} } from '../entities/{{moduleName}}'
+import { Create{{moduleName}}Command } from '../../application/commands/Create{{moduleName}}Command'
+import { Update{{moduleName}}Command } from '../../application/commands/Update{{moduleName}}Command'
+import { {{moduleName}}Repository } from './repositories/{{moduleName}}Repository'
+
+@injectable()
+export class {{moduleName}}DomainService {
+  constructor(
+    private readonly repository: {{moduleName}}Repository
+  ) {}
+
+  async validateCreate(command: Create{{moduleName}}Command): Promise<void> {
+    // Validar que el nombre no esté duplicado
+    const existing{{moduleName}} = await this.repository.findByName(command.name)
+    if (existing{{moduleName}}) {
+      throw new Error(`A {{moduleNameLower}} with name "${command.name}" already exists`)
+    }
+
+    // Validar reglas de negocio específicas
+    if (command.name.length < 2) {
+      throw new Error('Name must be at least 2 characters long')
+    }
+
+    if (command.description && command.description.length > 1000) {
+      throw new Error('Description must be less than 1000 characters')
+    }
+  }
+
+  async validateUpdate(existing{{moduleName}}: {{moduleName}}, command: Update{{moduleName}}Command): Promise<void> {
+    // Validar que la entidad no esté eliminada
+    if (existing{{moduleName}}.isDeleted()) {
+      throw new Error('Cannot update a deleted {{moduleNameLower}}')
+    }
+
+    // Si se está cambiando el nombre, validar que no esté duplicado
+    if (command.name && command.name !== existing{{moduleName}}.name.value) {
+      const duplicate{{moduleName}} = await this.repository.findByName(command.name)
+      if (duplicate{{moduleName}} && duplicate{{moduleName}}.id.value !== existing{{moduleName}}.id.value) {
+        throw new Error(`A {{moduleNameLower}} with name "${command.name}" already exists`)
+      }
+    }
+
+    // Validar reglas de negocio específicas
+    if (command.name && command.name.length < 2) {
+      throw new Error('Name must be at least 2 characters long')
+    }
+
+    if (command.description && command.description.length > 1000) {
+      throw new Error('Description must be less than 1000 characters')
+    }
+
+    // Validar transiciones de estado
+    if (command.status && command.status !== existing{{moduleName}}.status.value) {
+      this.validateStatusTransition(existing{{moduleName}}.status.value, command.status)
+    }
+  }
+
+  async validateDelete({{moduleNameLower}}: {{moduleName}}): Promise<void> {
+    // Validar que la entidad no esté ya eliminada
+    if ({{moduleNameLower}}.isDeleted()) {
+      throw new Error('{{moduleName}} is already deleted')
+    }
+
+    // Validar que la entidad esté activa
+    if (!{{moduleNameLower}}.isActive()) {
+      throw new Error('Cannot delete an inactive {{moduleNameLower}}')
+    }
+
+    // Aquí podrías agregar validaciones adicionales como:
+    // - Verificar si tiene dependencias
+    // - Verificar permisos del usuario
+    // - Verificar reglas de negocio específicas
+  }
+
+  private validateStatusTransition(currentStatus: string, newStatus: string): void {
+    const validTransitions: Record<string, string[]> = {
+      'ACTIVE': ['INACTIVE', 'ARCHIVED'],
+      'INACTIVE': ['ACTIVE', 'ARCHIVED'],
+      'PENDING': ['ACTIVE', 'INACTIVE', 'ARCHIVED'],
+      'ARCHIVED': [] // No se puede cambiar desde ARCHIVED
+    }
+
+    const allowedTransitions = validTransitions[currentStatus] || []
+    if (!allowedTransitions.includes(newStatus)) {
+      throw new Error(`Invalid status transition from ${currentStatus} to ${newStatus}`)
+    }
+  }
+
+  // Métodos de utilidad para reglas de negocio
+  isNameValid(name: string): boolean {
+    return name && name.trim().length >= 2 && name.trim().length <= 255
+  }
+
+  isDescriptionValid(description: string): boolean {
+    return !description || description.length <= 1000
+  }
+
+  isStatusValid(status: string): boolean {
+    const validStatuses = ['ACTIVE', 'INACTIVE', 'PENDING', 'ARCHIVED']
+    return validStatuses.includes(status)
+  }
+} 

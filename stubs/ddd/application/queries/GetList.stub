@@ -1,0 +1,61 @@
+import { Query } from '../Query'
+
+export interface Get{{entityName}}ListQuery extends Query {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  includeDeleted?: boolean
+  filters?: Record<string, any>
+}
+
+export class Get{{entityName}}ListQueryImpl implements Get{{entityName}}ListQuery {
+  constructor(
+    public readonly page: number = 1,
+    public readonly limit: number = 20,
+    public readonly search?: string,
+    public readonly status?: string,
+    public readonly sortBy: string = 'createdAt',
+    public readonly sortOrder: 'asc' | 'desc' = 'desc',
+    public readonly includeDeleted: boolean = false,
+    public readonly filters: Record<string, any> = {}
+  ) {
+    this.validate()
+  }
+
+  private validate(): void {
+    if (this.page < 1) {
+      throw new Error('Page must be greater than 0')
+    }
+
+    if (this.limit < 1 || this.limit > 100) {
+      throw new Error('Limit must be between 1 and 100')
+    }
+
+    if (this.search && this.search.length > 255) {
+      throw new Error('Search term must be less than 255 characters')
+    }
+
+    if (this.status) {
+      const validStatuses = ['ACTIVE', 'INACTIVE', 'PENDING', 'ARCHIVED']
+      if (!validStatuses.includes(this.status)) {
+        throw new Error(`Status must be one of: ${validStatuses.join(', ')}`)
+      }
+    }
+
+    const validSortFields = ['id', 'name', 'status', 'createdAt', 'updatedAt']
+    if (!validSortFields.includes(this.sortBy)) {
+      throw new Error(`Sort field must be one of: ${validSortFields.join(', ')}`)
+    }
+
+    if (!['asc', 'desc'].includes(this.sortOrder)) {
+      throw new Error('Sort order must be either "asc" or "desc"')
+    }
+  }
+
+  get offset(): number {
+    return (this.page - 1) * this.limit
+  }
+} 

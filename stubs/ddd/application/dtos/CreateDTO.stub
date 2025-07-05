@@ -1,0 +1,10 @@
+import * as yup from 'yup'
+
+export interface Create{{entityName}}DTO {
+  // Properties will be added here
+}
+
+export const create{{moduleName}}Schema = yup.object({
+  name: yup.string().required().min(2).max(100),
+  status: yup.string().oneOf(['ACTIVE', 'INACTIVE', 'PENDING']).optional(),
+}) 

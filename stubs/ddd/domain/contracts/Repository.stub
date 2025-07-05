@@ -1,0 +1,34 @@
+import { {{moduleName}} } from '../entities/{{moduleName}}'
+
+export interface {{moduleName}}Repository {
+  save({{moduleNameLower}}: {{moduleName}}): Promise<{{moduleName}}>
+  findById(id: string, includeDeleted?: boolean): Promise<{{moduleName}} | null>
+  findByName(name: string, includeDeleted?: boolean): Promise<{{moduleName}} | null>
+  findByCriteria(criteria: {
+    page?: number
+    limit?: number
+    search?: string
+    status?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+    includeDeleted?: boolean
+    filters?: Record<string, any>
+  }): Promise<{
+    items: {{moduleName}}[]
+    total: number
+    page: number
+    limit: number
+  }>
+  count(criteria?: {
+    search?: string
+    status?: string
+    includeDeleted?: boolean
+    filters?: Record<string, any>
+  }): Promise<number>
+  exists(id: string): Promise<boolean>
+  existsByName(name: string, excludeId?: string): Promise<boolean>
+  delete(id: string): Promise<void>
+  restore(id: string): Promise<{{moduleName}}>
+  findActive(): Promise<{{moduleName}}[]>
+  findByStatus(status: string): Promise<{{moduleName}}[]>
+} 

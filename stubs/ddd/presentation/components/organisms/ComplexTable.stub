@@ -1,0 +1,544 @@
+<template>
+  <div class="{{entityNameKebab}}-table">
+    <!-- Filters and Search -->
+    <v-card class="mb-4">
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="4">
+            <v-text-field
+              v-model="search"
+              :label="$t('common.search')"
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              @update:model-value="handleSearch"
+            />
+          </v-col>
+          {{#each entitySpec.properties}}
+          {{#if type === 'enum'}}
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="filters.{{@key}}"
+              :items="{{@key}}Options"
+              :label="$t('{{../moduleNameLower}}.{{@key}}')"
+              clearable
+              @update:model-value="handleFilter"
+            />
+          </v-col>
+          {{/if}}
+          {{/each}}
+          <v-col cols="12" md="2">
+            <v-btn
+              color="primary"
+              @click="showFilters = !showFilters"
+              :icon="showFilters ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Advanced Filters -->
+        <v-expand-transition>
+          <div v-show="showFilters">
+            <v-divider class="my-4" />
+            <v-row>
+              {{#each entitySpec.properties}}
+              {{#if type === 'datetime'}}
+              <v-col cols="12" md="6">
+                <v-row>
+                  <v-col cols="6">
+                    <v-text-field
+                      v-model="filters.{{@key}}_from"
+                      :label="$t('{{../moduleNameLower}}.{{@key}}') + ' ' + $t('common.from')"
+                      type="date"
+                      @update:model-value="handleFilter"
+                    />
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      v-model="filters.{{@key}}_to"
+                      :label="$t('{{../moduleNameLower}}.{{@key}}') + ' ' + $t('common.to')"
+                      type="date"
+                      @update:model-value="handleFilter"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
+              {{/if}}
+              {{/each}}
+            </v-row>
+          </div>
+        </v-expand-transition>
+      </v-card-text>
+    </v-card>
+
+    <!-- Table -->
+    <v-card>
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span>{{ $t('{{moduleNameLower}}.title') }}</span>
+        <div class="d-flex gap-2">
+          <v-btn
+            v-if="selectedItems.length > 0"
+            color="error"
+            variant="outlined"
+            @click="handleBulkDelete"
+            :loading="bulkDeleting"
+          >
+            {{ $t('common.deleteSelected', { count: selectedItems.length }) }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="$emit('create')"
+            :disabled="!canCreate"
+          >
+            {{ $t('common.create') }}
+          </v-btn>
+        </div>
+      </v-card-title>
+
+      <v-data-table
+        v-model="selectedItems"
+        :headers="headers"
+        :items="items"
+        :loading="loading"
+        :search="search"
+        :items-per-page="itemsPerPage"
+        :page="page"
+        :sort-by="sortBy"
+        :sort-desc="sortDesc"
+        show-select
+        @update:options="handleTableUpdate"
+      >
+        <!-- Custom column templates -->
+        {{#each entitySpec.properties}}
+        {{#if type === 'enum'}}
+        <template #[`item.{{@key}}`]="{ item }">
+          <v-chip
+            :color="get{{@key}}Color(item.{{@key}})"
+            size="small"
+            variant="tonal"
+          >
+            {{ $t(`{{../moduleNameLower}}.{{@key}}.${item.{{@key}}}`) }}
+          </v-chip>
+        </template>
+        {{/if}}
+        {{#if type === 'boolean'}}
+        <template #[`item.{{@key}}`]="{ item }">
+          <v-icon
+            :color="item.{{@key}} ? 'success' : 'error'"
+            :icon="item.{{@key}} ? 'mdi-check-circle' : 'mdi-close-circle'"
+          />
+        </template>
+        {{/if}}
+        {{#if type === 'datetime'}}
+        <template #[`item.{{@key}}`]="{ item }">
+          {{ formatDate(item.{{@key}}) }}
+        </template>
+        {{/if}}
+        {{#if type === 'json'}}
+        <template #[`item.{{@key}}`]="{ item }">
+          <v-btn
+            size="small"
+            variant="text"
+            @click="showJsonDialog(item.{{@key}})"
+          >
+            {{ $t('common.view') }}
+          </v-btn>
+        </template>
+        {{/if}}
+        {{/each}}
+
+        <!-- Actions column -->
+        <template #item.actions="{ item }">
+          <v-menu>
+            <template #activator="{ props }">
+              <v-btn
+                icon="mdi-dots-vertical"
+                variant="text"
+                size="small"
+                v-bind="props"
+              />
+            </template>
+            <v-list>
+              <v-list-item
+                v-if="canView"
+                @click="$emit('view', item)"
+                :prepend-icon="'mdi-eye'"
+              >
+                {{ $t('common.view') }}
+              </v-list-item>
+              <v-list-item
+                v-if="canEdit"
+                @click="$emit('edit', item)"
+                :prepend-icon="'mdi-pencil'"
+              >
+                {{ $t('common.edit') }}
+              </v-list-item>
+              {{#if entitySpec.properties.status}}
+              <v-list-item
+                v-if="canUpdateStatus"
+                @click="handleStatusChange(item)"
+                :prepend-icon="'mdi-toggle-switch'"
+              >
+                {{ $t('common.changeStatus') }}
+              </v-list-item>
+              {{/if}}
+              <v-list-item
+                v-if="canDelete"
+                @click="handleDelete(item)"
+                :prepend-icon="'mdi-delete'"
+                color="error"
+              >
+                {{ $t('common.delete') }}
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </template>
+      </v-data-table>
+
+      <!-- Pagination -->
+      <v-card-actions class="d-flex justify-space-between">
+        <div class="d-flex align-center">
+          <span class="text-caption">
+            {{ $t('common.showing', { from: paginationInfo.from, to: paginationInfo.to, total: paginationInfo.total }) }}
+          </span>
+        </div>
+        <v-pagination
+          v-model="page"
+          :length="totalPages"
+          :total-visible="7"
+          @update:model-value="handlePageChange"
+        />
+      </v-card-actions>
+    </v-card>
+
+    <!-- JSON Dialog -->
+    <v-dialog v-model="jsonDialog.show" max-width="600">
+      <v-card>
+        <v-card-title>{{ $t('common.jsonData') }}</v-card-title>
+        <v-card-text>
+          <pre>{{ jsonDialog.data }}</pre>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="jsonDialog.show = false">
+            {{ $t('common.close') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Status Change Dialog -->
+    {{#if entitySpec.properties.status}}
+    <v-dialog v-model="statusDialog.show" max-width="400">
+      <v-card>
+        <v-card-title>{{ $t('common.changeStatus') }}</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="statusDialog.newStatus"
+            :items="statusOptions"
+            :label="$t('{{moduleNameLower}}.status')"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="statusDialog.show = false">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="confirmStatusChange"
+            :loading="statusDialog.loading"
+          >
+            {{ $t('common.confirm') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    {{/if}}
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="deleteDialog.show" max-width="400">
+      <v-card>
+        <v-card-title>{{ $t('common.confirmDelete') }}</v-card-title>
+        <v-card-text>
+          {{ deleteDialog.message }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="deleteDialog.show = false">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            @click="confirmDelete"
+            :loading="deleteDialog.loading"
+          >
+            {{ $t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { use{{entityName}}Store } from '@/modules/{{moduleNameLower}}/stores/{{entityNameLower}}Store'
+import { usePermissions } from '@/modules/{{moduleNameLower}}/composables/usePermissions'
+import { formatDate } from '@/modules/{{moduleNameLower}}/utils/formatters'
+import type { {{entityName}} } from '@/modules/{{moduleNameLower}}/types/entities'
+
+// Props
+interface Props {
+  items?: {{entityName}}[]
+  loading?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  items: () => [],
+  loading: false
+})
+
+// Emits
+const emit = defineEmits<{
+  create: []
+  view: [item: {{entityName}}]
+  edit: [item: {{entityName}}]
+  delete: [item: {{entityName}}]
+  bulkDelete: [items: {{entityName}}[]]
+  refresh: []
+}>()
+
+// Composables
+const { t } = useI18n()
+const {{entityNameLower}}Store = use{{entityName}}Store()
+const { can, cannot } = usePermissions()
+
+// Refs
+const search = ref('')
+const showFilters = ref(false)
+const selectedItems = ref<{{entityName}}[]>([])
+const itemsPerPage = ref(20)
+const page = ref(1)
+const sortBy = ref('createdAt')
+const sortDesc = ref(true)
+const bulkDeleting = ref(false)
+
+// Filters
+const filters = reactive({
+  {{#each entitySpec.properties}}
+  {{#if type === 'enum'}}
+  {{@key}}: '',
+  {{/if}}
+  {{#if type === 'datetime'}}
+  {{@key}}_from: '',
+  {{@key}}_to: '',
+  {{/if}}
+  {{/each}}
+})
+
+// Dialogs
+const jsonDialog = reactive({
+  show: false,
+  data: ''
+})
+
+const statusDialog = reactive({
+  show: false,
+  newStatus: '',
+  item: null as {{entityName}} | null,
+  loading: false
+})
+
+const deleteDialog = reactive({
+  show: false,
+  message: '',
+  item: null as {{entityName}} | null,
+  loading: false
+})
+
+// Computed
+const items = computed(() => props.items)
+
+const headers = computed(() => [
+  {{#each entitySpec.properties}}
+  {{#unless primary}}
+  {
+    title: t('{{../moduleNameLower}}.{{@key}}'),
+    key: '{{@key}}',
+    sortable: true,
+    {{#if type === 'datetime'}}
+    align: 'start',
+    {{/if}}
+  },
+  {{/unless}}
+  {{/each}}
+  {
+    title: t('common.actions'),
+    key: 'actions',
+    sortable: false,
+    align: 'center',
+    width: '100px'
+  }
+])
+
+{{#each entitySpec.properties}}
+{{#if type === 'enum'}}
+const {{@key}}Options = [
+  {{#each values}}
+  { text: t('{{../moduleNameLower}}.{{@key}}.{{this}}'), value: '{{this}}' },
+  {{/each}}
+]
+
+const get{{@key}}Color = (value: string) => {
+  const colors = {
+    {{#each values}}
+    '{{this}}': '{{#if (eq this "active")}}success{{else if (eq this "inactive")}}error{{else if (eq this "pending")}}warning{{else}}primary{{/if}}',
+    {{/each}}
+  }
+  return colors[value] || 'primary'
+}
+{{/if}}
+{{/each}}
+
+{{#if entitySpec.properties.status}}
+const statusOptions = computed(() => 
+  {{entitySpec.properties.status.values}}.map(status => ({
+    text: t(`{{moduleNameLower}}.status.${status}`),
+    value: status
+  }))
+)
+{{/if}}
+
+const totalPages = computed(() => Math.ceil({{entityNameLower}}Store.total / itemsPerPage.value))
+
+const paginationInfo = computed(() => {
+  const from = (page.value - 1) * itemsPerPage.value + 1
+  const to = Math.min(page.value * itemsPerPage.value, {{entityNameLower}}Store.total)
+  return { from, to, total: {{entityNameLower}}Store.total }
+})
+
+// Permissions
+const canCreate = computed(() => can('create', '{{entityName}}'))
+const canView = computed(() => can('read', '{{entityName}}'))
+const canEdit = computed(() => can('update', '{{entityName}}'))
+const canDelete = computed(() => can('delete', '{{entityName}}'))
+const canUpdateStatus = computed(() => can('update', '{{entityName}}'))
+
+// Methods
+const handleSearch = () => {
+  page.value = 1
+  loadData()
+}
+
+const handleFilter = () => {
+  page.value = 1
+  loadData()
+}
+
+const handleTableUpdate = (options: any) => {
+  itemsPerPage.value = options.itemsPerPage
+  page.value = options.page
+  sortBy.value = options.sortBy[0]
+  sortDesc.value = options.sortDesc[0]
+  loadData()
+}
+
+const handlePageChange = () => {
+  loadData()
+}
+
+const loadData = async () => {
+  const params = {
+    page: page.value,
+    limit: itemsPerPage.value,
+    search: search.value,
+    sortBy: sortBy.value,
+    sortDesc: sortDesc.value,
+    ...filters
+  }
+
+  await {{entityNameLower}}Store.fetch{{entityName}}List(params)
+}
+
+const showJsonDialog = (data: any) => {
+  jsonDialog.data = JSON.stringify(data, null, 2)
+  jsonDialog.show = true
+}
+
+const handleStatusChange = (item: {{entityName}}) => {
+  statusDialog.item = item
+  statusDialog.newStatus = item.status
+  statusDialog.show = true
+}
+
+const confirmStatusChange = async () => {
+  if (!statusDialog.item) return
+
+  try {
+    statusDialog.loading = true
+    await {{entityNameLower}}Store.update{{entityName}}(statusDialog.item.id, {
+      status: statusDialog.newStatus
+    })
+    statusDialog.show = false
+    emit('refresh')
+  } catch (error) {
+    console.error('Error updating status:', error)
+  } finally {
+    statusDialog.loading = false
+  }
+}
+
+const handleDelete = (item: {{entityName}}) => {
+  deleteDialog.item = item
+  deleteDialog.message = t('{{moduleNameLower}}.deleteConfirm', { name: item.name })
+  deleteDialog.show = true
+}
+
+const confirmDelete = async () => {
+  if (!deleteDialog.item) return
+
+  try {
+    deleteDialog.loading = true
+    await {{entityNameLower}}Store.delete{{entityName}}(deleteDialog.item.id)
+    deleteDialog.show = false
+    emit('refresh')
+  } catch (error) {
+    console.error('Error deleting item:', error)
+  } finally {
+    deleteDialog.loading = false
+  }
+}
+
+const handleBulkDelete = async () => {
+  if (selectedItems.value.length === 0) return
+
+  deleteDialog.item = null
+  deleteDialog.message = t('{{moduleNameLower}}.bulkDeleteConfirm', { count: selectedItems.value.length })
+  deleteDialog.show = true
+}
+
+// Lifecycle
+onMounted(() => {
+  loadData()
+})
+
+// Watchers
+watch(() => props.items, () => {
+  selectedItems.value = []
+}, { deep: true })
+</script>
+
+<style scoped>
+.{{entityNameKebab}}-table {
+  width: 100%;
+}
+
+pre {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.875rem;
+}
+</style> 
