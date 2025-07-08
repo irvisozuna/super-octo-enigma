@@ -15,6 +15,7 @@ interface Props {
   iconSize?: string | number
   isActiveStepValid?: boolean
   align?: 'start' | 'center' | 'end' | 'default'
+  stepStates?: string[] // 'completed' | 'active' | 'pending' | 'incomplete'
 }
 
 interface Emit {
@@ -93,9 +94,12 @@ watchEffect(() => {
         class="cursor-pointer app-stepper-step pa-1"
         :class="[
           (!props.isActiveStepValid && (isValidationEnabled)) && 'stepper-steps-invalid',
-          activeOrCompletedStepsClasses(index),
+          props.stepStates?.[index] === 'completed' && 'stepper-steps-completed',
+          props.stepStates?.[index] === 'active' && 'stepper-steps-active',
+          props.stepStates?.[index] === 'incomplete' && 'stepper-steps-incomplete',
+          props.stepStates?.[index] === 'pending' && 'stepper-steps-pending',
         ]"
-        @click="!isValidationEnabled && emit('update:currentStep', index)"
+        @click="!isValidationEnabled && index <= currentStep && emit('update:currentStep', index)"
       >
         <!-- SECTION stepper step with icon -->
         <template v-if="item.icon">
@@ -145,51 +149,57 @@ watchEffect(() => {
         <template v-else>
           <div class="d-flex align-center gap-x-3">
             <div>
-              <!-- 👉 custom circle icon -->
-              <template v-if="index >= currentStep">
-                <VAvatar
-                  v-if="(!isValidationEnabled || props.isActiveStepValid || index !== currentStep)"
-                  size="38"
-                  rounded
-                  :variant="index === currentStep ? 'elevated' : 'tonal'"
-                  :color="index === currentStep ? 'primary' : 'default'"
-                >
-                  <h5
-                    class="text-h5"
-                    :style="index === currentStep ? { color: '#fff' } : ''"
-                  >
-                    {{ index + 1 }}
-                  </h5>
-                </VAvatar>
-
-                <VAvatar
-                  v-else
-                  color="error"
-                  size="38"
-                  rounded
-                >
-                  <VIcon
-
-                    icon="tabler-alert-circle"
-                    size="22"
-                  />
-                </VAvatar>
-              </template>
-
-              <!-- 👉 step completed icon -->
-
+              <!-- Custom avatar for step state -->
               <VAvatar
-                v-else
+                v-if="props.stepStates?.[index] === 'completed'"
                 class="stepper-icon"
                 variant="tonal"
+                color="success"
+                size="38"
+                rounded
+              >
+                <VIcon
+                  icon="tabler-check"
+                  size="22"
+                />
+              </VAvatar>
+              <VAvatar
+                v-else-if="props.stepStates?.[index] === 'active'"
+                class="stepper-icon"
+                variant="elevated"
                 color="primary"
                 size="38"
                 rounded
               >
                 <h5
                   class="text-h5"
-                  style="color: rgb(var(--v-theme-primary));"
+                  style="color: #fff;"
                 >
+                  {{ index + 1 }}
+                </h5>
+              </VAvatar>
+              <VAvatar
+                v-else-if="props.stepStates?.[index] === 'incomplete'"
+                class="stepper-icon"
+                variant="tonal"
+                color="error"
+                size="38"
+                rounded
+              >
+                <VIcon
+                  icon="tabler-alert-circle"
+                  size="22"
+                />
+              </VAvatar>
+              <VAvatar
+                v-else
+                class="stepper-icon"
+                variant="tonal"
+                color="grey"
+                size="38"
+                rounded
+              >
+                <h5 class="text-h5">
                   {{ index + 1 }}
                 </h5>
               </VAvatar>
@@ -379,5 +389,23 @@ watchEffect(() => {
       justify-content: end;
     }
   }
+}
+</style>
+
+<style scoped>
+.stepper-steps-completed {
+  background-color: #e6f4ea !important;
+}
+
+.stepper-steps-active {
+  background-color: #e3e8fd !important;
+}
+
+.stepper-steps-incomplete {
+  background-color: #fdeaea !important;
+}
+
+.stepper-steps-pending {
+  background-color: #f5f5f5 !important;
 }
 </style>

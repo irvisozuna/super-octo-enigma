@@ -6245,7 +6245,7 @@ const rules = reactive({
   {{#unless primary}}
   {{@key}}: [
     {{#if required}}
-    (v: any) => !!v || t('validation.required', { field: t('{{../moduleNameLower}}.{{@key}}') }),
+    (v: any) => !!v || t('validations.required', { field: t('{{../moduleNameLower}}.{{@key}}') }),
     {{/if}}
     {{#if type === 'string'}}
     (v: string) => !v || v.length >= 3 || t('validation.minLength', { field: t('{{../moduleNameLower}}.{{@key}}'), min: 3 }),

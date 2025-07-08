@@ -199,7 +199,7 @@ onMounted(() => {
               :items="sortableFields"
               item-title="alias"
               item-value="field"
-              :rules="[v => !!v || t('validation.required', { field: t('DynamicReports.report.sorting.field') })]"
+              :rules="[v => !!v || t('validations.required', { field: t('DynamicReports.report.sorting.field') })]"
               @update:model-value="validateSortingLocal"
             />
           </VCol>

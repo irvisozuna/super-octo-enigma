@@ -51,127 +51,110 @@ const isTransitioning = ref(false)
 // Steps configuration
 const steps = [
   {
-    id: 'basic',
     title: t('DynamicReports.report.wizard.step1.title'),
     subtitle: t('DynamicReports.report.wizard.step1.description'),
   },
   {
-    id: 'fields',
     title: t('DynamicReports.report.wizard.step2.title'),
     subtitle: t('DynamicReports.report.wizard.step2.description'),
   },
   {
-    id: 'filters',
     title: t('DynamicReports.report.wizard.step3.title'),
     subtitle: t('DynamicReports.report.wizard.step3.description'),
   },
   {
-    id: 'sorting',
     title: t('DynamicReports.report.wizard.step4.title'),
     subtitle: t('DynamicReports.report.wizard.step4.description'),
   },
   {
-    id: 'export',
     title: t('DynamicReports.report.wizard.step5.title'),
     subtitle: t('DynamicReports.report.wizard.step5.description'),
   },
   {
-    id: 'advanced',
     title: t('DynamicReports.report.wizard.step6.title'),
     subtitle: t('DynamicReports.report.wizard.step6.description'),
   },
   {
-    id: 'summary',
     title: t('DynamicReports.report.wizard.step7.title'),
     subtitle: t('DynamicReports.report.wizard.step7.description'),
   },
 ]
 
-const stepIds = steps.map(s => s.id)
+// FIJO: Usar un ref independiente para el step actual
+const currentStep = ref(0)
 
-// Use a single source of truth for current step - FIXED to prevent infinite loops
-const currentStep = computed({
-  get: () => {
-    const step = wizardStore.currentStep || stepIds[0]
+const isFirstStep = computed(() => currentStep.value === 0)
+const isLastStep = computed(() => currentStep.value === steps.length - 1)
 
-    console.log('🔍 currentStep getter:', step)
-
-    return step
-  },
-  set: (val: string) => {
-    console.log('🔍 currentStep setter called with:', val, 'current:', wizardStore.currentStep)
-
-    // Only check for valid step and not redundant
-    if (stepIds.includes(val) && wizardStore.currentStep !== val) {
-      console.log('🔍 Setting current step to:', val)
-      wizardStore.setCurrentStep(val)
-    }
-    else {
-      console.log('🔍 Skipping setCurrentStep - conditions not met')
-    }
-  },
+// FIJO: Validación de estado de cada paso
+const stepValidations = ref<Record<number, boolean>>({
+  0: false,
+  1: false,
+  2: true, // Los filtros son opcionales
+  3: true, // El ordenamiento es opcional
+  4: true, // Las opciones de exportación son opcionales
+  5: true, // La configuración avanzada es opcional
+  6: true, // El resumen solo muestra información
 })
 
-const currentStepIndex = computed(() => stepIds.indexOf(currentStep.value))
-const isFirstStep = computed(() => currentStepIndex.value === 0)
-const isLastStep = computed(() => currentStepIndex.value === stepIds.length - 1)
+// FIJO: Función mejorada para navegar entre pasos
+const navigateToStep = async (stepIdx: number) => {
+  console.log('🔍 navigateToStep called with:', stepIdx)
+  console.log('🔍 currentStep.value:', currentStep.value)
+  console.log('🔍 steps.length:', steps.length)
+  console.log('🔍 isTransitioning.value:', isTransitioning.value)
 
-// Navigation methods with transition handling
-const navigateToStep = async (stepId: string | number) => {
-  const targetStep = typeof stepId === 'string' ? stepId : stepIds[stepId]
-
-  console.log('🔍 navigateToStep called with:', stepId, 'targetStep:', targetStep)
-  console.log('🔍 isTransitioning:', isTransitioning.value, 'currentStep:', currentStep.value)
-
-  if (!stepIds.includes(targetStep) || isTransitioning.value) {
-    console.log('🔍 Navigation blocked - invalid step or transitioning')
+  // Validaciones básicas
+  if (typeof stepIdx !== 'number' || stepIdx < 0 || stepIdx >= steps.length || isTransitioning.value) {
+    console.warn('❌ Invalid step navigation:', { stepIdx, currentStep: currentStep.value, isTransitioning: isTransitioning.value })
 
     return
   }
 
-  console.log('🔍 Starting navigation to:', targetStep)
+  // Prevenir navegación hacia atrás si estamos en transición
+  if (isTransitioning.value) {
+    console.warn('❌ Navigation blocked: transition in progress')
+
+    return
+  }
+
+  // Validar que podemos navegar al paso solicitado
+  if (stepIdx > currentStep.value) {
+    // Navegación hacia adelante: validar pasos anteriores
+    for (let i = 0; i < stepIdx; i++) {
+      if (!stepValidations.value[i]) {
+        console.warn(`❌ Cannot navigate to step ${stepIdx}: step ${i} is not valid`)
+
+        return
+      }
+    }
+  }
+
   isTransitioning.value = true
   try {
-    // Wait for current render cycle to complete
     await nextTick()
-    currentStep.value = targetStep
+    currentStep.value = stepIdx
+    console.log('✅ Navigation successful to step:', stepIdx)
     await nextTick()
-    console.log('🔍 Navigation completed to:', targetStep)
+  }
+  catch (error) {
+    console.error('❌ Navigation error:', error)
   }
   finally {
     isTransitioning.value = false
-    console.log('🔍 Transition flag reset')
   }
 }
 
 const nextStep = async () => {
-  console.log('🔍 nextStep called')
-  console.log('🔍 currentStepIndex:', currentStepIndex.value, 'total steps:', stepIds.length)
-
-  if (currentStepIndex.value < stepIds.length - 1) {
-    const nextStepId = stepIds[currentStepIndex.value + 1]
-
-    console.log('🔍 Navigating to next step:', nextStepId)
-    await navigateToStep(nextStepId)
-  }
-  else {
-    console.log('🔍 Already at last step')
-  }
+  console.log('🔍 nextStep called, currentStep:', currentStep.value)
+  if (currentStep.value < steps.length - 1)
+    await navigateToStep(currentStep.value + 1)
 }
 
 const previousStep = async () => {
-  console.log('🔍 previousStep called')
-  console.log('🔍 currentStepIndex:', currentStepIndex.value)
-
-  if (currentStepIndex.value > 0) {
-    const prevStepId = stepIds[currentStepIndex.value - 1]
-
-    console.log('🔍 Navigating to previous step:', prevStepId)
-    await navigateToStep(prevStepId)
-  }
-  else {
-    console.log('🔍 Already at first step')
-  }
+  console.log('🔍 previousStep called, currentStep:', currentStep.value)
+  if (currentStep.value > 0)
+    await navigateToStep(currentStep.value - 1)
 }
 
 // Computed
@@ -179,7 +162,7 @@ const dataSourceIdRef = computed(() => wizardStore.wizardData.basicInfo.dataSour
 
 const { fields: dsFields } = useDataSourceFields(dataSourceIdRef)
 
-// Add a computed for sortingModel to safely use as v-model
+// FIJO: Computed mejorado para sortingModel
 const sortingModel = computed({
   get() {
     return wizardStore.wizardData.sorting || {
@@ -195,25 +178,42 @@ const sortingModel = computed({
   },
 })
 
-// Update available fields when data source fields change - FIXED to prevent loops
+// FIJO: Computed para validar si se puede proceder
+const canProceedToNextStep = computed(() => {
+  return stepValidations.value[currentStep.value] === true
+})
+
+// FIJO: Función para actualizar campos disponibles sin causar loops
 const updateAvailableFields = (newFields: any[]) => {
-  // Only update if the array actually changed to prevent unnecessary re-renders
-  if (JSON.stringify(availableFields.value) !== JSON.stringify(newFields || []))
+  const newFieldsStr = JSON.stringify(newFields || [])
+  const currentFieldsStr = JSON.stringify(availableFields.value)
+
+  if (newFieldsStr !== currentFieldsStr) {
     availableFields.value = newFields || []
+    console.log('🔍 Available fields updated:', availableFields.value.length)
+  }
 }
 
-// Watch for field changes with proper cleanup - FIXED to prevent infinite loops
+// FIJO: Watcher mejorado para campos
 let fieldWatcher: any = null
 onMounted(() => {
-  fieldWatcher = watch(dsFields, updateAvailableFields, {
-    immediate: true,
-    deep: false, // Don't watch deeply to prevent loops
-  })
+  fieldWatcher = watch(
+    dsFields,
+    newFields => {
+      updateAvailableFields(newFields)
+    },
+    {
+      immediate: true,
+      deep: false,
+    },
+  )
 })
 
 onUnmounted(() => {
-  if (fieldWatcher)
+  if (fieldWatcher) {
     fieldWatcher()
+    fieldWatcher = null
+  }
 })
 
 // Methods
@@ -225,30 +225,77 @@ const loadDataSources = async () => {
     const res = await api.getList({})
 
     dataSources.value = res.data || []
+    console.log('✅ Data sources loaded:', dataSources.value.length)
   }
   catch (e: any) {
     errorDataSources.value = e.message
+    console.error('❌ Error loading data sources:', e)
   }
   finally {
     loadingDataSources.value = false
   }
 }
 
+// FIJO: Función mejorada para manejar validación de pasos
 const handleStepValidation = (stepIndex: number, isValid: boolean) => {
-  console.log(`Step ${stepIndex + 1} validation:`, isValid)
+  console.log(`🔍 Step ${stepIndex + 1} validation:`, isValid)
+  stepValidations.value[stepIndex] = isValid
+
+  // Actualizar el estado del store si es necesario
+  if (stepIndex === currentStep.value) {
+    // Forzar reactividad
+    stepValidations.value = { ...stepValidations.value }
+  }
 }
 
+// FIJO: Validaciones específicas para cada paso
+const validateStep = (stepIndex: number): boolean => {
+  switch (stepIndex) {
+    case 0: // Información básica
+      return !!(wizardStore.wizardData.basicInfo.name?.trim() && wizardStore.wizardData.basicInfo.dataSourceId)
+    case 1: // Campos seleccionados
+      return Array.isArray(wizardStore.wizardData.selectedFields) && wizardStore.wizardData.selectedFields.length > 0
+    case 2: // Filtros (opcional)
+      return true
+    case 3: // Ordenamiento (opcional)
+      return true
+    case 4: // Exportación (opcional)
+      return true
+    case 5: // Avanzado (opcional)
+      return true
+    case 6: // Resumen
+      return true
+    default:
+      return false
+  }
+}
+
+// FIJO: Watcher para validar pasos automáticamente
+watch(
+  () => wizardStore.wizardData,
+  () => {
+    for (let i = 0; i < steps.length; i++) {
+      const isValid = validateStep(i)
+      if (stepValidations.value[i] !== isValid)
+        stepValidations.value[i] = isValid
+    }
+  },
+  { deep: true, immediate: true },
+)
+
 const showErrorMessage = (message: string) => {
-  console.error(message)
+  console.error('❌ Error:', message)
 
   // Add toast notification here if available
 }
 
 const handleSubmit = async () => {
   try {
-    // Prevent submission during transition
-    if (isTransitioning.value)
+    if (isTransitioning.value) {
+      console.warn('❌ Submit blocked: transition in progress')
+
       return
+    }
 
     const errors = await validateCompleteReport(wizardStore.wizardData)
 
@@ -265,7 +312,6 @@ const handleSubmit = async () => {
 
     wizardStore.clearLocalStorage()
     emit('submit', wizardStore.wizardData)
-
     await router.push('/reports')
   }
   catch (error) {
@@ -280,6 +326,7 @@ const handleCancel = async () => {
 
 // Lifecycle
 onMounted(async () => {
+  console.log('🔍 Component mounted')
   await loadDataSources()
 
   if (props.reportId) {
@@ -298,10 +345,41 @@ onMounted(async () => {
   }
 })
 
-// Cleanup on unmount
 onUnmounted(() => {
   isTransitioning.value = false
+  if (fieldWatcher) {
+    fieldWatcher()
+    fieldWatcher = null
+  }
 })
+
+// FIJO: Computed mejorado para estados de pasos
+const stepStates = computed(() => {
+  return steps.map((_, idx) => {
+    if (idx < currentStep.value)
+      return stepValidations.value[idx] ? 'completed' : 'incomplete'
+    else if (idx === currentStep.value)
+      return 'active'
+    else
+      return 'pending'
+  })
+})
+
+// FIJO: Debug watcher para monitorear cambios
+watch(
+  () => currentStep.value,
+  (newStep, oldStep) => {
+    console.log(`🔍 Step changed from ${oldStep} to ${newStep}`)
+  },
+)
+
+watch(
+  () => stepValidations.value,
+  newValidations => {
+    console.log('🔍 Step validations updated:', newValidations)
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -316,6 +394,7 @@ onUnmounted(() => {
           <!-- 👉 Stepper -->
           <AppStepper
             :current-step="currentStep"
+            :step-states="stepStates"
             direction="vertical"
             :items="steps"
             @update:current-step="navigateToStep"
@@ -347,13 +426,9 @@ onUnmounted(() => {
             <VWindow
               :model-value="currentStep"
               class="disable-tab-transition"
-              @update:model-value="navigateToStep"
             >
               <!-- Paso 1: Información Básica -->
-              <VWindowItem
-                :key="`step-basic-${wizardStore.wizardData.basicInfo.dataSourceId}`"
-                value="basic"
-              >
+              <VWindowItem :value="0">
                 <ReportBasicInfoStep
                   v-model="wizardStore.wizardData.basicInfo"
                   :data-sources="dataSources"
@@ -364,10 +439,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 2: Selección de Campos -->
-              <VWindowItem
-                :key="`step-fields-${wizardStore.wizardData.basicInfo.dataSourceId}`"
-                value="fields"
-              >
+              <VWindowItem :value="1">
                 <ReportFieldsStep
                   v-model="wizardStore.wizardData.selectedFields"
                   :available-fields="availableFields"
@@ -379,10 +451,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 3: Configuración de Filtros -->
-              <VWindowItem
-                :key="`step-filters-${currentStep}`"
-                value="filters"
-              >
+              <VWindowItem :value="2">
                 <ReportFiltersStep
                   v-model="wizardStore.wizardData.filters"
                   :available-fields="wizardStore.wizardData.selectedFields"
@@ -391,10 +460,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 4: Ordenamiento -->
-              <VWindowItem
-                :key="`step-sorting-${currentStep}`"
-                value="sorting"
-              >
+              <VWindowItem :value="3">
                 <ReportSortingStep
                   v-model="sortingModel"
                   :available-fields="wizardStore.wizardData.selectedFields"
@@ -403,10 +469,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 5: Opciones de Exportación -->
-              <VWindowItem
-                :key="`step-export-${currentStep}`"
-                value="export"
-              >
+              <VWindowItem :value="4">
                 <ReportExportStep
                   v-model="wizardStore.wizardData.exportOptions"
                   @validate="(isValid: boolean) => handleStepValidation(4, isValid)"
@@ -414,10 +477,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 6: Configuración Avanzada -->
-              <VWindowItem
-                :key="`step-advanced-${currentStep}`"
-                value="advanced"
-              >
+              <VWindowItem :value="5">
                 <ReportAdvancedStep
                   v-model="wizardStore.wizardData.advanced"
                   :available-fields="wizardStore.wizardData.selectedFields"
@@ -426,10 +486,7 @@ onUnmounted(() => {
               </VWindowItem>
 
               <!-- Paso 7: Resumen -->
-              <VWindowItem
-                :key="`step-summary-${currentStep}`"
-                value="summary"
-              >
+              <VWindowItem :value="6">
                 <ReportSummaryStep
                   :basic-info="wizardStore.wizardData.basicInfo"
                   :selected-fields="wizardStore.wizardData.selectedFields"
@@ -455,7 +512,7 @@ onUnmounted(() => {
                   start
                   class="flip-in-rtl"
                 />
-                {{ $t('common.prev') }}
+                {{ $t('common.previous') }}
               </VBtn>
 
               <VBtn
@@ -474,13 +531,8 @@ onUnmounted(() => {
               <VBtn
                 v-else
                 color="primary"
-                :disabled="!wizardStore.canProceed || isTransitioning"
-                @click="() => {
-                  console.log('🔍 Next button clicked')
-                  console.log('🔍 canProceed:', wizardStore.canProceed)
-                  console.log('🔍 isTransitioning:', isTransitioning.value)
-                  nextStep()
-                }"
+                :disabled="!canProceedToNextStep || isTransitioning"
+                @click="nextStep"
               >
                 {{ $t('common.next') }}
                 <VIcon
@@ -490,13 +542,7 @@ onUnmounted(() => {
                 />
               </VBtn>
 
-              <!-- Debug info -->
-              <div
-                v-if="!wizardStore.canProceed"
-                class="text-caption text-error mt-2"
-              >
-                {{ $t('DynamicReports.report.wizard.cannot_proceed') }}
-              </div>
+              <!-- Contextual help message for step validation -->
             </div>
           </VForm>
         </VCardText>
@@ -510,7 +556,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* Prevent flickering during transitions */
 .disable-tab-transition .v-window__container {
   transition: none !important;
 }

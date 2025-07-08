@@ -36,9 +36,9 @@ console.log('Montando Paso: ReportBasicInfoStep')
 
 // Validation schema
 const schema = toTypedSchema(z.object({
-  name: z.string().min(1, t('validation.required', { field: t('DynamicReports.report.fields.name') })),
+  name: z.string().min(1, t('validations.required', { field: t('DynamicReports.report.fields.name') })),
   description: z.string().optional(),
-  dataSourceId: z.string().min(1, t('validation.required', { field: t('DynamicReports.report.fields.dataSource') })),
+  dataSourceId: z.string().min(1, t('validations.required', { field: t('DynamicReports.report.fields.dataSource') })),
   isActive: z.boolean(),
   isPublic: z.boolean(),
 }))
@@ -126,7 +126,7 @@ const dataSourceOptions = computed(() => {
       </VCol>
 
       <VCol cols="12">
-        <AppTextField
+        <AppTextarea
           :model-value="values.description"
           :label="$t('DynamicReports.report.fields.description')"
           :placeholder="$t('DynamicReports.report.placeholders.description')"

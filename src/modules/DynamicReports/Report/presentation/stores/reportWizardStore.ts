@@ -83,6 +83,8 @@ interface WizardData {
   }
 }
 
+const stepCount = 7 // Number of steps in the wizard
+
 const defaultWizardData: WizardData = {
   basicInfo: {
     name: '',
@@ -165,20 +167,10 @@ const defaultWizardData: WizardData = {
   },
 }
 
-const stepIds = [
-  'basic',
-  'fields',
-  'filters',
-  'sorting',
-  'export',
-  'advanced',
-  'summary',
-]
-
 export const useReportWizardStore = defineStore('reportWizard', () => {
   // State
   const wizardData = ref<WizardData>(JSON.parse(JSON.stringify(defaultWizardData)))
-  const currentStep = ref(stepIds[0])
+  const currentStep = ref(0) // Use number index
   const isEditing = ref(false)
   const reportId = ref<string | null>(null)
   const lastSaved = ref<Date | null>(null)
@@ -190,42 +182,18 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   let saveTimer: NodeJS.Timeout | null = null
 
   // Computed
-  const isFirstStep = computed(() => currentStep.value === stepIds[0])
-  const isLastStep = computed(() => currentStep.value === stepIds[stepIds.length - 1])
-  const currentStepIndex = computed(() => stepIds.indexOf(currentStep.value))
+  const isFirstStep = computed(() => currentStep.value === 0)
+  const isLastStep = computed(() => currentStep.value === stepCount - 1)
+  const currentStepIndex = computed(() => currentStep.value)
 
   const canProceed = computed(() => {
-    console.log('🔍 Store canProceed check for step:', currentStep.value)
-
     switch (currentStep.value) {
-      case 'basic':
-        const basicValid = wizardData.value.basicInfo.name.trim() !== '' && wizardData.value.basicInfo.dataSourceId !== ''
-
-        console.log('🔍 Store: Basic step validation - name:', wizardData.value.basicInfo.name.trim(), 'dataSourceId:', wizardData.value.basicInfo.dataSourceId, 'valid:', basicValid)
-        return basicValid
-      case 'fields':
-        const fieldsValid = wizardData.value.selectedFields.length > 0
-
-        console.log('🔍 Store: Fields step validation - selectedFields:', wizardData.value.selectedFields.length, 'valid:', fieldsValid)
-        return fieldsValid
-      case 'filters':
-        console.log('🔍 Store: Filters step validation - always true')
-        return true
-      case 'sorting':
-        console.log('🔍 Store: Sorting step validation - always true')
-        return true
-      case 'export':
-        console.log('🔍 Store: Export step validation - always true')
-        return true
-      case 'advanced':
-        console.log('🔍 Store: Advanced step validation - always true')
-        return true
-      case 'summary':
-        console.log('🔍 Store: Summary step validation - always true')
-        return true
+      case 0:
+        return wizardData.value.basicInfo.name.trim() !== '' && wizardData.value.basicInfo.dataSourceId !== ''
+      case 1:
+        return Array.isArray(wizardData.value.selectedFields) && wizardData.value.selectedFields.length > 0
       default:
-        console.log('🔍 Store: Unknown step validation - false')
-        return false
+        return true
     }
   })
 
@@ -315,7 +283,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
   const resetWizard = () => {
     wizardData.value = JSON.parse(JSON.stringify(defaultWizardData))
-    currentStep.value = stepIds[0]
+    currentStep.value = 0
     isEditing.value = false
     reportId.value = null
     lastSaved.value = null
@@ -325,55 +293,33 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   }
 
   // NEW METHOD: Set current step with validation
-  const setCurrentStep = (step: string) => {
-    console.log('🔍 Store setCurrentStep called with:', step)
-    console.log('🔍 Store currentStep:', currentStep.value)
-
-    if (!stepIds.includes(step)) {
-      console.log('🔍 Store: Step not found in stepIds')
-
+  const setCurrentStep = (step: number) => {
+    if (typeof step !== 'number' || step < 0 || step >= stepCount)
       return
-    }
-    if (currentStep.value === step) {
-      console.log('🔍 Store: Step already current')
 
+    // Only allow going back or staying on the same step
+    if (step > currentStep.value)
       return
-    }
-
-    // Prevent infinite loops by checking if we're already setting the same value
-    const previousStep = currentStep.value
-
-    console.log('🔍 Store: Setting step from', previousStep, 'to', step)
-
+    if (currentStep.value === step)
+      return
     currentStep.value = step
-
-    // Only mark as changed if step actually changed
-    if (previousStep !== step) {
-      hasUnsavedChanges.value = true
-      saveToLocalStorage()
-      console.log('🔍 Store: Step updated successfully')
-    }
+    hasUnsavedChanges.value = true
+    saveToLocalStorage()
   }
 
   // Updated navigation methods
   const nextStep = () => {
     if (isTransitioning.value)
       return
-
-    const idx = stepIds.indexOf(currentStep.value)
-    if (idx < stepIds.length - 1 && canProceed.value) {
+    if (currentStep.value < stepCount - 1 && canProceed.value) {
       isTransitioning.value = true
 
-      const newStep = stepIds[idx + 1]
-
-      // Only update if step actually changes
+      const newStep = currentStep.value + 1
       if (currentStep.value !== newStep) {
         currentStep.value = newStep
         hasUnsavedChanges.value = true
         saveToLocalStorage()
       }
-
-      // Reset transition flag after a short delay
       setTimeout(() => {
         isTransitioning.value = false
       }, 300)
@@ -383,46 +329,37 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   const previousStep = () => {
     if (isTransitioning.value)
       return
-
-    const idx = stepIds.indexOf(currentStep.value)
-    if (idx > 0) {
+    if (currentStep.value > 0) {
       isTransitioning.value = true
 
-      const newStep = stepIds[idx - 1]
-
-      // Only update if step actually changes
+      const newStep = currentStep.value - 1
       if (currentStep.value !== newStep) {
         currentStep.value = newStep
         hasUnsavedChanges.value = true
         saveToLocalStorage()
       }
-
       setTimeout(() => {
         isTransitioning.value = false
       }, 300)
     }
   }
 
-  const goToStep = (step: string) => {
-    if (!stepIds.includes(step))
+  const goToStep = (step: number) => {
+    if (typeof step !== 'number' || step < 0 || step >= stepCount)
       return
     if (currentStep.value === step)
       return
     if (isTransitioning.value)
       return
-
     isTransitioning.value = true
 
     const previousStep = currentStep.value
 
     currentStep.value = step
-
-    // Only mark as changed if step actually changed
     if (previousStep !== step) {
       hasUnsavedChanges.value = true
       saveToLocalStorage()
     }
-
     setTimeout(() => {
       isTransitioning.value = false
     }, 300)

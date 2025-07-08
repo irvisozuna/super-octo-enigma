@@ -308,7 +308,7 @@ onMounted(() => {
                 :items="availableFields"
                 item-title="alias"
                 item-value="field"
-                :rules="[v => !!v || t('validation.required', { field: t('DynamicReports.report.filters.field') })]"
+                :rules="[v => !!v || t('validations.required', { field: t('DynamicReports.report.filters.field') })]"
                 @update:model-value="updateFilter(index, { field: $event })"
               />
             </VCol>
@@ -323,7 +323,7 @@ onMounted(() => {
                 :label="t('DynamicReports.report.filters.type')"
                 variant="outlined"
                 :items="filterTypes"
-                :rules="[v => !!v || t('validation.required', { field: t('DynamicReports.report.filters.type') })]"
+                :rules="[v => !!v || t('validations.required', { field: t('DynamicReports.report.filters.type') })]"
                 @update:model-value="updateFilter(index, { type: $event })"
               />
             </VCol>
@@ -338,7 +338,7 @@ onMounted(() => {
                 :label="t('DynamicReports.report.filters.operator')"
                 variant="outlined"
                 :items="getOperatorsForType(filter.type)"
-                :rules="[v => !!v || t('validation.required', { field: t('DynamicReports.report.filters.operator') })]"
+                :rules="[v => !!v || t('validations.required', { field: t('DynamicReports.report.filters.operator') })]"
                 @update:model-value="updateFilter(index, { operator: $event })"
               />
             </VCol>

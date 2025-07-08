@@ -531,7 +531,9 @@
   "last_reading": "Ubicación de la toma",
   "common": {
     "success": "Éxito",
-    "error": "Error"
+    "error": "Error",
+    "next": "Siguiente",
+    "previous": "Anterior"
   },
   "close": "Cerrar",
   "period": "Periodo",

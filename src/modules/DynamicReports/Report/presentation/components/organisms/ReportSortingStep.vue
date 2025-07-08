@@ -54,7 +54,7 @@ const { t } = useI18n()
 // Validation schema
 const schema = toTypedSchema(z.object({
   primary: z.object({
-    field: z.string().min(1, t('validation.required', { field: t('DynamicReports.report.sorting.primary_field') })),
+    field: z.string().min(1, t('validations.required', { field: t('DynamicReports.report.sorting.primary_field') })),
     direction: z.enum(['ASC', 'DESC']),
   }),
   secondary: z.object({
