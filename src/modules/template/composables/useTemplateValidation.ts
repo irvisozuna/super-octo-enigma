@@ -1,10 +1,10 @@
 // useTemplateValidation.ts
-import { useI18n } from 'vue-i18n';
-import * as yup from 'yup';
+import { useI18n } from 'vue-i18n'
+import * as yup from 'yup'
 
 export function useTemplateValidation() {
-  const { t } = useI18n();
-  
+  const { t } = useI18n()
+
   const templateBaseValidation = yup.object({
     first_name: yup.string()
       .required(t('validations.required', { field: t('fields.first_name') })),
@@ -19,24 +19,24 @@ export function useTemplateValidation() {
     role: yup.array()
       .nullable()
       .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-  });
+  })
 
   const templateCreateValidation = templateBaseValidation.shape({
     role: yup.array()
       .required(t('validations.required', { field: t('fields.role') }))
       .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-  });
+  })
 
   const templateEditValidation = templateBaseValidation.shape({
     password: yup.string().notRequired(),
     first_name: yup.string().notRequired(),
     last_name: yup.string().notRequired(),
-    name: yup.string().required(t('validations.required', { field: t('fields.name') }))
-  });
+    name: yup.string().required(t('validations.required', { field: t('fields.name') })),
+  })
 
   return {
     templateBaseValidation,
     templateCreateValidation,
     templateEditValidation,
-  };
+  }
 }

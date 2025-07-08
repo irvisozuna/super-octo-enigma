@@ -1,16 +1,3 @@
-<template>
-  <VCard class="pa-4">
-    <VCardTitle class="text-h6">{{ $t('contract_general_data') }}</VCardTitle>
-    <VCardText>
-      <VList dense>
-        <VListItem v-for="(detail, index) in contractDetails" :key="index">
-          <VIcon :icon="detail.icon" class="me-2" />{{ $t(detail.label) }}: {{ detail.value }}
-        </VListItem>
-      </VList>
-    </VCardText>
-  </VCard>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
@@ -30,3 +17,24 @@ const contractDetails = computed(() => [
   { label: 'rate', value: contract.value?.rate_type, icon: 'tabler-tag' },
 ])
 </script>
+
+<template>
+  <VCard class="pa-4">
+    <VCardTitle class="text-h6">
+      {{ $t('contract_general_data') }}
+    </VCardTitle>
+    <VCardText>
+      <VList dense>
+        <VListItem
+          v-for="(detail, index) in contractDetails"
+          :key="index"
+        >
+          <VIcon
+            :icon="detail.icon"
+            class="me-2"
+          />{{ $t(detail.label) }}: {{ detail.value }}
+        </VListItem>
+      </VList>
+    </VCardText>
+  </VCard>
+</template>

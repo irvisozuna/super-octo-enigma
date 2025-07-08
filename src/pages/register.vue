@@ -1,3 +1,125 @@
+<script setup lang="ts">
+import { nextTick, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { VForm } from 'vuetify/components/VForm'
+import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
+
+import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
+import { themeConfig } from '@themeConfig'
+
+import authV2RegisterIllustrationBorderedDark from '@images/pages/auth-v2-register-illustration-bordered-dark.png'
+import authV2RegisterIllustrationBorderedLight from '@images/pages/auth-v2-register-illustration-bordered-light.png'
+import authV2RegisterIllustrationDark from '@images/pages/auth-v2-register-illustration-dark.png'
+import authV2RegisterIllustrationLight from '@images/pages/auth-v2-register-illustration-light.png'
+import authV2MaskDark from '@images/pages/misc-mask-dark.png'
+import authV2MaskLight from '@images/pages/misc-mask-light.png'
+
+const imageVariant = useGenerateImageVariant(
+  authV2RegisterIllustrationLight,
+  authV2RegisterIllustrationDark,
+  authV2RegisterIllustrationBorderedLight,
+  authV2RegisterIllustrationBorderedDark,
+  true,
+)
+
+const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
+
+definePage({
+  meta: {
+    layout: 'blank',
+    unauthenticatedOnly: true,
+  },
+})
+
+const form = ref({
+  firstName: '',
+  lastName: '',
+  username: '',
+  email: '',
+  password: '',
+  privacyPolicies: false,
+})
+
+const isPasswordVisible = ref(false)
+
+const errors = ref<Record<string, string | undefined>>({
+  firstName: undefined,
+  lastName: undefined,
+  email: undefined,
+  password: undefined,
+})
+
+const refVForm = ref<VForm>()
+
+const route = useRoute()
+const router = useRouter()
+
+const ability = useAbility()
+
+const login = async (email: string, password: string) => {
+  try {
+    const res = await $api('/auth/login', {
+      method: 'POST',
+      body: {
+        email,
+        password,
+      },
+      onResponseError({ response }) {
+        errors.value = response._data.errors
+      },
+    })
+
+    const { accessToken, userData, userAbilityRules } = res
+
+    useCookie('userAbilityRules').value = userAbilityRules
+    ability.update(userAbilityRules)
+
+    useCookie('userData').value = userData
+    useCookie('accessToken').value = accessToken
+
+    // Redirect to `to` query if exist or redirect to index route
+    // ❗ nextTick is required to wait for DOM updates and later redirect
+    await nextTick(() => {
+      router.replace(route.query.to ? String(route.query.to) : '/')
+    })
+  }
+  catch (err) {
+    console.error(err)
+  }
+}
+
+const register = async () => {
+  try {
+    const res = await $api('/auth/register', {
+      method: 'POST',
+      body: {
+        first_name: form.value.firstName,
+        last_name: form.value.lastName,
+        email: form.value.email,
+        password: form.value.password,
+      },
+      onResponseError({ response }) {
+        errors.value = response._data.errors
+      },
+    })
+
+    // Perform login after successful registration
+    // await login(form.value.email, form.value.password)
+    router.replace('/')
+  }
+  catch (err) {
+    console.error(err)
+  }
+}
+
+const onSubmit = () => {
+  refVForm.value?.validate().then(({ valid: isValid }) => {
+    if (isValid)
+      register()
+  })
+}
+</script>
+
 <template>
   <RouterLink to="/">
     <div class="auth-logo d-flex align-center gap-x-3">
@@ -59,7 +181,10 @@
         </VCardText>
 
         <VCardText>
-          <VForm ref="refVForm" @submit.prevent="onSubmit">
+          <VForm
+            ref="refVForm"
+            @submit.prevent="onSubmit"
+          >
             <VRow>
               <!-- First Name -->
               <VCol cols="12">
@@ -104,8 +229,8 @@
                   placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
                   :error-messages="errors.password"
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
 
                 <div class="d-flex align-center my-6">
@@ -171,124 +296,6 @@
     </VCol>
   </VRow>
 </template>
-<script setup lang="ts">
-import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
-
-import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
-import { themeConfig } from '@themeConfig'
-import { nextTick, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { VForm } from 'vuetify/components/VForm'
-
-import authV2RegisterIllustrationBorderedDark from '@images/pages/auth-v2-register-illustration-bordered-dark.png'
-import authV2RegisterIllustrationBorderedLight from '@images/pages/auth-v2-register-illustration-bordered-light.png'
-import authV2RegisterIllustrationDark from '@images/pages/auth-v2-register-illustration-dark.png'
-import authV2RegisterIllustrationLight from '@images/pages/auth-v2-register-illustration-light.png'
-import authV2MaskDark from '@images/pages/misc-mask-dark.png'
-import authV2MaskLight from '@images/pages/misc-mask-light.png'
-
-const imageVariant = useGenerateImageVariant(
-  authV2RegisterIllustrationLight,
-  authV2RegisterIllustrationDark,
-  authV2RegisterIllustrationBorderedLight,
-  authV2RegisterIllustrationBorderedDark,
-  true
-)
-
-const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
-
-definePage({
-  meta: {
-    layout: 'blank',
-    unauthenticatedOnly: true,
-  },
-})
-
-const form = ref({
-  firstName: '',
-  lastName: '',
-  username: '',
-  email: '',
-  password: '',
-  privacyPolicies: false,
-})
-
-const isPasswordVisible = ref(false)
-
-const errors = ref<Record<string, string | undefined>>({
-  firstName: undefined,
-  lastName: undefined,
-  email: undefined,
-  password: undefined,
-})
-
-const refVForm = ref<VForm>()
-
-const route = useRoute()
-const router = useRouter()
-
-const ability = useAbility()
-
-const login = async (email: string, password: string) => {
-  try {
-    const res = await $api('/auth/login', {
-      method: 'POST',
-      body: {
-        email,
-        password,
-      },
-      onResponseError({ response }) {
-        errors.value = response._data.errors
-      },
-    })
-
-    const { accessToken, userData, userAbilityRules } = res
-
-    useCookie('userAbilityRules').value = userAbilityRules
-    ability.update(userAbilityRules)
-
-    useCookie('userData').value = userData
-    useCookie('accessToken').value = accessToken
-
-    // Redirect to `to` query if exist or redirect to index route
-    // ❗ nextTick is required to wait for DOM updates and later redirect
-    await nextTick(() => {
-      router.replace(route.query.to ? String(route.query.to) : '/')
-    })
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-const register = async () => {
-  try {
-    const res = await $api('/auth/register', {
-      method: 'POST',
-      body: {
-        first_name: form.value.firstName,
-        last_name: form.value.lastName,
-        email: form.value.email,
-        password: form.value.password,
-      },
-      onResponseError({ response }) {
-        errors.value = response._data.errors
-      },
-    })
-
-    // Perform login after successful registration
-    //await login(form.value.email, form.value.password)
-    router.replace('/')
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-const onSubmit = () => {
-  refVForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) register()
-  })
-}
-</script>
 
 <style lang="scss">
 @use "@core/scss/template/pages/page-auth";

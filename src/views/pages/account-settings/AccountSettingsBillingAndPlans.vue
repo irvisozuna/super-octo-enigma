@@ -73,7 +73,10 @@ const resetPaymentForm = () => {
       <VCard title="Current Plan">
         <VCardText>
           <VRow>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div>
                 <div class="mb-6">
                   <h3 class="text-body-1 text-high-emphasis font-weight-medium mb-1">
@@ -96,7 +99,11 @@ const resetPaymentForm = () => {
                 <div>
                   <h3 class="text-body-1 text-high-emphasis font-weight-medium mb-1">
                     <span class="me-2">$199 Per Month</span>
-                    <VChip color="primary" size="small" label>
+                    <VChip
+                      color="primary"
+                      size="small"
+                      label
+                    >
                       Popular
                     </VChip>
                   </h3>
@@ -107,8 +114,15 @@ const resetPaymentForm = () => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
-              <VAlert icon="tabler-alert-triangle" type="warning" variant="tonal">
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VAlert
+                icon="tabler-alert-triangle"
+                type="warning"
+                variant="tonal"
+              >
                 <VAlertTitle class="mb-1">
                   We need your attention!
                 </VAlertTitle>
@@ -123,7 +137,11 @@ const resetPaymentForm = () => {
                 <span>12 of 30 Days</span>
               </h6>
 
-              <VProgressLinear color="primary" rounded model-value="15" />
+              <VProgressLinear
+                color="primary"
+                rounded
+                model-value="15"
+              />
 
               <p class="text-body-2 mt-1 mb-0">
                 18 days remaining until your plan requires update
@@ -136,7 +154,11 @@ const resetPaymentForm = () => {
                   upgrade plan
                 </VBtn>
 
-                <VBtn color="error" variant="tonal" @click="isConfirmDialogVisible = true">
+                <VBtn
+                  color="error"
+                  variant="tonal"
+                  @click="isConfirmDialogVisible = true"
+                >
                   Cancel Subscription
                 </VBtn>
               </div>
@@ -144,10 +166,14 @@ const resetPaymentForm = () => {
           </VRow>
 
           <!-- 👉 Confirm Dialog -->
-          <ConfirmDialog v-model:is-dialog-visible="isConfirmDialogVisible"
-            confirmation-question="Are you sure to cancel your subscription?" cancel-msg="Unsubscription Cancelled!!"
-            cancel-title="Cancelled" confirm-msg="Your subscription cancelled successfully."
-            confirm-title="Unsubscribed!" />
+          <ConfirmDialog
+            v-model:is-dialog-visible="isConfirmDialogVisible"
+            confirmation-question="Are you sure to cancel your subscription?"
+            cancel-msg="Unsubscription Cancelled!!"
+            cancel-title="Cancelled"
+            confirm-msg="Your subscription cancelled successfully."
+            confirm-title="Unsubscribed!"
+          />
 
           <!-- 👉 plan and pricing dialog -->
           <PricingPlanDialog v-model:is-dialog-visible="isPricingPlanDialogVisible" />
@@ -161,14 +187,28 @@ const resetPaymentForm = () => {
         <VCardText>
           <VForm @submit.prevent="() => {}">
             <VRow>
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <VRow>
                   <!-- 👉 card type switch -->
                   <VCol cols="12">
-                    <VRadioGroup v-model="selectedPaymentMethod" inline>
-                      <VRadio value="credit-debit-atm-card" label="Credit/Debit/ATM Card" color="primary"
-                        class="me-6" />
-                      <VRadio value="paypal-account" label="Paypal account" color="primary" />
+                    <VRadioGroup
+                      v-model="selectedPaymentMethod"
+                      inline
+                    >
+                      <VRadio
+                        value="credit-debit-atm-card"
+                        label="Credit/Debit/ATM Card"
+                        color="primary"
+                        class="me-6"
+                      />
+                      <VRadio
+                        value="paypal-account"
+                        label="Paypal account"
+                        color="primary"
+                      />
                     </VRadioGroup>
                   </VCol>
 
@@ -176,37 +216,73 @@ const resetPaymentForm = () => {
                     <VRow>
                       <!-- 👉 Card Number -->
                       <VCol cols="12">
-                        <AppTextField v-model="cardNumber" label="Card Number" placeholder="1234 1234 1234 1234"
-                          type="number" />
+                        <AppTextField
+                          v-model="cardNumber"
+                          label="Card Number"
+                          placeholder="1234 1234 1234 1234"
+                          type="number"
+                        />
                       </VCol>
 
                       <!-- 👉 Name -->
-                      <VCol cols="12" md="6">
-                        <AppTextField v-model="cardName" label="Name" placeholder="John Doe" />
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
+                        <AppTextField
+                          v-model="cardName"
+                          label="Name"
+                          placeholder="John Doe"
+                        />
                       </VCol>
 
                       <!-- 👉 Expiry date -->
-                      <VCol cols="6" md="3">
-                        <AppTextField v-model="cardExpiryDate" label="Expiry Date" placeholder="MM/YY" />
+                      <VCol
+                        cols="6"
+                        md="3"
+                      >
+                        <AppTextField
+                          v-model="cardExpiryDate"
+                          label="Expiry Date"
+                          placeholder="MM/YY"
+                        />
                       </VCol>
 
                       <!-- 👉 Cvv code -->
-                      <VCol cols="6" md="3">
-                        <AppTextField v-model="cardCvv" type="number" label="CVV Code" placeholder="123" />
+                      <VCol
+                        cols="6"
+                        md="3"
+                      >
+                        <AppTextField
+                          v-model="cardCvv"
+                          type="number"
+                          label="CVV Code"
+                          placeholder="123"
+                        />
                       </VCol>
 
                       <!-- 👉 Future Billing switch -->
                       <VCol cols="12">
-                        <VSwitch v-model="isCardDetailSaveBilling" density="compact"
-                          label="Save card for future billing?" />
+                        <VSwitch
+                          v-model="isCardDetailSaveBilling"
+                          density="compact"
+                          label="Save card for future billing?"
+                        />
                       </VCol>
                     </VRow>
                   </VCol>
-                  <VCol cols="12" class="d-flex flex-wrap gap-4">
+                  <VCol
+                    cols="12"
+                    class="d-flex flex-wrap gap-4"
+                  >
                     <VBtn type="submit">
                       Save changes
                     </VBtn>
-                    <VBtn color="secondary" variant="tonal" @click="resetPaymentForm">
+                    <VBtn
+                      color="secondary"
+                      variant="tonal"
+                      @click="resetPaymentForm"
+                    >
                       Cancel
                     </VBtn>
                   </VCol>
@@ -214,22 +290,37 @@ const resetPaymentForm = () => {
               </VCol>
 
               <!-- 👉 Saved Cards -->
-              <VCol cols="12" md="6">
+              <VCol
+                cols="12"
+                md="6"
+              >
                 <h6 class="text-body-1 text-high-emphasis font-weight-medium mb-6">
                   My Cards
                 </h6>
 
                 <div class="d-flex flex-column gap-y-6">
-                  <VCard v-for="card in creditCards" :key="card.name" flat
-                    color="rgba(var(--v-theme-on-surface),var(--v-hover-opacity))">
+                  <VCard
+                    v-for="card in creditCards"
+                    :key="card.name"
+                    flat
+                    color="rgba(var(--v-theme-on-surface),var(--v-hover-opacity))"
+                  >
                     <VCardText class="d-flex flex-sm-row flex-column">
                       <div class="text-no-wrap">
-                        <img :src="card.image" height="25">
+                        <img
+                          :src="card.image"
+                          height="25"
+                        >
                         <h4 class="my-2 text-body-1 text-high-emphasis d-flex align-center">
                           <div class="me-4 font-weight-medium">
                             {{ card.name }}
                           </div>
-                          <VChip v-if="card.isPrimary" label color="primary" size="small">
+                          <VChip
+                            v-if="card.isPrimary"
+                            label
+                            color="primary"
+                            size="small"
+                          >
                             Primary
                           </VChip>
                         </h4>
@@ -242,10 +333,18 @@ const resetPaymentForm = () => {
 
                       <div class="d-flex flex-column text-sm-end">
                         <div class="d-flex flex-wrap gap-4 order-sm-0 order-1">
-                          <VBtn variant="tonal" size="small" @click="openEditCardDialog(card)">
+                          <VBtn
+                            variant="tonal"
+                            size="small"
+                            @click="openEditCardDialog(card)"
+                          >
                             Edit
                           </VBtn>
-                          <VBtn color="error" size="small" variant="tonal">
+                          <VBtn
+                            color="error"
+                            size="small"
+                            variant="tonal"
+                          >
                             Delete
                           </VBtn>
                         </div>
@@ -256,8 +355,10 @@ const resetPaymentForm = () => {
                 </div>
 
                 <!-- 👉 Add Edit Card Dialog -->
-                <CardAddEditDialog v-model:is-dialog-visible="isCardEditDialogVisible"
-                  :card-details="currentCardDetails" />
+                <CardAddEditDialog
+                  v-model:is-dialog-visible="isCardEditDialogVisible"
+                  :card-details="currentCardDetails"
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -272,56 +373,119 @@ const resetPaymentForm = () => {
           <VForm @submit.prevent="() => {}">
             <VRow>
               <!-- 👉 Company name -->
-              <VCol cols="12" md="6">
-                <AppTextField label="Company Name" placeholder="nibuk" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="Company Name"
+                  placeholder="nibuk"
+                />
               </VCol>
 
               <!-- 👉 Billing Email -->
-              <VCol cols="12" md="6">
-                <AppTextField label="Billing Email" placeholder="nibuk@email.com" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="Billing Email"
+                  placeholder="nibuk@email.com"
+                />
               </VCol>
 
               <!-- 👉 Tax ID -->
-              <VCol cols="12" md="6">
-                <AppTextField label="Tax ID" placeholder="123 123 1233" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="Tax ID"
+                  placeholder="123 123 1233"
+                />
               </VCol>
 
               <!-- 👉 Vat Number -->
-              <VCol cols="12" md="6">
-                <AppTextField label="VAT Number" placeholder="121212" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="VAT Number"
+                  placeholder="121212"
+                />
               </VCol>
 
               <!-- 👉 Mobile -->
-              <VCol cols="12" md="6">
-                <AppTextField dirty label="Phone Number" type="number" prefix="US (+1)" placeholder="+1 123 456 7890" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  dirty
+                  label="Phone Number"
+                  type="number"
+                  prefix="US (+1)"
+                  placeholder="+1 123 456 7890"
+                />
               </VCol>
 
               <!-- 👉 Country -->
-              <VCol cols="12" md="6">
-                <AppSelect label="Country" :items="countryList" placeholder="Select Country" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  label="Country"
+                  :items="countryList"
+                  placeholder="Select Country"
+                />
               </VCol>
 
               <!-- 👉 Billing Address -->
               <VCol cols="12">
-                <AppTextField label="Billing Address" placeholder="1234 Main St" />
+                <AppTextField
+                  label="Billing Address"
+                  placeholder="1234 Main St"
+                />
               </VCol>
 
               <!-- 👉 State -->
-              <VCol cols="12" md="6">
-                <AppTextField label="State" placeholder="New York" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="State"
+                  placeholder="New York"
+                />
               </VCol>
 
               <!-- 👉 Zip Code -->
-              <VCol cols="12" md="6">
-                <AppTextField label="Zip Code" type="number" placeholder="100006" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  label="Zip Code"
+                  type="number"
+                  placeholder="100006"
+                />
               </VCol>
 
               <!-- 👉 Actions Button -->
-              <VCol cols="12" class="d-flex flex-wrap gap-4">
+              <VCol
+                cols="12"
+                class="d-flex flex-wrap gap-4"
+              >
                 <VBtn type="submit">
                   Save changes
                 </VBtn>
-                <VBtn type="reset" color="secondary" variant="tonal">
+                <VBtn
+                  type="reset"
+                  color="secondary"
+                  variant="tonal"
+                >
                   Discard
                 </VBtn>
               </VCol>

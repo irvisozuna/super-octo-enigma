@@ -1,3 +1,17 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useAppManager } from '@/composables/useAppManager'
+
+const item = ref(null)
+const { closeDialog } = useAppManager()
+
+function close() {
+  closeDialog()
+}
+
+defineExpose({ open })
+</script>
+
 <template>
   <VCard>
     <VCardTitle>Template Details</VCardTitle>
@@ -8,23 +22,12 @@
     </VCardText>
     <VCardActions>
       <VSpacer />
-      <VBtn color="primary" @click="close">Close</VBtn>
+      <VBtn
+        color="primary"
+        @click="close"
+      >
+        Close
+      </VBtn>
     </VCardActions>
   </VCard>
 </template>
-
-<script setup lang="ts">
-import { useAppManager } from '@/composables/useAppManager';
-import { ref } from 'vue';
-
-
-const item = ref(null);
-const { closeDialog } = useAppManager();
-
-
-function close() {
-  closeDialog();
-}
-
-defineExpose({ open });
-</script>

@@ -3,7 +3,6 @@ import debounce from 'lodash/debounce'
 import { useI18n } from 'vue-i18n'
 
 // Componentes internos
-import PaymentmandateFilters from '../components/PaymentmandateFilters.vue'
 import PaymentmandateTable from '../components/PaymentmandateTable.vue'
 import PaymentmandateAdd from './PaymentmandateAdd.vue'
 import PaymentmandateDelete from './PaymentmandateDelete.vue'

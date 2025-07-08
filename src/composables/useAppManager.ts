@@ -1,7 +1,7 @@
-import { useAppStore } from '@/stores/appStore'
-import type { DialogOptions } from '@/types/types'
 import { markRaw } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/appStore'
+import type { DialogOptions } from '@/types/types'
 
 export function useAppManager() {
   const appStore = useAppStore()

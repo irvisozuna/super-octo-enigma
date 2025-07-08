@@ -9,8 +9,8 @@ import { redirects, routes } from './additional-routes'
 import { setupGuards } from './guards'
 
 // Cargar rutas de módulos
-const modules = import.meta.glob('@/modules/**/routes.ts', { eager: true });
-const routesModules = Object.values(modules).flatMap((mod: any) => mod.default);
+const modules = import.meta.glob('@/modules/**/routes.ts', { eager: true })
+const routesModules = Object.values(modules).flatMap((mod: any) => mod.default)
 
 function recursiveLayouts(route: RouteRecordRaw): RouteRecordRaw {
   if (route.children) {
@@ -32,8 +32,9 @@ const router = createRouter({
     return { top: 0 }
   },
   extendRoutes: pages => {
-    const allRoutes = [...pages, ...routes, ...routesModules];
-    return [...redirects, ... allRoutes.map(route => recursiveLayouts(route))];
+    const allRoutes = [...pages, ...routes, ...routesModules]
+
+    return [...redirects, ...allRoutes.map(route => recursiveLayouts(route))]
   },
 })
 

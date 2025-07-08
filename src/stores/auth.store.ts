@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({

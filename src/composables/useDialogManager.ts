@@ -1,13 +1,13 @@
-import { useDialogStore } from '@/stores/dialogStore';
-import { DialogOptions } from '@/types/types';
+import { useDialogStore } from '@/stores/dialogStore'
+import type { DialogOptions } from '@/types/types'
 
 export function useDialogManager() {
-  const dialogStore = useDialogStore();
+  const dialogStore = useDialogStore()
 
   function openDialog(
     component: any,
     props: Record<string, any> = {},
-    options: Partial<DialogOptions> = {}
+    options: Partial<DialogOptions> = {},
   ) {
     dialogStore.openDialog({
       component,
@@ -22,23 +22,23 @@ export function useDialogManager() {
       closeOnEsc: options.closeOnEsc ?? true,
       closeOnBackdropClick: options.closeOnBackdropClick ?? true,
       actions: options.actions || [],
-    });
+    })
   }
 
   function closeDialog() {
-    dialogStore.closeDialog();
+    dialogStore.closeDialog()
   }
 
   function getDialogHistory() {
-    return dialogStore.dialogHistory;
+    return dialogStore.dialogHistory
   }
 
   function onDialogOpened(callback: (options: DialogOptions) => void) {
-    window.addEventListener('dialog-opened', (event: Event) => callback((event as CustomEvent).detail));
+    window.addEventListener('dialog-opened', (event: Event) => callback((event as CustomEvent).detail))
   }
 
   function onDialogClosed(callback: (options: DialogOptions | null) => void) {
-    window.addEventListener('dialog-closed', (event: Event) => callback((event as CustomEvent).detail));
+    window.addEventListener('dialog-closed', (event: Event) => callback((event as CustomEvent).detail))
   }
 
   return {
@@ -47,5 +47,5 @@ export function useDialogManager() {
     getDialogHistory,
     onDialogOpened,
     onDialogClosed,
-  };
+  }
 }

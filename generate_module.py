@@ -2283,20 +2283,23 @@ const selection = computed({{
 
     def _generate_form_component(self, entity_dir: Path, entity_name: str, entity_spec: Dict):
         """Generate form component"""
+        store_name = f'use{entity_name}Store'
+        store_var = f'{self._to_camel_case(entity_name)}Store'
         content = f'''<template>
-  <VForm @submit.prevent="handleSubmit">
+  <VForm @submit.prevent="onSubmit">
+    <DialogCloseBtn @click="close('cancel')" />
     <VCard>
-      <VCardTitle>{{ title }}</VCardTitle>
+      <VCardTitle>{{{{ title }}}}</VCardTitle>
       <VCardText>
         <VRow>
-{self._generate_form_fields(entity_name, entity_spec)}
+{self._generate_form_fields(entity_name, entity_spec, use_model_value=True)}
         </VRow>
       </VCardText>
       <VCardActions>
         <VBtn type="submit" color="primary" :loading="loading">
-          {{ mode === 'create' ? 'Create' : 'Update' }}
+          {{{{ mode === 'create' ? 'Create' : 'Update' }}}}
         </VBtn>
-        <VBtn color="secondary" variant="tonal" @click="$emit('cancel')">
+        <VBtn color="secondary" variant="tonal" @click="close('cancel')">
           Cancel
         </VBtn>
       </VCardActions>
@@ -2308,6 +2311,7 @@ const selection = computed({{
 import {{ useForm }} from 'vee-validate'
 import {{ toTypedSchema }} from '@vee-validate/zod'
 import * as z from 'zod'
+import {{ {store_name} }} from '../../stores/{self._to_camel_case(entity_name)}Store'
 
 interface Props {{
   mode: 'create' | 'edit'
@@ -2319,6 +2323,7 @@ interface Props {{
 interface Emits {{
   (e: 'submit', data: any): void
   (e: 'cancel'): void
+  (e: 'close'): void
 }}
 
 const props = withDefaults(defineProps<Props>(), {{
@@ -2327,20 +2332,36 @@ const props = withDefaults(defineProps<Props>(), {{
 }})
 
 const emit = defineEmits<Emits>()
+const {store_var} = {store_name}()
+const {{ closeDialog }} = useAppManager()
 
 // Form validation schema
 const schema = toTypedSchema(z.object({{
 {self._generate_zod_schema(entity_spec)}
 }}))
 
-const {{ handleSubmit, errors, values }} = useForm({{
+const {{ handleSubmit, errors, values, setFieldValue }} = useForm({{
   validationSchema: schema,
   initialValues: props.initialData || {{}}
 }})
 
-const onSubmit = handleSubmit((values) => {{
-  emit('submit', values)
+const onSubmit = handleSubmit(async (values) => {{
+  try {{
+    if (props.mode === 'create') {{
+      await {store_var}.createItem(values)
+    }} else if (props.mode === 'edit') {{
+      await {store_var}.updateItem(values.id, values)
+    }}
+    close('submit', values)
+  }} catch (error) {{
+    // Opcional: mostrar error
+    console.error(error)
+  }}
 }})
+
+function close(result: 'close' | 'submit' | 'cancel' = 'close') {{
+  closeDialog(result)
+}}
 </script>
 '''
         
@@ -2349,7 +2370,7 @@ const onSubmit = handleSubmit((values) => {{
             content
         )
 
-    def _generate_form_fields(self, entity_name: str, entity_spec: Dict) -> str:
+    def _generate_form_fields(self, entity_name: str, entity_spec: Dict, use_model_value: bool = False) -> str:
         """Generate form fields for entity"""
         fields = []
         properties = entity_spec.get('properties', {})
@@ -2359,10 +2380,18 @@ const onSubmit = handleSubmit((values) => {{
                 display_name = prop_name.replace('_', ' ').title()
                 prop_type = prop_config.get('type', 'string')
                 
+                if use_model_value:
+                    if prop_type in ['integer', 'number']:
+                        model = f':model-value="values.{prop_name}" @update:model-value="val => setFieldValue(\'{prop_name}\', val === \'\' ? undefined : Number(val))"'
+                    else:
+                        model = f':model-value="values.{prop_name}" @update:model-value="val => setFieldValue(\'{prop_name}\', val)"'
+                else:
+                    model = f'v-model="values.{prop_name}"'
+                
                 if prop_type == 'boolean':
                     fields.append(f'''          <VCol cols="12">
             <VCheckbox
-              v-model="values.{prop_name}"
+              {model}
               :label="'{display_name}'"
               :error-messages="errors.{prop_name}"
             />
@@ -2370,7 +2399,7 @@ const onSubmit = handleSubmit((values) => {{
                 elif prop_type in ['datetime', 'date']:
                     fields.append(f'''          <VCol cols="12">
             <VTextField
-              v-model="values.{prop_name}"
+              {model}
               :label="'{display_name}'"
               :error-messages="errors.{prop_name}"
               type="date"
@@ -2380,7 +2409,7 @@ const onSubmit = handleSubmit((values) => {{
                     options = ',\n'.join([f"              {{ title: '{val}', value: '{val}' }}" for val in prop_config['values']])
                     fields.append(f'''          <VCol cols="12">
             <VSelect
-              v-model="values.{prop_name}"
+              {model}
               :label="'{display_name}'"
               :error-messages="errors.{prop_name}"
               :items="[\n{options}\n              ]"
@@ -2389,7 +2418,7 @@ const onSubmit = handleSubmit((values) => {{
                 else:
                     fields.append(f'''          <VCol cols="12">
             <VTextField
-              v-model="values.{prop_name}"
+              {model}
               :label="'{display_name}'"
               :error-messages="errors.{prop_name}"
             />
@@ -2407,19 +2436,26 @@ const onSubmit = handleSubmit((values) => {{
                 
                 if field_type in ['string', 'text']:
                     field = f"  {prop_name}: z.string()"
+                    if required:
+                        field += ".min(1, 'This field is required')"
                 elif field_type in ['integer', 'number']:
                     field = f"  {prop_name}: z.number()"
+                    if required:
+                        field += ".min(1, 'This field is required')"
                 elif field_type == 'boolean':
                     field = f"  {prop_name}: z.boolean()"
+                    # Boolean doesn't need min validation
                 elif field_type in ['datetime', 'date']:
                     field = f"  {prop_name}: z.date()"
+                    if required:
+                        field += ".min(1, 'This field is required')"
                 elif field_type == 'enum' and prop_config.get('values'):
                     field = f"  {prop_name}: z.enum({json.dumps(prop_config['values'])})"
+                    # Enum validation is handled by the enum itself, no need for min
                 else:
                     field = f"  {prop_name}: z.any()"
-                
-                if required:
-                    field += ".min(1, 'This field is required')"
+                    if required:
+                        field += ".min(1, 'This field is required')"
                 
                 fields.append(field)
         

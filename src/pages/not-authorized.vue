@@ -12,11 +12,13 @@ definePage({
     public: true,
   },
 })
+
 const router = useRouter()
 const ability = useAbility()
 
 // TODO: Get type from backend
 const userData = useCookie<any>('userData')
+
 const logout = async () => {
   // Remove "accessToken" from cookie
   useCookie('accessToken').value = null
@@ -36,6 +38,7 @@ const logout = async () => {
   // Reset ability to initial ability
   ability.update([])
 }
+
 const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
 </script>
 
@@ -77,7 +80,6 @@ const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
       {{ $t('logout') }}
     </VBtn>
   </div>
-
 </template>
 
 <style lang="scss">

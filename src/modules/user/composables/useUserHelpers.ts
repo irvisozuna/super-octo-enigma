@@ -1,7 +1,7 @@
 export function useUserHelpers() {
   // Ejemplo de función reutilizable
   function formatUserName(name: string) {
-    return name.trim().toUpperCase();
+    return name.trim().toUpperCase()
   }
 
   function getDefaultUser() {
@@ -10,11 +10,11 @@ export function useUserHelpers() {
       name: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   return {
     formatUserName,
     getDefaultUser,
-  };
+  }
 }

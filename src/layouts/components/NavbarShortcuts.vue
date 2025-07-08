@@ -42,5 +42,8 @@ const shortcuts = [
 
 <template>
   <!-- ACTIVACION POR BACKEND EN SETTINGS -->
-  <Shortcuts :shortcuts="shortcuts" v-if="false" />
+  <Shortcuts
+    v-if="false"
+    :shortcuts="shortcuts"
+  />
 </template>

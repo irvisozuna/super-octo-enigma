@@ -40,8 +40,11 @@ const referAndEarnSteps = [
 </script>
 
 <template>
-  <VDialog :model-value="props.isDialogVisible" :width="$vuetify.display.smAndDown ? 'auto' : 800"
-    @update:model-value="dialogVisibleUpdate">
+  <VDialog
+    :model-value="props.isDialogVisible"
+    :width="$vuetify.display.smAndDown ? 'auto' : 800"
+    @update:model-value="dialogVisibleUpdate"
+  >
     <!-- 👉 Dialog close btn -->
     <DialogCloseBtn @click="$emit('update:isDialogVisible', false)" />
 
@@ -56,9 +59,22 @@ const referAndEarnSteps = [
         </p>
 
         <VRow class="text-center mt-8">
-          <VCol v-for="step in referAndEarnSteps" :key="step.title" cols="12" sm="4">
-            <VAvatar variant="tonal" size="88" color="primary" rounded>
-              <VIcon size="40" :icon="step.icon" />
+          <VCol
+            v-for="step in referAndEarnSteps"
+            :key="step.title"
+            cols="12"
+            sm="4"
+          >
+            <VAvatar
+              variant="tonal"
+              size="88"
+              color="primary"
+              rounded
+            >
+              <VIcon
+                size="40"
+                :icon="step.icon"
+              />
             </VAvatar>
 
             <h5 class="text-h5 mt-4 mb-2">
@@ -74,11 +90,19 @@ const referAndEarnSteps = [
           Invite your friends
         </h5>
 
-        <VForm class="d-flex align-center flex-wrap gap-4" @submit.prevent="() => { }">
-          <AppTextField placeholder="johnDoe@gmail.com"
-            label="Enter your friend's email address and invite them to join nibuk 😍" />
+        <VForm
+          class="d-flex align-center flex-wrap gap-4"
+          @submit.prevent="() => { }"
+        >
+          <AppTextField
+            placeholder="johnDoe@gmail.com"
+            label="Enter your friend's email address and invite them to join nibuk 😍"
+          />
 
-          <VBtn class="align-self-end" type="submit">
+          <VBtn
+            class="align-self-end"
+            type="submit"
+          >
             Send
           </VBtn>
         </VForm>
@@ -87,9 +111,15 @@ const referAndEarnSteps = [
           Share the referral link
         </h5>
 
-        <VForm class="d-flex align-center flex-wrap gap-4" @submit.prevent="() => { }">
-          <AppTextField placeholder="http://nibuk.link"
-            label="You can also copy and send it or share it on your social media. 🚀" class="refer-link-input">
+        <VForm
+          class="d-flex align-center flex-wrap gap-4"
+          @submit.prevent="() => { }"
+        >
+          <AppTextField
+            placeholder="http://nibuk.link"
+            label="You can also copy and send it or share it on your social media. 🚀"
+            class="refer-link-input"
+          >
             <template #append-inner>
               <VBtn variant="text">
                 Copy link
@@ -98,16 +128,43 @@ const referAndEarnSteps = [
           </AppTextField>
 
           <div class="d-flex align-self-end gap-1">
-            <VBtn icon class="rounded" color="#3B5998" size="38">
-              <VIcon color="white" icon="tabler-brand-facebook" size="22" />
+            <VBtn
+              icon
+              class="rounded"
+              color="#3B5998"
+              size="38"
+            >
+              <VIcon
+                color="white"
+                icon="tabler-brand-facebook"
+                size="22"
+              />
             </VBtn>
 
-            <VBtn icon class="rounded" color="#55ACEE" size="38">
-              <VIcon color="white" icon="tabler-brand-twitter" size="22" />
+            <VBtn
+              icon
+              class="rounded"
+              color="#55ACEE"
+              size="38"
+            >
+              <VIcon
+                color="white"
+                icon="tabler-brand-twitter"
+                size="22"
+              />
             </VBtn>
 
-            <VBtn icon class="rounded" color="#007BB6" size="38">
-              <VIcon color="white" icon="tabler-brand-linkedin" size="22" />
+            <VBtn
+              icon
+              class="rounded"
+              color="#007BB6"
+              size="38"
+            >
+              <VIcon
+                color="white"
+                icon="tabler-brand-linkedin"
+                size="22"
+              />
             </VBtn>
           </div>
         </VForm>

@@ -1,0 +1,57 @@
+{
+  "name": "@modules/dynamic-reports",
+  "version": "1.0.0",
+  "description": "DynamicReports Module - Auto-installable DDD Module",
+  "main": "installer.ts",
+  "type": "module",
+  "keywords": [
+    "vue",
+    "typescript",
+    "ddd",
+    "module",
+    "auto-install",
+    "plug-and-play"
+  ],
+  "author": "DDD Module Generator",
+  "license": "MIT",
+  "dependencies": {
+    "vue": "^3.0.0",
+    "pinia": "^2.0.0",
+    "vue-router": "^4.0.0",
+    "vuetify": "^3.0.0",
+    "vee-validate": "^4.0.0",
+    "@vee-validate/zod": "^1.0.0",
+    "zod": "^3.0.0",
+    "yup": "^1.0.0",
+    "axios": "^1.0.0",
+    "uuid": "^9.0.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0",
+    "pinia": "^2.0.0",
+    "vue-router": "^4.0.0",
+    "vuetify": "^3.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./installer.ts",
+      "types": "./installer.ts"
+    },
+    "./routes": {
+      "import": "./config/routes.ts",
+      "types": "./config/routes.ts"
+    },
+    "./menu": {
+      "import": "./config/menu.ts",
+      "types": "./config/menu.ts"
+    },
+    "./stores/*": {
+      "import": "./*/presentation/stores/*.ts",
+      "types": "./*/presentation/stores/*.ts"
+    },
+    "./components/*": {
+      "import": "./*/presentation/components/organisms/*.vue",
+      "types": "./*/presentation/components/organisms/*.vue"
+    }
+  }
+}

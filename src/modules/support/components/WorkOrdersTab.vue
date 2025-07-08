@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseTable from '@/components/BaseTable.vue'
 import { useAppManager } from '@/composables/useAppManager'
 import { useContractStore } from '@/modules/support/stores/contractStore'
-import { onMounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 // Props para personalizar el título y descripción
 const props = defineProps({

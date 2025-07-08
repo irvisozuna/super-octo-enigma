@@ -1,0 +1,34 @@
+{
+  "connection": {
+    "title": "Connections",
+    "description": "Description",
+    "add_{entity_key}": "Add Connection",
+    "search_connection": "Search Connection",
+    "name": "Name",
+    "status": "Status"
+  },
+  "data-source": {
+    "title": "DataSources",
+    "description": "Description",
+    "add_{entity_key}": "Add DataSource",
+    "search_data-source": "Search DataSource",
+    "name": "Name",
+    "status": "Status"
+  },
+  "report": {
+    "title": "Reports",
+    "description": "Description",
+    "add_{entity_key}": "Add Report",
+    "search_report": "Search Report",
+    "name": "Name",
+    "status": "Status"
+  },
+  "execution": {
+    "title": "Executions",
+    "description": "Description",
+    "add_{entity_key}": "Add Execution",
+    "search_execution": "Search Execution",
+    "name": "Name",
+    "status": "Status"
+  }
+}

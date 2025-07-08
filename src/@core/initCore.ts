@@ -1,10 +1,9 @@
+import { useStorage } from '@vueuse/core'
+import { useTheme } from 'vuetify'
 import { initializeMenus } from '@/navigation'
 import { useConfigStore } from '@core/stores/config'
 import { cookieRef, namespaceConfig } from '@layouts/stores/config'
 import { themeConfig } from '@themeConfig'
-import { useStorage } from '@vueuse/core'
-import { useTheme } from 'vuetify'
-
 
 const _syncAppRtl = () => {
   const configStore = useConfigStore()

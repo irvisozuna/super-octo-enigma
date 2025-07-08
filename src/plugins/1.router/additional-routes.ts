@@ -1,6 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router/auto'
 
-
 // 👉 Redirects
 export const redirects: RouteRecordRaw[] = [
   // ℹ️ We are redirecting to different pages based on role.
@@ -17,16 +16,15 @@ export const redirects: RouteRecordRaw[] = [
         return { name: 'dashboards-crm' }
       if (userRole === 'user')
         return { name: 'supportsList' }
+
       // if (userRole !== 'client')
       //   return { name: 'dashboards-default' }
 
       return { name: 'login', query: to.query }
     },
-  }
+  },
 ]
 
 export const routes: RouteRecordRaw[] = [
-
-
 
 ]

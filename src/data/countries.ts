@@ -1,1 +1,1 @@
-export default ['USA', 'Canada', 'México'];
+export default ['USA', 'Canada', 'México']

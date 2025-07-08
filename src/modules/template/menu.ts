@@ -7,7 +7,7 @@ const templateMenu: VerticalNavItems = [
     to: 'templatesList',
     action: 'read',
     subject: 'Templates',
-  }
+  },
 ]
 
 export default templateMenu

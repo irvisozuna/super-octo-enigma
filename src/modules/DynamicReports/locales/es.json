@@ -1,0 +1,34 @@
+{
+  "connection": {
+    "title": "Connections",
+    "description": "Descripción",
+    "add_{entity_key}": "Agregar Connection",
+    "search_connection": "Buscar Connection",
+    "name": "Nombre",
+    "status": "Estado"
+  },
+  "data-source": {
+    "title": "DataSources",
+    "description": "Descripción",
+    "add_{entity_key}": "Agregar DataSource",
+    "search_data-source": "Buscar DataSource",
+    "name": "Nombre",
+    "status": "Estado"
+  },
+  "report": {
+    "title": "Reports",
+    "description": "Descripción",
+    "add_{entity_key}": "Agregar Report",
+    "search_report": "Buscar Report",
+    "name": "Nombre",
+    "status": "Estado"
+  },
+  "execution": {
+    "title": "Executions",
+    "description": "Descripción",
+    "add_{entity_key}": "Agregar Execution",
+    "search_execution": "Buscar Execution",
+    "name": "Nombre",
+    "status": "Estado"
+  }
+}

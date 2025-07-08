@@ -1,7 +1,7 @@
-import { ENDPOINTS } from '@/services/endpoints'
-import { createCrudStore } from '@/stores/crudFactory'
 import dbConfig from '../indexedDbConfig'
 import type { Support } from '../types/support'
+import { ENDPOINTS } from '@/services/endpoints'
+import { createCrudStore } from '@/stores/crudFactory'
 
 export const useSupportStore = createCrudStore<Support>({
   id: dbConfig.tableName,

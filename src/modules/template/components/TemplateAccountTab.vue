@@ -1,3 +1,17 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const props = defineProps<Props>()
+
+const { t } = useI18n()
+
+interface Props {
+  itemData: {
+    email: string
+  }
+}
+</script>
+
 <template>
   <VCard>
     <VCardText>
@@ -12,17 +26,3 @@
     </VCardText>
   </VCard>
 </template>
-
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
-
-interface Props {
-  itemData: {
-    email: string;
-  };
-}
-
-const props = defineProps<Props>();
-</script>

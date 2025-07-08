@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import CompanyInfo from './components/CompanyInfo.vue'
+import UserInfo from './components/UserInfo.vue'
+import type { User } from '@/types/types'
+import { useOnboarding } from '@/composables/useOnboarding'
+
+const userData: User = useCookie('userData').value as unknown as User
+
+const { t } = useI18n()
+const { onboardingStore, handleCompleteUserInfo, handleCompleteCompanyInfo, currentStep, nextStep, previousStep, isStepDisabled, submitCompanyInfo, isLoading, error } = useOnboarding()
+
+onboardingStore.propertyListingData.userInfo.firstName = userData.firstName
+onboardingStore.propertyListingData.userInfo.lastName = userData.lastName
+
+const dialog = ref(false)
+
+watch([isLoading, error], () => {
+  if (isLoading.value || error.value)
+    dialog.value = true
+})
+
+definePage({
+  meta: {
+    layout: 'blank',
+  },
+})
+
+const propertyListingSteps = [
+  {
+    title: t('userInfo'),
+    icon: 'tabler-users',
+  },
+  {
+    title: t('companyInfo'),
+    icon: 'tabler-home',
+  },
+]
+</script>
+
 <template>
   <div class="wizard-container">
     <VCard class="wizard-card">
@@ -14,7 +55,7 @@
               direction="vertical"
               icon-size="22"
               class="stepper-icon-step-bg"
-              :isStepDisabled="isStepDisabled" 
+              :is-step-disabled="isStepDisabled"
             />
           </VCardText>
         </VCol>
@@ -29,10 +70,16 @@
               class="disable-tab-transition"
             >
               <VWindowItem>
-                <UserInfo v-model:form-data="onboardingStore.propertyListingData.userInfo"  @complete="handleCompleteUserInfo" />
+                <UserInfo
+                  v-model:form-data="onboardingStore.propertyListingData.userInfo"
+                  @complete="handleCompleteUserInfo"
+                />
               </VWindowItem>
               <VWindowItem>
-                <CompanyInfo v-model:form-data="onboardingStore.propertyListingData.companyInfo" @complete="handleCompleteCompanyInfo"/>
+                <CompanyInfo
+                  v-model:form-data="onboardingStore.propertyListingData.companyInfo"
+                  @complete="handleCompleteCompanyInfo"
+                />
               </VWindowItem>
             </VWindow>
 
@@ -62,8 +109,8 @@
 
               <VBtn
                 v-else
-                @click="nextStep"
                 :disabled="!onboardingStore.isUserInfoComplete"
+                @click="nextStep"
               >
                 {{ $t('next') }}
                 <VIcon
@@ -74,72 +121,33 @@
               </VBtn>
             </div>
 
-            <!-- <VDialog v-model="dialog" max-width="400">
+            <!--
+              <VDialog v-model="dialog" max-width="400">
               <VCard>
-                <VCardTitle>
-                  <span v-if="isLoading">{{ $t('Loading...') }}</span>
-                  <span v-else>{{ $t('Error') }}</span>
-                </VCardTitle>
-                <VCardText>
-                  <div v-if="isLoading">
-                    <VSkeletonLoader type="list-item-two-line" />
-                  </div>
-                  <div v-else>
-                    <p>{{ error }}</p>
-                  </div>
-                </VCardText>
-                <VCardActions v-if="!isLoading">
-                  <VBtn color="primary" text @click="dialog = false">{{ $t('OK') }}</VBtn>
-                </VCardActions>
+              <VCardTitle>
+              <span v-if="isLoading">{{ $t('Loading...') }}</span>
+              <span v-else>{{ $t('Error') }}</span>
+              </VCardTitle>
+              <VCardText>
+              <div v-if="isLoading">
+              <VSkeletonLoader type="list-item-two-line" />
+              </div>
+              <div v-else>
+              <p>{{ error }}</p>
+              </div>
+              </VCardText>
+              <VCardActions v-if="!isLoading">
+              <VBtn color="primary" text @click="dialog = false">{{ $t('OK') }}</VBtn>
+              </VCardActions>
               </VCard>
-            </VDialog> -->
-
+              </VDialog>
+            -->
           </VCardText>
         </VCol>
       </VRow>
     </VCard>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useOnboarding } from '@/composables/useOnboarding';
-import { User } from '@/types/types';
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import CompanyInfo from './components/CompanyInfo.vue';
-import UserInfo from './components/UserInfo.vue';
-const userData: User = useCookie('userData').value as unknown as User;
-
-const { t } = useI18n();
-const { onboardingStore, handleCompleteUserInfo, handleCompleteCompanyInfo, currentStep , nextStep, previousStep, isStepDisabled, submitCompanyInfo, isLoading, error } = useOnboarding();
-
-onboardingStore.propertyListingData.userInfo.firstName = userData.firstName;
-onboardingStore.propertyListingData.userInfo.lastName = userData.lastName;
-const dialog = ref(false);
-
-  watch([isLoading, error], () => {
-    if (isLoading.value || error.value) {
-      dialog.value = true;
-    }
-  });
-
-  definePage({
-    meta: {
-      layout: 'blank',
-    },
-  });
-
-  const propertyListingSteps = [
-    {
-      title: t('userInfo'),
-      icon: 'tabler-users',
-    },
-    {
-      title: t('companyInfo'),
-      icon: 'tabler-home',
-    },
-  ];
-</script>
 
 <style scoped>
   .wizard-container {

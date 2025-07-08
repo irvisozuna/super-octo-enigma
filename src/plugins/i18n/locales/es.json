@@ -633,5 +633,9 @@
   "other_payment_methods": "Otros Métodos de Pago",
   "credit_applied": "Crédito Aplicado",
   "credit_used": "Crédito Utilizado",
-  "applied": "Aplicado"
+  "applied": "Aplicado",
+  "logic": {
+    "and": "Y",
+    "or": "O"
+  }
 }
