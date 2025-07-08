@@ -1,4 +1,18 @@
 {
+  "common": {
+    "prev": "Previous",
+    "next": "Next",
+    "create": "Create",
+    "update": "Update",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "validation": {
+    "required": "The field {field} is required",
+    "min_fields": "You must select at least {count} field",
+    "errors_found": "Found {count} validation errors"
+  },
   "connection": {
     "title": "Connections",
     "description": "Description",
@@ -21,7 +35,278 @@
     "add_{entity_key}": "Add Report",
     "search_report": "Search Report",
     "name": "Name",
-    "status": "Status"
+    "status": "Status",
+    "create": {
+      "title": "Create Report",
+      "description": "Configure a new report step by step"
+    },
+    "wizard": {
+      "create_title": "Create Report",
+      "description": "Configure your report step by step",
+      "last_saved": "Last saved",
+      "step1": {
+        "title": "Basic Information",
+        "description": "Configure basic report data"
+      },
+      "step2": {
+        "title": "Fields",
+        "description": "Select report fields"
+      },
+      "step3": {
+        "title": "Filters",
+        "description": "Configure report filters"
+      },
+      "step4": {
+        "title": "Sorting",
+        "description": "Configure data ordering"
+      },
+      "step5": {
+        "title": "Export",
+        "description": "Configure export options"
+      },
+      "step6": {
+        "title": "Advanced Configuration",
+        "description": "Customize format and style"
+      },
+      "step7": {
+        "title": "Summary",
+        "description": "Review and confirm configuration"
+      }
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "dataSource": "Data Source",
+      "isActive": "Active",
+      "isPublic": "Public",
+      "field": "Field",
+      "alias": "Alias",
+      "format": "Format",
+      "width": "Width",
+      "aggregation": "Aggregation",
+      "sortable": "Sortable",
+      "filterable": "Filterable",
+      "type": "Type",
+      "operator": "Operator",
+      "placeholder": "Placeholder",
+      "required": "Required",
+      "options": "Options",
+      "filters": "Filters",
+      "selected_fields": "Selected Fields"
+    },
+    "placeholders": {
+      "name": "Enter report name",
+      "description": "Describe the report",
+      "dataSource": "Select a data source",
+      "select_field": "Select a field",
+      "field_alias": "Field alias",
+      "filter_placeholder": "Filter placeholder",
+      "options_format": "Format: value:label",
+      "options_example": "active:Active\ninactive:Inactive",
+      "no_aggregation": "No aggregation"
+    },
+    "field_formats": {
+      "text": "Text",
+      "number": "Number",
+      "currency": "Currency",
+      "date": "Date",
+      "datetime": "Date & Time"
+    },
+    "aggregations": {
+      "sum": "Sum",
+      "count": "Count",
+      "avg": "Average",
+      "min": "Minimum",
+      "max": "Maximum"
+    },
+    "filter_types": {
+      "text": "Text",
+      "number": "Number",
+      "date": "Date",
+      "select": "Select",
+      "range": "Range"
+    },
+    "operators": {
+      "equals": "Equals",
+      "contains": "Contains",
+      "starts_with": "Starts with",
+      "ends_with": "Ends with",
+      "greater_than": "Greater than",
+      "less_than": "Less than",
+      "between": "Between",
+      "in": "In"
+    },
+    "actions": {
+      "add_field": "Add Field",
+      "add_filter": "Add Filter"
+    },
+    "messages": {
+      "no_fields_selected": "No fields selected",
+      "no_filters_configured": "No filters configured",
+      "no_description": "No description"
+    },
+    "summary": {
+      "basic_info": "Basic Information",
+      "fields": "Fields",
+      "filters": "Filters",
+      "sorting": "Sorting",
+      "export_options": "Export Options",
+      "advanced_config": "Advanced Configuration",
+      "total_fields": "Total Fields",
+      "total_filters": "Total Filters",
+      "required_filters": "Required Filters",
+      "export_formats": "Export Formats"
+    },
+    "error": {
+      "load": "Error loading report",
+      "save": "Error saving report",
+      "load_fields": "Error loading fields"
+    },
+    "sorting": {
+      "title": "Sorting",
+      "description": "Configure how data will be ordered",
+      "primary_sort": "Primary Sort",
+      "secondary_sort": "Secondary Sort",
+      "tertiary_sort": "Tertiary Sort",
+      "field": "Field",
+      "direction": "Direction",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "required": "Required",
+      "optional": "Optional",
+      "select_secondary": "Select secondary field",
+      "select_tertiary": "Select tertiary field",
+      "nulls_handling": "Null values handling",
+      "nulls_first": "Nulls first",
+      "nulls_last": "Nulls last",
+      "nulls_ignore": "Ignore nulls",
+      "case_sensitive": "Case sensitive",
+      "advanced_settings": "Advanced Settings",
+      "primary_field": "Primary field"
+    },
+    "export": {
+      "title": "Export Options",
+      "description": "Configure how reports will be exported",
+      "enabled_formats": "Enabled Formats",
+      "excel": {
+        "title": "Excel",
+        "description": "Excel file (.xlsx)",
+        "include_charts": "Include charts",
+        "auto_filter": "Auto filter"
+      },
+      "pdf": {
+        "title": "PDF",
+        "description": "PDF document",
+        "orientation": "Orientation",
+        "portrait": "Portrait",
+        "landscape": "Landscape",
+        "page_size": "Page size",
+        "margins": "Margins"
+      },
+      "csv": {
+        "title": "CSV",
+        "description": "CSV file",
+        "delimiter": "Delimiter",
+        "encoding": "Encoding"
+      },
+      "include_headers": "Include headers",
+      "include_totals": "Include totals",
+      "general_settings": "General Settings",
+      "filename_template": "Filename template",
+      "filename_template_placeholder": "report_{date}_{time}",
+      "compression_level": "Compression level",
+      "compression": {
+        "none": "No compression",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "no_formats_enabled": "No formats enabled"
+    },
+    "advanced": {
+      "column_formatting": "Column Formatting",
+      "footer_settings": "Footer Settings",
+      "display_settings": "Display Settings",
+      "grouping_settings": "Grouping Settings",
+      "styling_settings": "Styling Settings"
+    },
+    "format": {
+      "title": "Format",
+      "text": "Text",
+      "number": "Number",
+      "currency": "Currency",
+      "date": "Date",
+      "datetime": "Date & Time",
+      "percentage": "Percentage",
+      "boolean": "Boolean",
+      "decimal_places": "Decimal places",
+      "currency_symbol": "Currency symbol",
+      "date_format": "Date format"
+    },
+    "alignment": {
+      "title": "Alignment",
+      "left": "Left",
+      "center": "Center",
+      "right": "Right"
+    },
+    "style": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline"
+    },
+    "color": {
+      "text": "Text color",
+      "background": "Background color",
+      "default": "Default",
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "footer": {
+      "enabled": "Enable footer",
+      "show_totals": "Show totals",
+      "show_subtotals": "Show subtotals",
+      "show_count": "Show count",
+      "show_average": "Show average",
+      "show_min": "Show minimum",
+      "show_max": "Show maximum",
+      "custom_text": "Custom text",
+      "custom_text_placeholder": "Custom footer text"
+    },
+    "display": {
+      "show_grid_lines": "Show grid lines",
+      "show_alternate_rows": "Show alternate rows",
+      "header_style": "Header style",
+      "row_height": "Row height"
+    },
+    "header_style": {
+      "default": "Default",
+      "bold": "Bold",
+      "colored": "Colored"
+    },
+    "grouping": {
+      "enabled": "Enable grouping",
+      "show_headers": "Show group headers",
+      "show_footers": "Show group footers"
+    },
+    "styling": {
+      "theme": "Theme",
+      "font_family": "Font family",
+      "font_size": "Font size"
+    },
+    "theme": {
+      "default": "Default",
+      "dark": "Dark",
+      "light": "Light",
+      "custom": "Custom"
+    },
+    "width": "Width"
+  },
+  "common": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "execution": {
     "title": "Executions",

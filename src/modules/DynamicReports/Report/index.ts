@@ -37,6 +37,34 @@ export { default as ReportTable } from './presentation/components/organisms/Repo
 export { default as ReportForm } from './presentation/components/organisms/ReportForm.vue'
 export { default as ReportDetail } from './presentation/components/organisms/ReportDetail.vue'
 
+// New Components
+export { default as ReportWizard } from './presentation/components/organisms/ReportWizard.vue'
+export { default as ReportFieldSelector } from './presentation/components/molecules/ReportFieldSelector.vue'
+export { default as ReportFilters } from './presentation/components/molecules/ReportFilters.vue'
+export { default as ReportSortConfig } from './presentation/components/molecules/ReportSortConfig.vue'
+export { default as ReportExportOptions } from './presentation/components/molecules/ReportExportOptions.vue'
+export { default as ReportPermissions } from './presentation/components/molecules/ReportPermissions.vue'
+
+// Composables
 export { useReportStore } from './presentation/stores/reportStore'
 export { useReport } from './presentation/composables/useReport'
+export { useReportWizard } from './presentation/composables/useReportWizard'
+export { useReportFilters } from './presentation/composables/useReportFilters'
+export { useReportExecution } from './presentation/composables/useReportExecution'
+export { useReportValidation } from './presentation/composables/useReportValidation'
+
+// Validators
 export { reportCreateValidation, reportUpdateValidation } from './presentation/validators/ReportValidators'
+
+// Types
+export type {
+  WizardStep,
+  ReportWizardData,
+  FilterConfig,
+  AppliedFilter,
+  ExecutionResult,
+  ExportConfig,
+  ExecutionParams,
+  ValidationError,
+  ValidationRule,
+} from './presentation/composables/useReportWizard'

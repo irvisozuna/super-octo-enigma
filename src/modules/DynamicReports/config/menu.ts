@@ -4,33 +4,43 @@ import type { VerticalNavItems } from '@layouts/types'
 
 const DynamicReportsMenu: VerticalNavItems = [
   {
-    title: 'Connections',
-    icon: { icon: 'tabler-connection' },
-    to: 'connectionsList',
-    action: 'read',
-    subject: 'connections',
-  },
-  {
-    title: 'DataSources',
-    icon: { icon: 'tabler-data-source' },
-    to: 'data-sourcesList',
-    action: 'read',
-    subject: 'data-sources',
-  },
-  {
     title: 'Reports',
     icon: { icon: 'tabler-report' },
-    to: 'reportsList',
-    action: 'read',
+    to: 'reportsCreate',
+    action: 'create',
     subject: 'reports',
+    children: [
+      {
+        title: 'Connections',
+        icon: { icon: 'tabler-connection' },
+        to: 'connectionsList',
+        action: 'read',
+        subject: 'connections',
+      },
+      {
+        title: 'DataSources',
+        icon: { icon: 'tabler-data-source' },
+        to: 'data-sourcesList',
+        action: 'read',
+        subject: 'data-sources',
+      },
+      {
+        title: 'Reports',
+        icon: { icon: 'tabler-report' },
+        to: 'reportsList',
+        action: 'read',
+        subject: 'reports',
+      },
+      {
+        title: 'Executions',
+        icon: { icon: 'tabler-execution' },
+        to: 'executionsList',
+        action: 'read',
+        subject: 'executions',
+      },
+    ],
   },
-  {
-    title: 'Executions',
-    icon: { icon: 'tabler-execution' },
-    to: 'executionsList',
-    action: 'read',
-    subject: 'executions',
-  },
+
 ]
 
 export default DynamicReportsMenu

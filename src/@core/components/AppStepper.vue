@@ -10,7 +10,7 @@ type Direction = 'vertical' | 'horizontal'
 
 interface Props {
   items: Item[]
-  currentStep?: number
+  currentStep?: string | number
   direction?: Direction
   iconSize?: string | number
   isActiveStepValid?: boolean
@@ -18,7 +18,7 @@ interface Props {
 }
 
 interface Emit {
-  (e: 'update:currentStep', value: number): void
+  (e: 'update:currentStep', value: string | number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,14 +31,25 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
-const currentStep = ref(props.currentStep || 0)
+const currentStep = ref(props.currentStep ?? 0)
 
 // check if step is completed or active and return class name accordingly
-const activeOrCompletedStepsClasses = computed(() => (index: number) => (
-  index < currentStep.value
+const activeOrCompletedStepsClasses = computed(() => (index: number) => {
+  // If using string ids, compare with index mapping
+  if (typeof currentStep.value === 'string') {
+    const stepIndex = props.items.findIndex((_, i) =>
+      props.items[i].title === props.items.find(item => item.title === props.items[index].title)?.title,
+    )
+
+    return index < stepIndex
+      ? 'stepper-steps-completed'
+      : index === stepIndex ? 'stepper-steps-active' : ''
+  }
+
+  return index < (currentStep.value as number)
     ? 'stepper-steps-completed'
     : index === currentStep.value ? 'stepper-steps-active' : ''
-))
+})
 
 // check if step is horizontal and not last step
 const isHorizontalAndNotLastStep = computed(() => (index: number) => (
@@ -53,14 +64,15 @@ const isValidationEnabled = computed(() => {
 
 watchEffect(() => {
   // we need to check undefined because if we pass 0 as currentStep it will be falsy
-  if (
-    props.currentStep !== undefined
-    && props.currentStep < props.items.length
-    && props.currentStep >= 0
-  )
-    currentStep.value = props.currentStep
+  if (props.currentStep !== undefined) {
+    const newValue = props.currentStep
 
-  emit('update:currentStep', currentStep.value)
+    // Only emit if the value actually changed to prevent infinite loops
+    if (currentStep.value !== newValue) {
+      currentStep.value = newValue
+      emit('update:currentStep', currentStep.value)
+    }
+  }
 })
 </script>
 

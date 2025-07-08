@@ -19,9 +19,9 @@ const reportStore = useReportStore()
 
 // Headers para la tabla
 const headers = [
-  { title: t('report.name'), key: 'name' },
-  { title: t('report.description'), key: 'description' },
-  { title: t('report.status'), key: 'status' },
+  { title: t('DynamicReports.report.name'), key: 'name' },
+  { title: t('DynamicReports.report.description'), key: 'description' },
+  { title: t('DynamicReports.report.status'), key: 'status' },
   { title: t('actions'), key: 'actions', sortable: false },
 ]
 
@@ -66,10 +66,7 @@ function deleteSelected() {
 }
 
 function openAddDialog() {
-  openDialog(ReportAdd, { title: t('add Report') }, { width: '900px', persistent: true }).then(result => {
-    if (result === 'submit')
-      reportStore.fetchList()
-  })
+  navigateTo('/reports/create')
 }
 
 function openEditDialog(item: any) {
@@ -138,7 +135,7 @@ onMounted(() => {
           color="primary"
           @click="openAddDialog"
         >
-          { ('report.add report') }
+          { ('DynamicReports.report.add report') }
         </VBtn>
 
         <!-- Botones para acciones con seleccionados -->

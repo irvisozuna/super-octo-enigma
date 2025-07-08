@@ -36,4 +36,8 @@ export class DataSourceApiService {
       body: payload,
     })
   }
+
+  async getFields(id: string) {
+    return await rawApi(`${this.baseUrl}/${id}/fields`, { method: 'GET' })
+  }
 }

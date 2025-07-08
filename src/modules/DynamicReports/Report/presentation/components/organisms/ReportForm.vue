@@ -3,6 +3,7 @@
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
+import { useAppManager } from '@/composables/useAppManager'
 import { useReportStore } from '../../stores/reportStore'
 
 interface Props {
@@ -29,13 +30,13 @@ const { closeDialog } = useAppManager()
 
 // Form validation schema
 const schema = toTypedSchema(z.object({
-  data_source_id: z.any().min(1, 'This field is required'),
+  data_source_id: z.string().min(1, 'This field is required'),
   name: z.string().min(1, 'This field is required'),
-  description: z.string(),
-  selected_fields: z.any().min(1, 'This field is required'),
-  export_formats: z.any().min(1, 'This field is required'),
-  default_filters: z.any(),
-  is_public: z.boolean(),
+  description: z.string().optional(),
+  selected_fields: z.array(z.any()).min(1, 'At least one field is required'),
+  export_formats: z.array(z.any()).min(1, 'At least one export format is required'),
+  default_filters: z.record(z.any()).optional(),
+  is_public: z.boolean().optional(),
 }))
 
 const { handleSubmit, errors, values, setFieldValue } = useForm({
@@ -50,22 +51,18 @@ const onSubmit = handleSubmit(async values => {
     else if (props.mode === 'edit')
       await reportStore.updateItem(values.id, values)
 
-    close('submit', values)
+    closeDialog('submit', values)
   }
   catch (error) {
     // Opcional: mostrar error
     console.error(error)
   }
 })
-
-function close(result: 'close' | 'submit' | 'cancel' = 'close') {
-  closeDialog(result)
-}
 </script>
 
 <template>
-  <VForm @submit.prevent="handleSubmit">
-    <DialogCloseBtn @click="close('cancel')" />
+  <VForm @submit.prevent="onSubmit">
+    <DialogCloseBtn @click="closeDialog('cancel')" />
     <VCard>
       <VCardTitle>{{ title }}</VCardTitle>
       <VCardText>
@@ -139,7 +136,7 @@ function close(result: 'close' | 'submit' | 'cancel' = 'close') {
         <VBtn
           color="secondary"
           variant="tonal"
-          @click="close('cancel')"
+          @click="closeDialog('cancel')"
         >
           Cancel
         </VBtn>

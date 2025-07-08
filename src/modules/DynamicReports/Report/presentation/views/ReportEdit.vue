@@ -3,7 +3,7 @@
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useReportStore } from '../stores/reportStore'
-import ReportForm from '../components/organisms/ReportForm.vue'
+import ReportWizard from '../components/organisms/ReportWizard.vue'
 
 const route = useRoute()
 const store = useReportStore()
@@ -15,8 +15,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ReportForm
-    mode="edit"
+  <ReportWizard
+    :report-id="route.params.id"
     :initial-data="currentItem"
   />
 </template>

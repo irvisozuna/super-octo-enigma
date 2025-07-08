@@ -58,6 +58,15 @@ const DynamicReportsRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reports/create',
+    name: 'reportsCreate',
+    component: () => import('@/modules/DynamicReports/Report/presentation/views/ReportCreateView.vue'),
+    meta: {
+      action: 'create',
+      subject: 'reports',
+    },
+  },
+  {
     path: '/reports/:id',
     name: 'reportsView',
     component: () => import('@/modules/DynamicReports/Report/presentation/views/ReportView.vue'),

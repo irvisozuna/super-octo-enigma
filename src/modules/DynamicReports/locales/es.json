@@ -1,4 +1,18 @@
 {
+  "common": {
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "create": "Crear",
+    "update": "Actualizar",
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "validation": {
+    "required": "El campo {field} es requerido",
+    "min_fields": "Debe seleccionar al menos {count} campo",
+    "errors_found": "Se encontraron {count} errores de validación"
+  },
   "connection": {
     "title": "Connections",
     "description": "Descripción",
@@ -21,7 +35,283 @@
     "add_{entity_key}": "Agregar Report",
     "search_report": "Buscar Report",
     "name": "Nombre",
-    "status": "Estado"
+    "status": "Estado",
+    "create": {
+      "title": "Crear Reporte",
+      "description": "Configura un nuevo reporte paso a paso"
+    },
+    "wizard": {
+      "create_title": "Crear Reporte",
+      "description": "Configura tu reporte paso a paso",
+      "last_saved": "Último guardado",
+      "step1": {
+        "title": "Información Básica",
+        "description": "Configura los datos básicos del reporte"
+      },
+      "step2": {
+        "title": "Campos",
+        "description": "Selecciona los campos del reporte"
+      },
+      "step3": {
+        "title": "Filtros",
+        "description": "Configura los filtros del reporte"
+      },
+      "step4": {
+        "title": "Ordenamiento",
+        "description": "Configura el orden de los datos"
+      },
+      "step5": {
+        "title": "Exportación",
+        "description": "Configura las opciones de exportación"
+      },
+      "step6": {
+        "title": "Configuración Avanzada",
+        "description": "Personaliza el formato y estilo"
+      },
+      "step7": {
+        "title": "Resumen",
+        "description": "Revisa y confirma la configuración"
+      }
+    },
+    "fields": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "dataSource": "Origen de Datos",
+      "isActive": "Activo",
+      "isPublic": "Público",
+      "field": "Campo",
+      "alias": "Alias",
+      "format": "Formato",
+      "width": "Ancho",
+      "aggregation": "Agregación",
+      "sortable": "Ordenable",
+      "filterable": "Filtrable",
+      "type": "Tipo",
+      "operator": "Operador",
+      "placeholder": "Placeholder",
+      "required": "Requerido",
+      "options": "Opciones",
+      "filters": "Filtros",
+      "selected_fields": "Campos Seleccionados",
+      "available_fields": "Campos disponibles",
+      "field_config": "Configuración del campo"
+    },
+    "placeholders": {
+      "name": "Ingresa el nombre del reporte",
+      "description": "Describe el reporte",
+      "dataSource": "Selecciona un origen de datos",
+      "select_field": "Selecciona un campo",
+      "field_alias": "Alias del campo",
+      "filter_placeholder": "Placeholder del filtro",
+      "options_format": "Formato: valor:etiqueta",
+      "options_example": "activo:Activo\ninactivo:Inactivo",
+      "no_aggregation": "Sin agregación",
+      "search_field": "Buscar campo..."
+    },
+    "field_formats": {
+      "text": "Texto",
+      "number": "Número",
+      "currency": "Moneda",
+      "date": "Fecha",
+      "datetime": "Fecha y Hora"
+    },
+    "aggregations": {
+      "sum": "Suma",
+      "count": "Conteo",
+      "avg": "Promedio",
+      "min": "Mínimo",
+      "max": "Máximo"
+    },
+    "filter_types": {
+      "text": "Texto",
+      "number": "Número",
+      "date": "Fecha",
+      "select": "Selector",
+      "range": "Rango"
+    },
+    "operators": {
+      "equals": "Igual a",
+      "contains": "Contiene",
+      "starts_with": "Empieza con",
+      "ends_with": "Termina con",
+      "greater_than": "Mayor que",
+      "less_than": "Menor que",
+      "between": "Entre",
+      "in": "En"
+    },
+    "actions": {
+      "add_field": "Agregar Campo",
+      "add_filter": "Agregar Filtro"
+    },
+    "messages": {
+      "no_fields_selected": "No hay campos seleccionados",
+      "no_filters_configured": "No hay filtros configurados",
+      "no_description": "Sin descripción",
+      "no_fields_available": "No hay campos disponibles",
+      "no_field_selected": "Selecciona un campo para configurar."
+    },
+    "summary": {
+      "basic_info": "Información Básica",
+      "fields": "Campos",
+      "filters": "Filtros",
+      "sorting": "Ordenamiento",
+      "export_options": "Opciones de Exportación",
+      "advanced_config": "Configuración Avanzada",
+      "total_fields": "Total de Campos",
+      "total_filters": "Total de Filtros",
+      "required_filters": "Filtros Requeridos",
+      "export_formats": "Formatos de Exportación"
+    },
+    "error": {
+      "load": "Error al cargar el reporte",
+      "save": "Error al guardar el reporte",
+      "load_fields": "Error al cargar los campos"
+    },
+    "sorting": {
+      "title": "Ordenamiento",
+      "description": "Configura cómo se ordenarán los datos",
+      "primary_sort": "Ordenamiento Primario",
+      "secondary_sort": "Ordenamiento Secundario",
+      "tertiary_sort": "Ordenamiento Terciario",
+      "field": "Campo",
+      "direction": "Dirección",
+      "ascending": "Ascendente",
+      "descending": "Descendente",
+      "required": "Requerido",
+      "optional": "Opcional",
+      "select_secondary": "Selecciona campo secundario",
+      "select_tertiary": "Selecciona campo terciario",
+      "nulls_handling": "Manejo de valores nulos",
+      "nulls_first": "Nulos primero",
+      "nulls_last": "Nulos último",
+      "nulls_ignore": "Ignorar nulos",
+      "case_sensitive": "Sensible a mayúsculas",
+      "advanced_settings": "Configuración Avanzada",
+      "primary_field": "Campo primario"
+    },
+    "export": {
+      "title": "Opciones de Exportación",
+      "description": "Configura cómo se exportarán los reportes",
+      "enabled_formats": "Formatos Habilitados",
+      "excel": {
+        "title": "Excel",
+        "description": "Archivo de Excel (.xlsx)",
+        "include_charts": "Incluir gráficos",
+        "auto_filter": "Filtro automático"
+      },
+      "pdf": {
+        "title": "PDF",
+        "description": "Documento PDF",
+        "orientation": "Orientación",
+        "portrait": "Vertical",
+        "landscape": "Horizontal",
+        "page_size": "Tamaño de página",
+        "margins": "Márgenes"
+      },
+      "csv": {
+        "title": "CSV",
+        "description": "Archivo CSV",
+        "delimiter": "Delimitador",
+        "encoding": "Codificación"
+      },
+      "include_headers": "Incluir encabezados",
+      "include_totals": "Incluir totales",
+      "general_settings": "Configuración General",
+      "filename_template": "Plantilla de nombre",
+      "filename_template_placeholder": "report_{date}_{time}",
+      "compression_level": "Nivel de compresión",
+      "compression": {
+        "none": "Sin compresión",
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      },
+      "no_formats_enabled": "No hay formatos habilitados"
+    },
+    "advanced": {
+      "column_formatting": "Formato de Columnas",
+      "footer_settings": "Configuración del Footer",
+      "display_settings": "Configuración de Visualización",
+      "grouping_settings": "Configuración de Agrupación",
+      "styling_settings": "Configuración de Estilos"
+    },
+    "format": {
+      "title": "Formato",
+      "text": "Texto",
+      "number": "Número",
+      "currency": "Moneda",
+      "date": "Fecha",
+      "datetime": "Fecha y Hora",
+      "percentage": "Porcentaje",
+      "boolean": "Booleano",
+      "decimal_places": "Decimales",
+      "currency_symbol": "Símbolo de moneda",
+      "date_format": "Formato de fecha"
+    },
+    "alignment": {
+      "title": "Alineación",
+      "left": "Izquierda",
+      "center": "Centro",
+      "right": "Derecha"
+    },
+    "style": {
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado"
+    },
+    "color": {
+      "text": "Color de texto",
+      "background": "Color de fondo",
+      "default": "Predeterminado",
+      "primary": "Primario",
+      "secondary": "Secundario",
+      "success": "Éxito",
+      "warning": "Advertencia",
+      "error": "Error"
+    },
+    "footer": {
+      "enabled": "Habilitar footer",
+      "show_totals": "Mostrar totales",
+      "show_subtotals": "Mostrar subtotales",
+      "show_count": "Mostrar conteo",
+      "show_average": "Mostrar promedio",
+      "show_min": "Mostrar mínimo",
+      "show_max": "Mostrar máximo",
+      "custom_text": "Texto personalizado",
+      "custom_text_placeholder": "Texto personalizado del footer"
+    },
+    "display": {
+      "show_grid_lines": "Mostrar líneas de cuadrícula",
+      "show_alternate_rows": "Mostrar filas alternadas",
+      "header_style": "Estilo de encabezado",
+      "row_height": "Altura de fila"
+    },
+    "header_style": {
+      "default": "Predeterminado",
+      "bold": "Negrita",
+      "colored": "Coloreado"
+    },
+    "grouping": {
+      "enabled": "Habilitar agrupación",
+      "show_headers": "Mostrar encabezados de grupo",
+      "show_footers": "Mostrar pies de grupo"
+    },
+    "styling": {
+      "theme": "Tema",
+      "font_family": "Familia de fuente",
+      "font_size": "Tamaño de fuente"
+    },
+    "theme": {
+      "default": "Predeterminado",
+      "dark": "Oscuro",
+      "light": "Claro",
+      "custom": "Personalizado"
+    },
+    "width": "Ancho"
+  },
+  "common": {
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado"
   },
   "execution": {
     "title": "Executions",
