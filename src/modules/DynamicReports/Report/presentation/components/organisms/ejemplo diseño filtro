@@ -450,11 +450,10 @@ onUnmounted(() => {
     <VRow>
       <VCol cols="12">
         <h6 class="text-h6 font-weight-medium mb-2">
-          Configuración de Filtros del Reporte
+          {{ $t('DynamicReports.report.wizard.step3.title') }}
         </h6>
         <p class="text-body-2 text-medium-emphasis mb-4">
-          Define qué filtros estarán disponibles para los usuarios cuando ejecuten este reporte.
-          Los usuarios podrán aplicar estos filtros para personalizar los datos mostrados.
+          {{ $t('DynamicReports.report.wizard.step3.description') }}
         </p>
       </VCol>
 
@@ -466,45 +465,20 @@ onUnmounted(() => {
                 icon="tabler-adjustments-horizontal"
                 class="me-2"
               />
-              <span>Definir Filtros Disponibles</span>
+              <span>Filtros y Condiciones</span>
             </div>
-            <VChip
-              size="small"
-              variant="tonal"
-              color="info"
-            >
-              <VIcon
-                icon="tabler-info-circle"
-                size="16"
-                start
-              />
-              Configuración de filtros
-            </VChip>
           </VCardTitle>
 
           <VCardText class="pa-0">
             <!-- Grupo principal -->
             <div class="filter-container pa-4">
-              <div class="d-flex align-center justify-space-between mb-3">
-                <div class="d-flex align-center">
-                  <VIcon
-                    icon="tabler-folder"
-                    size="20"
-                    class="me-2"
-                  />
-                  <span class="text-body-1">Filtros del reporte</span>
-                </div>
-                <VTooltip location="top">
-                  <template #activator="{ props }">
-                    <VIcon
-                      icon="tabler-help-circle"
-                      size="18"
-                      v-bind="props"
-                      class="text-medium-emphasis"
-                    />
-                  </template>
-                  <span>Los usuarios podrán aplicar estos filtros cuando ejecuten el reporte</span>
-                </VTooltip>
+              <div class="d-flex align-center mb-3">
+                <VIcon
+                  icon="tabler-folder"
+                  size="20"
+                  class="me-2"
+                />
+                <span class="text-body-1">Grupo principal</span>
               </div>
 
               <div class="ms-6">
@@ -602,8 +576,7 @@ onUnmounted(() => {
                               density="compact"
                               variant="outlined"
                               hide-details
-                              :placeholder="item.placeholder || 'Ejemplo: Activo'"
-                              prepend-inner-icon="tabler-abc"
+                              :placeholder="item.placeholder || 'Valor'"
                             />
 
                             <!-- Campo numérico -->
@@ -614,11 +587,10 @@ onUnmounted(() => {
                               density="compact"
                               variant="outlined"
                               hide-details
-                              :placeholder="item.placeholder || 'Ejemplo: 1000'"
+                              :placeholder="item.placeholder || 'Valor'"
                               :min="item.min"
                               :max="item.max"
                               :step="item.step"
-                              prepend-inner-icon="tabler-number"
                             />
 
                             <!-- Campo de fecha -->
@@ -629,7 +601,6 @@ onUnmounted(() => {
                               density="compact"
                               variant="outlined"
                               hide-details
-                              prepend-inner-icon="tabler-calendar"
                             />
 
                             <!-- Select simple -->
@@ -642,9 +613,7 @@ onUnmounted(() => {
                               density="compact"
                               variant="outlined"
                               hide-details
-                              :placeholder="item.placeholder || 'Valor por defecto (opcional)'"
-                              clearable
-                              prepend-inner-icon="tabler-list"
+                              :placeholder="item.placeholder || 'Seleccione'"
                             />
 
                             <!-- Select múltiple -->
@@ -660,9 +629,7 @@ onUnmounted(() => {
                               density="compact"
                               variant="outlined"
                               hide-details
-                              :placeholder="item.placeholder || 'Valores por defecto (opcional)'"
-                              clearable
-                              prepend-inner-icon="tabler-list-check"
+                              :placeholder="item.placeholder || 'Seleccione'"
                             />
 
                             <!-- Boolean -->
@@ -670,14 +637,12 @@ onUnmounted(() => {
                               v-else-if="getValueInputType(item) === 'boolean'"
                               v-model="item.defaultValue"
                               :items="[
-                                { title: 'Sin valor por defecto', value: null },
                                 { title: 'Verdadero', value: true },
                                 { title: 'Falso', value: false },
                               ]"
                               density="compact"
                               variant="outlined"
                               hide-details
-                              prepend-inner-icon="tabler-toggle-left"
                             />
 
                             <!-- Rango -->
@@ -690,7 +655,7 @@ onUnmounted(() => {
                                 density="compact"
                                 variant="outlined"
                                 hide-details
-                                placeholder="Min"
+                                placeholder="Desde"
                                 type="number"
                                 :min="item.min"
                                 :max="item.max"
@@ -700,7 +665,7 @@ onUnmounted(() => {
                                 density="compact"
                                 variant="outlined"
                                 hide-details
-                                placeholder="Max"
+                                placeholder="Hasta"
                                 type="number"
                                 :min="item.min"
                                 :max="item.max"
@@ -1158,7 +1123,7 @@ onUnmounted(() => {
                     size="20"
                     class="me-2"
                   />
-                  <span class="text-body-2 font-weight-medium">Ejemplo de SQL cuando el usuario aplique los filtros</span>
+                  <span class="text-body-2 font-weight-medium">Vista previa SQL</span>
                 </div>
                 <VBtn
                   v-if="sqlPreview"
@@ -1180,9 +1145,6 @@ onUnmounted(() => {
                 </VBtn>
               </div>
               <code class="text-caption">{{ sqlPreview || 'Sin filtros configurados' }}</code>
-              <p class="text-caption text-medium-emphasis mt-2 mb-0">
-                * Este es un ejemplo de cómo se verá la consulta cuando el usuario aplique valores a estos filtros
-              </p>
             </div>
           </VCardText>
         </VCard>
@@ -1200,163 +1162,48 @@ onUnmounted(() => {
           icon="tabler-eye"
           class="me-2"
         />
-        Cómo verán los filtros los usuarios
+        Vista previa de filtros
       </VCardTitle>
       <VCardText>
-        <VAlert
-          type="info"
-          variant="tonal"
-          density="compact"
-          class="mb-4"
-        >
-          <VIcon
-            icon="tabler-bulb"
-            size="18"
-          />
-          Esta es una simulación de cómo aparecerán los filtros cuando el usuario ejecute el reporte
-        </VAlert>
-
-        <div class="user-filters-preview pa-4 rounded border">
-          <h6 class="text-subtitle-2 mb-3">
-            <VIcon
-              icon="tabler-filter"
-              size="18"
-              class="me-1"
-            />
-            Filtros disponibles
-          </h6>
-
-          <VRow>
-            <VCol
-              v-for="filter in rootGroup.children.filter(f => f.type === 'filter')"
-              :key="filter.id"
-              cols="12"
-              :md="filter.fieldType === 'range' ? 12 : 6"
-            >
-              <div class="filter-preview-item">
-                <label class="text-body-2 d-flex align-center mb-1">
-                  {{ filter.alias || filter.field }}
-                  <VIcon
-                    v-if="filter.required"
-                    icon="tabler-asterisk"
-                    size="12"
-                    color="error"
-                    class="ms-1"
-                  />
-                  <VTooltip
-                    v-if="filter.advanced"
-                    location="top"
-                  >
-                    <template #activator="{ props }">
-                      <VIcon
-                        icon="tabler-settings"
-                        size="14"
-                        class="ms-1 text-medium-emphasis"
-                        v-bind="props"
-                      />
-                    </template>
-                    <span>Filtro avanzado</span>
-                  </VTooltip>
-                </label>
-
-                <!-- Simulación del input según el tipo -->
-                <VTextField
-                  v-if="filter.fieldType === 'text'"
-                  :placeholder="filter.placeholder || `Filtrar por ${filter.alias || filter.field}`"
-                  density="compact"
-                  variant="outlined"
-                  readonly
-                  prepend-inner-icon="tabler-search"
-                />
-
-                <VTextField
-                  v-else-if="filter.fieldType === 'number'"
-                  :placeholder="filter.placeholder || 'Ingrese un número'"
-                  density="compact"
-                  variant="outlined"
-                  readonly
-                  type="number"
-                  prepend-inner-icon="tabler-number"
-                />
-
-                <VTextField
-                  v-else-if="filter.fieldType === 'date'"
-                  placeholder="Seleccione fecha"
-                  density="compact"
-                  variant="outlined"
-                  readonly
-                  type="date"
-                  prepend-inner-icon="tabler-calendar"
-                />
-
-                <VSelect
-                  v-else-if="filter.fieldType === 'select'"
-                  :placeholder="filter.placeholder || 'Seleccione una opción'"
-                  density="compact"
-                  variant="outlined"
-                  readonly
-                  :items="[]"
-                  :multiple="filter.multiple"
-                  :prepend-inner-icon="filter.multiple ? 'tabler-list-check' : 'tabler-list'"
-                />
-
-                <div
-                  v-else-if="filter.fieldType === 'range'"
-                  class="d-flex gap-2"
-                >
-                  <VTextField
-                    placeholder="Desde"
-                    density="compact"
-                    variant="outlined"
-                    readonly
-                    type="number"
-                  />
-                  <VTextField
-                    placeholder="Hasta"
-                    density="compact"
-                    variant="outlined"
-                    readonly
-                    type="number"
-                  />
-                </div>
-
-                <VSwitch
-                  v-else-if="filter.fieldType === 'boolean'"
-                  label="Activar/Desactivar"
-                  density="compact"
-                  readonly
-                />
-              </div>
-            </VCol>
-          </VRow>
-
-          <div class="d-flex justify-end mt-4 gap-2">
-            <VBtn
+        <VChipGroup>
+          <template
+            v-for="filter in rootGroup.children"
+            :key="filter.id"
+          >
+            <VChip
+              v-if="filter.type === 'filter'"
+              :color="filter.required ? 'warning' : 'primary'"
               variant="tonal"
               size="small"
-              disabled
             >
               <VIcon
-                icon="tabler-refresh"
+                :icon="filter.advanced ? 'tabler-adjustments' : 'tabler-filter'"
                 size="16"
                 start
               />
-              Limpiar filtros
-            </VBtn>
-            <VBtn
-              color="primary"
+              {{ filter.alias || filter.field }}
+              <VIcon
+                v-if="filter.required"
+                icon="tabler-asterisk"
+                size="12"
+                end
+              />
+            </VChip>
+            <VChip
+              v-else-if="filter.type === 'group'"
+              color="secondary"
+              variant="tonal"
               size="small"
-              disabled
             >
               <VIcon
-                icon="tabler-check"
+                icon="tabler-folders"
                 size="16"
                 start
               />
-              Aplicar filtros
-            </VBtn>
-          </div>
-        </div>
+              Grupo ({{ filter.condition }})
+            </VChip>
+          </template>
+        </VChipGroup>
       </VCardText>
     </VCard>
 
@@ -1376,43 +1223,8 @@ onUnmounted(() => {
       variant="tonal"
       class="mt-4"
     >
-      <template #prepend>
-        <VIcon icon="tabler-info-circle" />
-      </template>
-      <div>
-        <strong>Sin filtros configurados</strong>
-        <p class="mb-0 mt-1">
-          Los filtros son opcionales. Si no configuras filtros, los usuarios verán todos los datos del reporte sin opciones de filtrado.
-        </p>
-      </div>
+      No hay filtros configurados. Los filtros son opcionales y permiten a los usuarios filtrar los datos del reporte.
     </VAlert>
-
-    <!-- Ejemplo de uso -->
-    <VCard
-      variant="tonal"
-      class="mt-4"
-    >
-      <VCardText>
-        <div class="d-flex align-center mb-2">
-          <VIcon
-            icon="tabler-bulb"
-            size="20"
-            color="warning"
-            class="me-2"
-          />
-          <span class="text-subtitle-2 font-weight-medium">Ejemplo de uso</span>
-        </div>
-        <p class="text-body-2 mb-0">
-          Si configuras un filtro para el campo "Estado" con opciones "Activo/Inactivo", los usuarios podrán:
-        </p>
-        <ul class="text-body-2 mt-2 mb-0">
-          <li>Ver todos los registros por defecto</li>
-          <li>Filtrar solo registros activos</li>
-          <li>Filtrar solo registros inactivos</li>
-          <li>Combinar este filtro con otros que hayas configurado</li>
-        </ul>
-      </VCardText>
-    </VCard>
   </div>
 </template>
 
@@ -1490,18 +1302,8 @@ code {
   transition: all 0.3s ease;
 }
 
-.user-filters-preview {
-  border: 1px dashed rgba(var(--v-border-color), 0.5);
-  background-color: rgba(var(--v-theme-on-surface), 0.02);
-}
-
-.filter-preview-item {
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.filter-preview-item:hover {
-  background-color: rgba(var(--v-theme-on-surface), 0.04);
+/* Estilos para chips en vista previa */
+.v-chip-group {
+  gap: 8px;
 }
 </style>

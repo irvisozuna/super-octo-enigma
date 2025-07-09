@@ -99,11 +99,6 @@ const stepValidations = ref<Record<number, boolean>>({
 
 // FIJO: Función mejorada para navegar entre pasos
 const navigateToStep = async (stepIdx: number) => {
-  console.log('🔍 navigateToStep called with:', stepIdx)
-  console.log('🔍 currentStep.value:', currentStep.value)
-  console.log('🔍 steps.length:', steps.length)
-  console.log('🔍 isTransitioning.value:', isTransitioning.value)
-
   // Validaciones básicas
   if (typeof stepIdx !== 'number' || stepIdx < 0 || stepIdx >= steps.length || isTransitioning.value) {
     console.warn('❌ Invalid step navigation:', { stepIdx, currentStep: currentStep.value, isTransitioning: isTransitioning.value })
@@ -238,7 +233,6 @@ const loadDataSources = async () => {
 
 // FIJO: Función mejorada para manejar validación de pasos
 const handleStepValidation = (stepIndex: number, isValid: boolean) => {
-  console.log(`🔍 Step ${stepIndex + 1} validation:`, isValid)
   stepValidations.value[stepIndex] = isValid
 
   // Actualizar el estado del store si es necesario
@@ -326,7 +320,6 @@ const handleCancel = async () => {
 
 // Lifecycle
 onMounted(async () => {
-  console.log('🔍 Component mounted')
   await loadDataSources()
 
   if (props.reportId) {
@@ -364,22 +357,6 @@ const stepStates = computed(() => {
       return 'pending'
   })
 })
-
-// FIJO: Debug watcher para monitorear cambios
-watch(
-  () => currentStep.value,
-  (newStep, oldStep) => {
-    console.log(`🔍 Step changed from ${oldStep} to ${newStep}`)
-  },
-)
-
-watch(
-  () => stepValidations.value,
-  newValidations => {
-    console.log('🔍 Step validations updated:', newValidations)
-  },
-  { deep: true },
-)
 </script>
 
 <template>
