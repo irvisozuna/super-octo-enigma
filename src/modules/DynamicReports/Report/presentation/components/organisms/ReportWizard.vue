@@ -100,13 +100,13 @@ const stepValidations = ref<Record<number, boolean>>({
 // FIJO: Función mejorada para navegar entre pasos
 const navigateToStep = async (stepIdx: number) => {
   // Validaciones básicas
-  if (typeof stepIdx !== 'number' || stepIdx < 0 || stepIdx >= steps.length || isTransitioning.value) {
-    console.warn('❌ Invalid step navigation:', { stepIdx, currentStep: currentStep.value, isTransitioning: isTransitioning.value })
+  if (typeof stepIdx !== 'number' || stepIdx < 0 || stepIdx >= steps.length) {
+    console.warn('❌ Invalid step navigation:', { stepIdx, currentStep: currentStep.value })
 
     return
   }
 
-  // Prevenir navegación hacia atrás si estamos en transición
+  // Prevenir navegación si estamos en transición
   if (isTransitioning.value) {
     console.warn('❌ Navigation blocked: transition in progress')
 
@@ -127,29 +127,29 @@ const navigateToStep = async (stepIdx: number) => {
 
   isTransitioning.value = true
   try {
-    await nextTick()
     currentStep.value = stepIdx
     console.log('✅ Navigation successful to step:', stepIdx)
-    await nextTick()
   }
   catch (error) {
     console.error('❌ Navigation error:', error)
   }
   finally {
+    // Usar nextTick para liberar la transición en el siguiente ciclo
+    await nextTick()
     isTransitioning.value = false
   }
 }
 
-const nextStep = async () => {
+const nextStep = () => {
   console.log('🔍 nextStep called, currentStep:', currentStep.value)
   if (currentStep.value < steps.length - 1)
-    await navigateToStep(currentStep.value + 1)
+    navigateToStep(currentStep.value + 1)
 }
 
-const previousStep = async () => {
+const previousStep = () => {
   console.log('🔍 previousStep called, currentStep:', currentStep.value)
   if (currentStep.value > 0)
-    await navigateToStep(currentStep.value - 1)
+    navigateToStep(currentStep.value - 1)
 }
 
 // Computed
@@ -189,13 +189,21 @@ const updateAvailableFields = (newFields: any[]) => {
   }
 }
 
-// FIJO: Watcher mejorado para campos
+// FIJO: Watcher mejorado para campos con throttle
 let fieldWatcher: any = null
+let fieldUpdateTimeout: any = null
+
 onMounted(() => {
   fieldWatcher = watch(
     dsFields,
     newFields => {
-      updateAvailableFields(newFields)
+      // Debounce para evitar múltiples actualizaciones consecutivas
+      if (fieldUpdateTimeout)
+        clearTimeout(fieldUpdateTimeout)
+
+      fieldUpdateTimeout = setTimeout(() => {
+        updateAvailableFields(newFields)
+      }, 100)
     },
     {
       immediate: true,
@@ -208,6 +216,11 @@ onUnmounted(() => {
   if (fieldWatcher) {
     fieldWatcher()
     fieldWatcher = null
+  }
+
+  if (fieldUpdateTimeout) {
+    clearTimeout(fieldUpdateTimeout)
+    fieldUpdateTimeout = null
   }
 })
 
@@ -233,13 +246,8 @@ const loadDataSources = async () => {
 
 // FIJO: Función mejorada para manejar validación de pasos
 const handleStepValidation = (stepIndex: number, isValid: boolean) => {
-  stepValidations.value[stepIndex] = isValid
-
-  // Actualizar el estado del store si es necesario
-  if (stepIndex === currentStep.value) {
-    // Forzar reactividad
-    stepValidations.value = { ...stepValidations.value }
-  }
+  if (stepValidations.value[stepIndex] !== isValid)
+    stepValidations.value[stepIndex] = isValid
 }
 
 // FIJO: Validaciones específicas para cada paso
@@ -264,15 +272,32 @@ const validateStep = (stepIndex: number): boolean => {
   }
 }
 
-// FIJO: Watcher para validar pasos automáticamente
+// Flag para prevenir recursión infinita
+const isValidating = ref(false)
+
+// FIJO: Watcher para validar pasos automáticamente con protección contra bucles
 watch(
   () => wizardStore.wizardData,
   () => {
-    for (let i = 0; i < steps.length; i++) {
-      const isValid = validateStep(i)
-      if (stepValidations.value[i] !== isValid)
-        stepValidations.value[i] = isValid
-    }
+    // Prevenir recursión infinita
+    if (isValidating.value)
+      return
+
+    isValidating.value = true
+
+    // Usar nextTick para procesar en el siguiente ciclo de reactividad
+    nextTick(() => {
+      try {
+        for (let i = 0; i < steps.length; i++) {
+          const isValid = validateStep(i)
+          if (stepValidations.value[i] !== isValid)
+            stepValidations.value[i] = isValid
+        }
+      }
+      finally {
+        isValidating.value = false
+      }
+    })
   },
   { deep: true, immediate: true },
 )
@@ -318,12 +343,71 @@ const handleCancel = async () => {
   await router.push('/reports')
 }
 
+// Add loading state to prevent rendering until store is ready
+const isStoreReady = ref(false)
+
+// Initialize wizard with proper error handling
+const initializeWizard = async () => {
+  try {
+    if (props.reportId)
+      wizardStore.initializeWizard(true, props.reportId)
+
+    else
+      wizardStore.initializeWizard(false)
+
+    // Force proper initialization by ensuring all advanced properties exist
+    if (!wizardStore.wizardData.advanced.templates)
+      wizardStore.wizardData.advanced.templates = { selected: 'default', custom: [] }
+
+    if (!wizardStore.wizardData.advanced.calculatedFields)
+      wizardStore.wizardData.advanced.calculatedFields = []
+
+    if (!wizardStore.wizardData.advanced.conditionalFormats)
+      wizardStore.wizardData.advanced.conditionalFormats = []
+
+    if (!wizardStore.wizardData.advanced.interactive) {
+      wizardStore.wizardData.advanced.interactive = {
+        filters: { enabled: true, showFilterBar: true, quickFilters: [], allowCustomFilters: true },
+        actions: { enabled: true, allowExport: true, allowPrint: true, allowShare: true, customActions: [] },
+        drillDown: { enabled: false, levels: [] },
+      }
+    }
+    if (!wizardStore.wizardData.advanced.performance) {
+      wizardStore.wizardData.advanced.performance = {
+        enableCache: true,
+        cacheTimeout: 300,
+        enableLazyLoading: true,
+        enableVirtualScrolling: false,
+        maxRowsToRender: 1000,
+      }
+    }
+    if (!wizardStore.wizardData.advanced.security) {
+      wizardStore.wizardData.advanced.security = {
+        enableFieldLevelSecurity: false,
+        hiddenFields: [],
+        restrictedFields: [],
+        enableRowLevelSecurity: false,
+        securityFilters: [],
+      }
+    }
+
+    return true
+  }
+  catch (error) {
+    console.error('Error initializing wizard:', error)
+
+    return false
+  }
+}
+
+// Initialize immediately
+initializeWizard()
+
 // Lifecycle
 onMounted(async () => {
   await loadDataSources()
 
   if (props.reportId) {
-    wizardStore.initializeWizard(true, props.reportId)
     try {
       await reportStore.fetchById(props.reportId)
 
@@ -333,9 +417,13 @@ onMounted(async () => {
       showErrorMessage(t('DynamicReports.report.error.load'))
     }
   }
-  else {
-    wizardStore.initializeWizard(false)
-  }
+
+  // Ensure wizard is fully initialized
+  await initializeWizard()
+
+  // Wait for next tick to ensure store is fully initialized
+  await nextTick()
+  isStoreReady.value = true
 })
 
 onUnmounted(() => {
@@ -364,7 +452,7 @@ const stepStates = computed(() => {
     <VRow>
       <VCol
         cols="12"
-        md="4"
+        md="3"
         :class="$vuetify.display.smAndDown ? 'border-b' : 'border-e'"
       >
         <VCardText>
@@ -396,7 +484,7 @@ const stepStates = computed(() => {
       <!-- 👉 stepper content -->
       <VCol
         cols="12"
-        md="8"
+        md="9"
       >
         <VCardText>
           <VForm>
@@ -407,6 +495,7 @@ const stepStates = computed(() => {
               <!-- Paso 1: Información Básica -->
               <VWindowItem :value="0">
                 <ReportBasicInfoStep
+                  v-if="isStoreReady"
                   v-model="wizardStore.wizardData.basicInfo"
                   :data-sources="dataSources"
                   :loading="loadingDataSources"
@@ -418,6 +507,7 @@ const stepStates = computed(() => {
               <!-- Paso 2: Selección de Campos -->
               <VWindowItem :value="1">
                 <ReportFieldsStep
+                  v-if="isStoreReady"
                   v-model="wizardStore.wizardData.selectedFields"
                   :available-fields="availableFields"
                   :data-source-id="wizardStore.wizardData.basicInfo.dataSourceId"
@@ -430,6 +520,7 @@ const stepStates = computed(() => {
               <!-- Paso 3: Configuración de Filtros -->
               <VWindowItem :value="2">
                 <ReportFiltersStep
+                  v-if="isStoreReady"
                   v-model="wizardStore.wizardData.filters"
                   :available-fields="wizardStore.wizardData.selectedFields"
                   @validate="(isValid: boolean) => handleStepValidation(2, isValid)"
@@ -439,6 +530,7 @@ const stepStates = computed(() => {
               <!-- Paso 4: Ordenamiento -->
               <VWindowItem :value="3">
                 <ReportSortingStep
+                  v-if="isStoreReady"
                   v-model="sortingModel"
                   :available-fields="wizardStore.wizardData.selectedFields"
                   @validate="(isValid: boolean) => handleStepValidation(3, isValid)"
@@ -448,6 +540,7 @@ const stepStates = computed(() => {
               <!-- Paso 5: Opciones de Exportación -->
               <VWindowItem :value="4">
                 <ReportExportStep
+                  v-if="isStoreReady"
                   v-model="wizardStore.wizardData.exportOptions"
                   @validate="(isValid: boolean) => handleStepValidation(4, isValid)"
                 />
@@ -456,6 +549,7 @@ const stepStates = computed(() => {
               <!-- Paso 6: Configuración Avanzada -->
               <VWindowItem :value="5">
                 <ReportAdvancedStep
+                  v-if="isStoreReady"
                   v-model="wizardStore.wizardData.advanced"
                   :available-fields="wizardStore.wizardData.selectedFields"
                   @validate="(isValid: boolean) => handleStepValidation(5, isValid)"
@@ -465,6 +559,7 @@ const stepStates = computed(() => {
               <!-- Paso 7: Resumen -->
               <VWindowItem :value="6">
                 <ReportSummaryStep
+                  v-if="isStoreReady"
                   :basic-info="wizardStore.wizardData.basicInfo"
                   :selected-fields="wizardStore.wizardData.selectedFields"
                   :filters="wizardStore.wizardData.filters"

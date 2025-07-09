@@ -1,0 +1,106 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 🎨 Patrón Visual y de UX para Componentes de Reporte Dinámico
+
+## 📋 Principios Fundamentales
+
+### 1. Consistencia Visual
+- Todos los componentes siguen el mismo estilo visual y patrones de interacción
+- Uso consistente de iconos, colores y espaciado
+- Jerarquía visual clara con títulos, subtítulos y contenido
+
+### 2. Diseño Centrado en el Usuario
+- Interfaces intuitivas que no requieren manual
+- Feedback visual inmediato para todas las acciones
+- Mensajes de ayuda contextuales
+- Validaciones en tiempo real
+
+### 3. Accesibilidad y Claridad
+- Contraste adecuado entre elementos
+- Tamaños de fuente legibles
+- Iconos acompañados de texto cuando es necesario
+- Estados visuales claros (`hover`, `active`, `disabled`)
+
+---
+
+## 🏗️ Estructura de Componentes
+
+### 🔹 Layout Base
+
+```vue
+<div class="component-name-advanced">
+  <!-- Header Section -->
+  <VRow>
+    <VCol cols="12">
+      <div class="d-flex align-center justify-space-between mb-2">
+        <h6 class="text-h6 font-weight-medium mb-0">Título del Componente</h6>
+        <VChip size="small" variant="tonal" :color="statusColor">
+          <VIcon :icon="statusIcon" size="16" start />
+          Estado/Contador
+        </VChip>
+      </div>
+      <p class="text-body-2 text-medium-emphasis mb-4">
+        Descripción clara de lo que hace este paso/componente
+      </p>
+    </VCol>
+  </VRow>
+  <!-- Main Content -->
+</div>
+```
+
+### 🔹 Uso de Tabs para Organización
+
+```vue
+<VTabs v-model="activeTab" class="mb-4">
+  <VTab value="basic">
+    <VIcon icon="tabler-icon" start />
+    Categoría
+  </VTab>
+</VTabs>
+```
+
+---
+
+## 🎯 Patrones de Interacción
+
+### 1. Drag & Drop
+- Usar `vuedraggable` para reordenamiento
+- Icono de grip (`tabler-grip-vertical`) como handle
+- Efectos visuales durante el arrastre (`ghost class`)
+- Transiciones suaves
+
+### 2. Selección Múltiple
+- Cards clickeables con borde de selección
+- Chips para tags con estado toggle
+- Checkboxes para listas de usuarios
+- Radio buttons para selección única
+
+### 3. Configuración Expandible
+
+```vue
+<!-- Panel básico visible -->
+<div class="d-flex align-center">
+  <VBtn icon size="x-small" @click="togglePanel">
+    <VIcon :icon="expanded ? 'tabler-chevron-up' : 'tabler-chevron-down'" />
+  </VBtn>
+</div>
+
+<!-- Panel expandible -->
+<VExpandTransition>
+  <div v-show="expanded" class="config-panel">
+    <!-- Configuración avanzada -->
+  </div>
+</VExpandTransition>
+```
+
+### 4. Diálogos de Configuración Avanzada
+
+```vue
+<VBtn icon size="small" @click="openAdvancedConfig">
+  <VIcon icon="tabler-settings" />
+  <VTooltip activator="parent">Configuración avanzada</VTooltip>
+</VBtn>
+```

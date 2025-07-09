@@ -80,6 +80,65 @@ interface WizardData {
       fontFamily: string
       fontSize: number
     }
+    templates?: {
+      selected: string
+      custom: any[]
+    }
+    calculatedFields?: Array<{
+      id: string
+      name: string
+      formula: string
+      format: string
+      description: string
+      enabled: boolean
+    }>
+    conditionalFormats?: Array<{
+      id: string
+      name: string
+      field: string
+      conditions: Array<{
+        operator: string
+        value: string
+        color: string
+        backgroundColor: string
+        bold: boolean
+        italic: boolean
+      }>
+      enabled: boolean
+    }>
+    interactive?: {
+      filters: {
+        enabled: boolean
+        showFilterBar: boolean
+        quickFilters: string[]
+        allowCustomFilters: boolean
+      }
+      actions: {
+        enabled: boolean
+        allowExport: boolean
+        allowPrint: boolean
+        allowShare: boolean
+        customActions: any[]
+      }
+      drillDown: {
+        enabled: boolean
+        levels: any[]
+      }
+    }
+    performance?: {
+      enableCache: boolean
+      cacheTimeout: number
+      enableLazyLoading: boolean
+      enableVirtualScrolling: boolean
+      maxRowsToRender: number
+    }
+    security?: {
+      enableFieldLevelSecurity: boolean
+      hiddenFields: string[]
+      restrictedFields: string[]
+      enableRowLevelSecurity: boolean
+      securityFilters: any[]
+    }
   }
 }
 
@@ -163,6 +222,45 @@ const defaultWizardData: WizardData = {
       secondaryColor: '#424242',
       fontFamily: 'Arial',
       fontSize: 12,
+    },
+    templates: {
+      selected: 'default',
+      custom: [],
+    },
+    calculatedFields: [],
+    conditionalFormats: [],
+    interactive: {
+      filters: {
+        enabled: true,
+        showFilterBar: true,
+        quickFilters: [],
+        allowCustomFilters: true,
+      },
+      actions: {
+        enabled: true,
+        allowExport: true,
+        allowPrint: true,
+        allowShare: true,
+        customActions: [],
+      },
+      drillDown: {
+        enabled: false,
+        levels: [],
+      },
+    },
+    performance: {
+      enableCache: true,
+      cacheTimeout: 300,
+      enableLazyLoading: true,
+      enableVirtualScrolling: false,
+      maxRowsToRender: 1000,
+    },
+    security: {
+      enableFieldLevelSecurity: false,
+      hiddenFields: [],
+      restrictedFields: [],
+      enableRowLevelSecurity: false,
+      securityFilters: [],
     },
   },
 }
