@@ -13,7 +13,7 @@ import ChipAtom from '../atoms/ChipAtom.vue'
 import AlertAtom from '../atoms/AlertAtom.vue'
 import IconButtonAtom from '../atoms/IconButtonAtom.vue'
 
-import type { FilterConfigDTO, FilterValueDTO } from '../../../application/dtos/ReportDtos'
+import type { FilterConfigDTO, FilterValueDTO } from '../../Application/DTOs/ReportDTOs'
 
 interface Props {
   filters: FilterConfigDTO[]

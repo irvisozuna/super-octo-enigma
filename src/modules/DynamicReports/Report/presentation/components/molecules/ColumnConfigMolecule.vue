@@ -3,24 +3,29 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-interface FieldConfigDTO {
+// Atoms
+import IconButtonAtom from '../atoms/IconButtonAtom.vue'
+
+interface FieldConfig {
   field: string
-  label: string
+  alias: string
   type: string
-  width?: number
   visible?: boolean
-  frozen?: boolean
+  width?: number
+  align?: 'left' | 'center' | 'right'
 }
 
 interface Props {
   visibleColumns: string[]
-  availableColumns: FieldConfigDTO[]
+  availableColumns: FieldConfig[]
   frozenColumns: string[]
 }
 
 interface Emits {
   columnVisibilityUpdate: [columns: string[]]
-  frozenColumnsUpdate: [columns: string[]]
+  columnFreeze: [field: string]
+  columnResize: [field: string, width: number]
+  columnReorder: [fromIndex: number, toIndex: number]
 }
 
 const props = defineProps<Props>()
@@ -28,36 +33,34 @@ const emit = defineEmits<Emits>()
 
 const { t } = useI18n()
 
-const showColumnMenu = ref(false)
+const showMenu = ref(false)
+const searchQuery = ref('')
 
-const columnOptions = computed(() =>
-  props.availableColumns.map(column => ({
-    ...column,
-    checked: props.visibleColumns.includes(column.field),
-    frozen: props.frozenColumns.includes(column.field),
-  })),
-)
+const filteredColumns = computed(() => {
+  if (!searchQuery.value)
+    return props.availableColumns
 
-const handleColumnToggle = (field: string, checked: boolean): void => {
-  let newVisibleColumns: string[]
+  const query = searchQuery.value.toLowerCase()
 
-  if (checked)
-    newVisibleColumns = [...props.visibleColumns, field]
-  else
-    newVisibleColumns = props.visibleColumns.filter(col => col !== field)
+  return props.availableColumns.filter(column =>
+    column.alias.toLowerCase().includes(query)
+    || column.field.toLowerCase().includes(query),
+  )
+})
 
-  emit('columnVisibilityUpdate', newVisibleColumns)
+const visibleColumnsSet = computed(() => new Set(props.visibleColumns))
+const frozenColumnsSet = computed(() => new Set(props.frozenColumns))
+
+const toggleColumnVisibility = (field: string): void => {
+  const newVisible = visibleColumnsSet.value.has(field)
+    ? props.visibleColumns.filter(col => col !== field)
+    : [...props.visibleColumns, field]
+
+  emit('columnVisibilityUpdate', newVisible)
 }
 
-const handleFrozenToggle = (field: string, frozen: boolean): void => {
-  let newFrozenColumns: string[]
-
-  if (frozen)
-    newFrozenColumns = [...props.frozenColumns, field]
-  else
-    newFrozenColumns = props.frozenColumns.filter(col => col !== field)
-
-  emit('frozenColumnsUpdate', newFrozenColumns)
+const toggleColumnFreeze = (field: string): void => {
+  emit('columnFreeze', field)
 }
 
 const handleSelectAll = (): void => {
@@ -69,115 +72,261 @@ const handleSelectAll = (): void => {
 const handleSelectNone = (): void => {
   emit('columnVisibilityUpdate', [])
 }
+
+const getColumnIcon = (column: FieldConfig): string => {
+  switch (column.type) {
+    case 'number':
+    case 'integer':
+    case 'double':
+      return 'tabler-123'
+    case 'date':
+    case 'datetime':
+      return 'tabler-calendar'
+    case 'boolean':
+      return 'tabler-toggle-left'
+    case 'text':
+    case 'varchar':
+      return 'tabler-abc'
+    default:
+      return 'tabler-column'
+  }
+}
 </script>
 
 <template>
-  <VMenu
-    v-model="showColumnMenu"
-    location="bottom end"
-    :close-on-content-click="false"
-  >
-    <template #activator="{ props: menuProps }">
-      <VBtn
-        icon
-        variant="text"
-        density="compact"
-        v-bind="menuProps"
-        :tooltip="t('reports.columns.configure')"
-      >
-        <VIcon icon="tabler-columns" />
-      </VBtn>
-    </template>
-
-    <VCard
-      min-width="300"
+  <div class="column-config-molecule">
+    <VMenu
+      v-model="showMenu"
+      :close-on-content-click="false"
+      location="bottom end"
+      min-width="320"
       max-width="400"
     >
-      <VCardTitle class="d-flex align-center justify-space-between">
-        <span>{{ t('reports.columns.title') }}</span>
-        <VBtn
-          icon
-          size="small"
-          variant="text"
-          @click="showColumnMenu = false"
-        >
-          <VIcon icon="tabler-x" />
-        </VBtn>
-      </VCardTitle>
+      <template #activator="{ props: menuProps }">
+        <IconButtonAtom
+          icon="tabler-columns"
+          :tooltip="t('reports.columns.configure')"
+          v-bind="menuProps"
+        />
+      </template>
 
-      <VCardText class="pa-0">
-        <VList
-          density="compact"
-          class="pa-0"
-        >
-          <!-- Select All/None Actions -->
-          <VListItem>
-            <VBtnGroup
-              variant="outlined"
-              density="compact"
-              class="w-100"
-            >
-              <VBtn
-                size="small"
-                @click="handleSelectAll"
-              >
-                {{ t('common.selectAll') }}
-              </VBtn>
-              <VBtn
-                size="small"
-                @click="handleSelectNone"
-              >
-                {{ t('common.selectNone') }}
-              </VBtn>
-            </VBtnGroup>
-          </VListItem>
+      <VCard class="column-config-card">
+        <!-- Header -->
+        <VCardTitle class="d-flex align-center justify-space-between pa-3 pb-2">
+          <span class="text-subtitle-1 font-weight-medium">
+            {{ t('reports.columns.title') }}
+          </span>
+          <IconButtonAtom
+            icon="tabler-x"
+            size="small"
+            variant="text"
+            @click="showMenu = false"
+          />
+        </VCardTitle>
 
-          <VDivider />
-
-          <!-- Column List -->
-          <VListItem
-            v-for="column in columnOptions"
-            :key="column.field"
-            class="px-3"
+        <!-- Search -->
+        <VCardText class="pa-3 pt-0">
+          <VTextField
+            v-model="searchQuery"
+            :placeholder="t('reports.columns.search')"
+            density="compact"
+            variant="outlined"
+            hide-details
+            clearable
           >
-            <template #prepend>
-              <VCheckbox
-                :model-value="column.checked"
-                density="compact"
-                hide-details
-                @update:model-value="(checked) => handleColumnToggle(column.field, checked)"
+            <template #prepend-inner>
+              <VIcon
+                icon="tabler-search"
+                size="16"
               />
             </template>
+          </VTextField>
+        </VCardText>
 
-            <VListItemTitle class="text-body-2">
-              {{ column.label }}
-            </VListItemTitle>
+        <!-- Quick Actions -->
+        <VCardText class="pa-3 pt-0">
+          <div class="d-flex gap-2">
+            <VBtn
+              size="small"
+              variant="text"
+              @click="handleSelectAll"
+            >
+              {{ t('reports.columns.selectAll') }}
+            </VBtn>
+            <VBtn
+              size="small"
+              variant="text"
+              @click="handleSelectNone"
+            >
+              {{ t('reports.columns.selectNone') }}
+            </VBtn>
+          </div>
+        </VCardText>
 
-            <template #append>
-              <VBtn
-                v-if="column.checked"
-                icon
-                size="x-small"
-                variant="text"
-                :color="column.frozen ? 'primary' : undefined"
-                :tooltip="column.frozen ? t('reports.columns.unfreeze') : t('reports.columns.freeze')"
-                @click="handleFrozenToggle(column.field, !column.frozen)"
-              >
-                <VIcon
-                  :icon="column.frozen ? 'tabler-pin' : 'tabler-pin-off'"
-                  size="small"
+        <!-- Columns List -->
+        <VCardText class="pa-0">
+          <VList
+            density="compact"
+            class="column-list"
+            max-height="300"
+            style="overflow-y: auto;"
+          >
+            <VListItem
+              v-for="column in filteredColumns"
+              :key="column.field"
+              class="column-item"
+            >
+              <!-- Visibility Checkbox -->
+              <template #prepend>
+                <VCheckbox
+                  :model-value="visibleColumnsSet.has(column.field)"
+                  hide-details
+                  density="compact"
+                  color="primary"
+                  @update:model-value="toggleColumnVisibility(column.field)"
                 />
-              </VBtn>
-            </template>
-          </VListItem>
-        </VList>
-      </VCardText>
-    </VCard>
-  </VMenu>
+              </template>
+
+              <!-- Column Info -->
+              <VListItemTitle class="d-flex align-center">
+                <VIcon
+                  :icon="getColumnIcon(column)"
+                  size="16"
+                  class="me-2"
+                  :color="visibleColumnsSet.has(column.field) ? 'primary' : 'disabled'"
+                />
+
+                <div class="flex-grow-1">
+                  <div class="text-body-2 font-weight-medium">
+                    {{ column.alias }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ column.field }} • {{ column.type }}
+                  </div>
+                </div>
+              </VListItemTitle>
+
+              <!-- Actions -->
+              <template #append>
+                <div class="d-flex align-center gap-1">
+                  <!-- Freeze Toggle -->
+                  <IconButtonAtom
+                    :icon="frozenColumnsSet.has(column.field) ? 'tabler-pin-filled' : 'tabler-pin'"
+                    :color="frozenColumnsSet.has(column.field) ? 'primary' : undefined"
+                    :tooltip="frozenColumnsSet.has(column.field)
+                      ? t('reports.columns.unfreeze')
+                      : t('reports.columns.freeze')"
+                    size="small"
+                    variant="text"
+                    @click="toggleColumnFreeze(column.field)"
+                  />
+
+                  <!-- Drag Handle -->
+                  <VIcon
+                    icon="tabler-grip-vertical"
+                    size="16"
+                    color="disabled"
+                    class="drag-handle"
+                  />
+                </div>
+              </template>
+            </VListItem>
+
+            <!-- Empty State -->
+            <VListItem v-if="filteredColumns.length === 0">
+              <VListItemTitle class="text-center text-medium-emphasis">
+                {{ t('reports.columns.noResults') }}
+              </VListItemTitle>
+            </VListItem>
+          </VList>
+        </VCardText>
+
+        <!-- Footer -->
+        <VCardActions class="pa-3 pt-0">
+          <div class="text-caption text-medium-emphasis">
+            {{ t('reports.columns.selected', {
+              count: props.visibleColumns.length,
+              total: props.availableColumns.length,
+            }) }}
+          </div>
+          <VSpacer />
+          <VBtn
+            size="small"
+            variant="text"
+            @click="showMenu = false"
+          >
+            {{ t('common.done') }}
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VMenu>
+  </div>
 </template>
 
 <style scoped>
-.v-list-item {
-  min-block-size: 40px;
+.column-config-molecule {
+  display: inline-flex;
+}
+
+.column-config-card {
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 12%);
+}
+
+.column-list {
+  border-block-start: 1px solid rgb(var(--v-theme-outline-variant));
+}
+
+.column-item {
+  border-block-end: 1px solid rgba(var(--v-theme-outline-variant), 0.5);
+  transition: background-color 0.2s ease;
+}
+
+.column-item:hover {
+  background-color: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.column-item:last-child {
+  border-block-end: none;
+}
+
+.drag-handle {
+  cursor: grab;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.drag-handle:hover {
+  opacity: 0.8;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Checkbox styling */
+.column-item :deep(.v-checkbox) {
+  margin-inline-end: 8px;
+}
+
+/* Smooth transitions */
+.column-item * {
+  transition: color 0.2s ease;
+}
+
+/* Focus management */
+.column-item:focus-within {
+  background-color: rgba(var(--v-theme-primary), 0.04);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .column-config-card {
+    max-inline-size: 90vw;
+  }
+
+  .column-item .text-caption {
+    display: none;
+  }
 }
 </style>

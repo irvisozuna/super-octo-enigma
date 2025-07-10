@@ -241,6 +241,25 @@ const generateSampleData = () => {
 const buildFiltersPayload = () => {
   const filters: any = {}
 
+  console.log('Filtros aplicados:', appliedFilters.value)
+  console.log('Mapa de filtros:', appliedFiltersMap)
+
+  // Función recursiva para buscar filtros en grupos anidados
+  const findFilterInConfig = (filters: any[], fieldName: string): any => {
+    for (const filter of filters) {
+      if (filter.type === 'filter' && filter.field === fieldName)
+        return filter
+
+      if (filter.type === 'group' && filter.children) {
+        const found = findFilterInConfig(filter.children, fieldName)
+        if (found)
+          return found
+      }
+    }
+
+    return null
+  }
+
   // Agregar filtros aplicados
   appliedFilters.value.forEach(filter => {
     const fieldConfig = getFieldConfig(filter.field)
@@ -265,6 +284,8 @@ const buildFiltersPayload = () => {
   // Agregar búsqueda rápida si existe
   if (quickSearchQuery.value)
     filters._search = quickSearchQuery.value
+
+  console.log('Payload de filtros construido:', filters)
 
   return filters
 }
@@ -425,15 +446,44 @@ const _applyFilter = (filter: any, value: any) => {
 }
 
 const applyAllFilters = () => {
+  console.log('=== APLICANDO FILTROS ===')
+  console.log('Mapa de filtros actual:', appliedFiltersMap)
+  console.log('Configuración del reporte:', reportConfig.value?.filters)
+
+  // Función recursiva para buscar filtros en grupos anidados
+  const findFilterInConfig = (filters: any[], fieldName: string): any => {
+    console.log(`Buscando filtro ${fieldName} en:`, filters)
+    for (const filter of filters) {
+      console.log('Revisando filtro:', filter)
+      if (filter.type === 'filter' && filter.field === fieldName) {
+        console.log(`Encontrado filtro para ${fieldName}:`, filter)
+
+        return filter
+      }
+      if (filter.type === 'group' && filter.children) {
+        const found = findFilterInConfig(filter.children, fieldName)
+        if (found)
+          return found
+      }
+    }
+    console.log(`No se encontró filtro para ${fieldName}`)
+
+    return null
+  }
+
   // Aplica todos los filtros del mapa
   appliedFilters.value = Object.entries(appliedFiltersMap)
     .filter(([_, v]) => v !== undefined && v !== null && v !== '')
     .map(([field, value]) => {
-      const filter = reportConfig.value?.filters.find(f => f.field === field)
+      const filter = findFilterInConfig(reportConfig.value?.filters || [], field)
 
-      return filter ? { field, operator: filter.operator, value } : null
+      console.log(`Procesando filtro ${field}:`, { value, filter })
+
+      return filter ? { field, operator: filter.operator || 'equals', value } : null
     })
     .filter(Boolean) as FilterValue[]
+
+  console.log('Filtros aplicados después de procesar:', appliedFilters.value)
 
   // Recargar datos con los nuevos filtros
   loadRealDataFromBackend(route.params.id as string)
@@ -452,6 +502,8 @@ const clearAllFilters = () => {
 
 // Manejar actualizaciones de filtros desde el componente
 const handleFiltersUpdate = (updatedFilters: any[]) => {
+  console.log('Actualizando filtros desde componente:', updatedFilters)
+
   // Actualizar el mapa de filtros aplicados
   Object.keys(appliedFiltersMap).forEach(key => {
     delete appliedFiltersMap[key]
@@ -459,14 +511,18 @@ const handleFiltersUpdate = (updatedFilters: any[]) => {
 
   const extractFilterValues = (filters: any[]) => {
     filters.forEach(filter => {
-      if (filter.type === 'filter' && filter.value !== undefined && filter.value !== '')
+      if (filter.type === 'filter' && filter.value !== undefined && filter.value !== '' && filter.value !== null) {
         appliedFiltersMap[filter.field] = filter.value
-      else if (filter.type === 'group' && filter.children)
+        console.log(`Agregando filtro al mapa: ${filter.field} = ${filter.value}`)
+      }
+      else if (filter.type === 'group' && filter.children) {
         extractFilterValues(filter.children)
+      }
     })
   }
 
   extractFilterValues(updatedFilters)
+  console.log('Mapa de filtros actualizado:', appliedFiltersMap)
 }
 
 // Gestión de ordenamiento
@@ -837,66 +893,66 @@ const FilterGroup = {
       </VCardTitle>
       <!-- Tabs de vista -->
       <VCardText class="pa-0">
-        <VRow class="align-center px-4 pt-2 pb-0">
+        <VRow class="align-center justify-space-between px-4 pt-2 pb-0">
           <VCol cols="auto">
-            <VTabs
-              v-model="viewMode"
-              class="mb-0"
-            >
-              <VTab value="table">
-                <VIcon
-                  icon="tabler-table"
-                  start
-                />Tabla
-              </VTab>
-            </VTabs>
-          </VCol>
-          <VCol cols="auto">
-            <VBtnToggle
-              v-model="density"
-              mandatory
-              density="compact"
-            >
-              <VBtn
-                value="comfortable"
-                icon
-                size="small"
+            <div class="d-flex align-center gap-2">
+              <VTabs
+                v-model="viewMode"
+                class="mb-0"
               >
-                <VIcon
-                  icon="tabler-line-height"
-                  size="16"
-                />
-                <VTooltip activator="parent">
-                  Cómodo
-                </VTooltip>
-              </VBtn>
-              <VBtn
-                value="default"
-                icon
-                size="small"
+                <VTab value="table">
+                  <VIcon
+                    icon="tabler-table"
+                    start
+                  />Tabla
+                </VTab>
+              </VTabs>
+              <VBtnToggle
+                v-model="density"
+                mandatory
+                density="compact"
               >
-                <VIcon
-                  icon="tabler-menu-2"
-                  size="16"
-                />
-                <VTooltip activator="parent">
-                  Normal
-                </VTooltip>
-              </VBtn>
-              <VBtn
-                value="compact"
-                icon
-                size="small"
-              >
-                <VIcon
-                  icon="tabler-list"
-                  size="16"
-                />
-                <VTooltip activator="parent">
-                  Compacto
-                </VTooltip>
-              </VBtn>
-            </VBtnToggle>
+                <VBtn
+                  value="comfortable"
+                  icon
+                  size="small"
+                >
+                  <VIcon
+                    icon="tabler-line-height"
+                    size="16"
+                  />
+                  <VTooltip activator="parent">
+                    Cómodo
+                  </VTooltip>
+                </VBtn>
+                <VBtn
+                  value="default"
+                  icon
+                  size="small"
+                >
+                  <VIcon
+                    icon="tabler-menu-2"
+                    size="16"
+                  />
+                  <VTooltip activator="parent">
+                    Normal
+                  </VTooltip>
+                </VBtn>
+                <VBtn
+                  value="compact"
+                  icon
+                  size="small"
+                >
+                  <VIcon
+                    icon="tabler-list"
+                    size="16"
+                  />
+                  <VTooltip activator="parent">
+                    Compacto
+                  </VTooltip>
+                </VBtn>
+              </VBtnToggle>
+            </div>
           </VCol>
           <VCol cols="auto">
             <div class="d-flex align-center gap-2">
@@ -920,7 +976,7 @@ const FilterGroup = {
                 hide-details
                 clearable
                 class="quick-search"
-                style="max-inline-size: 200px; min-inline-size: 140px;"
+                style="max-inline-size: 300px; min-inline-size: 300px;"
               >
                 <template #prepend-inner>
                   <VIcon
@@ -929,7 +985,7 @@ const FilterGroup = {
                   />
                 </template>
               </VTextField>
-              <VMenu>
+              <VMenu :close-on-content-click="false">
                 <template #activator="{ props }">
                   <VBtn
                     icon
@@ -952,32 +1008,37 @@ const FilterGroup = {
                     class="py-1 px-2"
                     style="min-block-size: 36px;"
                   >
-                    <VCheckbox
-                      :model-value="visibleColumns.includes(field.field)"
-                      hide-details
-                      density="compact"
-                      class="me-2"
-                      style="margin-block-end: 0;"
-                      @update:model-value="toggleColumnVisibility(field.field)"
-                    />
-                    <VListItemTitle
-                      class="text-body-2"
-                      style="min-inline-size: 80px;"
+                    <div
+                      class="d-flex align-center gap-2"
+                      style="inline-size: 100%;"
                     >
-                      {{ field.alias || field.field }}
-                    </VListItemTitle>
-                    <VBtn
-                      icon
-                      size="x-small"
-                      variant="text"
-                      @click="freezeColumn(field.field)"
-                    >
-                      <VIcon
-                        :icon="frozenColumns.includes(field.field) ? 'tabler-pin-filled' : 'tabler-pin'"
-                        size="16"
-                        :color="frozenColumns.includes(field.field) ? 'primary' : undefined"
+                      <VCheckbox
+                        :model-value="visibleColumns.includes(field.field)"
+                        hide-details
+                        density="compact"
+                        class="me-1"
+                        style="margin-block-end: 0;"
+                        @update:model-value="toggleColumnVisibility(field.field)"
                       />
-                    </VBtn>
+                      <VListItemTitle
+                        class="text-body-2"
+                        style=" flex: 1;min-inline-size: 80px;"
+                      >
+                        {{ field.alias || field.field }}
+                      </VListItemTitle>
+                      <VBtn
+                        icon
+                        size="x-small"
+                        variant="text"
+                        @click.stop="freezeColumn(field.field)"
+                      >
+                        <VIcon
+                          :icon="frozenColumns.includes(field.field) ? 'tabler-pin' : 'tabler-pin-filled'"
+                          size="16"
+                          :color="frozenColumns.includes(field.field) ? 'primary' : undefined"
+                        />
+                      </VBtn>
+                    </div>
                   </VListItem>
                 </VList>
               </VMenu>

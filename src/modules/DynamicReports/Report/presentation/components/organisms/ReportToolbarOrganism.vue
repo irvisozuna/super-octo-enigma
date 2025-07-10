@@ -12,7 +12,7 @@ import ColumnConfigMolecule from '../molecules/ColumnConfigMolecule.vue'
 // Atoms
 import IconButtonAtom from '../atoms/IconButtonAtom.vue'
 
-import type { DensityType, FieldConfigDTO, ViewModeType } from '../../../application/dtos/ReportDtos'
+import type { DensityType, FieldConfigDTO, ViewModeType } from '../../Application/DTOs/ReportDTOs'
 
 interface Props {
   viewMode: ViewModeType

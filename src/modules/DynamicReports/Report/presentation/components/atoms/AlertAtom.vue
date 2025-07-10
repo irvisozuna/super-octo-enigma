@@ -2,47 +2,51 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+const props = withDefaults(defineProps<Props>(), {
+  variant: 'tonal',
+  title: '',
+  text: '',
+  icon: '',
+  closable: false,
+  dense: false,
+})
+
+const emit = defineEmits<Emits>()
+
+// State Colors from design system
+const StateColors = {
+  success: '#16A34A',
+  warning: '#EAB308',
+  error: '#DC2626',
+  info: '#2563EB',
+} as const
+
 interface Props {
-  type?: 'info' | 'success' | 'warning' | 'error'
-  variant?: 'text' | 'tonal' | 'outlined' | 'elevated' | 'flat'
+  type: 'success' | 'warning' | 'error' | 'info'
+  variant?: 'flat' | 'tonal' | 'outlined' | 'text'
   title?: string
   text?: string
   icon?: string
   closable?: boolean
-  persistent?: boolean
+  dense?: boolean
 }
 
 interface Emits {
   close: []
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  type: 'info',
-  variant: 'tonal',
-  title: '',
-  text: '',
-  icon: '',
-  closable: false,
-  persistent: false,
-})
+const defaultIcons = {
+  success: 'tabler-check-circle',
+  warning: 'tabler-alert-triangle',
+  error: 'tabler-alert-circle',
+  info: 'tabler-info-circle',
+}
 
-const emit = defineEmits<Emits>()
+const computedIcon = computed(() =>
+  props.icon || defaultIcons[props.type],
+)
 
-const alertIcon = computed(() => {
-  if (props.icon)
-    return props.icon
-
-  switch (props.type) {
-    case 'success':
-      return 'tabler-check-circle'
-    case 'warning':
-      return 'tabler-alert-triangle'
-    case 'error':
-      return 'tabler-alert-circle'
-    default:
-      return 'tabler-info-circle'
-  }
-})
+const computedColor = computed(() => props.type)
 
 const handleClose = (): void => {
   emit('close')
@@ -53,34 +57,79 @@ const handleClose = (): void => {
   <VAlert
     :type="type"
     :variant="variant"
-    :icon="alertIcon"
+    :color="computedColor"
     :closable="closable"
-    :persistent="persistent"
+    :density="dense ? 'compact' : 'default'"
+    class="alert-atom"
     @click:close="handleClose"
   >
+    <!-- Custom Icon -->
     <template
+      v-if="computedIcon"
+      #prepend
+    >
+      <VIcon :icon="computedIcon" />
+    </template>
+
+    <!-- Title -->
+    <div
       v-if="title"
-      #title
+      class="alert-atom__title font-weight-medium mb-1"
     >
       {{ title }}
-    </template>
+    </div>
 
-    <template
+    <!-- Content -->
+    <div
       v-if="text"
-      #text
+      class="alert-atom__text"
     >
       {{ text }}
-    </template>
+    </div>
 
-    <template #default>
-      <slot />
-    </template>
+    <!-- Slot for custom content -->
+    <slot v-if="!text" />
   </VAlert>
 </template>
 
 <style scoped>
-.v-alert {
-  margin-block: 8px;
-  margin-inline: 0;
+.alert-atom {
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.alert-atom__title {
+  line-height: 1.3;
+}
+
+.alert-atom__text {
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+/* Type-specific styling */
+.alert-atom :deep(.v-alert--variant-tonal) {
+  border-inline-start: 4px solid currentcolor;
+}
+
+.alert-atom :deep(.v-alert--variant-outlined) {
+  border-width: 2px;
+}
+
+/* Animation for enter/leave */
+.alert-atom {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

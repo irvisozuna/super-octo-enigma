@@ -19,7 +19,7 @@ import type {
   ReportConfigDTO,
   SortingRuleDTO,
   ViewModeType,
-} from '../../../application/dtos/ReportDtos'
+} from '../../Application/DTOs/ReportDTOs'
 
 interface Props {
   data: any[]

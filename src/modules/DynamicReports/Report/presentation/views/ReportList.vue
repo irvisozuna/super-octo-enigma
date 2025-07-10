@@ -66,6 +66,9 @@ function deleteSelected() {
 
 function openAddDialog() {
   navigateTo('/reports/create')
+
+  // limpiar el local storage
+  localStorage.removeItem('reportWizardProgress')
 }
 
 function openEditDialog(item: any) {
@@ -73,7 +76,7 @@ function openEditDialog(item: any) {
 }
 
 function openViewDialog(item: any) {
-  navigateTo(`/reports/${item.id}`)
+  navigateTo(`/reports/viewer/${item.id}`)
 }
 
 function openDeleteDialog(item: any) {
