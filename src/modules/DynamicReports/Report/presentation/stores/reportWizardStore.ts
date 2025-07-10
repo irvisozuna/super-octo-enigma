@@ -1,150 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-
-interface WizardData {
-  basicInfo: {
-    name: string
-    description: string
-    dataSourceId: string
-    isActive: boolean
-    isPublic: boolean
-  }
-  selectedFields: any[]
-  filters: any[]
-  sorting: {
-    primary: { field: string; direction: 'ASC' | 'DESC' }
-    secondary?: { field: string; direction: 'ASC' | 'DESC' }
-    tertiary?: { field: string; direction: 'ASC' | 'DESC' }
-    nullsHandling: 'FIRST' | 'LAST'
-    caseSensitive: boolean
-  }
-  exportOptions: {
-    excel: {
-      enabled: boolean
-      includeCharts: boolean
-      autoFilter: boolean
-      includeHeaders: boolean
-      includeTotals: boolean
-    }
-    pdf: {
-      enabled: boolean
-      orientation: 'portrait' | 'landscape'
-      pageSize: 'A4' | 'A3' | 'Letter'
-      margins: number
-      includeHeaders: boolean
-      includeTotals: boolean
-    }
-    csv: {
-      enabled: boolean
-      delimiter: string
-      encoding: 'UTF-8' | 'ISO-8859-1'
-      includeHeaders: boolean
-    }
-    general: {
-      filenameTemplate: string
-      compressionLevel: 'none' | 'low' | 'medium' | 'high'
-    }
-  }
-  advanced: {
-    columns: any[]
-    footer: {
-      enabled: boolean
-      showTotals: boolean
-      showSubtotals: boolean
-      showCount: boolean
-      showAverage: boolean
-      showMin: boolean
-      showMax: boolean
-      customText: string
-    }
-    display: {
-      showGridLines: boolean
-      showAlternateRows: boolean
-      alternateRowColor: string
-      headerStyle: 'default' | 'bold' | 'colored'
-      rowHeight: number
-      maxRowsPerPage: number
-      enablePagination: boolean
-    }
-    grouping: {
-      enabled: boolean
-      showGroupHeaders: boolean
-      showGroupFooters: boolean
-      collapseGroups: boolean
-      groupByFields: any[]
-    }
-    styling: {
-      theme: 'default' | 'dark' | 'light' | 'custom'
-      primaryColor: string
-      secondaryColor: string
-      fontFamily: string
-      fontSize: number
-    }
-    templates?: {
-      selected: string
-      custom: any[]
-    }
-    calculatedFields?: Array<{
-      id: string
-      name: string
-      formula: string
-      format: string
-      description: string
-      enabled: boolean
-    }>
-    conditionalFormats?: Array<{
-      id: string
-      name: string
-      field: string
-      conditions: Array<{
-        operator: string
-        value: string
-        color: string
-        backgroundColor: string
-        bold: boolean
-        italic: boolean
-      }>
-      enabled: boolean
-    }>
-    interactive?: {
-      filters: {
-        enabled: boolean
-        showFilterBar: boolean
-        quickFilters: string[]
-        allowCustomFilters: boolean
-      }
-      actions: {
-        enabled: boolean
-        allowExport: boolean
-        allowPrint: boolean
-        allowShare: boolean
-        customActions: any[]
-      }
-      drillDown: {
-        enabled: boolean
-        levels: any[]
-      }
-    }
-    performance?: {
-      enableCache: boolean
-      cacheTimeout: number
-      enableLazyLoading: boolean
-      enableVirtualScrolling: boolean
-      maxRowsToRender: number
-    }
-    security?: {
-      enableFieldLevelSecurity: boolean
-      hiddenFields: string[]
-      restrictedFields: string[]
-      enableRowLevelSecurity: boolean
-      securityFilters: any[]
-    }
-  }
-}
+import type { ReportWizardData } from '../../domain/types/ReportWizardTypes'
 
 const stepCount = 7 // Number of steps in the wizard
 
-const defaultWizardData: WizardData = {
+const defaultWizardData: ReportWizardData = {
   basicInfo: {
     name: '',
     description: '',
@@ -267,7 +127,7 @@ const defaultWizardData: WizardData = {
 
 export const useReportWizardStore = defineStore('reportWizard', () => {
   // State
-  const wizardData = ref<WizardData>(JSON.parse(JSON.stringify(defaultWizardData)))
+  const wizardData = ref<ReportWizardData>(JSON.parse(JSON.stringify(defaultWizardData)))
   const currentStep = ref(0) // Use number index
   const isEditing = ref(false)
   const reportId = ref<string | null>(null)
@@ -463,7 +323,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     }, 300)
   }
 
-  const updateWizardData = (section: keyof WizardData, data: any) => {
+  const updateWizardData = (section: keyof ReportWizardData, data: any) => {
     // Prevent unnecessary updates by checking if data actually changed
     const currentSection = wizardData.value[section]
     const newSection = { ...currentSection, ...data }
@@ -475,7 +335,17 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     }
   }
 
-  const updateBasicInfo = (data: Partial<WizardData['basicInfo']>) => {
+  // FIJO: Método para actualizar todo el wizard data de una vez (útil para cargar desde backend)
+  const setWizardData = (data: ReportWizardData) => {
+    // Prevent unnecessary updates by checking if data actually changed
+    if (JSON.stringify(wizardData.value) !== JSON.stringify(data)) {
+      wizardData.value = { ...data }
+      hasUnsavedChanges.value = true
+      saveToLocalStorage()
+    }
+  }
+
+  const updateBasicInfo = (data: Partial<ReportWizardData['basicInfo']>) => {
     updateWizardData('basicInfo', data)
   }
 
@@ -497,7 +367,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     }
   }
 
-  const updateSorting = (sorting: WizardData['sorting']) => {
+  const updateSorting = (sorting: ReportWizardData['sorting']) => {
     // Prevent unnecessary updates by checking if object actually changed
     if (JSON.stringify(wizardData.value.sorting) !== JSON.stringify(sorting)) {
       wizardData.value.sorting = sorting
@@ -506,7 +376,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     }
   }
 
-  const updateExportOptions = (options: WizardData['exportOptions']) => {
+  const updateExportOptions = (options: ReportWizardData['exportOptions']) => {
     // Prevent unnecessary updates by checking if object actually changed
     if (JSON.stringify(wizardData.value.exportOptions) !== JSON.stringify(options)) {
       wizardData.value.exportOptions = options
@@ -515,7 +385,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     }
   }
 
-  const updateAdvanced = (advanced: WizardData['advanced']) => {
+  const updateAdvanced = (advanced: ReportWizardData['advanced']) => {
     // Prevent unnecessary updates by checking if object actually changed
     if (JSON.stringify(wizardData.value.advanced) !== JSON.stringify(advanced)) {
       wizardData.value.advanced = advanced
@@ -595,6 +465,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     previousStep,
     goToStep,
     updateWizardData,
+    setWizardData,
     updateBasicInfo,
     updateSelectedFields,
     updateFilters,

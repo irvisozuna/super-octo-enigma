@@ -25,7 +25,7 @@ export const useReportValidation = () => {
   const basicInfoSchema = yup.object({
     name: yup
       .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.name') }))
+      .required(t('validation.required', { field: t('DynamicReports.report.name') }))
       .min(3, t('validation.min_length', { field: t('DynamicReports.report.name'), min: 3 }))
       .max(255, t('validation.max_length', { field: t('DynamicReports.report.name'), max: 255 }))
       .matches(/^[\w\s\-]+$/, t('validation.alphanumeric', { field: t('DynamicReports.report.name') })),
@@ -34,7 +34,7 @@ export const useReportValidation = () => {
       .max(1000, t('validation.max_length', { field: t('DynamicReports.report.description'), max: 1000 })),
     dataSourceId: yup
       .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.data_source') })),
+      .required(t('validation.required', { field: t('DynamicReports.report.data_source') })),
     isActive: yup
       .boolean(),
     isPublic: yup
@@ -44,10 +44,10 @@ export const useReportValidation = () => {
   const fieldSchema = yup.object({
     field: yup
       .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.field') })),
+      .required(t('validation.required', { field: t('DynamicReports.report.field') })),
     alias: yup
       .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.alias') }))
+      .required(t('validation.required', { field: t('DynamicReports.report.alias') }))
       .min(1, t('validation.min_length', { field: t('DynamicReports.report.alias'), min: 1 }))
       .max(100, t('validation.max_length', { field: t('DynamicReports.report.alias'), max: 100 })),
     format: yup
@@ -65,14 +65,9 @@ export const useReportValidation = () => {
 
   const filterSchema = yup.object({
     field: yup
-      .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.filter_field') })),
-    type: yup
-      .string()
-      .oneOf(['text', 'number', 'date', 'select', 'range', 'boolean'], t('validation.invalid_type')),
+      .string(),
     operator: yup
-      .string()
-      .required(t('validations.required', { field: t('DynamicReports.report.operator') })),
+      .string(),
     defaultValue: yup
       .mixed(),
     required: yup
@@ -86,7 +81,7 @@ export const useReportValidation = () => {
     primary: yup.object({
       field: yup
         .string()
-        .required(t('validations.required', { field: t('DynamicReports.report.primary_sort') })),
+        .required(t('validation.required', { field: t('DynamicReports.report.primary_sort') })),
       direction: yup
         .string()
         .oneOf(['ASC', 'DESC'], t('validation.invalid_direction')),

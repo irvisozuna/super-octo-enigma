@@ -3,6 +3,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ReportApiService } from '../../infrastructure/api/services/ReportApiService'
+import { ReportDataTransformer } from '../../infrastructure/transformers/ReportDataTransformer'
 import type { ListFilters } from '../../../shared/types'
 
 export const useReportStore = defineStore('report', () => {
@@ -11,6 +12,12 @@ export const useReportStore = defineStore('report', () => {
   const currentItem = ref<any>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  // Report execution state
+  const reportData = ref<any[]>([])
+  const reportTotalRecords = ref(0)
+  const reportLoading = ref(false)
+  const reportError = ref<string | null>(null)
 
   // Pagination
   const page = ref(1)
@@ -44,8 +51,8 @@ export const useReportStore = defineStore('report', () => {
       })
 
       items.value = response.data
-      total.value = response.meta.total
-      totalPages.value = response.meta.total_pages
+      total.value = response.pagination.total
+      totalPages.value = response.pagination.total_pages
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch reports'
@@ -61,14 +68,61 @@ export const useReportStore = defineStore('report', () => {
 
     try {
       const response = await apiService.getById(id)
+      const backendData = response.metadata
 
-      currentItem.value = response.data
+      if (backendData) {
+        const transformedData = ReportDataTransformer.fromBackendToWizard(backendData)
+
+        const saveData = {
+          wizardData: transformedData,
+          currentStep: 0,
+          isEditing: true,
+          reportId: id,
+          timestamp: new Date().toISOString(),
+        }
+
+        localStorage.setItem('reportWizardProgress', JSON.stringify(saveData))
+        currentItem.value = null // opcional: limpiar currentItem
+      }
+      else {
+        currentItem.value = null
+      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch report'
     }
     finally {
       loading.value = false
+    }
+  }
+
+  const executeReport = async (payload: any) => {
+    reportLoading.value = true
+    reportError.value = null
+
+    try {
+      const response = await apiService.executeReport(payload)
+
+      // Solo los datos
+      reportData.value = response.data || []
+
+      // Total real del backend
+      reportTotalRecords.value = response.meta?.total_records ?? response.data?.length ?? 0
+
+      // Actualiza paginación local con la del backend
+      if (response.pagination) {
+        page.value = response.pagination.page || 1
+        itemsPerPage.value = response.pagination.per_page || 50
+        totalPages.value = response.pagination.total_pages || 1
+        total.value = response.pagination.total || reportTotalRecords.value
+      }
+
+      return response
+    } catch (err) {
+      reportError.value = err instanceof Error ? err.message : 'Error al cargar los datos del reporte'
+      throw err
+    } finally {
+      reportLoading.value = false
     }
   }
 
@@ -149,6 +203,12 @@ export const useReportStore = defineStore('report', () => {
     loading,
     error,
 
+    // Report execution state
+    reportData,
+    reportTotalRecords,
+    reportLoading,
+    reportError,
+
     // Pagination
     page,
     itemsPerPage,
@@ -166,6 +226,7 @@ export const useReportStore = defineStore('report', () => {
     // Actions
     fetchList,
     fetchById,
+    executeReport,
     createItem,
     updateItem,
     deleteItem,

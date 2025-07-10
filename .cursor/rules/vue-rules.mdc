@@ -1,106 +1,192 @@
 ---
-description: 
-globs: 
+description: >
+  🛠 **Global UI/UX Contract for the Project**  
+  Applies **Atomic Design** (Atoms → Molecules → Organisms → Templates → Pages) to
+  every front‑end PR.  Guarantees visual consistency, accessibility
+  (WCAG 2.2 AA), clear interactions, and performance budgets across the entire
+  code‑base.
+
+globs:
+  - "src/**/*.{vue,tsx,ts}"
+  - "src/**/*.scss"
+  - "src/**/*.css"
 alwaysApply: false
 ---
-# 🎨 Patrón Visual y de UX para Componentes de Reporte Dinámico
 
-## 📋 Principios Fundamentales
+# 🎨 UI · UX Design System & Cursor Rules
 
-### 1. Consistencia Visual
-- Todos los componentes siguen el mismo estilo visual y patrones de interacción
-- Uso consistente de iconos, colores y espaciado
-- Jerarquía visual clara con títulos, subtítulos y contenido
-
-### 2. Diseño Centrado en el Usuario
-- Interfaces intuitivas que no requieren manual
-- Feedback visual inmediato para todas las acciones
-- Mensajes de ayuda contextuales
-- Validaciones en tiempo real
-
-### 3. Accesibilidad y Claridad
-- Contraste adecuado entre elementos
-- Tamaños de fuente legibles
-- Iconos acompañados de texto cuando es necesario
-- Estados visuales claros (`hover`, `active`, `disabled`)
+> **Naming convention**: `FooBarAtom.vue` → `FooBarMolecule.vue`
+> → `FooBarOrganism.vue` → `FooBarTemplate.vue` → `FooBarPage.vue`
 
 ---
 
-## 🏗️ Estructura de Componentes
+## 1 · Core Principles
 
-### 🔹 Layout Base
-
-```vue
-<div class="component-name-advanced">
-  <!-- Header Section -->
-  <VRow>
-    <VCol cols="12">
-      <div class="d-flex align-center justify-space-between mb-2">
-        <h6 class="text-h6 font-weight-medium mb-0">Título del Componente</h6>
-        <VChip size="small" variant="tonal" :color="statusColor">
-          <VIcon :icon="statusIcon" size="16" start />
-          Estado/Contador
-        </VChip>
-      </div>
-      <p class="text-body-2 text-medium-emphasis mb-4">
-        Descripción clara de lo que hace este paso/componente
-      </p>
-    </VCol>
-  </VRow>
-  <!-- Main Content -->
-</div>
-```
-
-### 🔹 Uso de Tabs para Organización
-
-```vue
-<VTabs v-model="activeTab" class="mb-4">
-  <VTab value="basic">
-    <VIcon icon="tabler-icon" start />
-    Categoría
-  </VTab>
-</VTabs>
-```
+| # | Principle | Rationale |
+|---|-----------|-----------|
+| 1 | **Visual Consistency** | Use the design‑token system for colours, spacing, typography. |
+| 2 | **User‑Centred** | UI explains itself: instant feedback, inline help, real‑time validation. |
+| 3 | **Accessibility First** | WCAG 2.2 AA contrast, 44 × 44 px hit‑areas, focus rings, ARIA roles. |
+| 4 | **Performance Aware** | Lazy‑load heavy organisms; prefer CSS‑only animations; bundle ≤ 200 kB/route. |
+| 5 | **International‑Ready** | All text from `t()` helpers; no hard‑coded language. |
 
 ---
 
-## 🎯 Patrones de Interacción
+## 2 · Atomic Catalogue
 
-### 1. Drag & Drop
-- Usar `vuedraggable` para reordenamiento
-- Icono de grip (`tabler-grip-vertical`) como handle
-- Efectos visuales durante el arrastre (`ghost class`)
-- Transiciones suaves
+### 2.1 Atoms
+| Atom | Rules |
+|------|-------|
+| **IconButtonAtom** | 24 px icon; wrap in `VTooltip` if label not visible; `aria-label` required. |
+| **ChipAtom** | Tonal variant; max one line; optional 16 px start icon. |
+| **InputAtom** | Emits `update:modelValue`; inline error via `v-messages`. |
+| **AlertAtom** | Four variants (info, success, warning, error). Uses `StateColors`. |
+| **StateColors** | Success `#16A34A` · Warning `#EAB308` · Error `#DC2626` · Info `#2563EB`. |
 
-### 2. Selección Múltiple
-- Cards clickeables con borde de selección
-- Chips para tags con estado toggle
-- Checkboxes para listas de usuarios
-- Radio buttons para selección única
+### 2.2 Molecules
+| Molecule | Composition |
+|----------|-------------|
+| **HeaderBarMolecule** | `TypographyAtom` (`h6`) + `ChipAtom` + optional `IconButtonAtom` (settings). |
+| **TabsHeaderMolecule** | `VTabs` with `IconButtonAtom` + label; keyboard navigable & scrollable. |
+| **ExpandablePanelMolecule** | Summary row + chevron `IconButtonAtom`; expands via `VExpandTransition`. |
+| **DialogHeaderMolecule** | Title + close `IconButtonAtom`; placed in every modal organ‑ ism. |
 
-### 3. Configuración Expandible
+### 2.3 Organisms
+| Organism | Role |
+|----------|------|
+| **ReportBuilderOrganism** | Hosts field mapping, data‑source picker, preview, save. |
+| **FieldSelectorOrganism** | Two draggable lists with handle icon (`tabler-grip-vertical`). |
+| **AdvancedConfigDialogOrganism** | Modal with form Molecules; validates via VeeValidate. |
+| **StepperOrganism** | Multi‑step wizard; progress bar; emits `submit` when finalised. |
+
+### 2.4 Templates
+* **DefaultTemplate** – App bar, nav drawer, `<router-view>`.  
+* **ModalTemplate** – Centered dialog, max‑width 640 px, focus‑trap.  
+* **StepperTemplate** – Places `StepperOrganism` full‑width on desktop, stacked on mobile.
+
+---
+
+## 3 · Interaction Patterns
+
+| Pattern | Implementation |
+|---------|----------------|
+| **Drag & Drop** | `vuedraggable`; handle icon; ghost opacity 0.6; announce via `aria-live`. |
+| **Tabs** | Use `TabsHeaderMolecule`; scroll‑buttons auto on overflow; maintain deep‑link via `:to` route query. |
+| **Panels (Expandable)** | `ExpandablePanelMolecule`; default collapsed; animation 200 ms ease‑in‑out. |
+| **Dialogs / Modals** | Use `ModalTemplate`; trap focus; close on **Esc** & backdrop‑click; primary action first in tab‑order. |
+| **Stepper** | `StepperOrganism`; min 4 px progress bar above; disable “Next” until step valid; emit `step-change` event. |
+| **Real‑Time Validation** | Validate on `input` & `blur`; message ≤ 80 chars. |
+| **Loading & Empty States** | Spinner delay 200 ms; skeletons for lists > 3 items; empty‑state illustration + CTA. |
+| **Error Handling** | Show `AlertAtom`; provide retry action. |
+
+---
+
+## 4 · Code Skeletons
+
+### 4.1 Expandable Panel
 
 ```vue
-<!-- Panel básico visible -->
-<div class="d-flex align-center">
-  <VBtn icon size="x-small" @click="togglePanel">
-    <VIcon :icon="expanded ? 'tabler-chevron-up' : 'tabler-chevron-down'" />
-  </VBtn>
-</div>
-
-<!-- Panel expandible -->
-<VExpandTransition>
-  <div v-show="expanded" class="config-panel">
-    <!-- Configuración avanzada -->
+<!-- ExpandablePanelMolecule.vue -->
+<template>
+  <div class="d-flex align-center">
+    <VBtn icon size="x-small" @click="expanded = !expanded">
+      <VIcon :icon="expanded ? 'tabler-chevron-up' : 'tabler-chevron-down'" />
+    </VBtn>
+    <slot name="summary" />
   </div>
-</VExpandTransition>
+
+  <VExpandTransition>
+    <div v-show="expanded" class="pa-4">
+      <slot />
+    </div>
+  </VExpandTransition>
+</template>
 ```
 
-### 4. Diálogos de Configuración Avanzada
+### 4.2 Dialog Template
 
 ```vue
-<VBtn icon size="small" @click="openAdvancedConfig">
-  <VIcon icon="tabler-settings" />
-  <VTooltip activator="parent">Configuración avanzada</VTooltip>
-</VBtn>
+<!-- ModalTemplate.vue -->
+<template>
+  <VDialog v-model="open" max-width="640">
+    <VCard>
+      <DialogHeaderMolecule :title="title" @close="open = false" />
+
+      <VCardText>
+        <slot />
+      </VCardText>
+
+      <VCardActions class="justify-end">
+        <VBtn text @click="open = false">{{ t('common.cancel') }}</VBtn>
+        <VBtn color="primary" @click="$emit('confirm')">{{ t('common.save') }}</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
 ```
+
+### 4.3 Tabs Header
+
+```vue
+<!-- TabsHeaderMolecule.vue -->
+<template>
+  <VTabs v-model="modelValue" class="mb-4" show-arrows>
+    <template v-for="tab in tabs" :key="tab.value">
+      <VTab :value="tab.value">
+        <VIcon :icon="tab.icon" start />
+        {{ tab.label }}
+      </VTab>
+    </template>
+  </VTabs>
+</template>
+```
+
+### 4.4 Stepper Organism
+
+```vue
+<!-- StepperOrganism.vue -->
+<template>
+  <VStepper v-model="step">
+    <template v-for="(item, i) in steps" :key="i">
+      <VStepperHeader>
+        <VStepperStep :complete="step > i + 1" :step="i + 1">{{ item.label }}</VStepperStep>
+      </VStepperHeader>
+      <VStepperContent>
+        <component :is="item.component" @valid="valid = $event" />
+        <div class="d-flex justify-space-between mt-4">
+          <VBtn text :disabled="step === 1" @click="step--">{{ t('common.back') }}</VBtn>
+          <VBtn color="primary" :disabled="!valid" @click="next">{{ nextLabel }}</VBtn>
+        </div>
+      </VStepperContent>
+    </template>
+  </VStepper>
+</template>
+```
+
+---
+
+## 5 · Pull‑Request Checklist
+
+1. **Naming** matches Atomic tier & PascalCase.  
+2. **Design Tokens** – no hard‑coded values.  
+3. **Panels / Dialogs / Tabs / Stepper** follow provided skeletons.  
+4. **i18n** – all strings via `t()`.  
+5. **Accessibility** – Keyboard & screen‑reader compliant.  
+6. **Tests** – Unit for logic; snapshots for molecules.  
+7. **Storybook** – Story exists or updated.  
+8. **Performance** – Lighthouse ≥ 90 for Interaction & Accessibility.  
+
+---
+
+### 6 · Extending the System
+When a new UI need arises:
+
+1. Create an **Atom** first; document it here.  
+2. Compose into Molecules, then Organisms, Templates, Pages.  
+3. Update Storybook & this rule before merging feature branch.  
+
+---
+
+### 📚 References
+* Cursor docs – Rule anatomy & metadata citeturn0search0
+* Atomic Design (Brad Frost) citeturn0search2

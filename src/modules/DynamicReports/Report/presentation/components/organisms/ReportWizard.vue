@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 // Componentes organisms
 import { useDataSourceFields } from '../../composables/useDataSourceFields'
 import { useReportStore } from '../../stores/reportStore'
 import { useReportWizardStore } from '../../stores/reportWizardStore'
 import { useReportValidation } from '../../composables/useReportValidation'
+import type { ReportBackendResponse, ReportWizardData } from '../../domain/types/ReportWizardTypes'
 import ReportBasicInfoStep from './ReportBasicInfoStep.vue'
 import ReportFieldsStep from './ReportFieldsStep.vue'
 import ReportFiltersStep from './ReportFiltersStep.vue'
@@ -20,7 +21,7 @@ import { DataSourceApiService } from '@/modules/DynamicReports/DataSource/infras
 // Props
 interface Props {
   reportId?: string
-  initialData?: any
+  initialData?: ReportWizardData
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -30,13 +31,14 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  submit: [data: any]
+  submit: [data: ReportWizardData]
   cancel: []
 }>()
 
 // Composables
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const reportStore = useReportStore()
 const wizardStore = useReportWizardStore()
 const { validateCompleteReport } = useReportValidation()
@@ -47,6 +49,10 @@ const availableFields = ref<any[]>([])
 const loadingDataSources = ref(false)
 const errorDataSources = ref<string | null>(null)
 const isTransitioning = ref(false)
+const loading = ref(false)
+
+// FIJO: Detectar modo edición usando route params
+const isEdit = computed(() => !!route.params.id)
 
 // Steps configuration
 const steps = [
@@ -157,19 +163,147 @@ const dataSourceIdRef = computed(() => wizardStore.wizardData.basicInfo.dataSour
 
 const { fields: dsFields } = useDataSourceFields(dataSourceIdRef)
 
-// FIJO: Computed mejorado para sortingModel
-const sortingModel = computed({
-  get() {
-    return wizardStore.wizardData.sorting || {
+// Helper functions for sorting transformation
+const transformSortingObjectToArray = (sortingObj: any) => {
+  if (!sortingObj || !sortingObj.primary?.field)
+    return []
+
+  const rules = []
+
+  // Convert nullsHandling to the format expected by ReportSortingStep
+  const normalizeNullsHandling = (value: any) => {
+    if (value === 'IGNORE')
+      return 'DEFAULT'
+    if (value === 'FIRST' || value === 'LAST')
+      return value
+
+    return 'DEFAULT'
+  }
+
+  // Primary sorting
+  rules.push({
+    id: `sort_primary_${Date.now()}`,
+    field: sortingObj.primary.field,
+    alias: getFieldAlias(sortingObj.primary.field),
+    direction: sortingObj.primary.direction || 'ASC',
+    nullsHandling: normalizeNullsHandling(sortingObj.nullsHandling),
+    caseSensitive: sortingObj.caseSensitive || false,
+    priority: 1,
+  })
+
+  // Secondary sorting
+  if (sortingObj.secondary?.field) {
+    rules.push({
+      id: `sort_secondary_${Date.now()}`,
+      field: sortingObj.secondary.field,
+      alias: getFieldAlias(sortingObj.secondary.field),
+      direction: sortingObj.secondary.direction || 'ASC',
+      nullsHandling: normalizeNullsHandling(sortingObj.nullsHandling),
+      caseSensitive: sortingObj.caseSensitive || false,
+      priority: 2,
+    })
+  }
+
+  // Tertiary sorting
+  if (sortingObj.tertiary?.field) {
+    rules.push({
+      id: `sort_tertiary_${Date.now()}`,
+      field: sortingObj.tertiary.field,
+      alias: getFieldAlias(sortingObj.tertiary.field),
+      direction: sortingObj.tertiary.direction || 'ASC',
+      nullsHandling: normalizeNullsHandling(sortingObj.nullsHandling),
+      caseSensitive: sortingObj.caseSensitive || false,
+      priority: 3,
+    })
+  }
+
+  return rules
+}
+
+const transformSortingArrayToObject = (sortingArray: any[]) => {
+  if (!Array.isArray(sortingArray) || sortingArray.length === 0) {
+    return {
       primary: { field: '', direction: 'ASC' },
       secondary: undefined,
       tertiary: undefined,
       nullsHandling: 'LAST',
       caseSensitive: false,
     }
+  }
+
+  // Sort by priority
+  const sortedRules = [...sortingArray].sort((a, b) => (a.priority || 0) - (b.priority || 0))
+
+  // Convert nullsHandling to the format expected by validation schema
+  const normalizeNullsHandlingForValidation = (value: any) => {
+    if (value === 'DEFAULT')
+      return 'LAST'
+    if (value === 'FIRST' || value === 'LAST')
+      return value
+
+    return 'LAST'
+  }
+
+  const result = {
+    primary: { field: '', direction: 'ASC' as 'ASC' | 'DESC' },
+    secondary: undefined as { field: string; direction: 'ASC' | 'DESC' } | undefined,
+    tertiary: undefined as { field: string; direction: 'ASC' | 'DESC' } | undefined,
+    nullsHandling: normalizeNullsHandlingForValidation(sortedRules[0]?.nullsHandling) as 'FIRST' | 'LAST',
+    caseSensitive: sortedRules[0]?.caseSensitive || false,
+  }
+
+  // Primary (first rule)
+  if (sortedRules[0]) {
+    result.primary = {
+      field: sortedRules[0].field,
+      direction: sortedRules[0].direction || 'ASC',
+    }
+  }
+
+  // Secondary (second rule)
+  if (sortedRules[1]) {
+    result.secondary = {
+      field: sortedRules[1].field,
+      direction: sortedRules[1].direction || 'ASC',
+    }
+  }
+
+  // Tertiary (third rule)
+  if (sortedRules[2]) {
+    result.tertiary = {
+      field: sortedRules[2].field,
+      direction: sortedRules[2].direction || 'ASC',
+    }
+  }
+
+  return result
+}
+
+const getFieldAlias = (fieldName: string) => {
+  const field = wizardStore.wizardData.selectedFields.find(f => f.field === fieldName)
+
+  return field?.alias || fieldName
+}
+
+// FIJO: Computed para manejar la transformación de sorting entre array y objeto
+const sortingModel = computed({
+  get() {
+    // Transformar del objeto (store) al array (ReportSortingStep)
+    const result = transformSortingObjectToArray(wizardStore.wizardData.sorting)
+
+    console.log('🔄 sortingModel GET - from store:', wizardStore.wizardData.sorting, 'to array:', result)
+
+    return result
   },
   set(val) {
-    wizardStore.wizardData.sorting = val
+    // Transformar del array (ReportSortingStep) al objeto (store)
+    console.log('🔄 sortingModel SET - from array:', val)
+
+    const transformedSorting = transformSortingArrayToObject(val)
+
+    console.log('🔄 sortingModel SET - to object:', transformedSorting)
+
+    wizardStore.updateSorting(transformedSorting)
   },
 })
 
@@ -253,22 +387,22 @@ const handleStepValidation = (stepIndex: number, isValid: boolean) => {
 // FIJO: Validaciones específicas para cada paso
 const validateStep = (stepIndex: number): boolean => {
   switch (stepIndex) {
-    case 0: // Información básica
-      return !!(wizardStore.wizardData.basicInfo.name?.trim() && wizardStore.wizardData.basicInfo.dataSourceId)
-    case 1: // Campos seleccionados
-      return Array.isArray(wizardStore.wizardData.selectedFields) && wizardStore.wizardData.selectedFields.length > 0
-    case 2: // Filtros (opcional)
-      return true
-    case 3: // Ordenamiento (opcional)
-      return true
-    case 4: // Exportación (opcional)
-      return true
-    case 5: // Avanzado (opcional)
-      return true
-    case 6: // Resumen
-      return true
-    default:
-      return false
+  case 0: // Información básica
+    return !!(wizardStore.wizardData.basicInfo.name?.trim() && wizardStore.wizardData.basicInfo.dataSourceId)
+  case 1: // Campos seleccionados
+    return Array.isArray(wizardStore.wizardData.selectedFields) && wizardStore.wizardData.selectedFields.length > 0
+  case 2: // Filtros (opcional)
+    return true
+  case 3: // Ordenamiento (opcional)
+    return true
+  case 4: // Exportación (opcional)
+    return true
+  case 5: // Avanzado (opcional)
+    return true
+  case 6: // Resumen
+    return true
+  default:
+    return false
   }
 }
 
@@ -316,16 +450,26 @@ const handleSubmit = async () => {
       return
     }
 
+    // Ya NO filtrar filtros incompletos, se deben guardar todos los filtros configurados
+    // wizardStore.wizardData.filters = wizardStore.wizardData.filters.filter(
+    //   f => f.field && f.type && f.operator,
+    // )
+
+    console.log('🚀 handleSubmit - wizardStore.wizardData:', JSON.stringify(wizardStore.wizardData, null, 2))
+    console.log('🚀 handleSubmit - sorting data type:', typeof wizardStore.wizardData.sorting)
+    console.log('🚀 handleSubmit - sorting data:', wizardStore.wizardData.sorting)
+
     const errors = await validateCompleteReport(wizardStore.wizardData)
 
     if (errors.length > 0) {
+      console.error('❌ Validation errors:', errors)
       showErrorMessage(t('validation.errors_found', { count: errors.length }))
 
       return
     }
 
-    if (wizardStore.isEditing)
-      await reportStore.updateItem(wizardStore.reportId!, wizardStore.wizardData)
+    if (isEdit.value)
+      await reportStore.updateItem(route.params.id as string, wizardStore.wizardData)
     else
       await reportStore.createItem(wizardStore.wizardData)
 
@@ -334,6 +478,7 @@ const handleSubmit = async () => {
     await router.push('/reports')
   }
   catch (error) {
+    console.error('❌ Submit error:', error)
     showErrorMessage(error instanceof Error ? error.message : t('DynamicReports.report.error.save'))
   }
 }
@@ -407,14 +552,30 @@ initializeWizard()
 onMounted(async () => {
   await loadDataSources()
 
-  if (props.reportId) {
+  // FIJO: Cargar datos existentes al editar (patrón de DataSourceWizard)
+  if (isEdit.value) {
+    loading.value = true
     try {
-      await reportStore.fetchById(props.reportId)
+      await reportStore.fetchById(route.params.id as string)
 
-      // Map existing report data to wizard
+      const item = reportStore.currentItem
+      if (item) {
+        // El backend devuelve datos con la misma estructura que el wizard
+        console.log('🔍 item:', item)
+
+        const wizardData = item as ReportBackendResponse
+
+        // Actualizar el store con los datos cargados
+        wizardStore.setWizardData(wizardData)
+        console.log('✅ Report data loaded for editing:', wizardData)
+      }
     }
     catch (error) {
+      console.error('❌ Error loading report for editing:', error)
       showErrorMessage(t('DynamicReports.report.error.load'))
+    }
+    finally {
+      loading.value = false
     }
   }
 
@@ -449,6 +610,17 @@ const stepStates = computed(() => {
 
 <template>
   <VCard>
+    <!-- Loading Overlay -->
+    <VOverlay
+      v-model="loading"
+      class="align-center justify-center"
+    >
+      <VProgressCircular
+        indeterminate
+        size="64"
+      />
+    </VOverlay>
+
     <VRow>
       <VCol
         cols="12"
@@ -565,9 +737,9 @@ const stepStates = computed(() => {
                   :filters="wizardStore.wizardData.filters"
                   :sorting="wizardStore.wizardData.sorting"
                   :export-options="wizardStore.wizardData.exportOptions"
-                  :advanced="wizardStore.wizardData.advanced"
                   :data-sources="dataSources"
                   @submit="handleSubmit"
+                  @cancel="handleCancel"
                 />
               </VWindowItem>
             </VWindow>

@@ -8,7 +8,6 @@ import { useReportStore } from '../stores/reportStore'
 import ReportTable from '../components/organisms/ReportTable.vue'
 import ReportAdd from './ReportAdd.vue'
 import ReportDelete from './ReportDelete.vue'
-import ReportEdit from './ReportEdit.vue'
 
 // Composable para manejar diálogos
 const { openDialog, navigateTo } = useAppManager()
@@ -70,10 +69,7 @@ function openAddDialog() {
 }
 
 function openEditDialog(item: any) {
-  openDialog(ReportEdit, { item, title: t('edit Report') }, { width: '800px', persistent: true }).then(result => {
-    if (result === 'submit')
-      reportStore.fetchList()
-  })
+  navigateTo(`/reports/edit/${item.id}`)
 }
 
 function openViewDialog(item: any) {
@@ -101,10 +97,10 @@ onMounted(() => {
   <VCard>
     <VCardTitle>
       <h4 class="text-h4 mb-1">
-        report.title
+        {{ t('DynamicReports.report.title') }}
       </h4>
       <p class="text-body-1 mb-4">
-        report.description
+        {{ t('DynamicReports.report.description') }}
       </p>
     </VCardTitle>
 
@@ -113,7 +109,7 @@ onMounted(() => {
         <!-- Campo de búsqueda -->
         <VTextField
           v-model="reportStore.filters.search"
-          label="report.search_report"
+          :label="t('DynamicReports.report.search_report')"
           variant="outlined"
           dense
           class="filter-field"
@@ -135,7 +131,7 @@ onMounted(() => {
           color="primary"
           @click="openAddDialog"
         >
-          { ('DynamicReports.report.add report') }
+          {{ t('DynamicReports.report.add_report') }}
         </VBtn>
 
         <!-- Botones para acciones con seleccionados -->
@@ -144,7 +140,7 @@ onMounted(() => {
           color="error"
           @click="deleteSelected"
         >
-          { ('delete selected') }
+          {{ t('delete selected') }}
         </VBtn>
       </div>
     </VCardText>
@@ -154,11 +150,11 @@ onMounted(() => {
     <!-- Tabla de elementos -->
     <ReportTable
       :headers="headers"
-      :items="reportStore.list"
+      :items="reportStore.items"
       :total="reportStore.total"
       :page="reportStore.page"
       :items-per-page="reportStore.itemsPerPage"
-      :loading="reportStore.isLoading"
+      :loading="reportStore.loading"
       :selection="reportStore.selectedItems"
       @update:selection="val => reportStore.selectedItems = val"
       @update:page="onPageChange"

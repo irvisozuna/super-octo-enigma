@@ -28,4 +28,20 @@ export class ReportApiService {
   async getList(params: any) {
     return await rawApi(this.baseUrl, { method: 'GET', params })
   }
+
+  async executeReport(payload: {
+    report_id: string
+    export_format: string
+    filters?: any
+    sorting?: any
+    pagination?: {
+      page: number
+      per_page: number
+    }
+  }) {
+    return await rawApi('/dynamic-reports/executions/execute', {
+      method: 'POST',
+      body: payload,
+    })
+  }
 }

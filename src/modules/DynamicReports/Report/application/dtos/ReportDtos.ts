@@ -23,7 +23,6 @@ export interface UpdateReportDto {
 
 export interface ReportResponseDto {
   id: string
-  id: string
   data_source_id: string
   name: string
   description: string
