@@ -3,7 +3,7 @@
  * Provides access to all report-related use cases with dependency injection
  */
 
-import { inject, provide } from 'vue'
+import { inject } from 'vue'
 import type {
   ExportReportUseCase,
   GetReportDataUseCase,

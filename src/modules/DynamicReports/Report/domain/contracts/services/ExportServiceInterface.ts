@@ -8,10 +8,7 @@
 import type {
   ExportReportRequestDTO,
   ExportReportResponseDTO,
-  FieldConfigDTO,
-  FilterValueDTO,
   Result,
-  SortingRuleDTO,
 } from '../../../application/dtos/ReportDtos'
 
 /**

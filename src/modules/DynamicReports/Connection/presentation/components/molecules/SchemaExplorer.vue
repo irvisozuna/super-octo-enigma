@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useConnectionStore } from '../../stores/connectionStore'
-import type { ColumnInfoDto, ProcedureInfoDto, TableInfoDto } from '../../application/dtos/ConnectionDtos'
+import type { ProcedureInfoDto, TableInfoDto } from '../../application/dtos/ConnectionDtos'
 
 interface Props {
   connectionId: string

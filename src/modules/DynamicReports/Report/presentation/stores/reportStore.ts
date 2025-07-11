@@ -118,10 +118,12 @@ export const useReportStore = defineStore('report', () => {
       }
 
       return response
-    } catch (err) {
+    }
+    catch (err) {
       reportError.value = err instanceof Error ? err.message : 'Error al cargar los datos del reporte'
       throw err
-    } finally {
+    }
+    finally {
       reportLoading.value = false
     }
   }

@@ -1,3 +1,22 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import ReportWizard from '../components/organisms/ReportWizard.vue'
+
+const { t } = useI18n()
+const router = useRouter()
+
+const handleSubmit = (data: any) => {
+  console.log('Report created:', data)
+
+  // El wizard ya maneja la redirección a /reports
+}
+
+const handleCancel = () => {
+  router.push('/reports')
+}
+</script>
+
 <template>
   <div>
     <VCard class="pa-6">
@@ -17,23 +36,3 @@
     </VCard>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import ReportWizard from '../components/organisms/ReportWizard.vue'
-
-const { t } = useI18n()
-const router = useRouter()
-
-const handleSubmit = (data: any) => {
-  console.log('Report created:', data)
-  // El wizard ya maneja la redirección a /reports
-}
-
-const handleCancel = () => {
-  router.push('/reports')
-}
-</script>
-
-

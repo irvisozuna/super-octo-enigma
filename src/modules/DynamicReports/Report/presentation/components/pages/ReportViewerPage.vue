@@ -17,7 +17,6 @@ import DefaultTemplate from '../templates/DefaultTemplate.vue'
 import type {
   DensityType,
   ExportFormatDTO,
-  FieldConfigDTO,
   FilterValueDTO,
   PaginationDTO,
   ReportConfigDTO,

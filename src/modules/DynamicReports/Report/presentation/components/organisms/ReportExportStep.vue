@@ -311,6 +311,7 @@ const availableFormats = [
     color: 'info',
     description: 'Valores separados por comas, compatible universalmente',
   },
+
   // {
   //   id: 'html',
   //   name: 'HTML',
@@ -600,7 +601,7 @@ const updateGeneralConfig = (field: string, value: any) => {
   // Direct update since we're not using vee-validate here
   exportConfig.value.general = {
     ...exportConfig.value.general,
-    [field]: value
+    [field]: value,
   }
   emitUpdate()
 }
@@ -1134,18 +1135,20 @@ const handleImportConfig = () => {
                     value="download"
                     label="Descarga directa"
                   />
-                  <!-- <VRadio
+                  <!--
+                    <VRadio
                     value="email"
                     label="Envío por email"
-                  />
-                  <VRadio
+                    />
+                    <VRadio
                     value="cloud"
                     label="Almacenamiento en la nube"
-                  />
-                  <VRadio
+                    />
+                    <VRadio
                     value="api"
                     label="Envío por API"
-                  /> -->
+                    />
+                  -->
                 </VRadioGroup>
               </VCol>
 

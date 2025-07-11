@@ -1,6 +1,6 @@
 <!-- ReportFiltersOrganism.vue -->
 <script setup lang="ts">
-import { computed, h, reactive, resolveComponent } from 'vue'
+import { computed, h, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 // Molecules

@@ -4,7 +4,6 @@ import { computed } from 'vue'
 
 // Atoms
 import TypographyAtom from '../atoms/TypographyAtom.vue'
-import IconButtonAtom from '../atoms/IconButtonAtom.vue'
 
 interface Props {
   title: string

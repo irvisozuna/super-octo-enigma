@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import ReportFilterInput from './ReportFilterInput.vue'
 
 const props = defineProps({

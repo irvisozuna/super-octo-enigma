@@ -6,7 +6,6 @@ import { useReportStore } from '../stores/reportStore'
 
 // Componentes internos
 import ReportTable from '../components/organisms/ReportTable.vue'
-import ReportAdd from './ReportAdd.vue'
 import ReportDelete from './ReportDelete.vue'
 
 // Composable para manejar diálogos
@@ -20,7 +19,7 @@ const reportStore = useReportStore()
 const headers = [
   { title: t('DynamicReports.report.name'), key: 'name' },
   { title: t('DynamicReports.report.description'), key: 'description' },
-  { title: t('DynamicReports.report.status'), key: 'status' },
+  { title: t('DynamicReports.report.status'), key: 'is_active' },
   { title: t('actions'), key: 'actions', sortable: false },
 ]
 

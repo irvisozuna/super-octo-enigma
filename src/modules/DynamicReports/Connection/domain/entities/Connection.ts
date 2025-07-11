@@ -53,7 +53,7 @@ export interface ConnectionProps {
   name: string
   description?: string
   driver: ConnectionDriver
-  
+
   // Configuraciones específicas por tipo
   host?: string
   port?: number
@@ -66,7 +66,7 @@ export interface ConnectionProps {
   api_auth_type?: ApiAuthType
   api_auth_config?: Record<string, any>
   options?: Record<string, any>
-  
+
   // Campos comunes
   status?: 'active' | 'inactive' | 'testing' | 'error'
   created_at?: Date
@@ -135,34 +135,29 @@ export class Connection extends AggregateRoot<ConnectionProps> {
   private static validateDatabaseConfig(props: ConnectionProps): Result<void> {
     const requiredFields = ['host', 'port', 'database_name', 'username']
     const missingFields = requiredFields.filter(field => !props[field])
-    
-    if (missingFields.length > 0) {
+
+    if (missingFields.length > 0)
       return Result.fail<void>(`Missing required fields for database connection: ${missingFields.join(', ')}`)
-    }
 
     return Result.ok<void>()
   }
 
   private static validateApiConfig(props: ConnectionProps): Result<void> {
-    if (!props.api_base_url) {
+    if (!props.api_base_url)
       return Result.fail<void>('API base URL is required for API connections')
-    }
 
-    if (props.api_auth_type && !['none', 'bearer', 'basic', 'api_key'].includes(props.api_auth_type)) {
+    if (props.api_auth_type && !['none', 'bearer', 'basic', 'api_key'].includes(props.api_auth_type))
       return Result.fail<void>('Invalid API auth type')
-    }
 
     return Result.ok<void>()
   }
 
   private static validateFileConfig(props: ConnectionProps): Result<void> {
-    if (!props.file_path) {
+    if (!props.file_path)
       return Result.fail<void>('File path is required for file connections')
-    }
 
-    if (!props.file_config?.format) {
+    if (!props.file_config?.format)
       return Result.fail<void>('File format is required for file connections')
-    }
 
     return Result.ok<void>()
   }

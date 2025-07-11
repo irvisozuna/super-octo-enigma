@@ -9,6 +9,7 @@ import { useReportStore } from '../../stores/reportStore'
 import { useReportWizardStore } from '../../stores/reportWizardStore'
 import { useReportValidation } from '../../composables/useReportValidation'
 import type { ReportBackendResponse, ReportWizardData } from '../../../domain/types/ReportWizardTypes'
+import ReportMenuConfig from '../molecules/ReportMenuConfig.vue'
 import ReportBasicInfoStep from './ReportBasicInfoStep.vue'
 import ReportFieldsStep from './ReportFieldsStep.vue'
 import ReportFiltersStep from './ReportFiltersStep.vue'
@@ -100,7 +101,7 @@ const stepValidations = ref<Record<number, boolean>>({
   3: true, // El ordenamiento es opcional
   4: true, // Las opciones de exportación son opcionales
   5: true, // La configuración avanzada es opcional
-  6: true, // El resumen solo muestra información
+  6: true, // La configuración de menú es opcional
 })
 
 // FIJO: Función mejorada para navegar entre pasos
@@ -387,22 +388,24 @@ const handleStepValidation = (stepIndex: number, isValid: boolean) => {
 // FIJO: Validaciones específicas para cada paso
 const validateStep = (stepIndex: number): boolean => {
   switch (stepIndex) {
-  case 0: // Información básica
-    return !!(wizardStore.wizardData.basicInfo.name?.trim() && wizardStore.wizardData.basicInfo.dataSourceId)
-  case 1: // Campos seleccionados
-    return Array.isArray(wizardStore.wizardData.selectedFields) && wizardStore.wizardData.selectedFields.length > 0
-  case 2: // Filtros (opcional)
-    return true
-  case 3: // Ordenamiento (opcional)
-    return true
-  case 4: // Exportación (opcional)
-    return true
-  case 5: // Avanzado (opcional)
-    return true
-  case 6: // Resumen
-    return true
-  default:
-    return false
+    case 0: // Información básica
+      return !!(wizardStore.wizardData.basicInfo.name?.trim() && wizardStore.wizardData.basicInfo.dataSourceId)
+    case 1: // Campos seleccionados
+      return Array.isArray(wizardStore.wizardData.selectedFields) && wizardStore.wizardData.selectedFields.length > 0
+    case 2: // Filtros (opcional)
+      return true
+    case 3: // Ordenamiento (opcional)
+      return true
+    case 4: // Exportación (opcional)
+      return true
+    case 5: // Avanzado (opcional)
+      return true
+    case 6: // Configuración de menú (opcional)
+      return true
+    case 7: // Resumen
+      return true
+    default:
+      return false
   }
 }
 
@@ -536,6 +539,21 @@ const initializeWizard = async () => {
       }
     }
 
+    // Inicializar configuración de menú si no existe
+    if (!wizardStore.wizardData.menu_config) {
+      wizardStore.wizardData.menu_config = {
+        show_in_menu: false,
+        menu_title: '',
+        menu_icon: 'tabler-chart-bar',
+        menu_category: 'Reportes',
+        menu_order: 0,
+        menu_permissions: {
+          action: 'read',
+          subject: 'Report',
+        },
+      }
+    }
+
     return true
   }
   catch (error) {
@@ -568,6 +586,39 @@ onMounted(async () => {
         // Actualizar el store con los datos cargados
         wizardStore.setWizardData(wizardData)
         console.log('✅ Report data loaded for editing:', wizardData)
+
+        // --- INICIO: Inicialización robusta de menu_config ---
+        if (!wizardStore.wizardData.menu_config) {
+          wizardStore.wizardData.menu_config = {
+            show_in_menu: false,
+            menu_title: '',
+            menu_icon: 'tabler-chart-bar',
+            menu_category: 'Reportes',
+            menu_order: 0,
+            menu_permissions: {
+              action: 'read',
+              subject: 'Report',
+            },
+          }
+        }
+        else {
+          // Asegurar que todos los campos estén presentes
+          wizardStore.wizardData.menu_config = {
+            show_in_menu: !!wizardStore.wizardData.menu_config.show_in_menu,
+            menu_title: wizardStore.wizardData.menu_config.menu_title || '',
+            menu_icon: wizardStore.wizardData.menu_config.menu_icon || 'tabler-chart-bar',
+            menu_category: wizardStore.wizardData.menu_config.menu_category || 'Reportes',
+            menu_order: wizardStore.wizardData.menu_config.menu_order ?? 0,
+            menu_permissions: {
+              action: wizardStore.wizardData.menu_config.menu_permissions?.action || 'read',
+              subject: wizardStore.wizardData.menu_config.menu_permissions?.subject || 'Report',
+            },
+            menu_badge: wizardStore.wizardData.menu_config.menu_badge || undefined,
+          }
+        }
+        console.log('Menu config loaded:', wizardStore.wizardData.menu_config)
+
+        // --- FIN: Inicialización robusta de menu_config ---
       }
     }
     catch (error) {
@@ -765,11 +816,11 @@ const stepStates = computed(() => {
                 :disabled="isTransitioning"
                 @click="handleSubmit"
               >
+                {{ $t('common.submit') }}
                 <VIcon
-                  icon="tabler-check"
+                  icon="tabler-device-floppy"
                   end
                 />
-                {{ $t('common.submit') }}
               </VBtn>
 
               <VBtn

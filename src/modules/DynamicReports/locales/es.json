@@ -36,6 +36,7 @@
     "search_report": "Buscar Report",
     "name": "Nombre",
     "status": "Estado",
+    "add_report": "Agregar Reporte",
     "create": {
       "title": "Crear Reporte",
       "description": "Configura un nuevo reporte paso a paso"

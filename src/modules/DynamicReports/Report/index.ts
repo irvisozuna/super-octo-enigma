@@ -21,6 +21,9 @@ export { GetReportListHandler } from './application/handlers/GetReportListHandle
 export { ReportMapper } from './application/mappers/ReportMapper'
 export { CreateReportDto, UpdateReportDto, ReportResponseDto } from './application/dtos/ReportDtos'
 
+// Application Services
+export { DynamicMenuService } from './application/services/DynamicMenuService'
+
 // Infrastructure
 export { ReportRepositoryImpl } from './infrastructure/persistence/repositories/ReportRepositoryImpl'
 export { ReportApiService } from './infrastructure/api/services/ReportApiService'
@@ -45,6 +48,9 @@ export { default as ReportSortConfig } from './presentation/components/molecules
 export { default as ReportExportOptions } from './presentation/components/molecules/ReportExportOptions.vue'
 export { default as ReportPermissions } from './presentation/components/molecules/ReportPermissions.vue'
 
+// Dynamic Menu Components
+export { default as ReportMenuConfig } from './presentation/components/molecules/ReportMenuConfig.vue'
+
 // Composables
 export { useReportStore } from './presentation/stores/reportStore'
 export { useReport } from './presentation/composables/useReport'
@@ -52,6 +58,9 @@ export { useReportWizard } from './presentation/composables/useReportWizard'
 export { useReportFilters } from './presentation/composables/useReportFilters'
 export { useReportExecution } from './presentation/composables/useReportExecution'
 export { useReportValidation } from './presentation/composables/useReportValidation'
+
+// Plugins
+export { DynamicMenuPlugin, dynamicMenuPlugin } from './presentation/plugins/dynamicMenuPlugin'
 
 // Validators
 export { reportCreateValidation, reportUpdateValidation } from './presentation/validators/ReportValidators'

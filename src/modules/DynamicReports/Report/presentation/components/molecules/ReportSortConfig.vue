@@ -81,8 +81,10 @@ const updateSecondarySort = (field: string) => {
   const updated = { ...props.modelValue }
   if (field) {
     updated.secondary = { ...(updated.secondary || {}), field }
-    if (!updated.secondary.direction) updated.secondary.direction = 'ASC'
-  } else {
+    if (!updated.secondary.direction)
+      updated.secondary.direction = 'ASC'
+  }
+  else {
     updated.secondary = undefined
   }
   emit('update:modelValue', updated)
@@ -102,8 +104,10 @@ const updateTertiarySort = (field: string) => {
   const updated = { ...props.modelValue }
   if (field) {
     updated.tertiary = { ...(updated.tertiary || {}), field }
-    if (!updated.tertiary.direction) updated.tertiary.direction = 'ASC'
-  } else {
+    if (!updated.tertiary.direction)
+      updated.tertiary.direction = 'ASC'
+  }
+  else {
     updated.tertiary = undefined
   }
   emit('update:modelValue', updated)

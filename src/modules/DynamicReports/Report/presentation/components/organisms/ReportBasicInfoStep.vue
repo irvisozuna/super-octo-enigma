@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ReportMenuConfig from '../molecules/ReportMenuConfig.vue'
 
 interface ReportCategory {
   id: string
@@ -39,6 +40,22 @@ interface Department {
   color: string
 }
 
+interface MenuConfig {
+  show_in_menu: boolean
+  menu_title?: string
+  menu_icon?: string
+  menu_category?: string
+  menu_order?: number
+  menu_permissions?: {
+    action: string
+    subject: string
+  }
+  menu_badge?: {
+    content: string
+    class: string
+  }
+}
+
 interface BasicInfo {
 
   // Información básica
@@ -64,6 +81,9 @@ interface BasicInfo {
     requireAuth?: boolean
     inheritFromCategory?: boolean
   }
+
+  // Configuración de menú
+  menu_config?: MenuConfig
 
   // Rendimiento
   performance?: {
@@ -149,6 +169,15 @@ const defaultBasicInfo: BasicInfo = {
     allowGuests: false,
     requireAuth: true,
     inheritFromCategory: false,
+  },
+  menu_config: {
+    show_in_menu: false,
+    menu_title: '',
+    menu_icon: '',
+    menu_category: '',
+    menu_order: 0,
+    menu_permissions: { action: 'read', subject: 'Report' },
+    menu_badge: { content: '', class: '' },
   },
   performance: {
     refreshInterval: 60,
@@ -273,8 +302,8 @@ const refreshIntervalOptions = [
 // Canales de notificación
 const notificationChannels = [
   { value: 'email', title: 'Email', icon: 'tabler-mail', color: 'primary' },
-  { value: 'slack', title: 'Slack', icon: 'tabler-brand-slack', color: 'purple' },
-  { value: 'teams', title: 'Teams', icon: 'tabler-brand-teams', color: 'info' },
+  // { value: 'slack', title: 'Slack', icon: 'tabler-brand-slack', color: 'purple' },
+  // { value: 'teams', title: 'Teams', icon: 'tabler-brand-teams', color: 'info' },
   { value: 'webhook', title: 'Webhook', icon: 'tabler-webhook', color: 'warning' },
 ]
 
@@ -520,6 +549,12 @@ const isConfigValid = computed(() => {
   return !!(basicInfo.value.name?.trim() && basicInfo.value.dataSourceId)
 })
 
+// Función para manejar la validación del menú
+const onMenuConfigValidate = (isValid: boolean) => {
+  // La validación del menú se maneja internamente en el componente ReportMenuConfig
+  // Aquí podríamos agregar lógica adicional si es necesario
+}
+
 // Funciones de formato
 const getCacheTtlLabel = (seconds: number) => {
   if (seconds < 60)
@@ -594,6 +629,13 @@ const getRetentionLabel = (days: number) => {
           start
         />
         Clasificación
+      </VTab>
+      <VTab value="menu">
+        <VIcon
+          icon="tabler-menu-2"
+          start
+        />
+        Menú
       </VTab>
       <VTab value="performance">
         <VIcon
@@ -934,7 +976,7 @@ const getRetentionLabel = (days: number) => {
                 </VCol>
 
                 <!-- Departamentos -->
-                <VCol cols="12">
+                <!-- <VCol cols="12">
                   <h6 class="text-subtitle-1 mb-3">
                     <VIcon
                       icon="tabler-building"
@@ -978,7 +1020,7 @@ const getRetentionLabel = (days: number) => {
                       </VCard>
                     </VCol>
                   </VRow>
-                </VCol>
+                </VCol> -->
 
                 <!-- Opciones adicionales -->
                 <VCol cols="12">
@@ -1111,7 +1153,7 @@ const getRetentionLabel = (days: number) => {
           </VCol>
 
           <!-- Departamento -->
-          <VCol cols="12">
+          <!-- <VCol cols="12">
             <VCard variant="outlined">
               <VCardTitle class="d-flex align-center pa-4">
                 <VIcon
@@ -1149,7 +1191,7 @@ const getRetentionLabel = (days: number) => {
                 </VRow>
               </VCardText>
             </VCard>
-          </VCol>
+          </VCol> -->
 
           <!-- Etiquetas -->
           <VCol cols="12">
@@ -1653,6 +1695,7 @@ const getRetentionLabel = (days: number) => {
                   step="1"
                   thumb-label="always"
                   color="primary"
+                  class="slider-retention"
                 >
                   <template #thumb-label="{ modelValue }">
                     {{ getRetentionLabel(modelValue) }}
@@ -1699,6 +1742,15 @@ const getRetentionLabel = (days: number) => {
             </VAlert>
           </VCardText>
         </VCard>
+      </VWindowItem>
+
+      <!-- Tab Menú -->
+      <VWindowItem value="menu">
+        <ReportMenuConfig
+          v-model="basicInfo.menu_config"
+          :report-name="basicInfo.name"
+          @validate="onMenuConfigValidate"
+        />
       </VWindowItem>
     </VWindow>
 
@@ -1805,6 +1857,29 @@ const getRetentionLabel = (days: number) => {
                 </div>
                 <div class="text-body-2 font-weight-medium">
                   {{ basicInfo.performance?.cacheEnabled ? 'Cache activo' : 'Sin cache' }}
+                </div>
+              </div>
+            </div>
+          </VCol>
+
+          <VCol
+            cols="12"
+            sm="6"
+            md="3"
+          >
+            <div class="d-flex align-center">
+              <VIcon
+                icon="tabler-menu-2"
+                :color="basicInfo.menu_config?.show_in_menu ? 'success' : 'default'"
+                size="20"
+                class="me-2"
+              />
+              <div>
+                <div class="text-caption text-medium-emphasis">
+                  Menú
+                </div>
+                <div class="text-body-2 font-weight-medium">
+                  {{ basicInfo.menu_config?.show_in_menu ? 'Visible en menú' : 'No visible' }}
                 </div>
               </div>
             </div>
@@ -1956,5 +2031,10 @@ const getRetentionLabel = (days: number) => {
       text-transform: none;
     }
   }
+}
+</style>
+<style>
+.slider-retention .v-slider-thumb__label {
+  inline-size: 4.4vw !important;
 }
 </style>

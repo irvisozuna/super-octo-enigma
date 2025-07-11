@@ -50,11 +50,11 @@ function updateItemsPerPage(newItemsPerPage: number) {
 
 <template>
   <VDataTableServer
+    v-model="internalSelection"
     :headers="headers"
     :items="items"
     :items-length="total"
     :page="localPage"
-    v-model="internalSelection"
     item-value="id"
     return-object
     :items-per-page="localItemsPerPage"

@@ -20,6 +20,23 @@ export interface ReportProps {
   is_public?: boolean
   created_at?: Date
   updated_at?: Date
+
+  // Menu configuration
+  menu_config?: {
+    show_in_menu: boolean
+    menu_title?: string
+    menu_icon?: string
+    menu_category?: string
+    menu_order?: number
+    menu_permissions?: {
+      action: string
+      subject: string
+    }
+    menu_badge?: {
+      content: string
+      class: string
+    }
+  }
 }
 
 export class Report extends AggregateRoot<ReportProps> {
@@ -116,9 +133,57 @@ export class Report extends AggregateRoot<ReportProps> {
     return this.props.updated_at
   }
 
+  // Menu configuration getters
+  get menu_config(): any {
+    return this.props.menu_config
+  }
+
+  get show_in_menu(): boolean {
+    return this.props.menu_config?.show_in_menu || false
+  }
+
+  get menu_title(): string {
+    return this.props.menu_config?.menu_title || this.props.name
+  }
+
+  get menu_icon(): string {
+    return this.props.menu_config?.menu_icon || 'tabler-chart-bar'
+  }
+
+  get menu_category(): string {
+    return this.props.menu_config?.menu_category || 'Reports'
+  }
+
+  get menu_order(): number {
+    return this.props.menu_config?.menu_order || 0
+  }
+
+  get menu_permissions(): any {
+    return this.props.menu_config?.menu_permissions || { action: 'read', subject: 'Report' }
+  }
+
+  get menu_badge(): any {
+    return this.props.menu_config?.menu_badge
+  }
+
   // Business Methods
   addExecution(item: any): Result<void> {
     // Business logic for adding Execution
     return Result.ok<void>()
+  }
+
+  // Menu generation method
+  generateMenuConfig(): any {
+    if (!this.show_in_menu)
+      return null
+
+    return {
+      title: this.menu_title,
+      icon: { icon: this.menu_icon },
+      to: { name: 'reports-viewer-id', params: { id: this.id } },
+      action: this.menu_permissions.action,
+      subject: this.menu_permissions.subject,
+      badge: this.menu_badge,
+    }
   }
 }

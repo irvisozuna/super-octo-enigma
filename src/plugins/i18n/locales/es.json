@@ -533,7 +533,8 @@
     "success": "Éxito",
     "error": "Error",
     "next": "Siguiente",
-    "previous": "Anterior"
+    "previous": "Anterior",
+    "submit": "Enviar"
   },
   "close": "Cerrar",
   "period": "Periodo",

@@ -65,5 +65,12 @@ const selection = computed({
         @click="$emit('delete', item)"
       />
     </template>
+    <template #item.is_active="{ item }">
+      <VChip
+        :color="item.is_active ? 'success' : 'error'"
+        :prepend-icon="item.is_active ? 'tabler-check' : 'tabler-x'"
+        :label="item.is_active ? 'Activo' : 'Inactivo'"
+      />
+    </template>
   </VDataTable>
 </template>
