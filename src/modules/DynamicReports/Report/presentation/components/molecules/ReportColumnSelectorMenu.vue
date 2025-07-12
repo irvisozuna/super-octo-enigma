@@ -51,7 +51,13 @@ defineEmits<{
             class="text-body-2"
             style="flex: 1; min-inline-size: 80px;"
           >
-            {{ field.alias || field.field }}
+            <!-- si es calculado, mostrar el nombre del campo -->
+            <template v-if="field.type === 'calculated'">
+              {{ field.label }}
+            </template>
+            <template v-else>
+              {{ field.alias || field.field }}
+            </template>
           </VListItemTitle>
           <VBtn
             icon

@@ -377,9 +377,18 @@ const safeValues = computed(() => ({
 }))
 
 // Watch for changes and emit updates
-watch(() => safeValues.value, newValues => {
-  emit('update:modelValue', newValues as AdvancedConfig)
-}, { deep: true })
+let lastEmitted = JSON.stringify(safeValues.value)
+watch(
+  () => safeValues.value,
+  newValues => {
+    const newStr = JSON.stringify(newValues)
+    if (newStr !== lastEmitted) {
+      emit('update:modelValue', newValues as AdvancedConfig)
+      lastEmitted = newStr
+    }
+  },
+  { deep: true },
+)
 
 // Validate step
 const validateStep = () => {

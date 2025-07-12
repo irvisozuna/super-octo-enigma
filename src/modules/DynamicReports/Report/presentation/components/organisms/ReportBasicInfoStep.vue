@@ -118,7 +118,7 @@ interface BasicInfo {
   }
 
   // Configuración avanzada
-  advanced?: {
+  advanced_report?: {
     version?: string
     locale?: string
     timezone?: string
@@ -204,7 +204,7 @@ const defaultBasicInfo: BasicInfo = {
     trackModifications: true,
     anonymizeData: false,
   },
-  advanced: {
+  advanced_report: {
     version: '1.0.0',
     locale: 'es-ES',
     timezone: 'America/Mexico_City',
@@ -302,6 +302,7 @@ const refreshIntervalOptions = [
 // Canales de notificación
 const notificationChannels = [
   { value: 'email', title: 'Email', icon: 'tabler-mail', color: 'primary' },
+
   // { value: 'slack', title: 'Slack', icon: 'tabler-brand-slack', color: 'purple' },
   // { value: 'teams', title: 'Teams', icon: 'tabler-brand-teams', color: 'info' },
   { value: 'webhook', title: 'Webhook', icon: 'tabler-webhook', color: 'warning' },
@@ -976,51 +977,53 @@ const getRetentionLabel = (days: number) => {
                 </VCol>
 
                 <!-- Departamentos -->
-                <!-- <VCol cols="12">
+                <!--
+                  <VCol cols="12">
                   <h6 class="text-subtitle-1 mb-3">
-                    <VIcon
-                      icon="tabler-building"
-                      size="20"
-                      class="me-2"
-                    />
-                    Departamentos con acceso
+                  <VIcon
+                  icon="tabler-building"
+                  size="20"
+                  class="me-2"
+                  />
+                  Departamentos con acceso
                   </h6>
                   <VRow>
-                    <VCol
-                      v-for="dept in availableDepartments"
-                      :key="dept.id"
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <VCard
-                        variant="outlined"
-                        :class="{ 'border-primary': basicInfo.permissions!.departments?.includes(dept.id) }"
-                        class="cursor-pointer"
-                        @click="toggleDepartment(dept.id)"
-                      >
-                        <VCardText class="pa-3">
-                          <div class="d-flex align-center justify-space-between">
-                            <div class="d-flex align-center">
-                              <VIcon
-                                :icon="dept.icon"
-                                :color="dept.color"
-                                size="24"
-                                class="me-2"
-                              />
-                              <span class="font-weight-medium">{{ dept.name }}</span>
-                            </div>
-                            <VCheckbox
-                              :model-value="basicInfo.permissions!.departments?.includes(dept.id)"
-                              hide-details
-                              @click.stop
-                            />
-                          </div>
-                        </VCardText>
-                      </VCard>
-                    </VCol>
+                  <VCol
+                  v-for="dept in availableDepartments"
+                  :key="dept.id"
+                  cols="12"
+                  sm="6"
+                  md="4"
+                  >
+                  <VCard
+                  variant="outlined"
+                  :class="{ 'border-primary': basicInfo.permissions!.departments?.includes(dept.id) }"
+                  class="cursor-pointer"
+                  @click="toggleDepartment(dept.id)"
+                  >
+                  <VCardText class="pa-3">
+                  <div class="d-flex align-center justify-space-between">
+                  <div class="d-flex align-center">
+                  <VIcon
+                  :icon="dept.icon"
+                  :color="dept.color"
+                  size="24"
+                  class="me-2"
+                  />
+                  <span class="font-weight-medium">{{ dept.name }}</span>
+                  </div>
+                  <VCheckbox
+                  :model-value="basicInfo.permissions!.departments?.includes(dept.id)"
+                  hide-details
+                  @click.stop
+                  />
+                  </div>
+                  </VCardText>
+                  </VCard>
+                  </VCol>
                   </VRow>
-                </VCol> -->
+                  </VCol>
+                -->
 
                 <!-- Opciones adicionales -->
                 <VCol cols="12">
@@ -1153,45 +1156,47 @@ const getRetentionLabel = (days: number) => {
           </VCol>
 
           <!-- Departamento -->
-          <!-- <VCol cols="12">
+          <!--
+            <VCol cols="12">
             <VCard variant="outlined">
-              <VCardTitle class="d-flex align-center pa-4">
-                <VIcon
-                  icon="tabler-building"
-                  class="me-2"
-                />
-                Departamento
-              </VCardTitle>
-              <VCardText>
-                <VRow>
-                  <VCol
-                    v-for="dept in availableDepartments"
-                    :key="dept.id"
-                    cols="6"
-                    sm="4"
-                    md="3"
-                  >
-                    <VCard
-                      variant="outlined"
-                      :class="{ 'border-primary': basicInfo.departmentId === dept.id }"
-                      class="text-center cursor-pointer pa-3"
-                      @click="basicInfo.departmentId = dept.id"
-                    >
-                      <VIcon
-                        :icon="dept.icon"
-                        :color="dept.color"
-                        size="32"
-                        class="mb-2"
-                      />
-                      <div class="text-caption font-weight-medium">
-                        {{ dept.name }}
-                      </div>
-                    </VCard>
-                  </VCol>
-                </VRow>
-              </VCardText>
+            <VCardTitle class="d-flex align-center pa-4">
+            <VIcon
+            icon="tabler-building"
+            class="me-2"
+            />
+            Departamento
+            </VCardTitle>
+            <VCardText>
+            <VRow>
+            <VCol
+            v-for="dept in availableDepartments"
+            :key="dept.id"
+            cols="6"
+            sm="4"
+            md="3"
+            >
+            <VCard
+            variant="outlined"
+            :class="{ 'border-primary': basicInfo.departmentId === dept.id }"
+            class="text-center cursor-pointer pa-3"
+            @click="basicInfo.departmentId = dept.id"
+            >
+            <VIcon
+            :icon="dept.icon"
+            :color="dept.color"
+            size="32"
+            class="mb-2"
+            />
+            <div class="text-caption font-weight-medium">
+            {{ dept.name }}
+            </div>
             </VCard>
-          </VCol> -->
+            </VCol>
+            </VRow>
+            </VCardText>
+            </VCard>
+            </VCol>
+          -->
 
           <!-- Etiquetas -->
           <VCol cols="12">
@@ -1936,7 +1941,7 @@ const getRetentionLabel = (days: number) => {
               md="6"
             >
               <VTextField
-                v-model="basicInfo.advanced!.version"
+                v-model="basicInfo.advanced_report!.version"
                 label="Versión del reporte"
                 variant="outlined"
               />
@@ -1946,7 +1951,7 @@ const getRetentionLabel = (days: number) => {
               md="6"
             >
               <VSelect
-                v-model="basicInfo.advanced!.locale"
+                v-model="basicInfo.advanced_report!.locale"
                 label="Idioma"
                 :items="[
                   { value: 'es-ES', title: 'Español' },
@@ -1961,7 +1966,7 @@ const getRetentionLabel = (days: number) => {
               md="6"
             >
               <VSelect
-                v-model="basicInfo.advanced!.timezone"
+                v-model="basicInfo.advanced_report!.timezone"
                 label="Zona horaria"
                 :items="[
                   { value: 'America/Mexico_City', title: 'Ciudad de México' },
@@ -1973,7 +1978,7 @@ const getRetentionLabel = (days: number) => {
             </VCol>
             <VCol cols="12">
               <VTextarea
-                v-model="basicInfo.advanced!.customCSS"
+                v-model="basicInfo.advanced_report!.customCSS"
                 label="CSS personalizado"
                 placeholder=".report-header { background: #f0f0f0; }"
                 rows="3"
@@ -2033,6 +2038,7 @@ const getRetentionLabel = (days: number) => {
   }
 }
 </style>
+
 <style>
 .slider-retention .v-slider-thumb__label {
   inline-size: 4.4vw !important;

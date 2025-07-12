@@ -20,6 +20,7 @@ interface ReportConfig {
   sorting: any
   exportOptions: any
   advanced?: any
+  meta?: any
 }
 
 interface FilterValue {
@@ -91,15 +92,33 @@ const initializeReportConfig = () => {
   if (!reportConfig.value)
     return
 
-  // Inicializar columnas visibles
-  visibleColumns.value = reportConfig.value.selectedFields
-    .filter(f => f.visible !== false)
-    .map(f => f.field)
+  // Solo inicializar si visibleColumns está vacío
+  if (visibleColumns.value.length === 0) {
+    const selected = reportConfig.value.selectedFields && reportConfig.value.selectedFields.length > 0
+      ? reportConfig.value.selectedFields.filter(f => f.visible !== false).map(f => f.field)
+      : []
 
-  // Inicializar anchos de columna
-  reportConfig.value.selectedFields.forEach(field => {
-    columnWidths.value[field.field] = field.width || 150
-  })
+    const calculated = (reportConfig.value.advanced?.calculatedFields || [])
+      .filter(f => f.enabled !== false)
+      .map(f => f.id)
+
+    visibleColumns.value = Array.from(new Set([...selected, ...calculated]))
+  }
+
+  // Siempre inicializar anchos
+  if (reportConfig.value.selectedFields) {
+    reportConfig.value.selectedFields.forEach(field => {
+      if (!columnWidths.value[field.field])
+        columnWidths.value[field.field] = field.width || 150
+    })
+  }
+
+  if (reportConfig.value.advanced?.calculatedFields) {
+    reportConfig.value.advanced.calculatedFields.forEach(field => {
+      if (!columnWidths.value[field.id])
+        columnWidths.value[field.id] = 150
+    })
+  }
 
   // Inicializar ordenamiento
   if (reportConfig.value.sorting) {
@@ -125,9 +144,105 @@ onMounted(async () => {
 })
 
 // Computed
+// Normaliza los datos para que los keys sean los de selectedFields (field) y calculatedFields (id), usando el label, alias, field, name o id del row
+function normalizeDataBySelectedFields(data: any[], selectedFields: any[], calculatedFields: any[] = []) {
+  if ((!selectedFields || selectedFields.length === 0) && (!calculatedFields || calculatedFields.length === 0))
+    return data
+
+  return data.map(row => {
+    const newRow: Record<string, any> = {}
+
+    // Campos normales
+    selectedFields.forEach(field => {
+      newRow[field.field] = row[field.label] ?? row[field.alias] ?? row[field.field] ?? row[field.name] ?? null
+    })
+
+    // Campos calculados
+    calculatedFields.forEach(field => {
+      newRow[field.id] = row[field.name] ?? row[field.id] ?? null
+    })
+
+    return newRow
+  })
+}
+
+// Normaliza los datos usando meta.columns si existe, si no usa selectedFields/calculatedFields
+function normalizeDataWithMetaColumns(data: any[], metaColumns: any[]): any[] {
+  if (!metaColumns || metaColumns.length === 0)
+    return data
+
+  return data.map(row => {
+    const newRow: Record<string, any> = {}
+
+    metaColumns.forEach(col => {
+      newRow[col.key] = row[col.key] ?? row[col.label] ?? null
+    })
+
+    return newRow
+  })
+}
+
 const paginatedData = computed(() => {
-  // Como ahora los datos vienen paginados del backend, simplemente retornamos los datos del store
-  return store.reportData
+  const metaColumns = reportConfig.value?.meta?.columns || store.meta?.columns || []
+  if (metaColumns.length > 0)
+    return normalizeDataWithMetaColumns(store.reportData, metaColumns)
+
+  const selectedFields = reportConfig.value?.selectedFields || []
+  const calculatedFields = reportConfig.value?.advanced?.calculatedFields || []
+
+  return normalizeDataBySelectedFields(store.reportData, selectedFields, calculatedFields)
+})
+
+const availableColumns = computed(() => {
+  const columns = []
+
+  // Columnas del meta (prioridad)
+  if (reportConfig.value?.meta?.columns) {
+    reportConfig.value.meta.columns.forEach(col => {
+      columns.push({
+        field: col.key,
+        label: col.label,
+        type: col.type || 'text',
+      })
+    })
+
+    return columns
+  }
+
+  // Columnas de selectedFields
+  if (reportConfig.value?.selectedFields) {
+    reportConfig.value.selectedFields.forEach(field => {
+      columns.push({
+        field: field.field,
+        label: field.label || field.field,
+        type: field.type,
+      })
+    })
+  }
+
+  // Columnas calculadas
+  if (reportConfig.value?.advanced?.calculatedFields) {
+    reportConfig.value.advanced.calculatedFields.forEach(field => {
+      columns.push({
+        field: field.id,
+        label: field.name || field.id,
+        type: 'calculated',
+      })
+    })
+  }
+
+  // Si no hay nada configurado pero hay datos, usar las keys
+  if (columns.length === 0 && store.reportData && store.reportData.length > 0) {
+    Object.keys(store.reportData[0]).forEach(key => {
+      columns.push({
+        field: key,
+        label: key,
+        type: 'text',
+      })
+    })
+  }
+
+  return columns
 })
 
 const availableExportFormats = computed(() => {
@@ -333,7 +448,6 @@ const loadReportData = async () => {
 
 const loadRealDataFromBackend = async (reportId: string) => {
   try {
-    // Preparar el payload para la petición
     const payload = {
       report_id: reportId,
       export_format: 'table',
@@ -345,19 +459,56 @@ const loadRealDataFromBackend = async (reportId: string) => {
       },
     }
 
-    // Usar el store para ejecutar el reporte
     await store.executeReport(payload)
 
-    // Actualizar los datos locales con los del store
     reportData.value = store.reportData
     totalRecords.value = store.reportTotalRecords
     lastUpdated.value = new Date()
 
-    // Si hay error en el store, mostrarlo
+    // CRÍTICO: Actualizar visibleColumns con TODAS las columnas del response
+    if (store.meta?.columns && store.meta.columns.length > 0) {
+      // Actualizar meta en reportConfig
+      if (!reportConfig.value) {
+        reportConfig.value = {
+          basicInfo: {},
+          selectedFields: [],
+          filters: [],
+          sorting: {},
+          exportOptions: {},
+        }
+      }
+
+      if (!reportConfig.value.meta)
+        reportConfig.value.meta = {}
+
+      reportConfig.value.meta.columns = store.meta.columns
+
+      // IMPORTANTE: Actualizar visibleColumns con TODAS las columnas del meta
+      const allColumnKeys = store.meta.columns.map(col => col.key)
+
+      visibleColumns.value = allColumnKeys
+
+      // Actualizar anchos de columna para las nuevas columnas
+      store.meta.columns.forEach(col => {
+        if (!columnWidths.value[col.key])
+          columnWidths.value[col.key] = 150
+      })
+    }
+
+    // Fallback: Si no hay meta pero hay datos, usar las keys de los datos
+    else if (store.reportData && store.reportData.length > 0) {
+      const dataKeys = Object.keys(store.reportData[0])
+
+      visibleColumns.value = dataKeys
+
+      dataKeys.forEach(key => {
+        if (!columnWidths.value[key])
+          columnWidths.value[key] = 150
+      })
+    }
+
     if (store.reportError) {
       error.value = store.reportError
-
-      // Fallback a datos de ejemplo si falla la petición
       reportData.value = generateSampleData()
       totalRecords.value = reportData.value.length
     }
@@ -365,8 +516,6 @@ const loadRealDataFromBackend = async (reportId: string) => {
   catch (err) {
     console.error('Error al cargar datos del backend:', err)
     error.value = 'Error al cargar los datos del reporte desde el servidor'
-
-    // Fallback a datos de ejemplo si falla la petición
     reportData.value = generateSampleData()
     totalRecords.value = reportData.value.length
   }
@@ -728,7 +877,7 @@ const handleItemsPerPageChange = (items: number) => {
       :available-export-formats="availableExportFormats"
       :frozen-columns="frozenColumns"
       :visible-columns="visibleColumns"
-      :visible-columns-fields="reportConfig?.selectedFields || []"
+      :visible-columns-fields="availableColumns || []"
       :quick-search-query="quickSearchQuery"
       @go-to-reports-list="goToReportsList"
       @refresh="loadReportData"
