@@ -76,15 +76,6 @@ const DynamicReportsRoutes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/reports/:id',
-    name: 'reportsView',
-    component: () => import('@/modules/DynamicReports/Report/presentation/views/ReportView.vue'),
-    meta: {
-      action: 'read',
-      subject: 'reports',
-    },
-  },
-  {
     path: '/reports/viewer/:id',
     name: 'reportsViewer',
     component: () => import('@/modules/DynamicReports/Report/presentation/views/ReportViewer.vue'),

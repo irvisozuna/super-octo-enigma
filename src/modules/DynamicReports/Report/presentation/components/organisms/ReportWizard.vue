@@ -657,6 +657,26 @@ const stepStates = computed(() => {
       return 'pending'
   })
 })
+
+const reportName = computed(() => wizardStore.wizardData.basicInfo.name || '')
+
+const headerTitle = computed(() =>
+  isEdit.value
+    ? `Editar Reporte${reportName.value ? `: ${reportName.value}` : ''}`
+    : 'Crear Reporte',
+)
+
+const isReportValid = ref(false)
+
+watch(
+  () => wizardStore.wizardData,
+  async () => {
+    const errors = await validateCompleteReport(wizardStore.wizardData)
+
+    isReportValid.value = errors.length === 0
+  },
+  { deep: true, immediate: true },
+)
 </script>
 
 <template>

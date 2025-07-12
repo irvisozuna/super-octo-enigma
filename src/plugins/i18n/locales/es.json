@@ -640,5 +640,8 @@
   "logic": {
     "and": "Y",
     "or": "O"
-  }
+  },
+  "deleteModule": "Eliminar {moduleName}",
+  "deleteItemDescription": "¿Está seguro de que desea eliminar este elemento?",
+  "confirmDelete": "Confirmar eliminación",
 }

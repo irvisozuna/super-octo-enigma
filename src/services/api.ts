@@ -40,17 +40,14 @@ export async function rawApi(
   // 2. Manejo de query params
   const query = new URLSearchParams()
 
-  console.log('rawApi params:', params)
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null) {
       console.log(`Adding param: ${key} = ${val}`)
       query.append(key, String(val))
     }
   })
-  if (query.toString()) {
-    console.log('Final query string:', query.toString())
+  if (query.toString())
     finalUrl += `?${query.toString()}`
-  }
 
   // 3. Obtención del token de acceso (si lo hay) desde cookies
   //    Ajusta la función `useCookie` según tu librería preferida.
@@ -134,6 +131,10 @@ export async function rawApi(
     }
 
     // 9. Si la respuesta es exitosa, retornamos en base a `responseType`
+    if (response.status === 204) {
+      // No Content: no hay nada que parsear
+      return null
+    }
     switch (responseType) {
       case 'blob': {
       // Descarga de archivos binarios
