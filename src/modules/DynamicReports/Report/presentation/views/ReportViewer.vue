@@ -534,7 +534,7 @@ const formatCellValue = (value: any, field: any) => {
 
       return field.thousandsSeparator
         ? num.toLocaleString('es-MX', { minimumFractionDigits: field.decimals || 0, maximumFractionDigits: field.decimals || 0 })
-        : num.toFixed(field.decimals || 0)
+        : num.toFixed(field.decimals || 2)
     }
 
     case 'currency': {
@@ -555,7 +555,7 @@ const formatCellValue = (value: any, field: any) => {
       if (Number.isNaN(perc))
         return value
 
-      return `${(perc * 100).toFixed(field.decimals || 0)}%`
+      return `${(perc * 100).toFixed(field.decimals || 2)}%`
     }
 
     case 'date':

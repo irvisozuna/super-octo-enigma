@@ -62,8 +62,6 @@ const allColumns = computed(() => {
     })
   }
 
-  debugger
-
   // Luego agregar calculatedFields
   if (props.reportConfig?.advanced?.calculatedFields) {
     props.reportConfig.advanced.calculatedFields.forEach(calcField => {
@@ -89,6 +87,65 @@ const allColumns = computed(() => {
 const visibleColumnsConfig = computed(() => {
   return allColumns.value.filter(col => props.visibleColumns.includes(col.field))
 })
+
+// Computed para obtener los formatos condicionales
+const conditionalFormats = computed(() => {
+  return props.reportConfig?.advanced?.conditionalFormats || []
+})
+
+// Función para obtener el estilo condicional de una celda
+function getConditionalStyle(row: any, column: any) {
+  const formats = conditionalFormats.value.filter(
+    (f: any) => f.enabled && f.field === column.field,
+  )
+
+  const style: Record<string, string> = {}
+  const appliedRules: string[] = []
+
+  formats.forEach((format: any) => {
+    format.conditions.forEach((cond: any) => {
+      let cellValue = row[column.field]
+      let conditionValue = cond.value
+
+      if (!isNaN(Number(cellValue)) && !isNaN(Number(conditionValue))) {
+        cellValue = Number(cellValue)
+        conditionValue = Number(conditionValue)
+      }
+
+      let match = false
+      switch (cond.operator) {
+        case '>':
+          match = cellValue > conditionValue
+          break
+        case '<':
+          match = cellValue < conditionValue
+          break
+        case '=':
+        case '==':
+          match = cellValue == conditionValue
+          break
+        case '!=':
+          match = cellValue != conditionValue
+          break
+      }
+
+      if (match) {
+        if (cond.bold)
+          style.fontWeight = 'bold'
+        if (cond.italic)
+          style.fontStyle = 'italic'
+        if (cond.color)
+          style.color = cond.color
+        if (cond.backgroundColor)
+          style.backgroundColor = cond.backgroundColor
+        if (format.name)
+          appliedRules.push(format.name)
+      }
+    })
+  })
+
+  return { style, appliedRules }
+}
 </script>
 
 <template>
@@ -192,6 +249,7 @@ const visibleColumnsConfig = computed(() => {
               :key="index"
             >
               <td
+
                 v-for="column in visibleColumnsConfig"
                 :key="column.field"
                 :style="{
@@ -200,9 +258,33 @@ const visibleColumnsConfig = computed(() => {
                   left: frozenColumns.includes(column.field) ? '0' : 'auto',
                   zIndex: frozenColumns.includes(column.field) ? 10 : 1,
                   backgroundColor: 'rgb(var(--v-theme-surface))',
+                  ...getConditionalStyle(row, column).style,
                 }"
               >
-                {{ formatCellValue(row[column.field], column) }}
+                <span class="">
+
+                  <template v-if="getConditionalStyle(row, column).appliedRules.length">
+                    <VTooltip location="top">
+                      <template #activator="{ props }">
+                        <VIcon
+                          v-bind="props"
+                          icon="tabler-color-swatch"
+                          color="primary"
+                          size="16"
+                          class="ms-1"
+                        />
+                      </template>
+                      <span>
+                        {{ getConditionalStyle(row, column).appliedRules.join(', ') }}
+                      </span>
+                    </VTooltip>
+                  </template>
+                  <span>
+                    <span v-if="column.prefix">{{ column.prefix }}</span>
+                    {{ formatCellValue(row[column.field], column) }}
+                    <span v-if="column.suffix">{{ column.suffix }}</span>
+                  </span>
+                </span>
               </td>
             </tr>
           </tbody>
