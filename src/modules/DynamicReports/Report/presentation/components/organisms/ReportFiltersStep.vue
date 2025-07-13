@@ -45,11 +45,13 @@ interface Props {
   availableFields: FieldDefinition[]
   loading?: boolean
   error?: string | null
+  search?: { enabled: boolean; fields: string[] }
 }
 
 interface Emits {
   (e: 'update:modelValue', value: Filter[]): void
   (e: 'validate', isValid: boolean): void
+  (e: 'update:search', value: { enabled: boolean; fields: string[] }): void // Nuevo evento
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -140,8 +142,45 @@ const filterTypeOptions = [
   { value: 'boolean', label: 'Booleano' },
 ]
 
+// Estado para buscador global
+const searchEnabled = ref(false)
+const searchFields = ref<string[]>([])
+
+let updatingFromProp = false
+
+// Sincronizar estado local con la prop search
+watch(
+  () => props.search,
+  val => {
+    console.log('PROPS SEARCH CHANGED', val)
+    updatingFromProp = true
+    if (val) {
+      searchEnabled.value = val.enabled
+      searchFields.value = [...val.fields]
+    }
+    else {
+      searchEnabled.value = false
+      searchFields.value = []
+    }
+    updatingFromProp = false
+  },
+  { immediate: true, deep: true },
+)
+
+function arraysEqual(a: any[], b: any[]) {
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+watch([searchEnabled, searchFields], ([enabled, fields]) => {
+  if (updatingFromProp)
+    return
+  if (!props.search || props.search.enabled !== enabled || !arraysEqual(props.search.fields, fields))
+    emit('update:search', { enabled, fields })
+})
+
 // Inicializar
 onMounted(() => {
+  console.log('PROPS SEARCH INIT', props.search)
   if (props.modelValue && props.modelValue.length > 0) {
     // Si ya viene con estructura de grupos, usarla
     if (props.modelValue[0]?.type === 'group') {
@@ -189,6 +228,25 @@ watch(() => props.modelValue, newVal => {
     initializeManualInputs(rootGroup.value)
   }
 }, { deep: true })
+
+// Watch para inicializar defaultValue como array cuando el operador sea 'between'
+watch(
+  () => rootGroup.value,
+  newVal => {
+    // Función recursiva para todos los filtros
+    const ensureBetweenArray = group => {
+      if (group.type === 'filter' && group.operator === 'between') {
+        if (!Array.isArray(group.defaultValue) || group.defaultValue.length !== 2)
+          group.defaultValue = ['', '']
+      }
+      if (group.children)
+        group.children.forEach(child => ensureBetweenArray(child))
+    }
+
+    ensureBetweenArray(newVal)
+  },
+  { deep: true, immediate: true },
+)
 
 // Emit cambios
 let updateTimeout: NodeJS.Timeout | null = null
@@ -448,6 +506,53 @@ onUnmounted(() => {
 <template>
   <div class="report-filters-advanced">
     <VRow>
+      <!-- Buscador global -->
+      <VCol cols="12">
+        <VCard
+          variant="outlined"
+          class="mb-4"
+        >
+          <VCardTitle class="d-flex align-center pa-4">
+            <VIcon
+              icon="tabler-search"
+              class="me-2"
+            />
+            <span>Buscador global</span>
+          </VCardTitle>
+          <VCardText>
+            <VSwitch
+              v-model="searchEnabled"
+              label="¿Activar buscador global?"
+              color="primary"
+              hide-details
+            />
+            <VSelect
+              v-if="searchEnabled"
+              v-model="searchFields"
+              :items="availableFields"
+              item-title="alias"
+              item-value="field"
+              label="Campos sobre los que buscar"
+              multiple
+              chips
+              clearable
+              variant="outlined"
+              class="mt-2"
+              hide-details
+            />
+            <VAlert
+              v-if="searchEnabled && searchFields.length === 0"
+              type="info"
+              variant="tonal"
+              class="mt-2"
+              density="compact"
+            >
+              Selecciona al menos un campo para habilitar el buscador.
+            </VAlert>
+          </VCardText>
+        </VCard>
+      </VCol>
+      <!-- Fin buscador global -->
       <VCol cols="12">
         <h6 class="text-h6 font-weight-medium mb-2">
           Configuración de Filtros del Reporte
@@ -686,7 +791,7 @@ onUnmounted(() => {
                               class="d-flex gap-2"
                             >
                               <VTextField
-                                v-model="item.defaultValue[0]"
+                                :model-value="Array.isArray(item.defaultValue) ? item.defaultValue[0] : ''"
                                 density="compact"
                                 variant="outlined"
                                 hide-details
@@ -694,9 +799,13 @@ onUnmounted(() => {
                                 type="number"
                                 :min="item.min"
                                 :max="item.max"
+                                @update:model-value="val => {
+                                  if (!Array.isArray(item.defaultValue)) item.defaultValue = ['', '']
+                                  item.defaultValue[0] = val
+                                }"
                               />
                               <VTextField
-                                v-model="item.defaultValue[1]"
+                                :model-value="Array.isArray(item.defaultValue) ? item.defaultValue[1] : ''"
                                 density="compact"
                                 variant="outlined"
                                 hide-details
@@ -704,6 +813,10 @@ onUnmounted(() => {
                                 type="number"
                                 :min="item.min"
                                 :max="item.max"
+                                @update:model-value="val => {
+                                  if (!Array.isArray(item.defaultValue)) item.defaultValue = ['', '']
+                                  item.defaultValue[1] = val
+                                }"
                               />
                             </div>
                           </div>
@@ -1305,18 +1418,28 @@ onUnmounted(() => {
                   class="d-flex gap-2"
                 >
                   <VTextField
-                    placeholder="Desde"
+                    :model-value="Array.isArray(filter.defaultValue) ? filter.defaultValue[0] : ''"
                     density="compact"
                     variant="outlined"
-                    readonly
+                    hide-details
+                    placeholder="Desde"
                     type="number"
+                    @update:model-value="val => {
+                      if (!Array.isArray(filter.defaultValue)) filter.defaultValue = ['', '']
+                      filter.defaultValue[0] = val
+                    }"
                   />
                   <VTextField
-                    placeholder="Hasta"
+                    :model-value="Array.isArray(filter.defaultValue) ? filter.defaultValue[1] : ''"
                     density="compact"
                     variant="outlined"
-                    readonly
+                    hide-details
+                    placeholder="Hasta"
                     type="number"
+                    @update:model-value="val => {
+                      if (!Array.isArray(filter.defaultValue)) filter.defaultValue = ['', '']
+                      filter.defaultValue[1] = val
+                    }"
                   />
                 </div>
 

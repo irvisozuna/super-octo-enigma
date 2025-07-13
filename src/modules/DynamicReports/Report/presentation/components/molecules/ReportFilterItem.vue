@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 interface FilterOption {
   value: any
   label: string
@@ -21,6 +23,10 @@ interface Filter {
   children?: Filter[]
   expanded?: boolean
   condition?: 'AND' | 'OR'
+  mode?: 'single' | 'range'
+  min?: number
+  max?: number
+  step?: number
 }
 
 interface Props {
@@ -39,7 +45,27 @@ const emit = defineEmits<{
 }>()
 
 const updateValue = (value: any) => {
-  emit('update-value', props.filter, value)
+  // Si es un filtro de fecha y operador between, y el valor es string, conviértelo a array
+  if (
+    props.filter.fieldType === 'date'
+    && props.filter.operator === 'between'
+    && typeof value === 'string'
+    && value.includes(' to ')
+  ) {
+    const [start, end] = value.split(' to ')
+
+    emit('updateValue', props.filter, [start, end])
+
+    return
+  }
+
+  if (props.filter.fieldType === 'select' && props.filter.multiple) {
+    // Siempre array si es multiple
+    emit('updateValue', props.filter, value ? (Array.isArray(value) ? value : [value]) : [])
+  }
+  else {
+    emit('updateValue', props.filter, value)
+  }
 }
 
 const updateRangeValue = (index: number, value: any) => {
@@ -48,6 +74,21 @@ const updateRangeValue = (index: number, value: any) => {
   props.filter.value[index] = value
   emit('update-value', props.filter, props.filter.value)
 }
+
+// Inicializar el valor por defecto correctamente al montar
+onMounted(() => {
+  if (props.filter.value == null && props.filter.defaultValue != null) {
+    if (props.filter.fieldType === 'select' && props.filter.multiple) {
+      props.filter.value = Array.isArray(props.filter.defaultValue)
+        ? props.filter.defaultValue
+        : [props.filter.defaultValue]
+    }
+    else {
+      props.filter.value = props.filter.defaultValue
+    }
+    emit('update-value', props.filter, props.filter.value)
+  }
+})
 </script>
 
 <template>
@@ -146,6 +187,28 @@ const updateRangeValue = (index: number, value: any) => {
       @update:model-value="updateValue"
     />
 
+    <!-- Rango de fechas -->
+    <AppDateTimePicker
+      v-else-if="filter.fieldType === 'date' && filter.operator === 'between'"
+      v-model="filter.value"
+      :label="filter.alias || filter.field"
+      placeholder="Seleccione rango de fechas"
+      :config="{ mode: 'range' }"
+      :readonly="readonly"
+      @update:model-value="updateValue"
+    />
+
+    <!-- fechas -->
+    <AppDateTimePicker
+      v-else-if="filter.fieldType === 'date'"
+      v-model="filter.value"
+      placeholder="Seleccione fecha"
+      :config="{ mode: 'single' }"
+      :readonly="readonly"
+      @update:model-value="updateValue"
+    />
+
+    <!-- Fecha simple -->
     <VTextField
       v-else-if="filter.fieldType === 'date'"
       v-model="filter.value"
@@ -158,6 +221,24 @@ const updateRangeValue = (index: number, value: any) => {
       @update:model-value="updateValue"
     />
 
+    <!-- Select múltiple -->
+    <VAutocomplete
+      v-else-if="filter.fieldType === 'select' && filter.multiple"
+      v-model="filter.value"
+      :label="filter.alias || filter.field"
+      :items="filter.options || []"
+      item-title="label"
+      item-value="value"
+      placeholder="Seleccione una o varias opciones"
+      multiple
+      chips
+      clearable
+      eager
+      :readonly="readonly"
+      @update:model-value="updateValue"
+    />
+
+    <!-- Select simple -->
     <VSelect
       v-else-if="filter.fieldType === 'select'"
       v-model="filter.value"
@@ -168,11 +249,8 @@ const updateRangeValue = (index: number, value: any) => {
       :items="filter.options || []"
       item-title="label"
       item-value="value"
-      :multiple="filter.multiple"
-      :chips="filter.multiple"
-      :closable-chips="filter.multiple"
-      :prepend-inner-icon="filter.multiple ? 'tabler-list-check' : 'tabler-list'"
       clearable
+      prepend-inner-icon="tabler-list"
       @update:model-value="updateValue"
     />
 

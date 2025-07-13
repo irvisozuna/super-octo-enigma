@@ -156,6 +156,11 @@ export class ReportDataTransformer {
       },
     }
 
+    const search = backendData.search || {
+      enabled: false,
+      fields: [],
+    }
+
     const wizardData: ReportWizardData = {
       basicInfo,
       selectedFields,
@@ -163,6 +168,7 @@ export class ReportDataTransformer {
       sorting,
       exportOptions,
       advanced,
+      search,
     }
 
     console.log('✅ Transformed wizard data:', wizardData)

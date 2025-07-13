@@ -357,48 +357,35 @@ const generateSampleData = () => {
 }
 
 const buildFiltersPayload = () => {
-  const filters: any = {}
+  const filters: any[] = []
 
-  // Función recursiva para buscar filtros en grupos anidados
-  const findFilterInConfig = (filters: any[], fieldName: string): any => {
-    for (const filter of filters) {
-      if (filter.type === 'filter' && filter.field === fieldName)
-        return filter
-
-      if (filter.type === 'group' && filter.children) {
-        const found = findFilterInConfig(filter.children, fieldName)
-        if (found)
-          return found
+  // Función recursiva para recorrer todos los filtros configurados
+  const extractFilters = (filtersConfig: any[]) => {
+    filtersConfig.forEach(filter => {
+      if (filter.type === 'filter' && filter.value !== undefined && filter.value !== null && filter.value !== '') {
+        filters.push({
+          field: filter.field,
+          operator: filter.operator || 'equals',
+          value: filter.value,
+          fieldType: filter.fieldType,
+        })
       }
-    }
-
-    return null
+      else if (filter.type === 'group' && filter.children) {
+        extractFilters(filter.children)
+      }
+    })
   }
 
-  // Agregar filtros aplicados
-  appliedFilters.value.forEach(filter => {
-    const fieldConfig = getFieldConfig(filter.field)
-    if (fieldConfig) {
-      // Convertir el valor según el tipo de campo
-      let value = filter.value
-
-      if (fieldConfig.type === 'date' || fieldConfig.type === 'datetime') {
-        // Para fechas, asegurar formato correcto
-        if (typeof value === 'string')
-          value = new Date(value).toISOString().split('T')[0]
-      }
-      else if (fieldConfig.type === 'number' || fieldConfig.type === 'double' || fieldConfig.type === 'integer') {
-        // Para números, convertir a número
-        value = Number.parseFloat(value)
-      }
-
-      filters[filter.field] = value
-    }
-  })
+  extractFilters(reportConfig.value?.filters || [])
 
   // Agregar búsqueda rápida si existe
-  if (quickSearchQuery.value)
-    filters._search = quickSearchQuery.value
+  if (quickSearchQuery.value) {
+    filters.push({
+      field: '_search',
+      operator: 'contains',
+      value: quickSearchQuery.value,
+    })
+  }
 
   return filters
 }

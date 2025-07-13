@@ -45,6 +45,20 @@ const emit = defineEmits<{
 
 // Métodos para manejar cambios de filtros
 const updateFilterValue = (filter: Filter, value: any) => {
+  // Si es un filtro de fecha y operador between, y el valor es string, conviértelo a array
+  if (
+    filter.fieldType === 'date'
+    && filter.operator === 'between'
+    && typeof value === 'string'
+    && value.includes(' to ')
+  ) {
+    const [start, end] = value.split(' to ')
+
+    filter.value = [start, end]
+    emit('update:filters', props.filters)
+
+    return
+  }
   filter.value = value
   emit('update:filters', props.filters)
 }

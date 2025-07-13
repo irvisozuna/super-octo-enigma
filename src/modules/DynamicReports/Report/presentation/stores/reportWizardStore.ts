@@ -123,7 +123,13 @@ const defaultWizardData: ReportWizardData = {
       securityFilters: [],
     },
   },
+  search: {
+    enabled: false,
+    fields: [],
+  },
 }
+
+const defaultSearch = { enabled: false, fields: [] }
 
 export const useReportWizardStore = defineStore('reportWizard', () => {
   // State
@@ -337,12 +343,13 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
   // FIJO: Método para actualizar todo el wizard data de una vez (útil para cargar desde backend)
   const setWizardData = (data: ReportWizardData) => {
-    // Prevent unnecessary updates by checking if data actually changed
-    if (JSON.stringify(wizardData.value) !== JSON.stringify(data)) {
-      wizardData.value = { ...data }
-      hasUnsavedChanges.value = true
-      saveToLocalStorage()
+    wizardData.value = {
+      ...defaultWizardData,
+      ...data,
+      search: data.search ? { ...defaultSearch, ...data.search } : { ...defaultSearch },
     }
+    hasUnsavedChanges.value = false
+    saveToLocalStorage()
   }
 
   const updateBasicInfo = (data: Partial<ReportWizardData['basicInfo']>) => {
@@ -392,6 +399,15 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       hasUnsavedChanges.value = true
       saveToLocalStorage()
     }
+  }
+
+  /**
+   * Actualiza la configuración del buscador global
+   */
+  function updateSearch(search: { enabled: boolean; fields: string[] }) {
+    wizardData.value.search = { ...search }
+    hasUnsavedChanges.value = true
+    saveToLocalStorage()
   }
 
   const getWizardData = () => {
@@ -472,6 +488,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     updateSorting,
     updateExportOptions,
     updateAdvanced,
+    updateSearch,
     getWizardData,
     setAutoSave,
     saveToLocalStorage,

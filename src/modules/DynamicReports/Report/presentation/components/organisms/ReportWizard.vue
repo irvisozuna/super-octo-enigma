@@ -52,6 +52,11 @@ const errorDataSources = ref<string | null>(null)
 const isTransitioning = ref(false)
 const loading = ref(false)
 
+// Manejo del buscador global
+function handleUpdateSearch(search: { enabled: boolean; fields: string[] }) {
+  wizardStore.updateSearch(search)
+}
+
 // FIJO: Detectar modo edición usando route params
 const isEdit = computed(() => !!route.params.id)
 
@@ -575,51 +580,6 @@ onMounted(async () => {
     loading.value = true
     try {
       await reportStore.fetchById(route.params.id as string)
-
-      const item = reportStore.currentItem
-      if (item) {
-        // El backend devuelve datos con la misma estructura que el wizard
-        console.log('🔍 item:', item)
-
-        const wizardData = item as ReportBackendResponse
-
-        // Actualizar el store con los datos cargados
-        wizardStore.setWizardData(wizardData)
-        console.log('✅ Report data loaded for editing:', wizardData)
-
-        // --- INICIO: Inicialización robusta de menu_config ---
-        if (!wizardStore.wizardData.menu_config) {
-          wizardStore.wizardData.menu_config = {
-            show_in_menu: false,
-            menu_title: '',
-            menu_icon: 'tabler-chart-bar',
-            menu_category: 'Reportes',
-            menu_order: 0,
-            menu_permissions: {
-              action: 'read',
-              subject: 'Report',
-            },
-          }
-        }
-        else {
-          // Asegurar que todos los campos estén presentes
-          wizardStore.wizardData.menu_config = {
-            show_in_menu: !!wizardStore.wizardData.menu_config.show_in_menu,
-            menu_title: wizardStore.wizardData.menu_config.menu_title || '',
-            menu_icon: wizardStore.wizardData.menu_config.menu_icon || 'tabler-chart-bar',
-            menu_category: wizardStore.wizardData.menu_config.menu_category || 'Reportes',
-            menu_order: wizardStore.wizardData.menu_config.menu_order ?? 0,
-            menu_permissions: {
-              action: wizardStore.wizardData.menu_config.menu_permissions?.action || 'read',
-              subject: wizardStore.wizardData.menu_config.menu_permissions?.subject || 'Report',
-            },
-            menu_badge: wizardStore.wizardData.menu_config.menu_badge || undefined,
-          }
-        }
-        console.log('Menu config loaded:', wizardStore.wizardData.menu_config)
-
-        // --- FIN: Inicialización robusta de menu_config ---
-      }
     }
     catch (error) {
       console.error('❌ Error loading report for editing:', error)
@@ -766,7 +726,9 @@ watch(
                   v-if="isStoreReady"
                   v-model="wizardStore.wizardData.filters"
                   :available-fields="wizardStore.wizardData.selectedFields"
+                  :search="wizardStore.wizardData.search"
                   @validate="(isValid: boolean) => handleStepValidation(2, isValid)"
+                  @update:search="handleUpdateSearch"
                 />
               </VWindowItem>
 

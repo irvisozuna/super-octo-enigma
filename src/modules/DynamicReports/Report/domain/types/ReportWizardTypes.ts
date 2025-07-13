@@ -13,6 +13,10 @@ export interface ReportWizardData {
     tags?: string[]
     priority?: string
     departmentId?: string
+    search?: {
+      enabled: boolean
+      fields: string[]
+    }
     permissions?: {
       type: string
       users: string[]
@@ -211,6 +215,14 @@ export interface ReportWizardData {
       enableRowLevelSecurity: boolean
       securityFilters: any[]
     }
+  }
+
+  /**
+   * Configuración del buscador global
+   */
+  search?: {
+    enabled: boolean
+    fields: string[]
   }
 }
 
