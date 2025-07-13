@@ -879,8 +879,7 @@ const handleItemsPerPageChange = (items: number) => {
 }
 
 function onQuickSearchUpdate(val: string) {
-  if (quickSearchQuery.value && typeof quickSearchQuery.value !== 'undefined')
-    quickSearchQuery.value = val
+  quickSearchQuery.value = val
 }
 </script>
 

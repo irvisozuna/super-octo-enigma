@@ -6,7 +6,7 @@ export function useMap(initialCenter: { lat: number; lng: number }) {
   const apiKey = ''// import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   console.log('API KEY:', apiKey)
-  debugger
+
   const mapsLoaded = ref(false)
   const map = ref<google.maps.Map | null>(null)
   const center = ref(initialCenter)

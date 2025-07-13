@@ -80,7 +80,6 @@ async function onFormSubmit(values: any) {
   delete values.email
   try {
     const uuid = profile.value.id
-    debugger
 
     const response = await $api(`/profiles/update/${uuid}`, {
       method: 'PUT',
