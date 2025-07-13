@@ -43,6 +43,15 @@ const visible = ref(false)
 watch(currentSnackbar, newValue => {
   visible.value = !!newValue
 })
+
+const hasProgress = computed(() =>
+  currentSnackbar.value
+  && (typeof currentSnackbar.value.progress === 'number' || currentSnackbar.value.progressIndeterminate),
+)
+
+const showAction = computed(() =>
+  currentSnackbar.value && currentSnackbar.value.action && typeof currentSnackbar.value.action.label === 'string',
+)
 </script>
 
 <template>
@@ -66,6 +75,22 @@ watch(currentSnackbar, newValue => {
         <p class="alert-message">
           {{ $t(translatedMessage) }}
         </p>
+        <VProgressLinear
+          v-if="hasProgress"
+          :value="currentSnackbar.progress"
+          :indeterminate="currentSnackbar.progressIndeterminate"
+          color="primary"
+          height="4"
+          class="mt-2"
+        />
+        <VBtn
+          v-if="showAction"
+          color="primary"
+          class="mt-2"
+          @click="currentSnackbar.action.callback"
+        >
+          {{ currentSnackbar.action.label }}
+        </VBtn>
       </div>
     </VAlert>
   </div>

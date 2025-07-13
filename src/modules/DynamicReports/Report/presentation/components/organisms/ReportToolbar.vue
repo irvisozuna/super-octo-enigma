@@ -150,37 +150,19 @@ const searchFieldsPlaceholder = computed(() => {
             Actualizar
           </VTooltip>
         </VBtn>
-        <VMenu>
-          <template #activator="{ props }">
-            <VBtn
-              icon
-              variant="text"
-              v-bind="props"
-            >
-              <VIcon icon="tabler-download" />
-              <VTooltip
-                activator="parent"
-                location="bottom"
-              >
-                Exportar
-              </VTooltip>
-            </VBtn>
-          </template>
-          <VList>
-            <VListItem
-              v-for="format in availableExportFormats"
-              :key="format.id"
-              @click="$emit('export', format.id)"
-            >
-              <VIcon
-                :icon="format.icon"
-                :color="format.color"
-                class="me-2"
-              />
-              <VListItemTitle>{{ format.name }}</VListItemTitle>
-            </VListItem>
-          </VList>
-        </VMenu>
+        <VBtn
+          icon
+          variant="text"
+          @click="$emit('export')"
+        >
+          <VIcon icon="tabler-download" />
+          <VTooltip
+            activator="parent"
+            location="bottom"
+          >
+            Exportar
+          </VTooltip>
+        </VBtn>
         <VBtn
           icon
           variant="text"

@@ -3,10 +3,15 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { ApiService } from '@/services/apiService'
+import { rawApi } from '@/services/api'
+import { useGlobalSnackbar } from '@/composables/useGlobalSnackbar'
+import BackgroundTaskSnackbar from '@/components/BackgroundTaskSnackbar.vue'
 import { useReportStore } from '../stores/reportStore'
 import ReportFiltersPanel from '../components/organisms/ReportFiltersPanel.vue'
 import ReportToolbar from '../components/organisms/ReportToolbar.vue'
 import ShareDialogOrganism from '../components/organisms/ShareDialogOrganism.vue'
+import ReportExportDialog from '../components/organisms/ReportExportDialog.vue'
 
 import ReportDataTable from '../components/organisms/ReportDataTable.vue'
 
@@ -44,6 +49,7 @@ const { t: _t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const store = useReportStore()
+const { showSnackbar, updateSnackbar } = useGlobalSnackbar()
 
 // Estado principal
 const loading = ref(false)
@@ -74,6 +80,7 @@ const frozenColumns = ref<string[]>([])
 // Exportación
 const showExportDialog = ref(false)
 const exportLoading = ref(false)
+const exportFormatAndScope = ref<{ format: string; export_scope: 'all' | 'visible' } | null>(null)
 
 // Vista
 const viewMode = ref<'table' | 'card' | 'chart'>('table')
@@ -86,6 +93,8 @@ const shareLink = ref('')
 
 // Mapa reactivo para los valores de los filtros
 const appliedFiltersMap = reactive<Record<string, any>>({})
+
+const taskSnackbar = ref(null)
 
 // Inicializar columnas visibles
 const initializeReportConfig = () => {
@@ -489,7 +498,8 @@ const loadRealDataFromBackend = async (reportId: string) => {
       // IMPORTANTE: Actualizar visibleColumns con TODAS las columnas del meta
       const allColumnKeys = store.meta.columns.map(col => col.key)
 
-      visibleColumns.value = allColumnKeys
+      if (visibleColumns.value.length === 0)
+        visibleColumns.value = allColumnKeys
 
       // Actualizar anchos de columna para las nuevas columnas
       store.meta.columns.forEach(col => {
@@ -502,7 +512,8 @@ const loadRealDataFromBackend = async (reportId: string) => {
     else if (store.reportData && store.reportData.length > 0) {
       const dataKeys = Object.keys(store.reportData[0])
 
-      visibleColumns.value = dataKeys
+      if (visibleColumns.value.length === 0)
+        visibleColumns.value = dataKeys
 
       dataKeys.forEach(key => {
         if (!columnWidths.value[key])
@@ -730,24 +741,76 @@ const freezeColumn = (field: string) => {
 }
 
 // Exportación
-const exportReport = async (format: string) => {
+function openExportDialog() {
+  showExportDialog.value = true
+}
+
+async function handleExportDialog({ format, scope }) {
+  showExportDialog.value = false
   exportLoading.value = true
 
   try {
-    // Simular exportación
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const reportId = route.params.id as string
 
-    // En producción, esto llamaría a la API para generar el archivo
-    emit('export', format)
+    const payload = {
+      report_id: reportId,
+      export_format: format,
+      filters: buildFiltersPayload(),
+      sorting: buildSortingPayload(),
+      pagination: {
+        page: store.page,
+        per_page: store.itemsPerPage,
+      },
+      export_scope: scope,
+    }
 
-    // Mostrar mensaje de éxito
-    showExportDialog.value = false
+    // Llama al endpoint asíncrono
+    const res = await rawApi('/dynamic-reports/executions/execute', {
+      method: 'POST',
+      body: payload,
+      responseType: 'json',
+    })
+
+    if (res.status === 'pending') {
+      // DDD: la tarea debe tener task_id, started y messageKey
+      taskSnackbar.value.addTaskAndStartPolling({
+        ...payload,
+        task_id: res.execution_id,
+        started: Date.now(),
+        messageKey: 'report.exporting',
+      })
+    }
   }
-  catch (err) {
-    console.error('Error al exportar:', err)
+  catch (e) {
+    // Manejo de error rápido
+    showSnackbar({
+      title: 'Error',
+      messageKey: 'report.error',
+      color: 'error',
+      timeout: 10000,
+    })
   }
   finally {
     exportLoading.value = false
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function getMimeType(format: string) {
+  switch (format) {
+    case 'pdf': return 'application/pdf'
+    case 'csv': return 'text/csv'
+    case 'excel': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    default: return 'application/octet-stream'
   }
 }
 
@@ -906,7 +969,7 @@ function onQuickSearchUpdate(val: string) {
       :search="reportConfig.search || { enabled: false, fields: [] }"
       @go-to-reports-list="goToReportsList"
       @refresh="loadReportData"
-      @export="exportReport"
+      @export="openExportDialog"
       @share-report="shareReport"
       @edit-report="editReport"
       @toggle-fullscreen="toggleFullscreen"
@@ -964,6 +1027,13 @@ function onQuickSearchUpdate(val: string) {
       :share-link="shareLink"
       @copy-link="copyShareLink"
     />
+    <ReportExportDialog
+      v-model="showExportDialog"
+      :available-export-formats="availableExportFormats"
+      :export-loading="exportLoading"
+      @export="handleExportDialog"
+    />
+    <BackgroundTaskSnackbar ref="taskSnackbar" />
   </div>
 </template>
 
