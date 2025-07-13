@@ -22,6 +22,16 @@ const drawerValue = computed({
   set: v => emit('update:modelValue', v),
 })
 
+const activeAppliedFilters = computed(() =>
+  props.appliedFilters.filter(
+    filter =>
+      filter.value !== undefined
+      && filter.value !== null
+      && filter.value !== ''
+      && (!Array.isArray(filter.value) || filter.value.length > 0),
+  ),
+)
+
 function getFieldConfig(fieldName: string) {
   return props.reportConfig?.selectedFields?.find((f: any) => f.field === fieldName)
 }
@@ -76,7 +86,7 @@ function getFieldConfig(fieldName: string) {
           class="mb-4"
         >
           <VChip
-            v-for="filter in appliedFilters"
+            v-for="filter in activeAppliedFilters"
             :key="filter.field"
             closable
             size="small"

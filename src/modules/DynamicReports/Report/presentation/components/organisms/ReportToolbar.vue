@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ReportColumnSelectorMenu from '../molecules/ReportColumnSelectorMenu.vue'
 
 const props = defineProps<{
@@ -16,6 +16,10 @@ const props = defineProps<{
   visibleColumns: string[]
   visibleColumnsFields: any[]
   quickSearchQuery: string
+  search: {
+    enabled: boolean
+    query: string
+  }
 }>()
 
 const emit = defineEmits<{
@@ -47,6 +51,47 @@ const densityProxy = computed({
 const quickSearchProxy = computed({
   get: () => props.quickSearchQuery,
   set: v => emit('update:quickSearchQuery', v),
+})
+
+const quickSearchDraft = ref(props.quickSearchQuery)
+
+watch(() => props.quickSearchQuery, val => {
+  quickSearchDraft.value = val
+})
+
+// Limpiar el input y filtro cuando el buscador global se desactive
+watch(
+  () => props.search && props.search.enabled,
+  enabled => {
+    if (enabled === false) {
+      quickSearchDraft.value = ''
+      emit('update:quickSearchQuery', '')
+    }
+  },
+  { immediate: false },
+)
+
+function applyQuickSearch() {
+  emit('update:quickSearchQuery', quickSearchDraft.value)
+}
+
+function clearQuickSearch() {
+  quickSearchDraft.value = ''
+  emit('update:quickSearchQuery', '')
+}
+
+const searchFieldsPlaceholder = computed(() => {
+  // Si hay campos visibles, úsalos para el placeholder
+  if (Array.isArray(props.visibleColumnsFields) && props.visibleColumnsFields.length > 0) {
+    const fields = props.visibleColumnsFields
+      .map(f => f.label || f.alias || f.field)
+      .filter(Boolean)
+
+    if (fields.length > 0)
+      return `Buscar en: ${fields.join(', ')}`
+  }
+
+  return 'Buscar en todos los campos...'
 })
 </script>
 
@@ -255,14 +300,18 @@ const quickSearchProxy = computed({
               </VTooltip>
             </VBtn>
             <VTextField
-              v-model="quickSearchProxy"
-              placeholder="Buscar en todos los campos..."
+              v-if="search.enabled"
+              :model-value="quickSearchDraft"
+              :placeholder="searchFieldsPlaceholder"
               density="compact"
               variant="outlined"
               hide-details
               clearable
               class="quick-search"
               style="max-inline-size: 300px; min-inline-size: 300px;"
+              @update:model-value="val => quickSearchDraft = val"
+              @keydown.enter="applyQuickSearch"
+              @click:clear="clearQuickSearch"
             >
               <template #prepend-inner>
                 <VIcon

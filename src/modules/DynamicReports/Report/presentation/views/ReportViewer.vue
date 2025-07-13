@@ -94,11 +94,11 @@ const initializeReportConfig = () => {
 
   // Solo inicializar si visibleColumns está vacío
   if (visibleColumns.value.length === 0) {
-    const selected = reportConfig.value.selectedFields && reportConfig.value.selectedFields.length > 0
+    const selected = reportConfig.value?.selectedFields && reportConfig.value.selectedFields.length > 0
       ? reportConfig.value.selectedFields.filter(f => f.visible !== false).map(f => f.field)
       : []
 
-    const calculated = (reportConfig.value.advanced?.calculatedFields || [])
+    const calculated = (reportConfig.value?.advanced?.calculatedFields || [])
       .filter(f => f.enabled !== false)
       .map(f => f.id)
 
@@ -106,14 +106,14 @@ const initializeReportConfig = () => {
   }
 
   // Siempre inicializar anchos
-  if (reportConfig.value.selectedFields) {
+  if (reportConfig.value?.selectedFields) {
     reportConfig.value.selectedFields.forEach(field => {
       if (!columnWidths.value[field.field])
         columnWidths.value[field.field] = field.width || 150
     })
   }
 
-  if (reportConfig.value.advanced?.calculatedFields) {
+  if (reportConfig.value?.advanced?.calculatedFields) {
     reportConfig.value.advanced.calculatedFields.forEach(field => {
       if (!columnWidths.value[field.id])
         columnWidths.value[field.id] = 150
@@ -121,7 +121,7 @@ const initializeReportConfig = () => {
   }
 
   // Inicializar ordenamiento
-  if (reportConfig.value.sorting) {
+  if (reportConfig.value?.sorting) {
     const sortingRules: SortingRule[] = []
     if (reportConfig.value.sorting.primary?.field) {
       sortingRules.push({
@@ -362,7 +362,15 @@ const buildFiltersPayload = () => {
   // Función recursiva para recorrer todos los filtros configurados
   const extractFilters = (filtersConfig: any[]) => {
     filtersConfig.forEach(filter => {
-      if (filter.type === 'filter' && filter.value !== undefined && filter.value !== null && filter.value !== '') {
+      if (
+        filter.type === 'filter'
+        && filter.value !== undefined
+        && filter.value !== null
+        && filter.value !== ''
+
+        // Si es array, debe tener al menos un elemento
+        && (!Array.isArray(filter.value) || filter.value.length > 0)
+      ) {
         filters.push({
           field: filter.field,
           operator: filter.operator || 'equals',
@@ -378,12 +386,20 @@ const buildFiltersPayload = () => {
 
   extractFilters(reportConfig.value?.filters || [])
 
-  // Agregar búsqueda rápida si existe
-  if (quickSearchQuery.value) {
+  // Buscador global avanzado
+  const searchConfig = reportConfig.value?.search
+  if (searchConfig?.enabled && quickSearchQuery.value && Array.isArray(searchConfig.fields) && searchConfig.fields.length > 0) {
     filters.push({
-      field: '_search',
-      operator: 'contains',
-      value: quickSearchQuery.value,
+      type: 'group',
+      condition: 'OR',
+      advanced: true,
+      children: searchConfig.fields.map(field => ({
+        type: 'filter',
+        field,
+        operator: 'contains',
+        value: quickSearchQuery.value,
+        advanced: true,
+      })),
     })
   }
 
@@ -609,9 +625,25 @@ const applyAllFilters = () => {
   loadRealDataFromBackend(route.params.id as string)
 }
 
-const removeFilter = (field: string) => {
-  appliedFilters.value = appliedFilters.value.filter(f => f.field !== field)
-  loadRealDataFromBackend(route.params.id as string)
+function removeFilter(field: string) {
+  // Limpia el valor del filtro correspondiente en el modelo de filtros
+  function clearFilterValue(filters: any[]) {
+    for (const filter of filters) {
+      if (filter.type === 'filter' && filter.field === field) {
+        if (Array.isArray(filter.value))
+          filter.value = []
+        else filter.value = null
+      }
+      else if (filter.type === 'group' && filter.children) {
+        clearFilterValue(filter.children)
+      }
+    }
+  }
+  if (reportConfig.value?.filters)
+    clearFilterValue(reportConfig.value.filters)
+
+  // Aplica los filtros automáticamente
+  applyAllFilters()
 }
 
 const clearAllFilters = () => {
@@ -845,6 +877,11 @@ const handleItemsPerPageChange = (items: number) => {
   store.page = 1 // Reset a la primera página
   loadRealDataFromBackend(route.params.id as string)
 }
+
+function onQuickSearchUpdate(val: string) {
+  if (quickSearchQuery.value && typeof quickSearchQuery.value !== 'undefined')
+    quickSearchQuery.value = val
+}
 </script>
 
 <template>
@@ -853,6 +890,7 @@ const handleItemsPerPageChange = (items: number) => {
     :class="{ 'fullscreen-mode': isFullscreen }"
   >
     <ReportToolbar
+      v-if="reportConfig"
       :report-title="reportTitle"
       :report-description="reportDescription"
       :last-updated="lastUpdated"
@@ -866,6 +904,7 @@ const handleItemsPerPageChange = (items: number) => {
       :visible-columns="visibleColumns"
       :visible-columns-fields="availableColumns || []"
       :quick-search-query="quickSearchQuery"
+      :search="reportConfig.search || { enabled: false, fields: [] }"
       @go-to-reports-list="goToReportsList"
       @refresh="loadReportData"
       @export="exportReport"
@@ -875,7 +914,7 @@ const handleItemsPerPageChange = (items: number) => {
       @update:view-mode="val => viewMode.value = val"
       @update:density="val => density.value = val"
       @toggle-filter-panel="showFilterPanel = !showFilterPanel"
-      @update:quick-search-query="val => quickSearchQuery.value = val"
+      @update:quick-search-query="onQuickSearchUpdate"
       @toggle-column-visibility="toggleColumnVisibility"
       @freeze-column="freezeColumn"
     />
@@ -887,6 +926,7 @@ const handleItemsPerPageChange = (items: number) => {
     >
       <!-- Panel de filtros -->
       <ReportFiltersPanel
+        v-if="reportConfig"
         v-model="showFilterPanel"
         :applied-filters="appliedFilters"
         :report-config="reportConfig"
@@ -898,6 +938,7 @@ const handleItemsPerPageChange = (items: number) => {
       />
       <!-- Tabla de datos -->
       <ReportDataTable
+        v-if="reportConfig"
         :report-config="reportConfig"
         :visible-columns="visibleColumns"
         :frozen-columns="frozenColumns"
