@@ -6,7 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ApiService } from '@/services/apiService'
 import { rawApi } from '@/services/api'
 import { useGlobalSnackbar } from '@/composables/useGlobalSnackbar'
-import BackgroundTaskSnackbar from '@/components/BackgroundTaskSnackbar.vue'
+import BackgroundTaskPanel from '@/components/BackgroundTaskPanel.vue'
 import { useReportStore } from '../stores/reportStore'
 import ReportFiltersPanel from '../components/organisms/ReportFiltersPanel.vue'
 import ReportToolbar from '../components/organisms/ReportToolbar.vue'
@@ -94,7 +94,7 @@ const shareLink = ref('')
 // Mapa reactivo para los valores de los filtros
 const appliedFiltersMap = reactive<Record<string, any>>({})
 
-const taskSnackbar = ref(null)
+const taskPanel = ref(null)
 
 // Inicializar columnas visibles
 const initializeReportConfig = () => {
@@ -773,11 +773,11 @@ async function handleExportDialog({ format, scope }) {
 
     if (res.status === 'pending') {
       // DDD: la tarea debe tener task_id, started y messageKey
-      taskSnackbar.value.addTaskAndStartPolling({
+      taskPanel.value.addTaskAndStartPolling({
         ...payload,
         task_id: res.execution_id,
         started: Date.now(),
-        messageKey: 'report.exporting',
+        messageKey: 'Exportando reporte...',
       })
     }
   }
@@ -1033,7 +1033,10 @@ function onQuickSearchUpdate(val: string) {
       :export-loading="exportLoading"
       @export="handleExportDialog"
     />
-    <BackgroundTaskSnackbar ref="taskSnackbar" />
+    <BackgroundTaskPanel
+      ref="taskPanel"
+      location="bottom end"
+    />
   </div>
 </template>
 
