@@ -4,6 +4,23 @@ import { computed, ref } from 'vue'
 import { useContractStore } from '../../stores/contractStore'
 import { useNotification } from '@/helpers/notificationHelper'
 
+// Types
+interface Service {
+  rowid: string | number
+  name: string
+  tva_tx: number
+  price: number
+}
+
+interface Charge {
+  id: string | number
+  name: string
+  tva_tx: number
+  price: number
+  quantity: number
+  total: number
+}
+
 const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
@@ -21,14 +38,14 @@ const { handleSubmit, errors } = useForm({
 })
 
 const token_dolibarr = useCookie('dolibarrToken').value
-const { value: selectedService } = useField('selectedService')
-const { value: tva_tx } = useField('tva_tx')
-const { value: price } = useField('price')
-const { value: quantity } = useField('quantity')
+const { value: selectedService } = useField<Service | null>('selectedService')
+const { value: tva_tx } = useField<number>('tva_tx')
+const { value: price } = useField<string>('price')
+const { value: quantity } = useField<number>('quantity')
 
 // Options and State
-const servicesOptions = ref([])
-const addedCharges = ref([])
+const servicesOptions = ref<Service[]>([])
+const addedCharges = ref<Charge[]>([])
 
 const tableHeaders = [
   { title: 'Servicio', key: 'name' },
@@ -51,19 +68,27 @@ const totalCost = computed(() =>
 // Methods
 const addCharge = () => {
   if (selectedService.value && price.value && quantity.value) {
+    const priceBase = Number.parseFloat(String(price.value || '0'))
+    const quantityValue = Number.parseInt(String(quantity.value), 10)
+    const ivaRate = (tva_tx.value ?? 16) / 100
+    
+    // El precio ingresado es el precio base (sin IVA)
+    // El total debe incluir el IVA: precio base * (1 + IVA) * cantidad
+    const totalWithIva = priceBase * (1 + ivaRate) * quantityValue
+    
     addedCharges.value.push({
       id: selectedService.value.rowid,
       name: selectedService.value.name || 'N/A',
-      tva_tx: tva_tx.value || 16,
-      price: Number.parseFloat(((price.value || 0) / (1 + (tva_tx.value / 100))).toFixed(2)),
-      quantity: Number.parseInt(quantity.value, 10),
-      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10),
+      tva_tx: tva_tx.value ?? 16,
+      price: priceBase, // precio base sin IVA
+      quantity: quantityValue,
+      total: totalWithIva, // total con IVA incluido
     })
     resetFields()
   }
 }
 
-const removeCharge = item => {
+const removeCharge = (item: Charge) => {
   addedCharges.value = addedCharges.value.filter(charge => charge !== item)
 }
 
@@ -85,15 +110,14 @@ const onFormSubmit = async () => {
 
   try {
     if (!aquasoft_id) {
-      showError(t('error_creating_note'))
-
+      showError('Error creando nota')
       return
     }
     isLoading.value = true
 
     const payload = {
       charges: addedCharges.value,
-      account: contractStore.item.account,
+      account: contractStore.item?.account,
       token: token_dolibarr,
       user_id: aquasoft_id,
     }
@@ -103,8 +127,8 @@ const onFormSubmit = async () => {
     showSuccess(response.message || 'Cargos guardados correctamente')
     closeDialog()
   }
-  catch (error) {
-    showError(`Error al guardar los cargos: ${error.message || 'Error desconocido'}`)
+  catch (error: any) {
+    showError(`Error al guardar los cargos: ${error?.message || 'Error desconocido'}`)
     console.error('Error details:', error)
   }
   finally {
@@ -114,7 +138,7 @@ const onFormSubmit = async () => {
 
 const onServiceSelect = (service: any) => {
   if (service) {
-    tva_tx.value = service.tva_tx || 16
+    tva_tx.value = service.tva_tx ?? 16
     price.value = service.price?.toString() || ''
   }
   else {
@@ -231,7 +255,7 @@ const onServiceSelect = (service: any) => {
           class="elevation-1 mt-6"
         >
           <template #item.price="{ item }">
-            ${{ ((item.price || 0) / (1 + (item.tva_tx / 100))).toFixed(2) }}
+            ${{ (item.price || 0).toFixed(2) }}
           </template>
           <template #item.total="{ item }">
             ${{ item.total.toFixed(2) }}
