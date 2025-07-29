@@ -1,0 +1,656 @@
+{
+  "moduleName": "DashboardMonitor",
+  "version": "1.0.0",
+  "description": "Dashboard para monitorear lecturas y lecturistas en tiempo real",
+  "author": "Development Team",
+  "framework": "vue",
+  "language": "typescript",
+
+  "entities": {
+    "Reader": {
+      "table": "readers",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "email": {
+          "type": "string",
+          "required": true
+        },
+        "phone": {
+          "type": "string",
+          "required": false
+        },
+        "employee_code": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "status": {
+          "type": "enum",
+          "values": ["active", "inactive", "on_route", "break", "offline"],
+          "default": "inactive"
+        },
+        "current_location": {
+          "type": "json",
+          "required": false
+        },
+        "assigned_routes": {
+          "type": "json",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        },
+        "updated_at": {
+          "type": "datetime",
+          "generated": true
+        }
+      },
+      "indexes": [
+        "employee_code",
+        "status",
+        "name"
+      ]
+    },
+    "Route": {
+      "table": "routes",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "text",
+          "required": false
+        },
+        "reader_id": {
+          "type": "uuid",
+          "required": false
+        },
+        "total_meters": {
+          "type": "integer",
+          "required": true
+        },
+        "estimated_duration": {
+          "type": "integer",
+          "required": false
+        },
+        "status": {
+          "type": "enum",
+          "values": ["pending", "assigned", "in_progress", "completed", "cancelled"],
+          "default": "pending"
+        },
+        "assigned_date": {
+          "type": "date",
+          "required": false
+        },
+        "started_at": {
+          "type": "datetime",
+          "required": false
+        },
+        "completed_at": {
+          "type": "datetime",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        }
+      },
+      "indexes": [
+        "reader_id",
+        "status",
+        "assigned_date"
+      ]
+    },
+    "Reading": {
+      "table": "readings",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true
+        },
+        "route_id": {
+          "type": "uuid",
+          "required": true
+        },
+        "reader_id": {
+          "type": "uuid",
+          "required": true
+        },
+        "meter_id": {
+          "type": "uuid",
+          "required": true
+        },
+        "reading_value": {
+          "type": "decimal",
+          "required": true
+        },
+        "previous_reading": {
+          "type": "decimal",
+          "required": false
+        },
+        "consumption": {
+          "type": "decimal",
+          "required": false
+        },
+        "status": {
+          "type": "enum",
+          "values": ["pending", "completed", "failed", "anomaly"],
+          "default": "pending"
+        },
+        "location": {
+          "type": "json",
+          "required": false
+        },
+        "photo_url": {
+          "type": "string",
+          "required": false
+        },
+        "notes": {
+          "type": "text",
+          "required": false
+        },
+        "reading_date": {
+          "type": "datetime",
+          "required": true
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        }
+      },
+      "indexes": [
+        "route_id",
+        "reader_id",
+        "meter_id",
+        "status",
+        "reading_date"
+      ]
+    },
+    "Meter": {
+      "table": "meters",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true
+        },
+        "meter_number": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "customer_name": {
+          "type": "string",
+          "required": true
+        },
+        "address": {
+          "type": "string",
+          "required": true
+        },
+        "location": {
+          "type": "json",
+          "required": false
+        },
+        "meter_type": {
+          "type": "enum",
+          "values": ["water", "gas", "electricity"],
+          "required": true
+        },
+        "status": {
+          "type": "enum",
+          "values": ["active", "inactive", "maintenance", "replaced"],
+          "default": "active"
+        },
+        "last_reading": {
+          "type": "decimal",
+          "required": false
+        },
+        "last_reading_date": {
+          "type": "datetime",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        }
+      },
+      "indexes": [
+        "meter_number",
+        "meter_type",
+        "status"
+      ]
+    }
+  },
+
+  "relationships": {
+    "Reader": {
+      "hasMany": ["Route", "Reading"]
+    },
+    "Route": {
+      "belongsTo": "Reader",
+      "hasMany": ["Reading"]
+    },
+    "Reading": {
+      "belongsTo": ["Route", "Reader", "Meter"]
+    },
+    "Meter": {
+      "hasMany": ["Reading"]
+    }
+  },
+
+  "types": {
+    "entities": {
+      "Reader": {
+        "interface": "IReader",
+        "createDto": "CreateReaderDto",
+        "updateDto": "UpdateReaderDto",
+        "response": "ReaderResponse"
+      },
+      "Route": {
+        "interface": "IRoute",
+        "createDto": "CreateRouteDto",
+        "updateDto": "UpdateRouteDto",
+        "response": "RouteResponse"
+      },
+      "Reading": {
+        "interface": "IReading",
+        "createDto": "CreateReadingDto",
+        "updateDto": "UpdateReadingDto",
+        "response": "ReadingResponse"
+      },
+      "Meter": {
+        "interface": "IMeter",
+        "createDto": "CreateMeterDto",
+        "updateDto": "UpdateMeterDto",
+        "response": "MeterResponse"
+      }
+    },
+    "enums": {
+      "ReaderStatus": ["active", "inactive", "on_route", "break", "offline"],
+      "RouteStatus": ["pending", "assigned", "in_progress", "completed", "cancelled"],
+      "ReadingStatus": ["pending", "completed", "failed", "anomaly"],
+      "MeterType": ["water", "gas", "electricity"],
+      "MeterStatus": ["active", "inactive", "maintenance", "replaced"]
+    },
+    "shared": {
+      "ApiResponse": "ApiResponse<T>",
+      "DashboardStats": "DashboardStats",
+      "LocationCoordinates": "LocationCoordinates",
+      "RealtimeUpdate": "RealtimeUpdate"
+    }
+  },
+
+  "stores": {
+    "dashboardStore": {
+      "state": [
+        "stats",
+        "realtimeUpdates",
+        "filters",
+        "loading",
+        "error"
+      ],
+      "actions": [
+        "fetchDashboardStats",
+        "subscribeToUpdates",
+        "updateFilters",
+        "refreshData"
+      ],
+      "getters": [
+        "totalReadingsToday",
+        "activeReaders",
+        "completionRate",
+        "anomaliesCount"
+      ]
+    },
+    "readerStore": {
+      "state": [
+        "readers",
+        "selectedReader",
+        "loading",
+        "error"
+      ],
+      "actions": [
+        "fetchReaders",
+        "updateReaderStatus",
+        "trackReaderLocation",
+        "assignRoute"
+      ],
+      "getters": [
+        "readersByStatus",
+        "readersOnRoute",
+        "availableReaders"
+      ]
+    },
+    "readingStore": {
+      "state": [
+        "readings",
+        "todayReadings",
+        "loading",
+        "error"
+      ],
+      "actions": [
+        "fetchReadings",
+        "createReading",
+        "updateReading",
+        "markAnomaly"
+      ],
+      "getters": [
+        "readingsByRoute",
+        "pendingReadings",
+        "completedReadings",
+        "anomalies"
+      ]
+    },
+    "routeStore": {
+      "state": [
+        "routes",
+        "activeRoutes",
+        "loading",
+        "error"
+      ],
+      "actions": [
+        "fetchRoutes",
+        "assignReaderToRoute",
+        "startRoute",
+        "completeRoute"
+      ],
+      "getters": [
+        "routesByStatus",
+        "routeProgress",
+        "delayedRoutes"
+      ]
+    }
+  },
+
+  "composables": {
+    "useDashboard": {
+      "functions": [
+        "loadDashboardData",
+        "subscribeToRealtime",
+        "updateFilters",
+        "exportReport"
+      ],
+      "reactive": [
+        "stats",
+        "loading",
+        "error",
+        "filters"
+      ]
+    },
+    "useReaders": {
+      "functions": [
+        "trackReaderLocation",
+        "updateReaderStatus",
+        "assignRoute",
+        "sendNotification"
+      ],
+      "reactive": [
+        "readers",
+        "activeReaders",
+        "loading"
+      ]
+    },
+    "useReadings": {
+      "functions": [
+        "recordReading",
+        "validateReading",
+        "flagAnomaly",
+        "uploadPhoto"
+      ],
+      "reactive": [
+        "readings",
+        "todayReadings",
+        "anomalies"
+      ]
+    },
+    "useRealtime": {
+      "functions": [
+        "connect",
+        "disconnect",
+        "subscribe",
+        "emit"
+      ],
+      "reactive": [
+        "connected",
+        "updates",
+        "error"
+      ]
+    },
+    "useMap": {
+      "functions": [
+        "initializeMap",
+        "addMarkers",
+        "updateReaderPosition",
+        "showRoute"
+      ],
+      "reactive": [
+        "mapInstance",
+        "markers",
+        "routes"
+      ]
+    }
+  },
+
+  "components": {
+    "smart": {
+      "DashboardStats": {
+        "props": [
+          "period",
+          "filters"
+        ],
+        "emits": [
+          "filterChanged",
+          "refresh"
+        ]
+      },
+      "ReaderMap": {
+        "props": [
+          "readers",
+          "showRoutes"
+        ],
+        "emits": [
+          "readerSelected",
+          "locationUpdated"
+        ]
+      },
+      "ReadingProgress": {
+        "props": [
+          "route",
+          "realtime"
+        ],
+        "emits": [
+          "anomalyDetected",
+          "routeCompleted"
+        ]
+      }
+    },
+    "dumb": {
+      "StatCard": {
+        "props": [
+          "title",
+          "value",
+          "trend",
+          "color"
+        ]
+      },
+      "ReaderCard": {
+        "props": [
+          "reader",
+          "showLocation"
+        ],
+        "emits": [
+          "statusChanged",
+          "routeAssigned"
+        ]
+      },
+      "ProgressBar": {
+        "props": [
+          "current",
+          "total",
+          "color"
+        ]
+      },
+      "AnomalyAlert": {
+        "props": [
+          "anomaly",
+          "dismissible"
+        ],
+        "emits": [
+          "dismissed",
+          "investigated"
+        ]
+      }
+    },
+    "layout": {
+      "DashboardLayout": {
+        "slots": [
+          "header",
+          "sidebar",
+          "main",
+          "footer"
+        ]
+      }
+    }
+  },
+
+  "services": {
+    "dashboardService": {
+      "baseUrl": "/api/dashboard",
+      "methods": {
+        "getStats": {
+          "method": "GET",
+          "path": "/stats"
+        },
+        "getRealtimeUpdates": {
+          "method": "GET",
+          "path": "/realtime"
+        }
+      }
+    },
+    "readerService": {
+      "baseUrl": "/api/readers",
+      "methods": {
+        "getAll": {
+          "method": "GET",
+          "path": "/"
+        },
+        "updateStatus": {
+          "method": "PUT",
+          "path": "/:id/status"
+        },
+        "updateLocation": {
+          "method": "PUT",
+          "path": "/:id/location"
+        }
+      }
+    },
+    "readingService": {
+      "baseUrl": "/api/readings",
+      "methods": {
+        "create": {
+          "method": "POST",
+          "path": "/"
+        },
+        "markAnomaly": {
+          "method": "PUT",
+          "path": "/:id/anomaly"
+        }
+      }
+    },
+    "websocketService": {
+      "events": [
+        "reading_completed",
+        "reader_location_updated",
+        "anomaly_detected",
+        "route_completed"
+      ]
+    }
+  },
+
+  "routing": {
+    "basePath": "/dashboard",
+    "routes": [
+      {
+        "path": "/",
+        "name": "Dashboard",
+        "component": "DashboardLayout",
+        "meta": {
+          "requiresAuth": true,
+          "title": "Monitor de Lecturas"
+        },
+        "children": [
+          {
+            "path": "",
+            "name": "Overview",
+            "component": "DashboardOverview"
+          },
+          {
+            "path": "readers",
+            "name": "Readers",
+            "component": "ReadersView"
+          },
+          {
+            "path": "routes",
+            "name": "Routes", 
+            "component": "RoutesView"
+          },
+          {
+            "path": "readings",
+            "name": "Readings",
+            "component": "ReadingsView"
+          }
+        ]
+      }
+    ]
+  },
+
+  "ui": {
+    "theme": {
+      "primary": "blue",
+      "secondary": "gray",
+      "success": "green",
+      "warning": "yellow",
+      "error": "red"
+    },
+    "icon": "tabler-dashboard",
+    "color": "blue",
+    "realtime": {
+      "updateInterval": 5000,
+      "enableNotifications": true,
+      "enableSound": false
+    },
+    "dashboard": {
+      "refreshInterval": 30000,
+      "autoRefresh": true,
+      "showMap": true,
+      "showStats": true
+    }
+  },
+
+  "features": {
+    "realtime": true,
+    "websocket": true,
+    "notifications": true,
+    "geolocation": true,
+    "maps": true,
+    "export": ["excel", "pdf", "csv"],
+    "analytics": true,
+    "alerts": true
+  }
+}

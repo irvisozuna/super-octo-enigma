@@ -1,0 +1,189 @@
+{
+  "moduleName": "YourModuleName",
+  "version": "1.0.0",
+  "description": "Descripción de qué hace tu módulo",
+  "author": "Development Team",
+  "framework": "vue",
+  "language": "typescript",
+
+  "_instructions": {
+    "_note": "Este es un template base para crear nuevos módulos. Duplica este archivo y personalízalo.",
+    "_usage": "1. Copia este archivo: cp specs/spectBase.json specs/tu-modulo.json",
+    "_usage2": "2. Edita tu-modulo.json con tus entidades",
+    "_usage3": "3. Ejecuta: node scripts/generateModuleFromSpec.mjs specs/tu-modulo.json",
+    "_entityExample": "Define las entidades de tu dominio con sus propiedades específicas",
+    "_propertyTypes": "uuid, string, integer, number, boolean, datetime, json, enum"
+  },
+
+  "entities": {
+    "YourEntity": {
+      "table": "your_entities",
+      "description": "Descripción de la entidad",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true,
+          "description": "Identificador único"
+        },
+        "name": {
+          "type": "string",
+          "required": true,
+          "description": "Nombre descriptivo"
+        },
+        "description": {
+          "type": "string",
+          "required": false,
+          "description": "Descripción opcional"
+        },
+        "status": {
+          "type": "enum",
+          "values": ["active", "inactive", "pending"],
+          "default": "pending",
+          "required": true,
+          "description": "Estado de la entidad"
+        },
+        "priority": {
+          "type": "integer",
+          "required": false,
+          "default": 1,
+          "description": "Prioridad numérica"
+        },
+        "is_enabled": {
+          "type": "boolean",
+          "default": true,
+          "required": true,
+          "description": "Si está habilitado"
+        },
+        "metadata": {
+          "type": "json",
+          "required": false,
+          "description": "Datos adicionales en JSON"
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true,
+          "description": "Fecha de creación"
+        },
+        "updated_at": {
+          "type": "datetime",
+          "generated": true,
+          "description": "Fecha de última actualización"
+        }
+      }
+    },
+
+    "RelatedEntity": {
+      "table": "related_entities",
+      "description": "Entidad relacionada de ejemplo",
+      "properties": {
+        "id": {
+          "type": "uuid", 
+          "primary": true,
+          "generated": true
+        },
+        "your_entity_id": {
+          "type": "uuid",
+          "required": true,
+          "description": "Relación con YourEntity"
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "number",
+          "required": false
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        },
+        "updated_at": {
+          "type": "datetime", 
+          "generated": true
+        }
+      }
+    }
+  },
+
+  "features": {
+    "crud": {
+      "enabled": true,
+      "description": "Operaciones básicas de crear, leer, actualizar, eliminar"
+    },
+    "search": {
+      "enabled": true,
+      "description": "Funcionalidad de búsqueda"
+    },
+    "export": {
+      "enabled": true,
+      "formats": ["excel", "pdf"],
+      "description": "Exportación de datos"
+    },
+    "websocket": {
+      "enabled": false,
+      "description": "Comunicación en tiempo real"
+    },
+    "cache": {
+      "enabled": true,
+      "description": "Caché para optimizar rendimiento"
+    },
+    "validation": {
+      "enabled": true,
+      "description": "Validación de datos"
+    }
+  },
+
+  "ui": {
+    "components": {
+      "list": {
+        "enabled": true,
+        "pagination": true,
+        "filters": true,
+        "sorting": true
+      },
+      "form": {
+        "enabled": true,
+        "validation": true
+      },
+      "detail": {
+        "enabled": true,
+        "readonly": false
+      }
+    },
+    "theme": {
+      "primaryColor": "#3B82F6",
+      "layout": "sidebar"
+    }
+  },
+
+  "api": {
+    "baseUrl": "/api/v1",
+    "authentication": "bearer",
+    "rateLimit": {
+      "enabled": true,
+      "requests": 100,
+      "window": "15m"
+    }
+  },
+
+  "_examples": {
+    "_ecommerce": {
+      "entities": ["Product", "Category", "Order", "Customer"],
+      "description": "Sistema de comercio electrónico"
+    },
+    "_blog": {
+      "entities": ["Post", "Comment", "Tag", "Author"],
+      "description": "Sistema de blog"
+    },
+    "_inventory": {
+      "entities": ["Item", "Location", "Movement", "Supplier"],
+      "description": "Sistema de inventario"
+    },
+    "_crm": {
+      "entities": ["Lead", "Contact", "Deal", "Activity"],
+      "description": "Sistema CRM"
+    }
+  }
+} 
