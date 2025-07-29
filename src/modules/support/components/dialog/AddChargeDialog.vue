@@ -7,6 +7,24 @@ import { useNotification } from '@/helpers/notificationHelper'
 import { useAppManager } from '@/composables/useAppManager'
 
 const { t } = useI18n()
+
+// Types
+interface Service {
+  rowid: string | number
+  name: string
+  tva_tx: number
+  price: number
+}
+
+interface Charge {
+  id: string | number
+  name: string
+  tva_tx: number
+  price: number
+  quantity: number
+  total: number
+}
+
 const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
@@ -71,7 +89,6 @@ const totalCost = computed(() =>
   addedCharges.value.reduce((sum, charge) => sum + charge.total, 0),
 )
 
-// Methods
 const resetFields = () => {
   selectedService.value = null
   tva_tx.value = 16
@@ -114,7 +131,7 @@ const onFormSubmit = async () => {
 
   try {
     if (!aquasoft_id) {
-      showError(t('error_creating_note'))
+      showError('Error creando nota')
 
       return
     }
@@ -138,7 +155,7 @@ const onFormSubmit = async () => {
     closeDialog()
   }
   catch (error: any) {
-    showError(`Error al guardar los cargos: ${error.message || 'Error desconocido'}`)
+    showError(`Error al guardar los cargos: ${error?.message || 'Error desconocido'}`)
     console.error('Error details:', error)
   }
   finally {
@@ -148,9 +165,7 @@ const onFormSubmit = async () => {
 
 const onServiceSelect = (service: Service | null) => {
   if (service) {
-    // Asignar automáticamente el impuesto y precio del servicio seleccionado
-    // Usar el valor real del servicio, incluso si es 0
-    tva_tx.value = service.tva_tx !== undefined ? service.tva_tx : 16
+    tva_tx.value = service.tva_tx ?? 16
     price.value = service.price?.toString() || ''
   }
   else {
@@ -276,7 +291,7 @@ const onServiceSelect = (service: Service | null) => {
             {{ item.tva_tx }}%
           </template>
           <template #item.price="{ item }">
-            ${{ ((item.price || 0) / (1 + (item.tva_tx / 100))).toFixed(2) }}
+            ${{ (item.price || 0).toFixed(2) }}
           </template>
           <template #item.total="{ item }">
             ${{ item.total.toFixed(2) }}
