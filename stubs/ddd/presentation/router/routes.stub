@@ -1,0 +1,161 @@
+import type { RouteRecordRaw } from 'vue-router'
+
+// Views
+{{#each entities}}
+import {{@key}}List from '@/views/{{@key}}List.vue'
+import {{@key}}Create from '@/views/{{@key}}Create.vue'
+import {{@key}}Edit from '@/views/{{@key}}Edit.vue'
+import {{@key}}Detail from '@/views/{{@key}}Detail.vue'
+{{/each}}
+
+// Module routes
+export const {{moduleNameLower}}Routes: RouteRecordRaw[] = [
+  {
+    path: '/{{moduleNameLower}}',
+    name: '{{moduleName}}',
+    component: () => import('@/layouts/{{moduleName}}Layout.vue'),
+    meta: {
+      requiresAuth: true,
+      permission: '{{moduleNameLower}}.view',
+      title: '{{spec.description}}',
+      icon: '{{spec.ui.icon}}',
+      color: '{{spec.ui.color}}'
+    },
+    children: [
+      {
+        path: '',
+        name: '{{moduleName}}Dashboard',
+        component: () => import('@/views/{{moduleName}}Dashboard.vue'),
+        meta: {
+          title: 'Dashboard',
+          icon: 'dashboard',
+          permission: '{{moduleNameLower}}.view'
+        }
+      },
+      {{#each entities}}
+      {
+        path: '{{entityNameLower}}s',
+        name: '{{@key}}List',
+        component: {{@key}}List,
+        meta: {
+          title: '{{@key}}s',
+          icon: '{{getEntityIcon @key}}',
+          permission: '{{moduleNameLower}}.{{entityNameLower}}.view'
+        }
+      },
+      {
+        path: '{{entityNameLower}}s/create',
+        name: '{{@key}}Create',
+        component: {{@key}}Create,
+        meta: {
+          title: 'Crear {{@key}}',
+          icon: 'plus',
+          permission: '{{moduleNameLower}}.{{entityNameLower}}.create'
+        }
+      },
+      {
+        path: '{{entityNameLower}}s/:id/edit',
+        name: '{{@key}}Edit',
+        component: {{@key}}Edit,
+        props: true,
+        meta: {
+          title: 'Editar {{@key}}',
+          icon: 'pencil',
+          permission: '{{moduleNameLower}}.{{entityNameLower}}.edit'
+        }
+      },
+      {
+        path: '{{entityNameLower}}s/:id',
+        name: '{{@key}}Detail',
+        component: {{@key}}Detail,
+        props: true,
+        meta: {
+          title: 'Detalle {{@key}}',
+          icon: 'eye',
+          permission: '{{moduleNameLower}}.{{entityNameLower}}.view'
+        }
+      },
+      {{/each}}
+      {{#if spec.features.export}}
+      {
+        path: 'exports',
+        name: '{{moduleName}}Exports',
+        component: () => import('@/views/{{moduleName}}Exports.vue'),
+        meta: {
+          title: 'Exportaciones',
+          icon: 'download',
+          permission: '{{moduleNameLower}}.export'
+        }
+      },
+      {{/if}}
+      {{#if spec.features.audit}}
+      {
+        path: 'audit',
+        name: '{{moduleName}}Audit',
+        component: () => import('@/views/{{moduleName}}Audit.vue'),
+        meta: {
+          title: 'Auditoría',
+          icon: 'history',
+          permission: '{{moduleNameLower}}.audit'
+        }
+      },
+      {{/if}}
+    ]
+  }
+]
+
+// Helper function to get entity icon
+function getEntityIcon(entityName: string): string {
+  const iconMap: Record<string, string> = {
+    {{#each entities}}
+    '{{@key}}': '{{getEntityIcon @key}}',
+    {{/each}}
+  }
+  
+  return iconMap[entityName] || 'cube'
+}
+
+// Export individual route groups for easier access
+export const {{moduleNameLower}}EntityRoutes = {{moduleNameLower}}Routes[0].children?.filter(route => 
+  route.name?.toString().includes('List') || 
+  route.name?.toString().includes('Create') || 
+  route.name?.toString().includes('Edit') || 
+  route.name?.toString().includes('Detail')
+) || []
+
+export const {{moduleNameLower}}FeatureRoutes = {{moduleNameLower}}Routes[0].children?.filter(route => 
+  !route.name?.toString().includes('List') && 
+  !route.name?.toString().includes('Create') && 
+  !route.name?.toString().includes('Edit') && 
+  !route.name?.toString().includes('Detail')
+) || []
+
+// Route guards
+export const {{moduleNameLower}}RouteGuards = {
+  beforeEnter: (to: any, from: any, next: any) => {
+    // Check authentication
+    if (to.meta.requiresAuth && !isAuthenticated()) {
+      next({ name: 'Login', query: { redirect: to.fullPath } })
+      return
+    }
+    
+    // Check permissions
+    if (to.meta.permission && !hasPermission(to.meta.permission)) {
+      next({ name: 'Forbidden' })
+      return
+    }
+    
+    next()
+  }
+}
+
+// Helper functions (these should be imported from your auth/permissions system)
+function isAuthenticated(): boolean {
+  // Implement your authentication check
+  return true
+}
+
+function hasPermission(permission: string): boolean {
+  // Implement your permission check
+  return true
+} 

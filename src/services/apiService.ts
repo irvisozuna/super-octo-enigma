@@ -1,5 +1,5 @@
-import { useAuthStore } from '@/stores/auth.store'; // Ajusta la importación según tu estructura
 import { ofetch } from 'ofetch'
+import { useAuthStore } from '@/stores/auth.store' // Ajusta la importación según tu estructura
 
 const apiService = ofetch.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',

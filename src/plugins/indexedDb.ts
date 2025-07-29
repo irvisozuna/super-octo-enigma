@@ -1,5 +1,5 @@
-import { db } from '@/services/indexedDbService';
-import type { App } from 'vue';
+import type { App } from 'vue'
+import { db } from '@/services/indexedDbService'
 
 export default function (app: App) {
   db.open()
@@ -7,7 +7,7 @@ export default function (app: App) {
       // console.log('IndexedDB inicializado correctamente.');
       // console.log('Tablas disponibles:', db.tables.map((table) => table.name));
     })
-    .catch((err) => {
+    .catch(err => {
       // console.error('Error inicializando IndexedDB:', err);
-    });
+    })
 }

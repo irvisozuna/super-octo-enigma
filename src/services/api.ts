@@ -7,6 +7,7 @@
  *********************************************************/
 
 import type { ApiOptions } from '@/types/types'
+import { useCookie } from '@/@core/composable/useCookie'
 
 /**
  * Función principal para realizar peticiones HTTP.
@@ -27,16 +28,23 @@ export async function rawApi(
 ) {
   // 1. Construcción de la URL final (base + endpoint)
   //    Reemplaza con tu lógica para obtener la URL base si no usas import.meta.env.
-  let finalUrl = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}${url}`
-    : url
+  let finalUrl = url
+  if ((import.meta as any).env?.VITE_API_BASE_URL) {
+    const baseUrl = (import.meta as any).env.VITE_API_BASE_URL
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`
+
+    finalUrl = `${cleanBaseUrl}${cleanUrl}`
+  }
 
   // 2. Manejo de query params
   const query = new URLSearchParams()
 
   Object.entries(params).forEach(([key, val]) => {
-    if (val !== undefined && val !== null)
+    if (val !== undefined && val !== null) {
+      console.log(`Adding param: ${key} = ${val}`)
       query.append(key, String(val))
+    }
   })
   if (query.toString())
     finalUrl += `?${query.toString()}`
@@ -55,7 +63,7 @@ export async function rawApi(
   }
 
   // 5. Si tenemos token, lo añadimos al header
-  const organization = import.meta.env.VITE_API_ORGANIZATION
+  const organization = (import.meta as any).env?.VITE_API_ORGANIZATION
 
   if (accessToken) {
     fetchOptions.headers = {
@@ -123,6 +131,10 @@ export async function rawApi(
     }
 
     // 9. Si la respuesta es exitosa, retornamos en base a `responseType`
+    if (response.status === 204) {
+      // No Content: no hay nada que parsear
+      return null
+    }
     switch (responseType) {
       case 'blob': {
       // Descarga de archivos binarios

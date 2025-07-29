@@ -1,0 +1,10 @@
+import { UseCase } from '../UseCase'
+import { Update{{entityName}}Command } from '../commands/Update{{entityName}}Command'
+import { Update{{entityName}}Handler } from '../handlers/Update{{entityName}}Handler'
+import { {{entityName}} } from '../../domain/entities/{{entityName}}'
+
+export class Update{{entityName}}UseCase {
+  execute(command: Update{{entityName}}Command): void {
+    // Implementación aquí
+  }
+} 

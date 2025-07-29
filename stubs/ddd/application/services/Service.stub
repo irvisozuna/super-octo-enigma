@@ -1,0 +1,195 @@
+import { inject, injectable } from 'inversify'
+import { TYPES } from '../../types'
+import { {{moduleName}}Repository } from '../../domain/contracts/repositories/{{moduleName}}Repository'
+import { {{moduleName}}DomainService } from '../../domain/contracts/services/{{moduleName}}DomainService'
+import { {{moduleName}}Mapper } from '../mappers/{{moduleName}}Mapper'
+import { Create{{moduleName}}Command } from '../commands/Create{{moduleName}}Command'
+import { Update{{moduleName}}Command } from '../commands/Update{{moduleName}}Command'
+import { Delete{{moduleName}}Command } from '../commands/Delete{{moduleName}}Command'
+import { Get{{moduleName}}ByIdQuery } from '../queries/Get{{moduleName}}ByIdQuery'
+import { Get{{moduleName}}ListQuery } from '../queries/Get{{moduleName}}ListQuery'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+import { {{moduleName}}NotFound } from '../../domain/exceptions/{{moduleName}}NotFound'
+{{#if hasCache}}
+import { {{moduleName}}CacheService } from '../../infrastructure/persistence/cache/{{moduleName}}CacheService'
+{{/if}}
+
+export interface {{moduleName}}ListResult {
+  items: {{moduleName}}[]
+  total: number
+  page: number
+  limit: number
+}
+
+@injectable()
+export class {{moduleName}}ApplicationService {
+  constructor(
+    @inject(TYPES.{{moduleName}}Repository)
+    private readonly repository: {{moduleName}}Repository,
+    @inject(TYPES.{{moduleName}}DomainService)
+    private readonly domainService: {{moduleName}}DomainService,
+    @inject(TYPES.{{moduleName}}Mapper)
+    private readonly mapper: {{moduleName}}Mapper
+    {{#if hasCache}},
+    @inject(TYPES.{{moduleName}}CacheService)
+    private readonly cacheService: {{moduleName}}CacheService
+    {{/if}}
+  ) {}
+
+  async create(command: Create{{moduleName}}Command): Promise<{{moduleName}}> {
+    try {
+      // Validar reglas de negocio
+      await this.domainService.validateCreate(command)
+
+      // Crear la entidad
+      const {{moduleNameLower}} = {{moduleName}}.create({
+        name: command.name,
+        status: command.status,
+        description: command.description,
+        metadata: command.metadata
+      })
+
+      // Guardar en el repositorio
+      const saved{{moduleName}} = await this.repository.save({{moduleNameLower}})
+
+      {{#if hasCache}}
+      // Invalidar caché
+      await this.cacheService.invalidateList()
+      {{/if}}
+
+      return saved{{moduleName}}
+    } catch (error) {
+      throw new Error(`Failed to create {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async update(command: Update{{moduleName}}Command): Promise<{{moduleName}}> {
+    try {
+      // Buscar la entidad existente
+      const existing{{moduleName}} = await this.repository.findById(command.id)
+      if (!existing{{moduleName}}) {
+        throw new {{moduleName}}NotFound(command.id)
+      }
+
+      // Validar reglas de negocio
+      await this.domainService.validateUpdate(existing{{moduleName}}, command)
+
+      // Actualizar la entidad
+      existing{{moduleName}}.update({
+        name: command.name,
+        status: command.status,
+        description: command.description,
+        metadata: command.metadata
+      })
+
+      // Guardar en el repositorio
+      const updated{{moduleName}} = await this.repository.save(existing{{moduleName}})
+
+      {{#if hasCache}}
+      // Invalidar caché
+      await this.cacheService.invalidateById(command.id)
+      await this.cacheService.invalidateList()
+      {{/if}}
+
+      return updated{{moduleName}}
+    } catch (error) {
+      throw new Error(`Failed to update {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async delete(command: Delete{{moduleName}}Command): Promise<{{moduleName}}> {
+    try {
+      // Buscar la entidad existente
+      const existing{{moduleName}} = await this.repository.findById(command.id)
+      if (!existing{{moduleName}}) {
+        throw new {{moduleName}}NotFound(command.id)
+      }
+
+      // Validar reglas de negocio
+      await this.domainService.validateDelete(existing{{moduleName}})
+
+      // Eliminar la entidad (soft delete)
+      existing{{moduleName}}.delete()
+
+      // Guardar en el repositorio
+      const deleted{{moduleName}} = await this.repository.save(existing{{moduleName}})
+
+      {{#if hasCache}}
+      // Invalidar caché
+      await this.cacheService.invalidateById(command.id)
+      await this.cacheService.invalidateList()
+      {{/if}}
+
+      return deleted{{moduleName}}
+    } catch (error) {
+      throw new Error(`Failed to delete {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async getById(query: Get{{moduleName}}ByIdQuery): Promise<{{moduleName}}> {
+    try {
+      {{#if hasCache}}
+      // Intentar obtener del caché
+      const cached = await this.cacheService.getById(query.id)
+      if (cached) {
+        return cached
+      }
+      {{/if}}
+
+      // Buscar en el repositorio
+      const {{moduleNameLower}} = await this.repository.findById(query.id, query.includeDeleted)
+      if (!{{moduleNameLower}}) {
+        throw new {{moduleName}}NotFound(query.id)
+      }
+
+      {{#if hasCache}}
+      // Guardar en caché
+      await this.cacheService.setById(query.id, {{moduleNameLower}})
+      {{/if}}
+
+      return {{moduleNameLower}}
+    } catch (error) {
+      throw new Error(`Failed to get {{moduleName}} by ID: ${error.message}`)
+    }
+  }
+
+  async getList(query: Get{{moduleName}}ListQuery): Promise<{{moduleName}}ListResult> {
+    try {
+      {{#if hasCache}}
+      // Intentar obtener del caché
+      const cacheKey = this.generateCacheKey(query)
+      const cached = await this.cacheService.getList(cacheKey)
+      if (cached) {
+        return cached
+      }
+      {{/if}}
+
+      // Buscar en el repositorio
+      const result = await this.repository.findByCriteria({
+        page: query.page,
+        limit: query.limit,
+        search: query.search,
+        status: query.status,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
+        includeDeleted: query.includeDeleted,
+        filters: query.filters
+      })
+
+      {{#if hasCache}}
+      // Guardar en caché
+      await this.cacheService.setList(cacheKey, result)
+      {{/if}}
+
+      return result
+    } catch (error) {
+      throw new Error(`Failed to get {{moduleName}} list: ${error.message}`)
+    }
+  }
+
+  {{#if hasCache}}
+  private generateCacheKey(query: Get{{moduleName}}ListQuery): string {
+    return `{{moduleNameLower}}_list_${JSON.stringify(query)}`
+  }
+  {{/if}}
+} 

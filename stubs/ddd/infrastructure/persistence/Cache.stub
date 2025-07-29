@@ -1,0 +1,177 @@
+import { injectable } from 'inversify'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+
+export interface {{moduleName}}ListResult {
+  items: {{moduleName}}[]
+  total: number
+  page: number
+  limit: number
+}
+
+@injectable()
+export class {{moduleName}}CacheService {
+  private readonly cachePrefix = '{{moduleNameLower}}_'
+  private readonly defaultTTL = 5 * 60 * 1000 // 5 minutos
+
+  async getById(id: string): Promise<{{moduleName}} | null> {
+    try {
+      const key = `${this.cachePrefix}id_${id}`
+      const cached = localStorage.getItem(key)
+      
+      if (!cached) {
+        return null
+      }
+
+      const { data, timestamp } = JSON.parse(cached)
+      
+      // Verificar si el caché ha expirado
+      if (Date.now() - timestamp > this.defaultTTL) {
+        localStorage.removeItem(key)
+        return null
+      }
+
+      return {{moduleName}}.create({
+        id: data.id,
+        name: data.name,
+        status: data.status,
+        description: data.description,
+        metadata: data.metadata
+      })
+    } catch (error) {
+      console.warn('Error reading from cache:', error)
+      return null
+    }
+  }
+
+  async setById(id: string, {{moduleNameLower}}: {{moduleName}}): Promise<void> {
+    try {
+      const key = `${this.cachePrefix}id_${id}`
+      const data = {
+        id: {{moduleNameLower}}.id.value,
+        name: {{moduleNameLower}}.name.value,
+        status: {{moduleNameLower}}.status.value,
+        description: {{moduleNameLower}}.description?.value,
+        metadata: {{moduleNameLower}}.metadata || {}
+      }
+      
+      const cacheData = {
+        data,
+        timestamp: Date.now()
+      }
+
+      localStorage.setItem(key, JSON.stringify(cacheData))
+    } catch (error) {
+      console.warn('Error writing to cache:', error)
+    }
+  }
+
+  async getList(cacheKey: string): Promise<{{moduleName}}ListResult | null> {
+    try {
+      const key = `${this.cachePrefix}list_${cacheKey}`
+      const cached = localStorage.getItem(key)
+      
+      if (!cached) {
+        return null
+      }
+
+      const { data, timestamp } = JSON.parse(cached)
+      
+      // Verificar si el caché ha expirado
+      if (Date.now() - timestamp > this.defaultTTL) {
+        localStorage.removeItem(key)
+        return null
+      }
+
+      return {
+        items: data.items.map((item: any) => {{moduleName}}.create({
+          id: item.id,
+          name: item.name,
+          status: item.status,
+          description: item.description,
+          metadata: item.metadata
+        })),
+        total: data.total,
+        page: data.page,
+        limit: data.limit
+      }
+    } catch (error) {
+      console.warn('Error reading list from cache:', error)
+      return null
+    }
+  }
+
+  async setList(cacheKey: string, result: {{moduleName}}ListResult): Promise<void> {
+    try {
+      const key = `${this.cachePrefix}list_${cacheKey}`
+      const data = {
+        items: result.items.map({{moduleNameLower}} => ({
+          id: {{moduleNameLower}}.id.value,
+          name: {{moduleNameLower}}.name.value,
+          status: {{moduleNameLower}}.status.value,
+          description: {{moduleNameLower}}.description?.value,
+          metadata: {{moduleNameLower}}.metadata || {}
+        })),
+        total: result.total,
+        page: result.page,
+        limit: result.limit
+      }
+      
+      const cacheData = {
+        data,
+        timestamp: Date.now()
+      }
+
+      localStorage.setItem(key, JSON.stringify(cacheData))
+    } catch (error) {
+      console.warn('Error writing list to cache:', error)
+    }
+  }
+
+  async invalidateById(id: string): Promise<void> {
+    try {
+      const key = `${this.cachePrefix}id_${id}`
+      localStorage.removeItem(key)
+    } catch (error) {
+      console.warn('Error invalidating cache by ID:', error)
+    }
+  }
+
+  async invalidateList(): Promise<void> {
+    try {
+      const keys = Object.keys(localStorage)
+      const listKeys = keys.filter(key => key.startsWith(`${this.cachePrefix}list_`))
+      
+      listKeys.forEach(key => {
+        localStorage.removeItem(key)
+      })
+    } catch (error) {
+      console.warn('Error invalidating list cache:', error)
+    }
+  }
+
+  async invalidateAll(): Promise<void> {
+    try {
+      const keys = Object.keys(localStorage)
+      const moduleKeys = keys.filter(key => key.startsWith(this.cachePrefix))
+      
+      moduleKeys.forEach(key => {
+        localStorage.removeItem(key)
+      })
+    } catch (error) {
+      console.warn('Error invalidating all cache:', error)
+    }
+  }
+
+  async clear(): Promise<void> {
+    await this.invalidateAll()
+  }
+
+  // Métodos de utilidad
+  private generateCacheKey(params: any): string {
+    return btoa(JSON.stringify(params))
+  }
+
+  private isExpired(timestamp: number): boolean {
+    return Date.now() - timestamp > this.defaultTTL
+  }
+} 

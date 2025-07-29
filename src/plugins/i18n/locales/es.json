@@ -531,7 +531,10 @@
   "last_reading": "Ubicación de la toma",
   "common": {
     "success": "Éxito",
-    "error": "Error"
+    "error": "Error",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar"
   },
   "close": "Cerrar",
   "period": "Periodo",
@@ -633,5 +636,12 @@
   "other_payment_methods": "Otros Métodos de Pago",
   "credit_applied": "Crédito Aplicado",
   "credit_used": "Crédito Utilizado",
-  "applied": "Aplicado"
+  "applied": "Aplicado",
+  "logic": {
+    "and": "Y",
+    "or": "O"
+  },
+  "deleteModule": "Eliminar {moduleName}",
+  "deleteItemDescription": "¿Está seguro de que desea eliminar este elemento?",
+  "confirmDelete": "Confirmar eliminación",
 }

@@ -1,0 +1,56 @@
+import { injectable } from 'inversify'
+import type { Create{{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Create{{moduleName}}DTO'
+import type { Update{{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Update{{moduleName}}DTO'
+
+@injectable()
+export class {{moduleName}}Transformer {
+  /**
+   * Transforma la respuesta del servidor a DTO
+   */
+  transformItem(response: any): any {
+    return {
+      id: response.id,
+      name: response.name,
+      status: response.status,
+      createdAt: response.created_at,
+      updatedAt: response.updated_at,
+      deletedAt: response.deleted_at,
+    }
+  }
+
+  /**
+   * Transforma una lista de respuestas
+   */
+  transformList(response: any): any {
+    return {
+      data: response.data.map((item: any) => this.transformItem(item)),
+      total: response.meta?.total || response.total || 0,
+      page: response.meta?.current_page || response.page || 1,
+      limit: response.meta?.per_page || response.limit || 10,
+      hasNextPage: response.meta?.has_more_pages || false,
+      hasPreviousPage: (response.meta?.current_page || 1) > 1,
+    }
+  }
+
+  /**
+   * Transforma DTO de creación a payload del servidor
+   */
+  transformCreatePayload(dto: Create{{moduleName}}DTO): any {
+    return {
+      name: dto.name,
+      status: dto.status,
+    }
+  }
+
+  /**
+   * Transforma DTO de actualización a payload del servidor
+   */
+  transformUpdatePayload(dto: Update{{moduleName}}DTO): any {
+    const payload: any = {}
+    
+    if (dto.name !== undefined) payload.name = dto.name
+    if (dto.status !== undefined) payload.status = dto.status
+    
+    return payload
+  }
+} 

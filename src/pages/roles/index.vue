@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // import { UserList } from '@/modules/users';
-import { UserList } from '@/modules/user';
-import RoleCards from '@/views/roles/RoleCards.vue';
+import { UserList } from '@/modules/user'
+import RoleCards from '@/views/roles/RoleCards.vue'
 </script>
 
 <template>
@@ -20,11 +20,13 @@ import RoleCards from '@/views/roles/RoleCards.vue';
       <RoleCards />
     </VCol>
 
-
-
     <VCol cols="12">
       <!-- 👉 User List  -->
-      <UserList :title="$t('users_list')" :description="$t('users_list_description')" :extraFilters="{}" />
+      <UserList
+        :title="$t('users_list')"
+        :description="$t('users_list_description')"
+        :extra-filters="{}"
+      />
     </VCol>
   </VRow>
 </template>

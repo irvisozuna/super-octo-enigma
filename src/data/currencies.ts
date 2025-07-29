@@ -4,5 +4,5 @@ export default [
   'GBP',
   'AUD',
   'BRL',
-  'MXN'
-];
+  'MXN',
+]

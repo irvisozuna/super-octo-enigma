@@ -1,0 +1,50 @@
+import { {{moduleName}} } from '../entities/{{moduleName}}'
+import { {{moduleName}}ValidationError } from '../exceptions/{{moduleName}}ValidationError'
+
+export interface {{moduleName}}Specification {
+  ensureCanCreate(params: { name: string; status?: string }): Promise<void>
+  ensureCanUpdate({{moduleNameLower}}: {{moduleName}}, params: { name?: string; status?: string }): Promise<void>
+  ensureCanDelete({{moduleNameLower}}: {{moduleName}}): Promise<void>
+  isSatisfiedBy({{moduleNameLower}}: {{moduleName}}): boolean
+}
+
+export class {{moduleName}}SpecificationImpl implements {{moduleName}}Specification {
+  async ensureCanCreate(params: { name: string; status?: string }): Promise<void> {
+    // Implementar reglas de negocio para la creación
+    if (!params.name || params.name.trim().length === 0) {
+      throw new {{moduleName}}ValidationError('Name is required')
+    }
+
+    // Aquí podrías verificar duplicados, permisos, etc.
+  }
+
+  async ensureCanUpdate(
+    {{moduleNameLower}}: {{moduleName}},
+    params: { name?: string; status?: string }
+  ): Promise<void> {
+    // Implementar reglas de negocio para la actualización
+    if ({{moduleNameLower}}.isDeleted()) {
+      throw new {{moduleName}}ValidationError('Cannot update a deleted {{moduleNameLower}}')
+    }
+
+    if (params.status && !{{moduleNameLower}}.status.canTransitionTo(params.status)) {
+      throw new {{moduleName}}ValidationError(
+        `Cannot transition from ${{{moduleNameLower}}.status.value} to ${params.status}`
+      )
+    }
+  }
+
+  async ensureCanDelete({{moduleNameLower}}: {{moduleName}}): Promise<void> {
+    // Implementar reglas de negocio para la eliminación
+    if ({{moduleNameLower}}.isDeleted()) {
+      throw new {{moduleName}}ValidationError('{{moduleName}} is already deleted')
+    }
+
+    // Aquí podrías verificar dependencias, permisos, etc.
+  }
+
+  isSatisfiedBy({{moduleNameLower}}: {{moduleName}}): boolean {
+    // Verificar si el {{moduleNameLower}} cumple con las especificaciones
+    return {{moduleNameLower}}.isActive() && !{{moduleNameLower}}.isDeleted()
+  }
+} 

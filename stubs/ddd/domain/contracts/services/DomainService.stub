@@ -1,0 +1,20 @@
+import { {{moduleName}} } from '../../entities/{{moduleName}}'
+import { {{moduleName}}Id } from '../../entities/{{moduleName}}Id'
+
+export interface {{moduleName}}DomainService {
+  validateUniqueName(name: string, excludeId?: {{moduleName}}Id): Promise<boolean>
+  calculateMetrics({{moduleNameLower}}: {{moduleName}}): {{moduleName}}Metrics
+  checkBusinessRules({{moduleNameLower}}: {{moduleName}}): Promise<BusinessRuleResult>
+  generateCode({{moduleNameLower}}: {{moduleName}}): string
+}
+
+export interface {{moduleName}}Metrics {
+  daysActive: number
+  lastActivityDate: Date
+  completenessScore: number
+}
+
+export interface BusinessRuleResult {
+  isValid: boolean
+  violations: string[]
+} 

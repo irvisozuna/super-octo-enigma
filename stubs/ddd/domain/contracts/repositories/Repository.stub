@@ -1,0 +1,24 @@
+import { {{moduleName}} } from '../../entities/{{moduleName}}'
+import { {{moduleName}}Id } from '../../entities/{{moduleName}}Id'
+
+export interface {{moduleName}}Repository {
+  findById(id: {{moduleName}}Id): Promise<{{moduleName}} | null>
+  findAll(): Promise<{{moduleName}}[]>
+  findByName(name: string): Promise<{{moduleName}} | null>
+  save({{moduleNameLower}}: {{moduleName}}): Promise<void>
+  delete(id: {{moduleName}}Id): Promise<void>
+  exists(id: {{moduleName}}Id): Promise<boolean>
+  count(): Promise<number>
+  findByCriteria(criteria: {{moduleName}}SearchCriteria): Promise<{{moduleName}}[]>
+}
+
+export interface {{moduleName}}SearchCriteria {
+  name?: string
+  status?: string
+  createdAfter?: Date
+  createdBefore?: Date
+  limit?: number
+  offset?: number
+  orderBy?: string
+  orderDirection?: 'ASC' | 'DESC'
+} 

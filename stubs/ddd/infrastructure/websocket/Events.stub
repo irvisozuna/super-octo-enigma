@@ -1,0 +1,140 @@
+import { injectable } from 'inversify'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+
+@injectable()
+export class {{moduleName}}WebSocketEvents {
+  private eventHandlers: Map<string, Function[]> = new Map()
+
+  emitCreated({{moduleNameLower}}: {{moduleName}}): void {
+    this.emit('{{moduleNameLower}}.created', {{moduleNameLower}})
+  }
+
+  emitUpdated({{moduleNameLower}}: {{moduleName}}): void {
+    this.emit('{{moduleNameLower}}.updated', {{moduleNameLower}})
+  }
+
+  emitDeleted(id: string): void {
+    this.emit('{{moduleNameLower}}.deleted', { id })
+  }
+
+  emitRestored({{moduleNameLower}}: {{moduleName}}): void {
+    this.emit('{{moduleNameLower}}.restored', {{moduleNameLower}})
+  }
+
+  emitBulkUpdate(ids: string[]): void {
+    this.emit('{{moduleNameLower}}.bulk-updated', { ids })
+  }
+
+  emitBulkDelete(ids: string[]): void {
+    this.emit('{{moduleNameLower}}.bulk-deleted', { ids })
+  }
+
+  emitStatusChange(id: string, oldStatus: string, newStatus: string): void {
+    this.emit('{{moduleNameLower}}.status-changed', { id, oldStatus, newStatus })
+  }
+
+  // Event emitter pattern
+  on(event: string, handler: Function): void {
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, [])
+    }
+    this.eventHandlers.get(event)!.push(handler)
+  }
+
+  off(event: string, handler: Function): void {
+    const handlers = this.eventHandlers.get(event)
+    if (handlers) {
+      const index = handlers.indexOf(handler)
+      if (index > -1) {
+        handlers.splice(index, 1)
+      }
+    }
+  }
+
+  private emit(event: string, data: any): void {
+    const handlers = this.eventHandlers.get(event)
+    if (handlers) {
+      handlers.forEach(handler => {
+        try {
+          handler(data)
+        } catch (error) {
+          console.error(`Error in {{moduleName}} WebSocket event handler for ${event}:`, error)
+        }
+      })
+    }
+  }
+
+  // Métodos de utilidad para suscribirse a eventos específicos
+  onCreated(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.on('{{moduleNameLower}}.created', handler)
+  }
+
+  onUpdated(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.on('{{moduleNameLower}}.updated', handler)
+  }
+
+  onDeleted(handler: (id: string) => void): void {
+    this.on('{{moduleNameLower}}.deleted', handler)
+  }
+
+  onRestored(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.on('{{moduleNameLower}}.restored', handler)
+  }
+
+  onBulkUpdate(handler: (ids: string[]) => void): void {
+    this.on('{{moduleNameLower}}.bulk-updated', handler)
+  }
+
+  onBulkDelete(handler: (ids: string[]) => void): void {
+    this.on('{{moduleNameLower}}.bulk-deleted', handler)
+  }
+
+  onStatusChange(handler: (data: { id: string, oldStatus: string, newStatus: string }) => void): void {
+    this.on('{{moduleNameLower}}.status-changed', handler)
+  }
+
+  // Métodos para desuscribirse de eventos específicos
+  offCreated(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.off('{{moduleNameLower}}.created', handler)
+  }
+
+  offUpdated(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.off('{{moduleNameLower}}.updated', handler)
+  }
+
+  offDeleted(handler: (id: string) => void): void {
+    this.off('{{moduleNameLower}}.deleted', handler)
+  }
+
+  offRestored(handler: ({{moduleNameLower}}: {{moduleName}}) => void): void {
+    this.off('{{moduleNameLower}}.restored', handler)
+  }
+
+  offBulkUpdate(handler: (ids: string[]) => void): void {
+    this.off('{{moduleNameLower}}.bulk-updated', handler)
+  }
+
+  offBulkDelete(handler: (ids: string[]) => void): void {
+    this.off('{{moduleNameLower}}.bulk-deleted', handler)
+  }
+
+  offStatusChange(handler: (data: { id: string, oldStatus: string, newStatus: string }) => void): void {
+    this.off('{{moduleNameLower}}.status-changed', handler)
+  }
+
+  // Limpiar todos los event handlers
+  clear(): void {
+    this.eventHandlers.clear()
+  }
+
+  // Obtener el número de handlers para un evento
+  getHandlerCount(event: string): number {
+    const handlers = this.eventHandlers.get(event)
+    return handlers ? handlers.length : 0
+  }
+
+  // Obtener todos los eventos registrados
+  getRegisteredEvents(): string[] {
+    return Array.from(this.eventHandlers.keys())
+  }
+} 

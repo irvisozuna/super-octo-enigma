@@ -1,6 +1,6 @@
-import { User } from '@/types/types'
-import { canNavigate } from '@layouts/plugins/casl'
 import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
+import type { User } from '@/types/types'
+import { canNavigate } from '@layouts/plugins/casl'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
@@ -19,7 +19,8 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
      */
     const isLoggedIn = !!(useCookie('userData').value && useCookie('accessToken').value)
     const user = useCookie('userData').value
-    const userData = user as unknown as User;
+    const userData = user as unknown as User
+
     /*
       If user is logged in and is trying to access login like page, redirect to home
       else allow visiting the page
@@ -45,19 +46,21 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
           }
       /* eslint-enable indent */
     }
+
     // Verificar el wizardStep y redirigir si es necesario
     if (isLoggedIn && userData) {
+      const wizardStep = userData.wizardStep || 0
 
-      const wizardStep = userData.wizardStep || 0;
       // Si el wizardStep es menor a 3 y no está en una ruta de onboarding, redirigir a onboarding
       if (wizardStep < 3 && !to.path.startsWith('/pages/onboarding')) {
         return 'pages/onboarding'
-      } else if (wizardStep >= 3 && to.path.startsWith('/pages/onboarding')) {
+      }
+      else if (wizardStep >= 3 && to.path.startsWith('/pages/onboarding')) {
         // Si el wizardStep es mayor o igual a 3 y está en una ruta de onboarding, redirigir a la página de inicio
         return '/'
       }
     }
+
     // return 'login'
-    
   })
 }

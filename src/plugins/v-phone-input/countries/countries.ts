@@ -1,4 +1,4 @@
-import { Country } from "v-phone-input/dist/types/countries";
+import type { Country } from 'v-phone-input/dist/types/countries'
 
 export const countries: Country[] = [
   { iso2: 'us', dialCode: '1', name: 'United States' },
@@ -27,5 +27,5 @@ export const countries: Country[] = [
   { iso2: 'ht', dialCode: '509', name: 'Haiti' },
   { iso2: 'tt', dialCode: '1-868', name: 'Trinidad and Tobago' },
   { iso2: 'do', dialCode: '1-809', name: 'Dominican Republic' },
-  { iso2: 'cu', dialCode: '53', name: 'Cuba' }
-];
+  { iso2: 'cu', dialCode: '53', name: 'Cuba' },
+]

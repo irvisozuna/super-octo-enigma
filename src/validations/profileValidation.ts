@@ -1,8 +1,8 @@
-import { useI18n } from 'vue-i18n';
-import * as yup from 'yup';
+import { useI18n } from 'vue-i18n'
+import * as yup from 'yup'
 
 export const useProfileValidation = () => {
-  const { t } = useI18n(); // Accede a la función de traducción
+  const { t } = useI18n() // Accede a la función de traducción
 
   return yup.object({
     first_name: yup
@@ -36,5 +36,5 @@ export const useProfileValidation = () => {
     currency: yup
       .string()
       .required(t('validations.required', { field: t('currency') })),
-  });
-};
+  })
+}

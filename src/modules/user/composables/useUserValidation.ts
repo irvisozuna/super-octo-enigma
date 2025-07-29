@@ -1,10 +1,10 @@
 // useUserValidation.ts
-import { useI18n } from 'vue-i18n';
-import * as yup from 'yup';
+import { useI18n } from 'vue-i18n'
+import * as yup from 'yup'
 
 export function useUserValidation() {
-  const { t } = useI18n();
-  
+  const { t } = useI18n()
+
   const userBaseValidation = yup.object({
     first_name: yup.string()
       .required(t('validations.required', { field: t('fields.first_name') })),
@@ -19,24 +19,24 @@ export function useUserValidation() {
     role: yup.array()
       .nullable()
       .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-  });
+  })
 
   const userCreateValidation = userBaseValidation.shape({
     role: yup.array()
       .required(t('validations.required', { field: t('fields.role') }))
       .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-  });
+  })
 
   const userEditValidation = userBaseValidation.shape({
     password: yup.string().notRequired(),
     first_name: yup.string().notRequired(),
     last_name: yup.string().notRequired(),
-    name: yup.string().required(t('validations.required', { field: t('fields.name') }))
-  });
+    name: yup.string().required(t('validations.required', { field: t('fields.name') })),
+  })
 
   return {
     userBaseValidation,
     userCreateValidation,
     userEditValidation,
-  };
+  }
 }

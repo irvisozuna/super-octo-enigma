@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import type { CompanyInfoType } from '../../../../types/types'
+
+const props = defineProps<{
+  formData: CompanyInfoType
+  activities: string[]
+}>()
+
+const { t } = useI18n()
+</script>
+
+<script lang="ts">
+export default {
+  name: 'CompanyInfoForm',
+
+  // Otros opciones del componente si las tienes
+}
+</script>
+
 <template>
   <VForm>
     <VRow>
@@ -28,22 +48,3 @@
     </VRow>
   </VForm>
 </template>
-
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import type { CompanyInfoType } from '../../../../types/types';
-
-const props = defineProps<{
-  formData: CompanyInfoType;
-  activities: string[];
-}>();
-
-const { t } = useI18n();
-</script>
-
-<script lang="ts">
-export default {
-  name: 'CompanyInfoForm',
-  // Otros opciones del componente si las tienes
-}
-</script>

@@ -1,0 +1,21 @@
+export const {{moduleName}}WebSocketEvents = {
+  // Eventos entrantes (del servidor)
+  CREATED: '{{moduleNameLower}}.created',
+  UPDATED: '{{moduleNameLower}}.updated',
+  DELETED: '{{moduleNameLower}}.deleted',
+  BATCH_UPDATED: '{{moduleNameLower}}.batch.updated',
+  BATCH_DELETED: '{{moduleNameLower}}.batch.deleted',
+  
+  // Eventos salientes (al servidor)
+  SUBSCRIBE: '{{moduleNameLower}}.subscribe',
+  UNSUBSCRIBE: '{{moduleNameLower}}.unsubscribe',
+  JOIN_ROOM: '{{moduleNameLower}}.room.join',
+  LEAVE_ROOM: '{{moduleNameLower}}.room.leave',
+  
+  // Eventos de sincronización
+  SYNC_REQUEST: '{{moduleNameLower}}.sync.request',
+  SYNC_RESPONSE: '{{moduleNameLower}}.sync.response',
+  
+  // Eventos de notificación
+  NOTIFICATION: '{{moduleNameLower}}.notification',
+} as const 

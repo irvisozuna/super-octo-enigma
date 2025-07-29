@@ -1,0 +1,142 @@
+import type { ModuleConfig } from '@/types/module'
+
+export const {{moduleNameLower}}Config: ModuleConfig = {
+  name: '{{moduleName}}',
+  version: '{{spec.version}}',
+  description: '{{spec.description}}',
+  author: '{{spec.author}}',
+  framework: '{{spec.framework}}',
+  language: '{{spec.language}}',
+  
+  // Entities configuration
+  entities: {
+    {{#each entities}}
+    {{this}}: {
+      table: '{{spec.entities.[this].table}}',
+      properties: {{JSON.stringify spec.entities.[this].properties}},
+      indexes: {{JSON.stringify spec.entities.[this].indexes}},
+      {{#if spec.relationships.[this]}}
+      relationships: {{JSON.stringify spec.relationships.[this]}},
+      {{/if}}
+    },
+    {{/each}}
+  },
+
+  // Features
+  features: {
+    crud: {{#if features.crud}}true{{else}}false{{/if}},
+    websocket: {{#if features.websocket}}true{{else}}false{{/if}},
+    export: {{#if features.export}}true{{else}}false{{/if}},
+    import: {{#if features.import}}true{{else}}false{{/if}},
+    audit: {{#if features.audit}}true{{else}}false{{/if}},
+    cache: {{#if features.cache}}true{{else}}false{{/if}},
+    tests: {{#if features.tests}}true{{else}}false{{/if}},
+    e2e: {{#if features.e2e}}true{{else}}false{{/if}},
+    docs: {{#if features.docs}}true{{else}}false{{/if}},
+  },
+
+  // UI Configuration
+  ui: {
+    theme: {
+      primary: '{{ui.theme.primary}}',
+      secondary: '{{ui.theme.secondary}}',
+      success: '{{ui.theme.success}}',
+      warning: '{{ui.theme.warning}}',
+      error: '{{ui.theme.error}}',
+      info: '{{ui.theme.info}}',
+    },
+    icon: '{{ui.icon}}',
+    color: '{{ui.color}}',
+    menuPosition: '{{ui.menuPosition}}',
+    menuOrder: {{ui.menuOrder}},
+  },
+
+  // Routing
+  routing: {
+    basePath: '{{routing.basePath}}',
+    routes: {{JSON.stringify routing.routes}},
+  },
+
+  // Permissions
+  permissions: {
+    casl: {
+      enabled: {{permissions.casl.enabled}},
+      subjects: {{JSON.stringify permissions.casl.subjects}},
+      actions: {{JSON.stringify permissions.casl.actions}},
+      abilities: {{JSON.stringify permissions.casl.abilities}},
+      roles: {{JSON.stringify permissions.casl.roles}},
+    },
+    legacy: {{JSON.stringify permissions.legacy}},
+  },
+
+  // API Configuration
+  api: {
+    baseUrl: '{{api.baseUrl}}',
+    version: '{{api.version}}',
+    timeout: {{api.timeout}},
+    retries: {{api.retries}},
+    endpoints: {{JSON.stringify api.endpoints}},
+  },
+
+  // Dependencies
+  dependencies: {
+    core: {{JSON.stringify dependencies.core}},
+    ui: {{JSON.stringify dependencies.ui}},
+    validation: {{JSON.stringify dependencies.validation}},
+    utilities: {{JSON.stringify dependencies.utilities}},
+    charts: {{JSON.stringify dependencies.charts}},
+    dev: {{JSON.stringify dependencies.dev}},
+  },
+
+  // Build Configuration
+  buildConfig: {
+    vite: {{JSON.stringify buildConfig.vite}},
+    typescript: {{JSON.stringify buildConfig.typescript}},
+    tailwind: {{JSON.stringify buildConfig.tailwind}},
+  },
+
+  // Testing Configuration
+  testing: {
+    unit: {{JSON.stringify testing.unit}},
+    e2e: {{JSON.stringify testing.e2e}},
+  },
+
+  // Responsive Configuration
+  responsive: {
+    breakpoints: {{JSON.stringify responsive.breakpoints}},
+    mobileFirst: {{responsive.mobileFirst}},
+    components: {{JSON.stringify responsive.components}},
+  },
+
+  // Accessibility Configuration
+  accessibility: {
+    standards: '{{accessibility.standards}}',
+    features: {{JSON.stringify accessibility.features}},
+    testing: {{JSON.stringify accessibility.testing}},
+  },
+
+  // Security Configuration
+  security: {
+    authentication: {{JSON.stringify security.authentication}},
+    authorization: {{JSON.stringify security.authorization}},
+    dataProtection: {{JSON.stringify security.dataProtection}},
+    csp: {{JSON.stringify security.csp}},
+  },
+
+  // Performance Configuration
+  performance: {
+    optimization: {{JSON.stringify performance.optimization}},
+    caching: {{JSON.stringify performance.caching}},
+    monitoring: {{JSON.stringify performance.monitoring}},
+  },
+
+  // Internationalization
+  i18n: {
+    enabled: {{i18n.enabled}},
+    defaultLocale: '{{i18n.defaultLocale}}',
+    supportedLocales: {{JSON.stringify i18n.supportedLocales}},
+    messages: {{JSON.stringify i18n.messages}},
+  },
+}
+
+export default {{moduleNameLower}}Config 

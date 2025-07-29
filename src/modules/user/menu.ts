@@ -9,7 +9,7 @@ export default [
         action: 'read',
         subject: 'dashboard',
       },
-    ]
+    ],
   },
   {
     title: 'Users',
@@ -17,5 +17,5 @@ export default [
     to: 'UsersList',
     action: 'read',
     subject: 'users',
-  }
+  },
 ]

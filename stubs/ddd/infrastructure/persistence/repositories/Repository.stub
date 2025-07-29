@@ -1,0 +1,106 @@
+import { injectable, inject } from 'inversify'
+import { TYPES } from '@/modules/{{moduleNameLower}}/types'
+import { {{moduleName}} } from '@/modules/{{moduleNameLower}}/domain/entities/{{moduleName}}'
+import { {{moduleName}}Id } from '@/modules/{{moduleNameLower}}/domain/entities/{{moduleName}}Id'
+import { {{moduleName}}Repository, {{moduleName}}SearchCriteria } from '@/modules/{{moduleNameLower}}/domain/contracts/repositories/{{moduleName}}Repository'
+import { {{moduleName}}ApiService } from '../../api/services/{{moduleName}}ApiService'
+import { {{moduleName}}CacheService } from '../cache/{{moduleName}}CacheService'
+import { {{moduleName}}Mapper } from '@/modules/{{moduleNameLower}}/application/mappers/{{moduleName}}Mapper'
+
+@injectable()
+export class {{moduleName}}RepositoryImpl implements {{moduleName}}Repository {
+  constructor(
+    @inject(TYPES.{{moduleName}}ApiService)
+    private readonly apiService: {{moduleName}}ApiService,
+    @inject(TYPES.{{moduleName}}CacheService)
+    private readonly cacheService: {{moduleName}}CacheService,
+    @inject(TYPES.{{moduleName}}Mapper)
+    private readonly mapper: {{moduleName}}Mapper
+  ) {}
+
+  async findById(id: {{moduleName}}Id): Promise<{{moduleName}} | null> {
+    // Intentar obtener del caché primero
+    const cached = await this.cacheService.get(id.value)
+    if (cached) {
+      return this.mapper.toDomain(cached)
+    }
+
+    try {
+      const response = await this.apiService.findById(id.value)
+      if (response) {
+        // Guardar en caché
+        await this.cacheService.set(id.value, response)
+        return this.mapper.toDomain(response)
+      }
+      return null
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  async findAll(): Promise<{{moduleName}}[]> {
+    const response = await this.apiService.findAll()
+    return response.data.map((item: any) => this.mapper.toDomain(item))
+  }
+
+  async findByName(name: string): Promise<{{moduleName}} | null> {
+    const response = await this.apiService.findAll({ search: name })
+    const items = response.data.filter((item: any) => 
+      item.name.toLowerCase() === name.toLowerCase()
+    )
+    
+    return items.length > 0 ? this.mapper.toDomain(items[0]) : null
+  }
+
+  async save({{moduleNameLower}}: {{moduleName}}): Promise<void> {
+    const dto = this.mapper.toDTO({{moduleNameLower}})
+    
+    if (dto.id && await this.exists({{moduleNameLower}}.id)) {
+      // Actualizar
+      await this.apiService.update(dto.id, {
+        name: dto.name,
+        status: dto.status,
+      })
+    } else {
+      // Crear
+      await this.apiService.create({
+        name: dto.name,
+        status: dto.status,
+      })
+    }
+
+    // Invalidar caché
+    await this.cacheService.invalidate({{moduleNameLower}}.id.value)
+  }
+
+  async delete(id: {{moduleName}}Id): Promise<void> {
+    await this.apiService.delete(id.value)
+    await this.cacheService.invalidate(id.value)
+  }
+
+  async exists(id: {{moduleName}}Id): Promise<boolean> {
+    const item = await this.findById(id)
+    return item !== null
+  }
+
+  async count(): Promise<number> {
+    const response = await this.apiService.findAll({ limit: 1 })
+    return response.total
+  }
+
+  async findByCriteria(criteria: {{moduleName}}SearchCriteria): Promise<{{moduleName}}[]> {
+    const response = await this.apiService.findAll({
+      search: criteria.name,
+      status: criteria.status,
+      limit: criteria.limit,
+      page: criteria.offset ? Math.floor(criteria.offset / (criteria.limit || 10)) + 1 : 1,
+      sortBy: criteria.orderBy,
+      sortDirection: criteria.orderDirection,
+    })
+
+    return response.data.map((item: any) => this.mapper.toDomain(item))
+  }
+} 

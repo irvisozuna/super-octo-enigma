@@ -1,0 +1,58 @@
+<template>
+  <div class="{{moduleNameKebab}}-index">
+    <!-- Header con estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <StatsCard
+        v-for="stat in statistics"
+        :key="stat.label"
+        :icon="stat.icon"
+        :label="stat.label"
+        :value="stat.value"
+        :color="stat.color"
+      />
+    </div>
+
+    <!-- Lista principal -->
+    <{{moduleName}}List />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { use{{moduleName}}Store } from '../stores/{{moduleNameLower}}Store'
+import {{moduleName}}List from './{{moduleName}}List.vue'
+import StatsCard from '@/shared/components/StatsCard.vue'
+
+const {{moduleNameLower}}Store = use{{moduleName}}Store()
+
+const statistics = computed(() => [
+  {
+    icon: 'tabler-users',
+    label: 'Total {{moduleNamePlural}}',
+    value: {{moduleNameLower}}Store.statistics.total,
+    color: 'primary',
+  },
+  {
+    icon: 'tabler-user-check',
+    label: 'Active {{moduleNamePlural}}',
+    value: {{moduleNameLower}}Store.statistics.active,
+    color: 'success',
+  },
+  {
+    icon: 'tabler-user-x',
+    label: 'Inactive {{moduleNamePlural}}',
+    value: {{moduleNameLower}}Store.statistics.inactive,
+    color: 'warning',
+  },
+  {
+    icon: 'tabler-user-plus',
+    label: 'New This Month',
+    value: {{moduleNameLower}}Store.statistics.newThisMonth,
+    color: 'info',
+  },
+])
+
+onMounted(() => {
+  {{moduleNameLower}}Store.loadStatistics()
+})
+</script> 

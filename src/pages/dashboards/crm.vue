@@ -28,6 +28,7 @@ const simpleStatisticsDemoCards = [
     change: '+25.2%',
   },
 ]
+
 definePage({
   meta: {
     action: 'read',

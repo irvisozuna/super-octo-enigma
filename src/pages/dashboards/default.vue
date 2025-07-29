@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DefaultDashaBoard from '@/views/dashboards/default/DefaultDashaBoard.vue';
+import DefaultDashaBoard from '@/views/dashboards/default/DefaultDashaBoard.vue'
 
 definePage({
   meta: {
@@ -8,6 +8,7 @@ definePage({
   },
 })
 </script>
+
 <template>
   <DefaultDashaBoard />
 </template>

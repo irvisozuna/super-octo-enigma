@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useField, useForm } from 'vee-validate'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppManager } from '@/composables/useAppManager'

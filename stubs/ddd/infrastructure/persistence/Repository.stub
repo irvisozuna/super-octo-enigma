@@ -1,0 +1,266 @@
+import { inject, injectable } from 'inversify'
+import { TYPES } from '../../../types'
+import { {{moduleName}}Repository } from '../../domain/contracts/repositories/{{moduleName}}Repository'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+import { {{moduleName}}ApiService } from '../api/services/{{moduleName}}ApiService'
+import { {{moduleName}}Transformer } from '../api/transformers/{{moduleName}}Transformer'
+{{#if hasCache}}
+import { {{moduleName}}CacheService } from './cache/{{moduleName}}CacheService'
+{{/if}}
+
+@injectable()
+export class {{moduleName}}RepositoryImpl implements {{moduleName}}Repository {
+  constructor(
+    @inject(TYPES.{{moduleName}}ApiService)
+    private readonly apiService: {{moduleName}}ApiService,
+    @inject(TYPES.{{moduleName}}Transformer)
+    private readonly transformer: {{moduleName}}Transformer
+    {{#if hasCache}},
+    @inject(TYPES.{{moduleName}}CacheService)
+    private readonly cacheService: {{moduleName}}CacheService
+    {{/if}}
+  ) {}
+
+  async save({{moduleNameLower}}: {{moduleName}}): Promise<{{moduleName}}> {
+    try {
+      const data = this.transformer.toApi({{moduleNameLower}})
+      
+      if ({{moduleNameLower}}.id.value) {
+        // Update existing
+        const updatedData = await this.apiService.update({{moduleNameLower}}.id.value, data)
+        const updated{{moduleName}} = this.transformer.toDomain(updatedData)
+        
+        {{#if hasCache}}
+        await this.cacheService.invalidateById({{moduleNameLower}}.id.value)
+        await this.cacheService.invalidateList()
+        {{/if}}
+        
+        return updated{{moduleName}}
+      } else {
+        // Create new
+        const createdData = await this.apiService.create(data)
+        const created{{moduleName}} = this.transformer.toDomain(createdData)
+        
+        {{#if hasCache}}
+        await this.cacheService.invalidateList()
+        {{/if}}
+        
+        return created{{moduleName}}
+      }
+    } catch (error) {
+      throw new Error(`Failed to save {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async findById(id: string, includeDeleted: boolean = false): Promise<{{moduleName}} | null> {
+    try {
+      {{#if hasCache}}
+      if (!includeDeleted) {
+        const cached = await this.cacheService.getById(id)
+        if (cached) {
+          return cached
+        }
+      }
+      {{/if}}
+
+      const data = await this.apiService.getById(id, { includeDeleted })
+      if (!data) {
+        return null
+      }
+
+      const {{moduleNameLower}} = this.transformer.toDomain(data)
+      
+      {{#if hasCache}}
+      if (!includeDeleted) {
+        await this.cacheService.setById(id, {{moduleNameLower}})
+      }
+      {{/if}}
+      
+      return {{moduleNameLower}}
+    } catch (error) {
+      if (error.message.includes('404')) {
+        return null
+      }
+      throw new Error(`Failed to find {{moduleName}} by ID: ${error.message}`)
+    }
+  }
+
+  async findByName(name: string, includeDeleted: boolean = false): Promise<{{moduleName}} | null> {
+    try {
+      const result = await this.findByCriteria({
+        search: name,
+        limit: 1,
+        includeDeleted
+      })
+
+      return result.items.find(item => item.name.value === name) || null
+    } catch (error) {
+      throw new Error(`Failed to find {{moduleName}} by name: ${error.message}`)
+    }
+  }
+
+  async findByCriteria(criteria: {
+    page?: number
+    limit?: number
+    search?: string
+    status?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+    includeDeleted?: boolean
+    filters?: Record<string, any>
+  }): Promise<{
+    items: {{moduleName}}[]
+    total: number
+    page: number
+    limit: number
+  }> {
+    try {
+      {{#if hasCache}}
+      const cacheKey = this.generateCacheKey(criteria)
+      if (!criteria.includeDeleted) {
+        const cached = await this.cacheService.getList(cacheKey)
+        if (cached) {
+          return cached
+        }
+      }
+      {{/if}}
+
+      const result = await this.apiService.getList({
+        page: criteria.page || 1,
+        limit: criteria.limit || 10,
+        search: criteria.search,
+        status: criteria.status,
+        sortBy: criteria.sortBy || 'createdAt',
+        sortOrder: criteria.sortOrder || 'desc',
+        includeDeleted: criteria.includeDeleted || false,
+        filters: criteria.filters || {}
+      })
+
+      const items = result.items.map(item => this.transformer.toDomain(item))
+      
+      const response = {
+        items,
+        total: result.total,
+        page: result.page,
+        limit: result.limit
+      }
+
+      {{#if hasCache}}
+      if (!criteria.includeDeleted) {
+        await this.cacheService.setList(cacheKey, response)
+      }
+      {{/if}}
+
+      return response
+    } catch (error) {
+      throw new Error(`Failed to find {{moduleName}}s by criteria: ${error.message}`)
+    }
+  }
+
+  async count(criteria?: {
+    search?: string
+    status?: string
+    includeDeleted?: boolean
+    filters?: Record<string, any>
+  }): Promise<number> {
+    try {
+      const result = await this.apiService.getList({
+        page: 1,
+        limit: 1,
+        search: criteria?.search,
+        status: criteria?.status,
+        includeDeleted: criteria?.includeDeleted || false,
+        filters: criteria?.filters || {}
+      })
+
+      return result.total
+    } catch (error) {
+      throw new Error(`Failed to count {{moduleName}}s: ${error.message}`)
+    }
+  }
+
+  async exists(id: string): Promise<boolean> {
+    try {
+      const {{moduleNameLower}} = await this.findById(id)
+      return !!{{moduleNameLower}}
+    } catch (error) {
+      return false
+    }
+  }
+
+  async existsByName(name: string, excludeId?: string): Promise<boolean> {
+    try {
+      const {{moduleNameLower}} = await this.findByName(name)
+      if (!{{moduleNameLower}}) {
+        return false
+      }
+      
+      if (excludeId && {{moduleNameLower}}.id.value === excludeId) {
+        return false
+      }
+      
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      await this.apiService.delete(id)
+      
+      {{#if hasCache}}
+      await this.cacheService.invalidateById(id)
+      await this.cacheService.invalidateList()
+      {{/if}}
+    } catch (error) {
+      throw new Error(`Failed to delete {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async restore(id: string): Promise<{{moduleName}}> {
+    try {
+      const data = await this.apiService.restore(id)
+      const {{moduleNameLower}} = this.transformer.toDomain(data)
+      
+      {{#if hasCache}}
+      await this.cacheService.invalidateById(id)
+      await this.cacheService.invalidateList()
+      {{/if}}
+      
+      return {{moduleNameLower}}
+    } catch (error) {
+      throw new Error(`Failed to restore {{moduleName}}: ${error.message}`)
+    }
+  }
+
+  async findActive(): Promise<{{moduleName}}[]> {
+    try {
+      const result = await this.findByCriteria({
+        status: 'ACTIVE',
+        limit: 1000
+      })
+      return result.items
+    } catch (error) {
+      throw new Error(`Failed to find active {{moduleName}}s: ${error.message}`)
+    }
+  }
+
+  async findByStatus(status: string): Promise<{{moduleName}}[]> {
+    try {
+      const result = await this.findByCriteria({
+        status,
+        limit: 1000
+      })
+      return result.items
+    } catch (error) {
+      throw new Error(`Failed to find {{moduleName}}s by status: ${error.message}`)
+    }
+  }
+
+  {{#if hasCache}}
+  private generateCacheKey(criteria: any): string {
+    return `{{moduleNameLower}}_criteria_${JSON.stringify(criteria)}`
+  }
+  {{/if}}
+} 

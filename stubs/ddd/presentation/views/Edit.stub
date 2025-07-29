@@ -1,0 +1,112 @@
+<template>
+  <VCard class="{{moduleNameKebab}}-edit">
+    <VCardTitle>
+      <h2 class="text-h4">{{ $t('{{moduleNameLower}}.edit.title') }}</h2>
+      <p class="text-body-1 text-medium-emphasis">
+        {{ $t('{{moduleNameLower}}.edit.description') }}
+      </p>
+    </VCardTitle>
+
+    <VCardText v-if="isLoading">
+      <VProgressCircular indeterminate />
+    </VCardText>
+
+    <VCardText v-else-if="!{{moduleNameLower}}">
+      <VAlert type="error">
+        {{ $t('{{moduleNameLower}}.edit.notFound') }}
+      </VAlert>
+    </VCardText>
+
+    <VCardText v-else>
+      <{{moduleName}}Form
+        ref="formRef"
+        v-model="formData"
+        :loading="isSubmitting"
+        @submit="handleSubmit"
+        @cancel="handleCancel"
+      />
+    </VCardText>
+  </VCard>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { use{{moduleName}}Store } from '../stores/{{moduleNameLower}}Store'
+import { {{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/{{moduleName}}DTO'
+import { Update{{moduleName}}Command } from '@/modules/{{moduleNameLower}}/application/commands/Update{{moduleName}}Command'
+import {{moduleName}}Form from '../components/organisms/{{moduleName}}Form.vue'
+import { useNotification } from '@/composables/useNotification'
+
+const route = useRoute()
+const router = useRouter()
+const {{moduleNameLower}}Store = use{{moduleName}}Store()
+const { showSuccess, showError } = useNotification()
+
+const formRef = ref()
+const {{moduleNameLower}} = ref<{{moduleName}}DTO | null>(null)
+const isLoading = ref(false)
+const isSubmitting = ref(false)
+
+const formData = reactive({
+  name: '',
+  description: '',
+  // Agregar más campos según la entidad
+})
+
+const handleSubmit = async () => {
+  try {
+    isSubmitting.value = true
+    
+    const command = new Update{{moduleName}}Command({
+      id: {{moduleNameLower}}.value!.id,
+      ...formData,
+    })
+    await {{moduleNameLower}}Store.updateItem(command)
+    
+    showSuccess($t('{{moduleNameLower}}.edit.success'))
+    router.push({
+      name: '{{moduleNameLower}}-detail',
+      params: { id: {{moduleNameLower}}.value!.id },
+    })
+  } catch (error) {
+    showError($t('{{moduleNameLower}}.edit.error'))
+    console.error('Error updating {{moduleNameLower}}:', error)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleCancel = () => {
+  router.push({
+    name: '{{moduleNameLower}}-detail',
+    params: { id: route.params.id },
+  })
+}
+
+const load{{moduleName}} = async () => {
+  try {
+    isLoading.value = true
+    const id = route.params.id as string
+    {{moduleNameLower}}.value = await {{moduleNameLower}}Store.getItem(id)
+    
+    if ({{moduleNameLower}}.value) {
+      // Cargar datos en el formulario
+      Object.assign(formData, {
+        name: {{moduleNameLower}}.value.name,
+        description: {{moduleNameLower}}.value.description,
+        // Mapear más campos según la entidad
+      })
+    }
+  } catch (error) {
+    showError($t('{{moduleNameLower}}.edit.loadError'))
+    console.error('Error loading {{moduleNameLower}}:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  load{{moduleName}}()
+})
+</script> 

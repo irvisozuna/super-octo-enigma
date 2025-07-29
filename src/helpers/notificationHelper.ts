@@ -1,11 +1,11 @@
-import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore';
+import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore'
 
 /**
  * Helper para notificaciones / snackbars.
  * Muestra distintos tipos de alerta (success, error, info, warning).
  */
 export function useNotification() {
-  const snackbarStore = useGlobalSnackbarStore();
+  const snackbarStore = useGlobalSnackbarStore()
 
   function showSuccess(
     messageKey: string,
@@ -14,7 +14,7 @@ export function useNotification() {
   ) {
     snackbarStore.showSnackbar(title, { messageKey, variables }, 'success', {
       position: 'top end',
-    });
+    })
   }
 
   function showError(
@@ -24,7 +24,7 @@ export function useNotification() {
   ) {
     snackbarStore.showSnackbar(title, { messageKey, variables }, 'error', {
       position: 'top end',
-    });
+    })
   }
 
   function showInfo(
@@ -34,7 +34,7 @@ export function useNotification() {
   ) {
     snackbarStore.showSnackbar(title, { messageKey, variables }, 'info', {
       position: 'top end',
-    });
+    })
   }
 
   function showWarning(
@@ -44,7 +44,7 @@ export function useNotification() {
   ) {
     snackbarStore.showSnackbar(title, { messageKey, variables }, 'warning', {
       position: 'top end',
-    });
+    })
   }
 
   return {
@@ -52,5 +52,5 @@ export function useNotification() {
     showError,
     showInfo,
     showWarning,
-  };
+  }
 }

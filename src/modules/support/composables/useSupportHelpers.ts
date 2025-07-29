@@ -1,7 +1,7 @@
 export function useSupportHelpers() {
   // Ejemplo de función reutilizable
   function formatSupportName(name: string) {
-    return name.trim().toUpperCase();
+    return name.trim().toUpperCase()
   }
 
   function getDefaultSupport() {
@@ -10,11 +10,11 @@ export function useSupportHelpers() {
       name: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   return {
     formatSupportName,
     getDefaultSupport,
-  };
+  }
 }

@@ -1,0 +1,11 @@
+import { CommandHandler } from '../CommandHandler'
+import { Update{{entityName}}Command } from '../commands/Update{{entityName}}Command'
+import { {{entityName}}Repository } from '../../domain/contracts/repositories/{{entityName}}Repository'
+import { {{entityName}}Mapper } from '../mappers/{{entityName}}Mapper'
+import { {{entityName}} } from '../../domain/entities/{{entityName}}'
+
+export class Update{{entityName}}Handler {
+  handle(command: Update{{entityName}}Command): void {
+    // Implementación aquí
+  }
+} 

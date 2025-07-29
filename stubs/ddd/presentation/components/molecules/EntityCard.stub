@@ -1,0 +1,165 @@
+<template>
+  <v-card class="entity-card" :class="{ 'selected': selected }" @click="$emit('click', entity)">
+    <v-card-title class="d-flex align-center justify-space-between">
+      <div class="d-flex align-center">
+        <v-icon class="mr-2" :color="iconColor">{{ icon }}</v-icon>
+        <span class="text-h6">{{ entity.name || entity.title || entity.id }}</span>
+      </div>
+      <v-menu v-if="showActions" bottom left>
+        <template v-slot:activator="{ props }">
+          <v-btn icon v-bind="props" size="small">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item @click="$emit('edit', entity)" v-if="canEdit">
+            <v-list-item-title>
+              <v-icon class="mr-2">mdi-pencil</v-icon>
+              Editar
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="$emit('view', entity)" v-if="canView">
+            <v-list-item-title>
+              <v-icon class="mr-2">mdi-eye</v-icon>
+              Ver
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="$emit('delete', entity)" v-if="canDelete" class="text-error">
+            <v-list-item-title>
+              <v-icon class="mr-2">mdi-delete</v-icon>
+              Eliminar
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-card-title>
+
+    <v-card-text>
+      <div class="entity-info">
+        {{#each properties}}
+        <div class="info-row" v-if="entity.{{@key}}">
+          <span class="label">{{@key}}:</span>
+          <span class="value">{{ formatValue(entity.{{@key}}, '{{type}}') }}</span>
+        </div>
+        {{/each}}
+      </div>
+    </v-card-text>
+
+    <v-card-actions v-if="showFooter">
+      <v-spacer></v-spacer>
+      <v-btn 
+        v-if="canEdit"
+        size="small" 
+        color="primary" 
+        variant="outlined"
+        @click.stop="$emit('edit', entity)"
+      >
+        Editar
+      </v-btn>
+      <v-btn 
+        v-if="canView"
+        size="small" 
+        color="secondary" 
+        variant="outlined"
+        @click.stop="$emit('view', entity)"
+      >
+        Ver
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { usePermissions } from '@/composables/usePermissions'
+import type { {{entityName}} } from '@/types'
+
+// Props
+interface Props {
+  entity: {{entityName}}
+  selected?: boolean
+  showActions?: boolean
+  showFooter?: boolean
+  icon?: string
+  iconColor?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  selected: false,
+  showActions: true,
+  showFooter: true,
+  icon: 'mdi-{{entityNameLower}}',
+  iconColor: 'primary'
+})
+
+// Emits
+const emit = defineEmits<{
+  click: [entity: {{entityName}}]
+  edit: [entity: {{entityName}}]
+  view: [entity: {{entityName}}]
+  delete: [entity: {{entityName}}]
+}>()
+
+// Composables
+const { can } = usePermissions()
+
+// Computed
+const canEdit = computed(() => can('update', props.entity))
+const canView = computed(() => can('read', props.entity))
+const canDelete = computed(() => can('delete', props.entity))
+
+// Methods
+const formatValue = (value: any, type: string) => {
+  if (!value) return '-'
+  
+  switch (type) {
+    case 'datetime':
+      return new Date(value).toLocaleDateString()
+    case 'boolean':
+      return value ? 'Sí' : 'No'
+    case 'enum':
+      return value
+    default:
+      return value
+  }
+}
+</script>
+
+<style scoped>
+.entity-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.entity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.entity-card.selected {
+  border: 2px solid var(--v-primary-base);
+}
+
+.entity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-weight: 500;
+  color: var(--v-text-secondary);
+  font-size: 0.875rem;
+}
+
+.value {
+  font-size: 0.875rem;
+  color: var(--v-text-primary);
+}
+</style> 

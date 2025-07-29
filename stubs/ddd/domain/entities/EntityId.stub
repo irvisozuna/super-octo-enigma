@@ -1,0 +1,19 @@
+import { ValueObject } from '@/shared/domain/ValueObject'
+import { v4 as uuidv4 } from 'uuid'
+
+export class {{moduleName}}Id extends ValueObject<string> {
+  constructor(value?: string) {
+    super(value || uuidv4())
+    this.ensureIsValid()
+  }
+
+  private ensureIsValid(): void {
+    if (!this.value || this.value.trim().length === 0) {
+      throw new Error('{{moduleName}}Id cannot be empty')
+    }
+  }
+
+  public equals(other: {{moduleName}}Id): boolean {
+    return this.value === other.value
+  }
+} 

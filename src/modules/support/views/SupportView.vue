@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useSupportStore } from '@/modules/support/stores/supportStore'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useSupportStore } from '@/modules/support/stores/supportStore'
 
 // Interfaces
 interface Tab {
@@ -50,29 +50,60 @@ onMounted(fetchItemData)
 <template>
   <VRow v-if="itemData">
     <!-- Bio Panel -->
-    <VCol cols="12" md="5" lg="4">
+    <VCol
+      cols="12"
+      md="5"
+      lg="4"
+    >
       <BioPanel :item-data="itemData" />
     </VCol>
 
     <!-- Tabs -->
-    <VCol cols="12" md="7" lg="8">
-      <VTabs v-model="activeTab" class="v-tabs-pill">
-        <VTab v-for="tab in tabs" :key="tab.title">
-          <VIcon :size="18" :icon="tab.icon" class="me-1" />
+    <VCol
+      cols="12"
+      md="7"
+      lg="8"
+    >
+      <VTabs
+        v-model="activeTab"
+        class="v-tabs-pill"
+      >
+        <VTab
+          v-for="tab in tabs"
+          :key="tab.title"
+        >
+          <VIcon
+            :size="18"
+            :icon="tab.icon"
+            class="me-1"
+          />
           <span>{{ tab.title }}</span>
         </VTab>
       </VTabs>
 
-      <VWindow v-model="activeTab" class="mt-6 disable-tab-transition" :touch="false">
-        <VWindowItem v-for="tab in tabs" :key="tab.title">
-          <component :is="tab.component" :item-data="itemData" />
+      <VWindow
+        v-model="activeTab"
+        class="mt-6 disable-tab-transition"
+        :touch="false"
+      >
+        <VWindowItem
+          v-for="tab in tabs"
+          :key="tab.title"
+        >
+          <component
+            :is="tab.component"
+            :item-data="itemData"
+          />
         </VWindowItem>
       </VWindow>
     </VCol>
   </VRow>
 
   <div v-else>
-    <VAlert type="error" variant="tonal">
+    <VAlert
+      type="error"
+      variant="tonal"
+    >
       {{ $t('supportNotFound', { id: route.params.id }) }}
     </VAlert>
   </div>

@@ -12,17 +12,15 @@ export function useCrud(store: any, options: UseCrudOptions = {}) {
   const { autoFetch = true } = options
 
   onMounted(() => {
-    if (autoFetch) {
+    if (autoFetch)
       store.fetchList()
-    }
   })
 
   watch(
     () => [store.page, store.itemsPerPage, store.sortBy, store.sortOrder, store.filters],
     () => {
-      if (autoFetch) {
+      if (autoFetch)
         store.fetchList()
-      }
     },
     { deep: true },
   )

@@ -1,11 +1,11 @@
 // WorkOrderValidation.ts
-import { useI18n } from 'vue-i18n';
-import * as yup from 'yup';
+import { useI18n } from 'vue-i18n'
+import * as yup from 'yup'
 
 // En Vue 3, define una función que retorne el schema
 export function useWorkOrderValidation() {
   // Aquí sí puedes usar useI18n() porque estás dentro de una función composable
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   // Retorna el schema de Yup
   return yup.object({
@@ -24,6 +24,7 @@ export function useWorkOrderValidation() {
     message: yup
       .string()
       .required(t('validations.required', { field: 'Mensaje' })),
+
     // ... y más validaciones si requieres
-  });
+  })
 }

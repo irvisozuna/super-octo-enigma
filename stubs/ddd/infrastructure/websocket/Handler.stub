@@ -1,0 +1,215 @@
+import { injectable } from 'inversify'
+import { {{moduleName}} } from '../../domain/entities/{{moduleName}}'
+import { {{moduleName}}WebSocketEvents } from './events/{{moduleName}}WebSocketEvents'
+
+export interface {{moduleName}}WebSocketMessage {
+  type: string
+  data: any
+  timestamp: string
+  userId?: string
+}
+
+@injectable()
+export class {{moduleName}}WebSocketHandler {
+  private socket: WebSocket | null = null
+  private reconnectAttempts = 0
+  private maxReconnectAttempts = 5
+  private reconnectDelay = 1000
+  private eventHandlers: Map<string, Function[]> = new Map()
+
+  constructor(
+    private readonly events: {{moduleName}}WebSocketEvents
+  ) {}
+
+  connect(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.socket = new WebSocket(url)
+        
+        this.socket.onopen = () => {
+          console.log('{{moduleName}} WebSocket connected')
+          this.reconnectAttempts = 0
+          this.subscribeToEvents()
+          resolve()
+        }
+
+        this.socket.onmessage = (event) => {
+          this.handleMessage(event.data)
+        }
+
+        this.socket.onclose = (event) => {
+          console.log('{{moduleName}} WebSocket disconnected:', event.code, event.reason)
+          this.handleReconnect()
+        }
+
+        this.socket.onerror = (error) => {
+          console.error('{{moduleName}} WebSocket error:', error)
+          reject(error)
+        }
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.close()
+      this.socket = null
+    }
+  }
+
+  private handleReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++
+      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+      
+      console.log(`Attempting to reconnect {{moduleName}} WebSocket in ${delay}ms (attempt ${this.reconnectAttempts})`)
+      
+      setTimeout(() => {
+        if (this.socket?.readyState === WebSocket.CLOSED) {
+          this.connect(this.socket.url)
+        }
+      }, delay)
+    } else {
+      console.error('Max reconnection attempts reached for {{moduleName}} WebSocket')
+    }
+  }
+
+  private handleMessage(data: string): void {
+    try {
+      const message: {{moduleName}}WebSocketMessage = JSON.parse(data)
+      
+      switch (message.type) {
+        case '{{moduleNameLower}}.created':
+          this.handleCreated(message.data)
+          break
+        case '{{moduleNameLower}}.updated':
+          this.handleUpdated(message.data)
+          break
+        case '{{moduleNameLower}}.deleted':
+          this.handleDeleted(message.data)
+          break
+        case '{{moduleNameLower}}.restored':
+          this.handleRestored(message.data)
+          break
+        default:
+          console.warn('Unknown {{moduleName}} WebSocket message type:', message.type)
+      }
+
+      // Emitir evento genérico
+      this.emit('message', message)
+    } catch (error) {
+      console.error('Error parsing {{moduleName}} WebSocket message:', error)
+    }
+  }
+
+  private handleCreated(data: any): void {
+    const {{moduleNameLower}} = {{moduleName}}.create({
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      description: data.description,
+      metadata: data.metadata
+    })
+    
+    this.events.emitCreated({{moduleNameLower}})
+    this.emit('created', {{moduleNameLower}})
+  }
+
+  private handleUpdated(data: any): void {
+    const {{moduleNameLower}} = {{moduleName}}.create({
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      description: data.description,
+      metadata: data.metadata
+    })
+    
+    this.events.emitUpdated({{moduleNameLower}})
+    this.emit('updated', {{moduleNameLower}})
+  }
+
+  private handleDeleted(data: any): void {
+    this.events.emitDeleted(data.id)
+    this.emit('deleted', data.id)
+  }
+
+  private handleRestored(data: any): void {
+    const {{moduleNameLower}} = {{moduleName}}.create({
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      description: data.description,
+      metadata: data.metadata
+    })
+    
+    this.events.emitRestored({{moduleNameLower}})
+    this.emit('restored', {{moduleNameLower}})
+  }
+
+  private subscribeToEvents(): void {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      const subscription = {
+        type: 'subscribe',
+        channel: '{{moduleNameLower}}s',
+        timestamp: new Date().toISOString()
+      }
+      
+      this.socket.send(JSON.stringify(subscription))
+    }
+  }
+
+  // Event emitter pattern
+  on(event: string, handler: Function): void {
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, [])
+    }
+    this.eventHandlers.get(event)!.push(handler)
+  }
+
+  off(event: string, handler: Function): void {
+    const handlers = this.eventHandlers.get(event)
+    if (handlers) {
+      const index = handlers.indexOf(handler)
+      if (index > -1) {
+        handlers.splice(index, 1)
+      }
+    }
+  }
+
+  private emit(event: string, data: any): void {
+    const handlers = this.eventHandlers.get(event)
+    if (handlers) {
+      handlers.forEach(handler => {
+        try {
+          handler(data)
+        } catch (error) {
+          console.error(`Error in {{moduleName}} WebSocket event handler for ${event}:`, error)
+        }
+      })
+    }
+  }
+
+  // Métodos de utilidad
+  isConnected(): boolean {
+    return this.socket?.readyState === WebSocket.OPEN
+  }
+
+  getConnectionState(): string {
+    if (!this.socket) return 'DISCONNECTED'
+    
+    switch (this.socket.readyState) {
+      case WebSocket.CONNECTING:
+        return 'CONNECTING'
+      case WebSocket.OPEN:
+        return 'CONNECTED'
+      case WebSocket.CLOSING:
+        return 'CLOSING'
+      case WebSocket.CLOSED:
+        return 'CLOSED'
+      default:
+        return 'UNKNOWN'
+    }
+  }
+} 

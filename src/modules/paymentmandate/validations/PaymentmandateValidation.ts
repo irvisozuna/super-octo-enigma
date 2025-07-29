@@ -1,8 +1,8 @@
-import { useI18n } from 'vue-i18n'; // Importamos i18n para traducir mensajes
-import * as yup from 'yup';
+import { useI18n } from 'vue-i18n' // Importamos i18n para traducir mensajes
+import * as yup from 'yup'
 
 // Requerimos la función de traducción
-const { t } = useI18n();
+const { t } = useI18n()
 
 // Validación común para el modelo Paymentmandate
 export const paymentmandateBaseValidation = yup.object({
@@ -24,7 +24,7 @@ export const paymentmandateBaseValidation = yup.object({
     .array()
     .nullable()
     .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-});
+})
 
 // Validación extendida para crear un usuario
 export const paymentmandateCreateValidation = paymentmandateBaseValidation.shape({
@@ -32,9 +32,9 @@ export const paymentmandateCreateValidation = paymentmandateBaseValidation.shape
     .array()
     .nullable()
     .min(1, t('validations.minItems', { field: t('fields.role'), count: 1 })),
-});
+})
 
 // Validación para editar un usuario
 export const paymentmandateEditValidation = paymentmandateBaseValidation.shape({
   password: yup.string().notRequired(), // Password no es obligatorio al editar
-});
+})

@@ -1,0 +1,112 @@
+// {{moduleName}} Module
+// Generated from spec: {{spec.moduleName}}
+
+import type { App } from 'vue'
+import { createPinia } from 'pinia'
+import { {{moduleNameLower}}Menu } from './menu'
+import { {{moduleNameLower}}Routes } from './router/routes'
+
+// Components
+{{#each entities}}
+import {{this}}List from './presentation/{{thisLower}}/views/{{this}}List.vue'
+import {{this}}Create from './presentation/{{thisLower}}/views/{{this}}Create.vue'
+import {{this}}Edit from './presentation/{{thisLower}}/views/{{this}}Edit.vue'
+import {{this}}Detail from './presentation/{{thisLower}}/views/{{this}}Detail.vue'
+import {{this}}Table from './presentation/{{thisLower}}/components/organisms/{{this}}Table.vue'
+import {{this}}Form from './presentation/{{thisLower}}/components/organisms/{{this}}Form.vue'
+import {{this}}Card from './presentation/{{thisLower}}/components/molecules/{{this}}Card.vue'
+{{/each}}
+
+// Stores
+{{#each entities}}
+import { use{{this}}Store } from './presentation/{{thisLower}}/stores/{{thisLower}}Store'
+{{/each}}
+
+// Composables
+import { use{{moduleName}}Validation } from './presentation/composables/use{{moduleName}}Validation'
+import { use{{moduleName}}Permissions } from './presentation/composables/use{{moduleName}}Permissions'
+import { use{{moduleName}}Api } from './presentation/composables/use{{moduleName}}Api'
+
+// Types
+export * from './types'
+
+// Module configuration
+export const {{moduleNameLower}}Module = {
+  name: '{{moduleNameLower}}',
+  version: '{{spec.version}}',
+  description: '{{spec.description}}',
+  author: '{{spec.author}}',
+  
+  // Module data
+  entities: {{JSON.stringify spec.entities}},
+  relationships: {{JSON.stringify spec.relationships}},
+  features: {{JSON.stringify spec.features}},
+  permissions: {{JSON.stringify spec.permissions}},
+  ui: {{JSON.stringify spec.ui}},
+  
+  // Install function
+  install(app: App) {
+    // Register stores
+    const pinia = createPinia()
+    app.use(pinia)
+    
+    // Register components
+    {{#each entities}}
+    app.component('{{this}}List', {{this}}List)
+    app.component('{{this}}Create', {{this}}Create)
+    app.component('{{this}}Edit', {{this}}Edit)
+    app.component('{{this}}Detail', {{this}}Detail)
+    app.component('{{this}}Table', {{this}}Table)
+    app.component('{{this}}Form', {{this}}Form)
+    app.component('{{this}}Card', {{this}}Card)
+    {{/each}}
+    
+    // Register routes
+    if (app.config.globalProperties.$router) {
+      {{moduleNameLower}}Routes.forEach(route => {
+        app.config.globalProperties.$router.addRoute(route)
+      })
+    }
+    
+    // Register menu
+    if (app.config.globalProperties.$menu) {
+      app.config.globalProperties.$menu.addMenu({{moduleNameLower}}Menu)
+    }
+  }
+}
+
+// Export components
+export {
+  {{#each entities}}
+  {{this}}List,
+  {{this}}Create,
+  {{this}}Edit,
+  {{this}}Detail,
+  {{this}}Table,
+  {{this}}Form,
+  {{this}}Card,
+  {{/each}}
+}
+
+// Export stores
+export {
+  {{#each entities}}
+  use{{this}}Store,
+  {{/each}}
+}
+
+// Export composables
+export {
+  use{{moduleName}}Validation,
+  use{{moduleName}}Permissions,
+  use{{moduleName}}Api
+}
+
+// Export routes and menu
+export {
+  {{moduleNameLower}}Routes,
+  {{moduleNameLower}}Menu
+}
+
+// Default export
+export default {{moduleNameLower}}Module 

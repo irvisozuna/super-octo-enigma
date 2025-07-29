@@ -14,9 +14,10 @@ import NavBarI18n from '@core/components/I18n.vue'
 
 // @layouts plugin
 import { VerticalNavLayout } from '@layouts'
+
 const menuStore = useMenuStore()
 const navItems = computed(() => menuStore.verticalNavItems)
-const { isAdmin } = useCurrentUser();
+const { isAdmin } = useCurrentUser()
 </script>
 
 <template>
@@ -24,16 +25,25 @@ const { isAdmin } = useCurrentUser();
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">
-        <IconBtn id="vertical-nav-toggle-btn" class="ms-n3 d-lg-none" @click="toggleVerticalOverlayNavActive(true)">
-          <VIcon size="26" icon="tabler-menu-2" />
+        <IconBtn
+          id="vertical-nav-toggle-btn"
+          class="ms-n3 d-lg-none"
+          @click="toggleVerticalOverlayNavActive(true)"
+        >
+          <VIcon
+            size="26"
+            icon="tabler-menu-2"
+          />
         </IconBtn>
 
         <NavSearchBar class="ms-lg-n3" />
 
         <VSpacer />
 
-        <NavBarI18n v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
-          :languages="themeConfig.app.i18n.langConfig" />
+        <NavBarI18n
+          v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
+          :languages="themeConfig.app.i18n.langConfig"
+        />
         <NavbarThemeSwitcher />
         <NavbarShortcuts />
         <NavBarNotifications class="me-1" />

@@ -1,0 +1,86 @@
+import { injectable } from 'inversify'
+import { openDB, DBSchema, IDBPDatabase } from 'idb'
+
+interface {{moduleName}}CacheDB extends DBSchema {
+  {{moduleNameLower}}: {
+    key: string
+    value: {
+      id: string
+      data: any
+      timestamp: number
+    }
+  }
+}
+
+@injectable()
+export class {{moduleName}}CacheService {
+  private db: IDBPDatabase<{{moduleName}}CacheDB> | null = null
+  private readonly DB_NAME = '{{moduleNameLower}}-cache'
+  private readonly STORE_NAME = '{{moduleNameLower}}'
+  private readonly TTL = 3600000 // 1 hora en milisegundos
+
+  async init(): Promise<void> {
+    this.db = await openDB<{{moduleName}}CacheDB>(this.DB_NAME, 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('{{moduleNameLower}}')) {
+          db.createObjectStore('{{moduleNameLower}}', { keyPath: 'id' })
+        }
+      },
+    })
+  }
+
+  async get(id: string): Promise<any | null> {
+    if (!this.db) await this.init()
+    
+    const entry = await this.db!.get(this.STORE_NAME, id)
+    
+    if (!entry) return null
+    
+    // Verificar si el caché ha expirado
+    if (Date.now() - entry.timestamp > this.TTL) {
+      await this.invalidate(id)
+      return null
+    }
+    
+    return entry.data
+  }
+
+  async set(id: string, data: any): Promise<void> {
+    if (!this.db) await this.init()
+    
+    await this.db!.put(this.STORE_NAME, {
+      id,
+      data,
+      timestamp: Date.now(),
+    })
+  }
+
+  async invalidate(id: string): Promise<void> {
+    if (!this.db) await this.init()
+    
+    await this.db!.delete(this.STORE_NAME, id)
+  }
+
+  async clear(): Promise<void> {
+    if (!this.db) await this.init()
+    
+    await this.db!.clear(this.STORE_NAME)
+  }
+
+  async getAll(): Promise<any[]> {
+    if (!this.db) await this.init()
+    
+    const entries = await this.db!.getAll(this.STORE_NAME)
+    const validEntries = []
+    
+    for (const entry of entries) {
+      if (Date.now() - entry.timestamp <= this.TTL) {
+        validEntries.push(entry.data)
+      } else {
+        await this.invalidate(entry.id)
+      }
+    }
+    
+    return validEntries
+  }
+} 

@@ -1,5 +1,5 @@
 // menu/index.ts
-import { VerticalNavItems } from '@/@layouts/types'
+import type { VerticalNavItems } from '@/@layouts/types'
 import { useMenuStore } from '@/stores/menu'
 
 export const initializeMenus = () => {

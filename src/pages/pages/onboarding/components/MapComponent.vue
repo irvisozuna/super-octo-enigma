@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { useMap } from '@/composables/useMap'
+
+const props = defineProps<{
+  initialCenter: { lat: number; lng: number }
+}>()
+
+const { mapsLoaded, center, markerPosition, handleMapClick, handleMarkerDrag, updateAddressFromMarker } = useMap(props.initialCenter)
+
+const handleMapsLoaded = () => {
+  mapsLoaded.value = true
+}
+</script>
+
+<script lang="ts">
+export default {
+  name: 'MapComponent',
+}
+</script>
+
 <template>
   <div class="map-wrapper">
     <GMapMap
@@ -17,26 +37,6 @@
     </GMapMap>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useMap } from '@/composables/useMap';
-
-const props = defineProps<{
-  initialCenter: { lat: number; lng: number };
-}>();
-
-const { mapsLoaded, center, markerPosition, handleMapClick, handleMarkerDrag, updateAddressFromMarker } = useMap(props.initialCenter);
-
-const handleMapsLoaded = () => {
-  mapsLoaded.value = true;
-};
-</script>
-
-<script lang="ts">
-export default {
-  name: 'MapComponent',
-};
-</script>
 
 <style scoped>
 .map-wrapper {

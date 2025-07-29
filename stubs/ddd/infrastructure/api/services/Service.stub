@@ -1,0 +1,109 @@
+import { injectable } from 'inversify'
+import axios, { AxiosInstance } from 'axios'
+import { {{moduleName}}Endpoints } from './{{moduleName}}Endpoints'
+import { {{moduleName}}Transformer } from '../transformers/{{moduleName}}Transformer'
+import type { Create{{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Create{{moduleName}}DTO'
+import type { Update{{moduleName}}DTO } from '@/modules/{{moduleNameLower}}/application/dtos/Update{{moduleName}}DTO'
+
+@injectable()
+export class {{moduleName}}ApiService {
+  private readonly client: AxiosInstance
+  private readonly transformer: {{moduleName}}Transformer
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    this.transformer = new {{moduleName}}Transformer()
+    this.setupInterceptors()
+  }
+
+  private setupInterceptors(): void {
+    // Request interceptor
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
+        }
+        return config
+      },
+      (error) => Promise.reject(error)
+    )
+
+    // Response interceptor
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          // Handle unauthorized
+          window.location.href = '/login'
+        }
+        return Promise.reject(error)
+      }
+    )
+  }
+
+  async findAll(params?: {
+    page?: number
+    limit?: number
+    search?: string
+    status?: string
+    sortBy?: string
+    sortDirection?: string
+  }): Promise<any> {
+    const response = await this.client.get({{moduleName}}Endpoints.LIST, { params })
+    return this.transformer.transformList(response.data)
+  }
+
+  async findById(id: string): Promise<any> {
+    const response = await this.client.get({{moduleName}}Endpoints.DETAIL(id))
+    return this.transformer.transformItem(response.data)
+  }
+
+  async create(data: Create{{moduleName}}DTO): Promise<any> {
+    const payload = this.transformer.transformCreatePayload(data)
+    const response = await this.client.post({{moduleName}}Endpoints.CREATE, payload)
+    return this.transformer.transformItem(response.data)
+  }
+
+  async update(id: string, data: Update{{moduleName}}DTO): Promise<any> {
+    const payload = this.transformer.transformUpdatePayload(data)
+    const response = await this.client.put({{moduleName}}Endpoints.UPDATE(id), payload)
+    return this.transformer.transformItem(response.data)
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.client.delete({{moduleName}}Endpoints.DELETE(id))
+  }
+
+  async export(format: 'excel' | 'pdf' | 'csv', params?: any): Promise<Blob> {
+    const response = await this.client.get({{moduleName}}Endpoints.EXPORT(format), {
+      params,
+      responseType: 'blob',
+    })
+    return response.data
+  }
+
+  async import(file: File): Promise<any> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await this.client.post({{moduleName}}Endpoints.IMPORT, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  }
+
+  async getStatistics(): Promise<any> {
+    const response = await this.client.get({{moduleName}}Endpoints.STATISTICS)
+    return response.data
+  }
+} 

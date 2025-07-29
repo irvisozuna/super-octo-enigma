@@ -1,0 +1,109 @@
+import { injectable, inject } from 'inversify'
+import { TYPES } from '@/modules/{{moduleNameLower}}/types'
+import { EventBus } from '@/shared/infrastructure/EventBus'
+import { {{moduleName}}WebSocketEvents } from '../events/{{moduleName}}WebSocketEvents'
+import { use{{moduleName}}Store } from '@/modules/{{moduleNameLower}}/presentation/stores/{{moduleNameLower}}Store'
+
+@injectable()
+export class {{moduleName}}WebSocketHandler {
+  private socket: WebSocket | null = null
+  private reconnectInterval: number = 5000
+  private reconnectAttempts: number = 0
+  private maxReconnectAttempts: number = 10
+
+  constructor(
+    @inject(TYPES.EventBus)
+    private readonly eventBus: EventBus
+  ) {}
+
+  connect(): void {
+    const wsUrl = `${import.meta.env.VITE_WS_URL}/{{moduleNameLower}}`
+    
+    try {
+      this.socket = new WebSocket(wsUrl)
+      this.setupEventHandlers()
+    } catch (error) {
+      console.error('WebSocket connection error:', error)
+      this.scheduleReconnect()
+    }
+  }
+
+  private setupEventHandlers(): void {
+    if (!this.socket) return
+
+    this.socket.onopen = () => {
+      console.log('{{moduleName}} WebSocket connected')
+      this.reconnectAttempts = 0
+    }
+
+    this.socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        this.handleWebSocketMessage(data)
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error)
+      }
+    }
+
+    this.socket.onerror = (error) => {
+      console.error('{{moduleName}} WebSocket error:', error)
+    }
+
+    this.socket.onclose = () => {
+      console.log('{{moduleName}} WebSocket disconnected')
+      this.scheduleReconnect()
+    }
+  }
+
+  private handleWebSocketMessage(data: any): void {
+    const store = use{{moduleName}}Store()
+
+    switch (data.event) {
+      case {{moduleName}}WebSocketEvents.CREATED:
+        this.eventBus.emit({{moduleName}}WebSocketEvents.CREATED, data.payload)
+        store.handleItemCreated(data.payload)
+        break
+
+      case {{moduleName}}WebSocketEvents.UPDATED:
+        this.eventBus.emit({{moduleName}}WebSocketEvents.UPDATED, data.payload)
+        store.handleItemUpdated(data.payload)
+        break
+
+      case {{moduleName}}WebSocketEvents.DELETED:
+        this.eventBus.emit({{moduleName}}WebSocketEvents.DELETED, data.payload)
+        store.handleItemDeleted(data.payload)
+        break
+
+      default:
+        console.warn('Unknown WebSocket event:', data.event)
+    }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max reconnection attempts reached')
+      return
+    }
+
+    this.reconnectAttempts++
+    setTimeout(() => {
+      console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+      this.connect()
+    }, this.reconnectInterval)
+  }
+
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.close()
+      this.socket = null
+    }
+  }
+
+  send(event: string, payload: any): void {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ event, payload }))
+    } else {
+      console.warn('WebSocket is not connected')
+    }
+  }
+} 

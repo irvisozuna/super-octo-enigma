@@ -1,0 +1,60 @@
+import { injectable } from 'inversify'
+import Dexie, { Table } from 'dexie'
+
+export interface {{moduleName}}IndexedDbModel {
+  id?: string
+  name: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
+  syncStatus?: 'pending' | 'synced' | 'error'
+  lastSyncAt?: string
+}
+
+@injectable()
+export class {{moduleName}}IndexedDb extends Dexie {
+  {{moduleNameLower}}s!: Table<{{moduleName}}IndexedDbModel>
+
+  constructor() {
+    super('{{moduleName}}Database')
+    
+    this.version(1).stores({
+      {{moduleNameLower}}s: '++id, name, status, createdAt, syncStatus',
+    })
+  }
+
+  async saveOffline(data: {{moduleName}}IndexedDbModel): Promise<void> {
+    await this.{{moduleNameLower}}s.add({
+      ...data,
+      syncStatus: 'pending',
+    })
+  }
+
+  async getPendingSync(): Promise<{{moduleName}}IndexedDbModel[]> {
+    return await this.{{moduleNameLower}}s
+      .where('syncStatus')
+      .equals('pending')
+      .toArray()
+  }
+
+  async markAsSynced(id: string): Promise<void> {
+    await this.{{moduleNameLower}}s.update(id, {
+      syncStatus: 'synced',
+      lastSyncAt: new Date().toISOString(),
+    })
+  }
+
+  async markAsError(id: string): Promise<void> {
+    await this.{{moduleNameLower}}s.update(id, {
+      syncStatus: 'error',
+    })
+  }
+
+  async clearSynced(): Promise<void> {
+    await this.{{moduleNameLower}}s
+      .where('syncStatus')
+      .equals('synced')
+      .delete()
+  }
+} 

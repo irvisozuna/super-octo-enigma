@@ -1,9 +1,9 @@
-import { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
-const templateComponent = () => import('./views/index.vue');
-const templateViewComponent = () => import('./views/TemplateView.vue');
-const templateAddComponent = () => import('./views/TemplateAdd.vue');
-const templateEditComponent = () => import('./views/TemplateEdit.vue');
+const templateComponent = () => import('./views/index.vue')
+const templateViewComponent = () => import('./views/TemplateView.vue')
+const templateAddComponent = () => import('./views/TemplateAdd.vue')
+const templateEditComponent = () => import('./views/TemplateEdit.vue')
 
 const templateRoutes: RouteRecordRaw[] = [
   {
@@ -19,13 +19,13 @@ const templateRoutes: RouteRecordRaw[] = [
   {
     path: '/template/add',
     name: 'templatesAdd',
-    component: () => templateAddComponent
+    component: () => templateAddComponent,
   },
   {
     path: '/template/edit/:id',
     name: 'templatesEdit',
-    component: () => templateEditComponent
-  }
-];
+    component: () => templateEditComponent,
+  },
+]
 
-export default templateRoutes;
+export default templateRoutes

@@ -27,6 +27,7 @@ const moduleMessages = Object.fromEntries(
     // Puedes estructurar el objeto de salida según lo que necesites.
     // Por ejemplo, podrías usar una clave compuesta o agrupar por idioma.
     // En este ejemplo se crea una clave del tipo 'miModulo.en'
+
     return [`${moduleName}.${locale}`, value.default]
   }),
 )

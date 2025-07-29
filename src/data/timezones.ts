@@ -34,5 +34,5 @@ export default [
   '(GMT+10:00) Canberra, Melbourne, Sydney',
   '(GMT+11:00) Magadan, Solomon Islands, New Caledonia',
   '(GMT+12:00) Auckland, Wellington',
-  '(GMT+13:00) Nuku\'alofa'
-];
+  '(GMT+13:00) Nuku\'alofa',
+]

@@ -1,0 +1,198 @@
+import { ref, computed } from 'vue'
+import { useField, useForm } from 'vee-validate'
+import * as yup from 'yup'
+import type { {{entityName}}, Create{{entityName}}Dto, Update{{entityName}}Dto } from '@/types'
+
+// Validation schemas
+const create{{entityName}}Schema = yup.object({
+  {{#each properties}}
+  {{#unless primary}}
+  {{@key}}: yup.{{getYupType type}}{{#if required}}.required('{{@key}} es requerido'){{/if}}{{#if maxLength}}.max({{maxLength}}, '{{@key}} no puede tener más de {{maxLength}} caracteres'){{/if}}{{#if minLength}}.min({{minLength}}, '{{@key}} debe tener al menos {{minLength}} caracteres'){{/if}}{{#if type === 'email'}}.email('{{@key}} debe ser un email válido'){{/if}}{{#if type === 'url'}}.url('{{@key}} debe ser una URL válida'){{/if}}{{#if type === 'integer'}}.integer('{{@key}} debe ser un número entero'){{/if}}{{#if type === 'number'}}.number('{{@key}} debe ser un número'){{/if}}{{#if type === 'boolean'}}.boolean('{{@key}} debe ser verdadero o falso'){{/if}}{{#if type === 'enum'}}.oneOf([{{#each values}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}], '{{@key}} debe ser uno de los valores permitidos'){{/if}}{{#if type === 'uuid'}}.uuid('{{@key}} debe ser un UUID válido'){{/if}}{{#if type === 'date'}}.date('{{@key}} debe ser una fecha válida'){{/if}}{{#if type === 'datetime'}}.date('{{@key}} debe ser una fecha y hora válida'){{/if}},
+  {{/unless}}
+  {{/each}}
+})
+
+const update{{entityName}}Schema = yup.object({
+  id: yup.string().required('ID es requerido'),
+  {{#each properties}}
+  {{#unless primary}}
+  {{@key}}: yup.{{getYupType type}}{{#if required}}.required('{{@key}} es requerido'){{/if}}{{#if maxLength}}.max({{maxLength}}, '{{@key}} no puede tener más de {{maxLength}} caracteres'){{/if}}{{#if minLength}}.min({{minLength}}, '{{@key}} debe tener al menos {{minLength}} caracteres'){{/if}}{{#if type === 'email'}}.email('{{@key}} debe ser un email válido'){{/if}}{{#if type === 'url'}}.url('{{@key}} debe ser una URL válida'){{/if}}{{#if type === 'integer'}}.integer('{{@key}} debe ser un número entero'){{/if}}{{#if type === 'number'}}.number('{{@key}} debe ser un número'){{/if}}{{#if type === 'boolean'}}.boolean('{{@key}} debe ser verdadero o falso'){{/if}}{{#if type === 'enum'}}.oneOf([{{#each values}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}], '{{@key}} debe ser uno de los valores permitidos'){{/if}}{{#if type === 'uuid'}}.uuid('{{@key}} debe ser un UUID válido'){{/if}}{{#if type === 'date'}}.date('{{@key}} debe ser una fecha válida'){{/if}}{{#if type === 'datetime'}}.date('{{@key}} debe ser una fecha y hora válida'){{/if}},
+  {{/unless}}
+  {{/each}}
+})
+
+// Helper function to get Yup type
+function getYupType(type: string): string {
+  switch (type) {
+    case 'string':
+      return 'string()'
+    case 'text':
+      return 'string()'
+    case 'email':
+      return 'string()'
+    case 'url':
+      return 'string()'
+    case 'integer':
+      return 'number()'
+    case 'number':
+      return 'number()'
+    case 'boolean':
+      return 'boolean()'
+    case 'enum':
+      return 'string()'
+    case 'uuid':
+      return 'string()'
+    case 'date':
+      return 'date()'
+    case 'datetime':
+      return 'date()'
+    case 'json':
+      return 'mixed()'
+    default:
+      return 'string()'
+  }
+}
+
+export function use{{entityName}}Validation() {
+  // Create form validation
+  const createForm = useForm<Create{{entityName}}Dto>({
+    validationSchema: create{{entityName}}Schema,
+    initialValues: {
+      {{#each properties}}
+      {{#unless primary}}
+      {{@key}}: {{getDefaultValue type}},
+      {{/unless}}
+      {{/each}}
+    }
+  })
+
+  // Update form validation
+  const updateForm = useForm<Update{{entityName}}Dto>({
+    validationSchema: update{{entityName}}Schema,
+    initialValues: {
+      id: '',
+      {{#each properties}}
+      {{#unless primary}}
+      {{@key}}: {{getDefaultValue type}},
+      {{/unless}}
+      {{/each}}
+    }
+  })
+
+  // Individual field validations
+  {{#each properties}}
+  {{#unless primary}}
+  const {{@key}}Field = useField('{{@key}}', create{{entityName}}Schema.fields.{{@key}})
+  {{/unless}}
+  {{/each}}
+
+  // Computed properties
+  const isCreateFormValid = computed(() => createForm.meta.value.valid)
+  const isUpdateFormValid = computed(() => updateForm.meta.value.valid)
+  const createFormErrors = computed(() => createForm.errors.value)
+  const updateFormErrors = computed(() => updateForm.errors.value)
+
+  // Methods
+  const resetCreateForm = () => {
+    createForm.resetForm()
+  }
+
+  const resetUpdateForm = () => {
+    updateForm.resetForm()
+  }
+
+  const setUpdateFormData = (entity: {{entityName}}) => {
+    updateForm.setValues({
+      id: entity.id,
+      {{#each properties}}
+      {{#unless primary}}
+      {{@key}}: entity.{{@key}},
+      {{/unless}}
+      {{/each}}
+    })
+  }
+
+  const validateCreateForm = async (): Promise<boolean> => {
+    const { valid } = await createForm.validate()
+    return valid
+  }
+
+  const validateUpdateForm = async (): Promise<boolean> => {
+    const { valid } = await updateForm.validate()
+    return valid
+  }
+
+  const getFieldError = (fieldName: string, formType: 'create' | 'update' = 'create') => {
+    const form = formType === 'create' ? createForm : updateForm
+    return form.errors.value[fieldName]
+  }
+
+  const clearFieldError = (fieldName: string, formType: 'create' | 'update' = 'create') => {
+    const form = formType === 'create' ? createForm : updateForm
+    form.setFieldError(fieldName, undefined)
+  }
+
+  const clearAllErrors = (formType: 'create' | 'update' = 'create') => {
+    const form = formType === 'create' ? createForm : updateForm
+    form.setErrors({})
+  }
+
+  return {
+    // Forms
+    createForm,
+    updateForm,
+    
+    // Individual fields
+    {{#each properties}}
+    {{#unless primary}}
+    {{@key}}Field,
+    {{/unless}}
+    {{/each}}
+    
+    // Computed
+    isCreateFormValid,
+    isUpdateFormValid,
+    createFormErrors,
+    updateFormErrors,
+    
+    // Methods
+    resetCreateForm,
+    resetUpdateForm,
+    setUpdateFormData,
+    validateCreateForm,
+    validateUpdateForm,
+    getFieldError,
+    clearFieldError,
+    clearAllErrors,
+    
+    // Schemas
+    create{{entityName}}Schema,
+    update{{entityName}}Schema
+  }
+}
+
+// Helper function to get default values
+function getDefaultValue(type: string): string {
+  switch (type) {
+    case 'string':
+    case 'text':
+    case 'email':
+    case 'url':
+    case 'uuid':
+      return "''"
+    case 'integer':
+    case 'number':
+      return '0'
+    case 'boolean':
+      return 'false'
+    case 'enum':
+      return "''"
+    case 'date':
+    case 'datetime':
+      return 'null'
+    case 'json':
+      return '{}'
+    default:
+      return "''"
+  }
+} 

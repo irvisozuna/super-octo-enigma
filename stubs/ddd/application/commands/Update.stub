@@ -1,0 +1,26 @@
+import { Command } from '../Command'
+
+export interface Update{{entityName}}Command extends Command {
+  id: string;
+{{#each properties}}
+  {{@key}}?: {{type}};
+{{/each}}
+}
+
+export class Update{{entityName}}CommandImpl implements Update{{entityName}}Command {
+  constructor(
+    public id: string,
+{{#each properties}}
+    public {{@key}}?: {{type}},
+{{/each}}
+  ) {
+    this.validate();
+  }
+
+  private validate(): void {
+    if (!this.id) {
+      throw new Error('id is required');
+    }
+    // Puedes agregar más validaciones según el tipo aquí
+  }
+} 

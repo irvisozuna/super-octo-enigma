@@ -1,0 +1,127 @@
+import { injectable } from 'inversify'
+import { apiClient } from '@/services/api'
+import { {{moduleName}}ApiData } from './services/{{moduleName}}ApiService'
+
+export interface {{moduleName}}ListParams {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  includeDeleted?: boolean
+  filters?: Record<string, any>
+}
+
+@injectable()
+export class {{moduleName}}Endpoints {
+  private readonly baseUrl = '/api/{{moduleNameLower}}s'
+
+  async create(data: {{moduleName}}ApiData) {
+    return apiClient.post(this.baseUrl, data)
+  }
+
+  async update(id: string, data: Partial<{{moduleName}}ApiData>) {
+    return apiClient.put(`${this.baseUrl}/${id}`, data)
+  }
+
+  async delete(id: string) {
+    return apiClient.delete(`${this.baseUrl}/${id}`)
+  }
+
+  async getById(id: string, options?: { includeDeleted?: boolean }) {
+    const params = new URLSearchParams()
+    if (options?.includeDeleted) {
+      params.append('includeDeleted', 'true')
+    }
+    
+    const url = `${this.baseUrl}/${id}${params.toString() ? `?${params.toString()}` : ''}`
+    return apiClient.get(url)
+  }
+
+  async getList(params: {{moduleName}}ListParams) {
+    const queryParams = new URLSearchParams()
+    
+    if (params.page) queryParams.append('page', params.page.toString())
+    if (params.limit) queryParams.append('limit', params.limit.toString())
+    if (params.search) queryParams.append('search', params.search)
+    if (params.status) queryParams.append('status', params.status)
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy)
+    if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder)
+    if (params.includeDeleted) queryParams.append('includeDeleted', 'true')
+    if (params.filters) {
+      Object.entries(params.filters).forEach(([key, value]) => {
+        queryParams.append(`filters[${key}]`, value.toString())
+      })
+    }
+
+    const url = `${this.baseUrl}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    return apiClient.get(url)
+  }
+
+  async restore(id: string) {
+    return apiClient.post(`${this.baseUrl}/${id}/restore`)
+  }
+
+  async export(format: 'excel' | 'pdf' = 'excel', params?: {{moduleName}}ListParams) {
+    const queryParams = new URLSearchParams()
+    queryParams.append('format', format)
+    
+    if (params) {
+      if (params.page) queryParams.append('page', params.page.toString())
+      if (params.limit) queryParams.append('limit', params.limit.toString())
+      if (params.search) queryParams.append('search', params.search)
+      if (params.status) queryParams.append('status', params.status)
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy)
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder)
+      if (params.includeDeleted) queryParams.append('includeDeleted', 'true')
+      if (params.filters) {
+        Object.entries(params.filters).forEach(([key, value]) => {
+          queryParams.append(`filters[${key}]`, value.toString())
+        })
+      }
+    }
+
+    const url = `${this.baseUrl}/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    return apiClient.get(url, { responseType: 'blob' })
+  }
+
+  {{#if hasImport}}
+  async import(formData: FormData) {
+    return apiClient.post(`${this.baseUrl}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
+  {{/if}}
+
+  async bulkDelete(ids: string[]) {
+    return apiClient.post(`${this.baseUrl}/bulk-delete`, { ids })
+  }
+
+  async bulkUpdate(ids: string[], data: Partial<{{moduleName}}ApiData>) {
+    return apiClient.post(`${this.baseUrl}/bulk-update`, { ids, data })
+  }
+
+  async count(params?: {
+    search?: string
+    status?: string
+    includeDeleted?: boolean
+    filters?: Record<string, any>
+  }) {
+    const queryParams = new URLSearchParams()
+    
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.status) queryParams.append('status', params.status)
+    if (params?.includeDeleted) queryParams.append('includeDeleted', 'true')
+    if (params?.filters) {
+      Object.entries(params.filters).forEach(([key, value]) => {
+        queryParams.append(`filters[${key}]`, value.toString())
+      })
+    }
+
+    const url = `${this.baseUrl}/count${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    return apiClient.get(url)
+  }
+} 

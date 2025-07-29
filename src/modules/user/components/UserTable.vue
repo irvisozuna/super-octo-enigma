@@ -1,30 +1,6 @@
-<template>
-  <VDataTableServer :headers="headers" :items="items" :items-length="total" :page="localPage" item-value="id"
-    return-object :items-per-page="localItemsPerPage" :loading="loading" show-select
-    :items-per-page-options="itemsPerPageOptions" v-model="internalSelection" @update:page="updatePage"
-    @update:items-per-page="updateItemsPerPage">
-    <template #item.id="{ item }">{{ item.id }}</template>
-    <template #item.name="{ item }">{{ item.name }}</template>
-    <template #item.email="{ item }">{{ item.email }}</template>
-    <template #item.role="{ item }">
-      {{ item.roles ? item.roles.map((role: Role) => role.name).join(', ') : '' }}
-    </template>
-    <template #item.actions="{ item }">
-      <VBtn icon="tabler-user" rounded @click="$emit('view', item)" variant="text">
-        <VIcon icon="tabler-user" />
-        <VTooltip activator="parent" location="top">
-          {{ $t('show_profile') }}
-        </VTooltip>
-      </VBtn>
-      <VBtn icon="tabler-pencil" rounded @click="$emit('edit', item)" variant="text"></VBtn>
-      <VBtn icon="tabler-trash" rounded @click="$emit('delete', item)" color="error" variant="text"></VBtn>
-    </template>
-  </VDataTableServer>
-</template>
-
 <script setup lang="ts">
-import { Role } from '@/types/types';
-import { computed, defineEmits, defineProps, ref, watch } from 'vue';
+import { computed, defineEmits, defineProps, ref, watch } from 'vue'
+import type { Role } from '@/types/types'
 
 // Props
 const props = defineProps({
@@ -36,38 +12,98 @@ const props = defineProps({
   loading: { type: Boolean, required: true },
   itemsPerPageOptions: { type: Array, default: () => [5, 10, 25, 50, 100] },
   selection: { type: Array, default: () => [] }, // Lista seleccionada
-});
+})
 
 // Emits
-const emits = defineEmits(['update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete']);
+const emits = defineEmits(['update:page', 'update:items-per-page', 'update:selection', 'view', 'edit', 'delete'])
 
 // Local refs para paginación
-const localPage = ref(props.page);
-const localItemsPerPage = ref(props.itemsPerPage);
+const localPage = ref(props.page)
+const localItemsPerPage = ref(props.itemsPerPage)
 
 // Computed para el v-model de selección
 const internalSelection = computed({
   get: () => props.selection,
-  set: (val) => emits('update:selection', val),
-});
+  set: val => emits('update:selection', val),
+})
 
 // Watchers para sincronizar cambios locales con los props
 watch(
   () => props.page,
-  (newPage) => (localPage.value = newPage)
-);
+  newPage => (localPage.value = newPage),
+)
 
 watch(
   () => props.itemsPerPage,
-  (newItemsPerPage) => (localItemsPerPage.value = newItemsPerPage)
-);
+  newItemsPerPage => (localItemsPerPage.value = newItemsPerPage),
+)
 
 // Métodos
 function updatePage(newPage: number) {
-  emits('update:page', newPage);
+  emits('update:page', newPage)
 }
 
 function updateItemsPerPage(newItemsPerPage: number) {
-  emits('update:items-per-page', newItemsPerPage);
+  emits('update:items-per-page', newItemsPerPage)
 }
 </script>
+
+<template>
+  <VDataTableServer
+    v-model="internalSelection"
+    :headers="headers"
+    :items="items"
+    :items-length="total"
+    :page="localPage"
+    item-value="id"
+    return-object
+    :items-per-page="localItemsPerPage"
+    :loading="loading"
+    show-select
+    :items-per-page-options="itemsPerPageOptions"
+    @update:page="updatePage"
+    @update:items-per-page="updateItemsPerPage"
+  >
+    <template #item.id="{ item }">
+      {{ item.id }}
+    </template>
+    <template #item.name="{ item }">
+      {{ item.name }}
+    </template>
+    <template #item.email="{ item }">
+      {{ item.email }}
+    </template>
+    <template #item.role="{ item }">
+      {{ item.roles ? item.roles.map((role: Role) => role.name).join(', ') : '' }}
+    </template>
+    <template #item.actions="{ item }">
+      <VBtn
+        icon="tabler-user"
+        rounded
+        variant="text"
+        @click="$emit('view', item)"
+      >
+        <VIcon icon="tabler-user" />
+        <VTooltip
+          activator="parent"
+          location="top"
+        >
+          {{ $t('show_profile') }}
+        </VTooltip>
+      </VBtn>
+      <VBtn
+        icon="tabler-pencil"
+        rounded
+        variant="text"
+        @click="$emit('edit', item)"
+      />
+      <VBtn
+        icon="tabler-trash"
+        rounded
+        color="error"
+        variant="text"
+        @click="$emit('delete', item)"
+      />
+    </template>
+  </VDataTableServer>
+</template>

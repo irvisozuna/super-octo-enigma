@@ -535,5 +535,9 @@
   "previous_balance": "Previous Balance",
   "advance_type": "Advance Type",
   "has_rebilling": "This reading has a rebilling. Click to view details.",
-  "view_evidence": "View Evidence"
+  "view_evidence": "View Evidence",
+  "logic": {
+    "and": "AND",
+    "or": "OR"
+  }
 }

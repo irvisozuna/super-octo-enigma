@@ -10,15 +10,16 @@ type Direction = 'vertical' | 'horizontal'
 
 interface Props {
   items: Item[]
-  currentStep?: number
+  currentStep?: string | number
   direction?: Direction
   iconSize?: string | number
   isActiveStepValid?: boolean
   align?: 'start' | 'center' | 'end' | 'default'
+  stepStates?: string[] // 'completed' | 'active' | 'pending' | 'incomplete'
 }
 
 interface Emit {
-  (e: 'update:currentStep', value: number): void
+  (e: 'update:currentStep', value: string | number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,14 +32,25 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
-const currentStep = ref(props.currentStep || 0)
+const currentStep = ref(props.currentStep ?? 0)
 
 // check if step is completed or active and return class name accordingly
-const activeOrCompletedStepsClasses = computed(() => (index: number) => (
-  index < currentStep.value
+const activeOrCompletedStepsClasses = computed(() => (index: number) => {
+  // If using string ids, compare with index mapping
+  if (typeof currentStep.value === 'string') {
+    const stepIndex = props.items.findIndex((_, i) =>
+      props.items[i].title === props.items.find(item => item.title === props.items[index].title)?.title,
+    )
+
+    return index < stepIndex
+      ? 'stepper-steps-completed'
+      : index === stepIndex ? 'stepper-steps-active' : ''
+  }
+
+  return index < (currentStep.value as number)
     ? 'stepper-steps-completed'
     : index === currentStep.value ? 'stepper-steps-active' : ''
-))
+})
 
 // check if step is horizontal and not last step
 const isHorizontalAndNotLastStep = computed(() => (index: number) => (
@@ -53,14 +65,15 @@ const isValidationEnabled = computed(() => {
 
 watchEffect(() => {
   // we need to check undefined because if we pass 0 as currentStep it will be falsy
-  if (
-    props.currentStep !== undefined
-    && props.currentStep < props.items.length
-    && props.currentStep >= 0
-  )
-    currentStep.value = props.currentStep
+  if (props.currentStep !== undefined) {
+    const newValue = props.currentStep
 
-  emit('update:currentStep', currentStep.value)
+    // Only emit if the value actually changed to prevent infinite loops
+    if (currentStep.value !== newValue) {
+      currentStep.value = newValue
+      emit('update:currentStep', currentStep.value)
+    }
+  }
 })
 </script>
 
@@ -81,9 +94,12 @@ watchEffect(() => {
         class="cursor-pointer app-stepper-step pa-1"
         :class="[
           (!props.isActiveStepValid && (isValidationEnabled)) && 'stepper-steps-invalid',
-          activeOrCompletedStepsClasses(index),
+          props.stepStates?.[index] === 'completed' && 'stepper-steps-completed',
+          props.stepStates?.[index] === 'active' && 'stepper-steps-active',
+          props.stepStates?.[index] === 'incomplete' && 'stepper-steps-incomplete',
+          props.stepStates?.[index] === 'pending' && 'stepper-steps-pending',
         ]"
-        @click="!isValidationEnabled && emit('update:currentStep', index)"
+        @click="!isValidationEnabled && index <= currentStep && emit('update:currentStep', index)"
       >
         <!-- SECTION stepper step with icon -->
         <template v-if="item.icon">
@@ -133,51 +149,57 @@ watchEffect(() => {
         <template v-else>
           <div class="d-flex align-center gap-x-3">
             <div>
-              <!-- 👉 custom circle icon -->
-              <template v-if="index >= currentStep">
-                <VAvatar
-                  v-if="(!isValidationEnabled || props.isActiveStepValid || index !== currentStep)"
-                  size="38"
-                  rounded
-                  :variant="index === currentStep ? 'elevated' : 'tonal'"
-                  :color="index === currentStep ? 'primary' : 'default'"
-                >
-                  <h5
-                    class="text-h5"
-                    :style="index === currentStep ? { color: '#fff' } : ''"
-                  >
-                    {{ index + 1 }}
-                  </h5>
-                </VAvatar>
-
-                <VAvatar
-                  v-else
-                  color="error"
-                  size="38"
-                  rounded
-                >
-                  <VIcon
-
-                    icon="tabler-alert-circle"
-                    size="22"
-                  />
-                </VAvatar>
-              </template>
-
-              <!-- 👉 step completed icon -->
-
+              <!-- Custom avatar for step state -->
               <VAvatar
-                v-else
+                v-if="props.stepStates?.[index] === 'completed'"
                 class="stepper-icon"
                 variant="tonal"
+                color="success"
+                size="38"
+                rounded
+              >
+                <VIcon
+                  icon="tabler-check"
+                  size="22"
+                />
+              </VAvatar>
+              <VAvatar
+                v-else-if="props.stepStates?.[index] === 'active'"
+                class="stepper-icon"
+                variant="elevated"
                 color="primary"
                 size="38"
                 rounded
               >
                 <h5
                   class="text-h5"
-                  style="color: rgb(var(--v-theme-primary));"
+                  style="color: #fff;"
                 >
+                  {{ index + 1 }}
+                </h5>
+              </VAvatar>
+              <VAvatar
+                v-else-if="props.stepStates?.[index] === 'incomplete'"
+                class="stepper-icon"
+                variant="tonal"
+                color="error"
+                size="38"
+                rounded
+              >
+                <VIcon
+                  icon="tabler-alert-circle"
+                  size="22"
+                />
+              </VAvatar>
+              <VAvatar
+                v-else
+                class="stepper-icon"
+                variant="tonal"
+                color="grey"
+                size="38"
+                rounded
+              >
+                <h5 class="text-h5">
                   {{ index + 1 }}
                 </h5>
               </VAvatar>
@@ -367,5 +389,23 @@ watchEffect(() => {
       justify-content: end;
     }
   }
+}
+</style>
+
+<style scoped>
+.stepper-steps-completed {
+  background-color: #e6f4ea !important;
+}
+
+.stepper-steps-active {
+  background-color: #e3e8fd !important;
+}
+
+.stepper-steps-incomplete {
+  background-color: #fdeaea !important;
+}
+
+.stepper-steps-pending {
+  background-color: #f5f5f5 !important;
 }
 </style>

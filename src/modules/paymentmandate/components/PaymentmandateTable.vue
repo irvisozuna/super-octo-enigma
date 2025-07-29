@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, defineEmits, defineProps, ref, watch } from 'vue'
-import type { Role } from '@/types/types'
 
 // Props
 const props = defineProps({

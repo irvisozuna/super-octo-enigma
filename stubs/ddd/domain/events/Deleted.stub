@@ -1,0 +1,14 @@
+import { DomainEvent } from '@/shared/domain/DomainEvent'
+
+export interface {{moduleName}}DeletedPayload {
+  aggregateId: string
+  deletedAt: string
+}
+
+export class {{moduleName}}Deleted extends DomainEvent<{{moduleName}}DeletedPayload> {
+  static eventName = '{{moduleNameLower}}.deleted'
+
+  constructor(payload: {{moduleName}}DeletedPayload) {
+    super({{moduleName}}Deleted.eventName, payload)
+  }
+} 
