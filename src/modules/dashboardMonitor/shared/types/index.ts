@@ -1,0 +1,1 @@
+// Template not found: shared/types/index.stub
