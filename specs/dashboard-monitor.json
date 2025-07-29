@@ -1,0 +1,153 @@
+{
+  "moduleName": "DashboardMonitor",
+  "version": "1.0.0",
+  "description": "Módulo DashboardMonitor - Personaliza esta descripción",
+  "author": "Development Team",
+  "framework": "vue",
+  "language": "typescript",
+  "_instructions": {
+    "_note": "Este es un template base para crear nuevos módulos. Duplica este archivo y personalízalo.",
+    "_usage": "1. Copia este archivo: cp specs/spectBase.json specs/tu-modulo.json",
+    "_usage2": "2. Edita tu-modulo.json con tus entidades",
+    "_usage3": "3. Ejecuta: node scripts/generateModuleFromSpec.mjs specs/tu-modulo.json",
+    "_entityExample": "Define las entidades de tu dominio con sus propiedades específicas",
+    "_propertyTypes": "uuid, string, integer, number, boolean, datetime, json, enum"
+  },
+  "entities": {
+    "DashboardMonitorEntity": {
+      "table": "dashboard_monitor",
+      "description": "Entidad principal del módulo DashboardMonitor",
+      "properties": {
+        "id": {
+          "type": "uuid",
+          "primary": true,
+          "generated": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "required": false
+        },
+        "status": {
+          "type": "enum",
+          "values": [
+            "active",
+            "inactive"
+          ],
+          "default": "active",
+          "required": true
+        },
+        "created_at": {
+          "type": "datetime",
+          "generated": true
+        },
+        "updated_at": {
+          "type": "datetime",
+          "generated": true
+        }
+      }
+    }
+  },
+  "features": {
+    "crud": {
+      "enabled": false,
+      "description": "Operaciones básicas de crear, leer, actualizar, eliminar"
+    },
+    "search": {
+      "enabled": true,
+      "description": "Funcionalidad de búsqueda"
+    },
+    "export": {
+      "enabled": true,
+      "formats": [
+        "excel",
+        "pdf"
+      ],
+      "description": "Exportación de datos"
+    },
+    "websocket": {
+      "enabled": false,
+      "description": "Comunicación en tiempo real"
+    },
+    "cache": {
+      "enabled": true,
+      "description": "Caché para optimizar rendimiento"
+    },
+    "validation": {
+      "enabled": true,
+      "description": "Validación de datos"
+    }
+  },
+  "ui": {
+    "components": {
+      "list": {
+        "enabled": true,
+        "pagination": true,
+        "filters": true,
+        "sorting": true
+      },
+      "form": {
+        "enabled": true,
+        "validation": true
+      },
+      "detail": {
+        "enabled": true,
+        "readonly": false
+      }
+    },
+    "theme": {
+      "primaryColor": "#3B82F6",
+      "layout": "sidebar"
+    }
+  },
+  "api": {
+    "baseUrl": "/api/v1",
+    "authentication": "bearer",
+    "rateLimit": {
+      "enabled": true,
+      "requests": 100,
+      "window": "15m"
+    }
+  },
+  "_examples": {
+    "_ecommerce": {
+      "entities": [
+        "Product",
+        "Category",
+        "Order",
+        "Customer"
+      ],
+      "description": "Sistema de comercio electrónico"
+    },
+    "_blog": {
+      "entities": [
+        "Post",
+        "Comment",
+        "Tag",
+        "Author"
+      ],
+      "description": "Sistema de blog"
+    },
+    "_inventory": {
+      "entities": [
+        "Item",
+        "Location",
+        "Movement",
+        "Supplier"
+      ],
+      "description": "Sistema de inventario"
+    },
+    "_crm": {
+      "entities": [
+        "Lead",
+        "Contact",
+        "Deal",
+        "Activity"
+      ],
+      "description": "Sistema CRM"
+    }
+  }
+}

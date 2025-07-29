@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 import chalk from 'chalk'
-import { generateModuleFromSpec } from './generateModuleFromSpec.mjs'
+import { generateModuleFromSpec } from './generator.mjs'
 
 function showHelp() {
   console.log(chalk.cyan.bold('🏗️  New Module Creator'))
