@@ -11,8 +11,8 @@ const emit = defineEmits(['next', 'back'])
 
 const { buildFullSql, getHighlightedSql, generateTableAlias } = useSqlExpressionPreview()
 
-// Función para generar alias de tabla (copiada del paso 1)
-function generateTableAlias(tableName: string, index: number = 0): string {
+// Función para generar alias de tabla local (diferente de la importada)
+function generateLocalTableAlias(tableName: string, index: number = 0): string {
   // Tomar las primeras 3 letras de cada palabra del nombre de la tabla
   const words = tableName.split('_')
   const alias = words.map(word => word.substring(0, 3)).join('').toLowerCase()
@@ -26,7 +26,7 @@ const availableFields = computed(() => {
     let fields = [...(props.stepData.tableColumns || [])]
 
     // Agregar displayName a las columnas de la tabla principal
-    const mainTableAlias = generateTableAlias(props.stepData.table)
+    const mainTableAlias = generateLocalTableAlias(props.stepData.table)
 
     fields = fields.map(col => ({
       ...col,
@@ -38,7 +38,7 @@ const availableFields = computed(() => {
     if (props.stepData.joins && props.stepData.joins.length > 0) {
       props.stepData.joins.forEach(join => {
         if (join.table && props.stepData.joinColumns && props.stepData.joinColumns[join.table]) {
-          const joinAlias = join.alias || generateTableAlias(join.table)
+          const joinAlias = join.alias || generateLocalTableAlias(join.table)
 
           // Agregar alias de tabla para evitar conflictos de nombres
           const joinFields = props.stepData.joinColumns[join.table].map(col => ({
@@ -100,7 +100,7 @@ function buildJoins(mainTableAlias, joins = []) {
   let sql = ''
   joins.forEach(join => {
     if (join.table && join.type && join.mainField && join.joinField) {
-      const joinAlias = join.alias || generateTableAlias(join.table)
+      const joinAlias = join.alias || generateLocalTableAlias(join.table)
 
       sql += ` ${join.type} JOIN ${join.table} AS ${joinAlias} ON ${mainTableAlias}.${join.mainField} = ${joinAlias}.${join.joinField}`
     }
@@ -113,7 +113,7 @@ const generatedSql = computed(() => {
   if (props.stepData.type === 'custom_sql')
     return props.stepData.custom_sql
   if (props.stepData.type === 'table') {
-    const mainTableAlias = generateTableAlias(props.stepData.table)
+    const mainTableAlias = generateLocalTableAlias(props.stepData.table)
     const columns = Array.isArray(selectedFields.value) ? selectedFields.value : []
     let sql = buildFullSql({
       columns,

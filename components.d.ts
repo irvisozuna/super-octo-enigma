@@ -49,7 +49,6 @@ declare module 'vue' {
     DropZone: typeof import('./src/@core/components/DropZone.vue')['default']
     EnableOneTimePasswordDialog: typeof import('./src/components/dialogs/EnableOneTimePasswordDialog.vue')['default']
     ErrorHeader: typeof import('./src/components/ErrorHeader.vue')['default']
-    ExportSnackbar: typeof import('./src/components/ExportSnackbar.vue')['default']
     GlobalMenu: typeof import('./src/components/GlobalMenu.vue')['default']
     GlobalSnackbar: typeof import('./src/components/GlobalSnackbar.vue')['default']
     I18n: typeof import('./src/@core/components/I18n.vue')['default']
@@ -72,7 +71,6 @@ declare module 'vue' {
     TwoFactorAuthDialog: typeof import('./src/components/dialogs/TwoFactorAuthDialog.vue')['default']
     UserInfoEditDialog: typeof import('./src/components/dialogs/UserInfoEditDialog.vue')['default']
     UserUpgradePlanDialog: typeof import('./src/components/dialogs/UserUpgradePlanDialog.vue')['default']
-    VueApexCharts: typeof import('vue3-apexcharts')['default']
     WidgetCard: typeof import('./src/components/WidgetCard.vue')['default']
   }
 }

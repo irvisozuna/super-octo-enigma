@@ -62,14 +62,17 @@ const initials = computed(() => {
 const initialsImage = computed(() => generateInitialsImage(initials.value))
 
 const isComplete = computed(() => {
-  return !!formData.value.firstName
+  const complete = !!formData.value.firstName
          && !!formData.value.lastName
-
          && !!formData.value.contact && isPhoneValid.value // Assuming contact is not nullish when valid
+  
+  if (complete) {
     nextTick(() => { // Ensure formData is updated before emitting
       emit('complete', formData.value)
     })
   }
+  
+  return complete
 })
 
 // Function to update contact number

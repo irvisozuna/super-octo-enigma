@@ -53,7 +53,7 @@ export const SHARE_REPORT_USECASE_KEY = Symbol('ShareReportUseCase')
  * </script>
  * ```
  */
-export const useReportUseCases = () => {
+export const useReportUseCases = async () => {
   // Try to inject use cases first (if already provided)
   const getReportDataUseCase = inject<GetReportDataUseCase>(GET_REPORT_DATA_USECASE_KEY)
   const exportReportUseCase = inject<ExportReportUseCase>(EXPORT_REPORT_USECASE_KEY)

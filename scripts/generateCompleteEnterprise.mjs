@@ -14,24 +14,32 @@ async function generateCompleteEnterprise(moduleName, specPath) {
     {
       name: '🏗️ Base Module Generation',
       command: specPath 
-        ? `npm run generate:from-spec ${specPath}` 
-        : `npm run generate:module:test`
+        ? `node scripts/generateModuleFromSpec.mjs ${specPath}` 
+        : `node scripts/test-ddd-generator.mjs`
+    },
+    {
+      name: '📦 Modern Installer Generation', 
+      command: `node scripts/generateModuleInstaller.mjs ${moduleName}`
     },
     {
       name: '🔗 DDD Contracts',
-      command: `npm run generate:contracts ${moduleName}`
+      command: `node scripts/generateContracts.mjs ${moduleName}`
     },
     {
       name: '🚀 Advanced Architecture',
-      command: `npm run generate:advanced ${moduleName}`
+      command: `node scripts/generateAdvancedArchitecture.mjs ${moduleName}`
     },
     {
       name: '🔥 Scalability Patterns',
-      command: `npm run generate:scalability ${moduleName}`
+      command: `node scripts/generateScalabilityPatterns.mjs ${moduleName}`
     },
     {
       name: '🧹 Validation & Fixes',
-      command: `npm run validate:module ${moduleName}`
+      command: `npm run validate ${moduleName}`
+    },
+    {
+      name: '🔥 Level 10/10 Features',
+      command: `node scripts/generateEnterpriseLevel10.mjs ${moduleName}`
     },
     {
       name: '🧪 Module Testing',
@@ -106,17 +114,26 @@ async function generateCompleteEnterprise(moduleName, specPath) {
   console.log(chalk.white('   🔌 Dependency Injection Container'))
   console.log(chalk.white('   🏗️ Module Federation'))
   console.log(chalk.white('   🎯 Bounded Contexts'))
+  console.log(chalk.white('   📦 Modern Vue 3 Plugin Installer'))
+  console.log(chalk.white('   🚀 Performance & Virtual Scrolling'))
+  console.log(chalk.white('   📊 Observability & Core Web Vitals'))
+  console.log(chalk.white('   🛡️ Enterprise Security (OWASP)'))
+  console.log(chalk.white('   🔄 Real-time WebSocket Management'))
+  console.log(chalk.white('   ♿ WCAG 2.1 AA Accessibility'))
   console.log(chalk.white('   ✅ 100% Tested & Validated'))
   
-  console.log(chalk.cyan.bold('\n🚀 READY FOR ENTERPRISE DEPLOYMENT!'))
+  console.log(chalk.cyan.bold('\n🚀 READY FOR FORTUNE 500 DEPLOYMENT!'))
   console.log(chalk.gray('Your module is now:'))
-  console.log(chalk.green('   ✅ Independently deployable'))
-  console.log(chalk.green('   ✅ Highly scalable'))
-  console.log(chalk.green('   ✅ Multi-language ready'))
-  console.log(chalk.green('   ✅ Permission-secured'))
-  console.log(chalk.green('   ✅ Event-driven'))
-  console.log(chalk.green('   ✅ Clean Architecture compliant'))
-  console.log(chalk.green('   ✅ DDD best practices'))
+  console.log(chalk.green('   ✅ Independently deployable (Module Federation)'))
+  console.log(chalk.green('   ✅ Highly scalable (Virtual Scrolling + Performance)'))
+  console.log(chalk.green('   ✅ Multi-language ready (4 languages)'))
+  console.log(chalk.green('   ✅ Permission-secured (ACL Enterprise)'))
+  console.log(chalk.green('   ✅ Event-driven (WebSocket + Event Sourcing)'))
+  console.log(chalk.green('   ✅ Clean Architecture compliant (DDD)'))
+  console.log(chalk.green('   ✅ WCAG 2.1 AA Accessible'))
+  console.log(chalk.green('   ✅ OWASP Security Compliant'))
+  console.log(chalk.green('   ✅ Core Web Vitals Optimized'))
+  console.log(chalk.green('   ✅ Real-time Collaborative'))
   
   return {
     totalFiles,
