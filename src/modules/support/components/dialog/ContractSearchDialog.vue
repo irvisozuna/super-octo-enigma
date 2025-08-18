@@ -179,12 +179,12 @@ async function selectContract(contract) {
     await contractStore.getContract(contract.account) // Ejecutar la acción del store con el ID del contrato
 
     // Abrir el diálogo de notas obligatorio
-    openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
-      if (result === 'submit') {
-        console.log('Nota creada, cerrando diálogo de búsqueda...')
-        closeDialog('submit') // Cerrar el diálogo después de crear la nota
-      }
-    })
+    // openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
+    //   if (result === 'submit') {
+    //     console.log('Nota creada, cerrando diálogo de búsqueda...')
+    //     closeDialog('submit') // Cerrar el diálogo después de crear la nota
+    //   }
+    // })
   }
   catch (error) {
     console.error('Error al seleccionar el contrato:', error)

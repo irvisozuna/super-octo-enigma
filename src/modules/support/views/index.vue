@@ -61,7 +61,7 @@ async function searchContract() {
     searchQuery.value = '' // Limpia el campo de búsqueda
 
     // Abrir el diálogo de notas después de cargar el contrato
-    openNoteDialog()
+    // openNoteDialog()
   }
   catch (error) {
     console.error('Error fetching contract data:', error)
