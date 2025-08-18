@@ -178,6 +178,8 @@ async function selectContract(contract) {
     loading.value = true
     await contractStore.getContract(contract.account) // Ejecutar la acción del store con el ID del contrato
 
+    closeDialog('submit')
+
     // Abrir el diálogo de notas obligatorio
     // openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
     //   if (result === 'submit') {
