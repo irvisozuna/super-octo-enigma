@@ -1,38 +1,79 @@
 <script setup lang="ts">
 import { useField, useForm } from 'vee-validate'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useContractStore } from '../../stores/contractStore'
 import { useNotification } from '@/helpers/notificationHelper'
+import { useAppManager } from '@/composables/useAppManager'
+
+const { t } = useI18n()
+
+// Types
+interface Service {
+  rowid: string | number
+  name: string
+  tva_tx: number
+  price: number
+}
+
+interface Charge {
+  id: string | number
+  name: string
+  tva_tx: number
+  price: number
+  quantity: number
+  total: number
+}
 
 const { showSuccess, showError } = useNotification()
 const contractStore = useContractStore()
 const { closeDialog } = useAppManager()
 const isLoading = ref(false)
-const { aquasoft_id, name } = useCookie('userData').value
+
+// Get user data from cookie
+const userData = useCookie('userData').value
+const aquasoft_id = userData?.aquasoft_id
+const token_dolibarr = useCookie('dolibarrToken').value
+
+// Define types for better TypeScript support
+interface Service {
+  rowid: number
+  name: string
+  price: number
+  tva_tx: number
+}
+
+interface Charge {
+  id: number
+  name: string
+  tva_tx: number
+  price: number
+  quantity: number
+  total: number
+}
 
 // Validation and Form
-const { handleSubmit, errors } = useForm({
+const { errors } = useForm({
   initialValues: {
-    selectedService: null,
+    selectedService: null as Service | null,
     tva_tx: 16,
     price: '',
     quantity: 1,
   },
 })
 
-const token_dolibarr = useCookie('dolibarrToken').value
-const { value: selectedService } = useField('selectedService')
-const { value: tva_tx } = useField('tva_tx')
-const { value: price } = useField('price')
-const { value: quantity } = useField('quantity')
+const { value: selectedService } = useField<Service | null>('selectedService')
+const { value: tva_tx } = useField<number>('tva_tx')
+const { value: price } = useField<string>('price')
+const { value: quantity } = useField<number>('quantity')
 
 // Options and State
-const servicesOptions = ref([])
-const addedCharges = ref([])
+const servicesOptions = ref<Service[]>([])
+const addedCharges = ref<Charge[]>([])
 
 const tableHeaders = [
   { title: 'Servicio', key: 'name' },
-  { title: 'iva', key: 'tva_tx' },
+  { title: 'IVA', key: 'tva_tx' },
   { title: 'Precio', key: 'price' },
   { title: 'Cantidad', key: 'quantity' },
   { title: 'Total', key: 'total' },
@@ -48,30 +89,35 @@ const totalCost = computed(() =>
   addedCharges.value.reduce((sum, charge) => sum + charge.total, 0),
 )
 
-// Methods
-const addCharge = () => {
-  if (selectedService.value && price.value && quantity.value) {
-    addedCharges.value.push({
-      id: selectedService.value.rowid,
-      name: selectedService.value.name || 'N/A',
-      tva_tx: tva_tx.value || 16,
-      price: Number.parseFloat(((price.value || 0) / (1 + (tva_tx.value / 100))).toFixed(2)),
-      quantity: Number.parseInt(quantity.value, 10),
-      total: Number.parseFloat(price.value) * Number.parseInt(quantity.value, 10),
-    })
-    resetFields()
-  }
-}
-
-const removeCharge = item => {
-  addedCharges.value = addedCharges.value.filter(charge => charge !== item)
-}
-
 const resetFields = () => {
   selectedService.value = null
   tva_tx.value = 16
   price.value = ''
   quantity.value = 1
+}
+
+const addCharge = () => {
+  if (selectedService.value && price.value && quantity.value) {
+    const priceValue = Number.parseFloat(price.value)
+    const quantityValue = Number.parseInt(quantity.value.toString(), 10)
+
+    // Usar el valor real del IVA, incluso si es 0
+    const tvaValue = tva_tx.value !== undefined ? tva_tx.value : 16
+
+    addedCharges.value.push({
+      id: selectedService.value.rowid,
+      name: selectedService.value.name || 'N/A',
+      tva_tx: tvaValue,
+      price: Number.parseFloat((priceValue / (1 + (tvaValue / 100))).toFixed(2)),
+      quantity: quantityValue,
+      total: priceValue * quantityValue,
+    })
+    resetFields()
+  }
+}
+
+const removeCharge = (item: Charge) => {
+  addedCharges.value = addedCharges.value.filter(charge => charge !== item)
 }
 
 // Modify the onFormSubmit function
@@ -85,7 +131,7 @@ const onFormSubmit = async () => {
 
   try {
     if (!aquasoft_id) {
-      showError(t('error_creating_note'))
+      showError('Error creando nota')
 
       return
     }
@@ -98,7 +144,7 @@ const onFormSubmit = async () => {
 
     const payload = {
       charges: addedCharges.value,
-      account: contractStore.item.account,
+      account: contractStore.item?.account,
       token: token_dolibarr,
       user_id: aquasoft_id,
     }
@@ -108,8 +154,8 @@ const onFormSubmit = async () => {
     showSuccess(response.message || 'Cargos guardados correctamente')
     closeDialog()
   }
-  catch (error) {
-    showError(`Error al guardar los cargos: ${error.message || 'Error desconocido'}`)
+  catch (error: any) {
+    showError(`Error al guardar los cargos: ${error?.message || 'Error desconocido'}`)
     console.error('Error details:', error)
   }
   finally {
@@ -117,9 +163,9 @@ const onFormSubmit = async () => {
   }
 }
 
-const onServiceSelect = (service: any) => {
+const onServiceSelect = (service: Service | null) => {
   if (service) {
-    tva_tx.value = service.tva_tx || 16
+    tva_tx.value = service.tva_tx ?? 16
     price.value = service.price?.toString() || ''
   }
   else {
@@ -154,7 +200,7 @@ const onServiceSelect = (service: any) => {
                   v-model="selectedService"
                   :items="servicesOptions"
                   item-title="name"
-                  item-value="id"
+                  item-value="rowid"
                   label="Cargo"
                   variant="outlined"
                   dense
@@ -182,10 +228,13 @@ const onServiceSelect = (service: any) => {
           >
             <VTextField
               v-model="tva_tx"
-              label="IVA"
+              label="IVA (%)"
               variant="outlined"
               dense
-              readonly
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
             />
           </VCol>
           <!-- Price -->
@@ -198,6 +247,9 @@ const onServiceSelect = (service: any) => {
               label="Precio"
               variant="outlined"
               dense
+              type="number"
+              min="0"
+              step="0.01"
             />
           </VCol>
           <!-- Quantity -->
@@ -235,8 +287,11 @@ const onServiceSelect = (service: any) => {
           hide-default-footer
           class="elevation-1 mt-6"
         >
+          <template #item.tva_tx="{ item }">
+            {{ item.tva_tx }}%
+          </template>
           <template #item.price="{ item }">
-            ${{ ((item.price || 0) / (1 + (item.tva_tx / 100))).toFixed(2) }}
+            ${{ (item.price || 0).toFixed(2) }}
           </template>
           <template #item.total="{ item }">
             ${{ item.total.toFixed(2) }}
