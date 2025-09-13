@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useMenuStore } from '@/stores/menu'
+import { useMenuTranslation } from '@/composables/useMenuTranslation'
 
 import { themeConfig } from '@themeConfig'
 
@@ -15,7 +16,10 @@ import { HorizontalNavLayout } from '@layouts'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer' /* PartiallyEnd: #3632/scriptSetup.vue */
 
 const menuStore = useMenuStore()
-const navItems = computed(() => menuStore.horizontalNavItems)
+const { translateMenuItems } = useMenuTranslation()
+
+// Traducir los elementos del menú
+const navItems = computed(() => translateMenuItems(menuStore.horizontalNavItems))
 const { isAdmin } = useCurrentUser()
 </script>
 

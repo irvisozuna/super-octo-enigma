@@ -10,12 +10,12 @@ export const useMenuStore = defineStore('menu', {
     ] as VerticalNavItems, // Menú base
   }),
   getters: {
-    // Adaptar el menú base para diseño vertical
+    // Adaptar el menú base para diseño vertical (sin traducción aquí)
     verticalNavItems(): VerticalNavItems {
       return this.baseNavItems
     },
 
-    // Adaptar el menú base para diseño horizontal
+    // Adaptar el menú base para diseño horizontal (sin traducción aquí)
     horizontalNavItems(): HorizontalNavItems {
       // Ejemplo: Puedes transformar la estructura si es necesario
       return this.baseNavItems.map(item => {

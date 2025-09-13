@@ -1,11 +1,26 @@
 import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 import type { User } from '@/types/types'
 import { canNavigate } from '@layouts/plugins/casl'
+import { useTenantStore } from '@/stores/tenant.store'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
   router.beforeEach(to => {
+    // Verificar que el tenant esté listo antes de continuar
+    const tenantStore = useTenantStore()
+
+    // Si el tenant no está listo y no es una ruta pública, esperar
+    if (!tenantStore.isReady && !to.meta.public) {
+      // Si hay error en el tenant, redirigir a pantalla de error
+      if (tenantStore.hasError)
+        return '/tenant-error'
+
+      // Si aún está cargando, mostrar loader
+      if (tenantStore.isLoading)
+        return '/tenant-loading'
+    }
+
     /*
      * If it's a public route, continue navigation. This kind of pages are allowed to visited by login & non-login users. Basically, without any restrictions.
      * Examples of public routes are, 404, under maintenance, etc.

@@ -5,7 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { useAppManager } from '@/composables/useAppManager'
 import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore'
 import { useReportStore } from '../stores/reportStore'
-import { useNotificationStore } from '@/stores/notification' // Si tienes un store de notificaciones global
+
+// Si tienes un store de notificaciones global
 
 interface Props {
   item?: any

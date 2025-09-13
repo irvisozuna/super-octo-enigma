@@ -12,7 +12,19 @@ export const useApi = createFetch({
     refetch: true,
     async beforeFetch({ options }) {
       const accessToken = useCookie('accessToken').value
-      const organization = import.meta.env.VITE_API_ORGANIZATION ?? ''
+
+      // Obtener organización del tenant store o usar fallback
+      let organization = ''
+      try {
+        const { useTenantStore } = await import('@/stores/tenant.store')
+        const tenantStore = useTenantStore()
+
+        organization = tenantStore.organization || import.meta.env.VITE_API_ORGANIZATION || ''
+      }
+      catch (error) {
+        // Fallback a variable de entorno si hay error
+        organization = import.meta.env.VITE_API_ORGANIZATION || ''
+      }
 
       if (accessToken) {
         options.headers = {

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 // import navItems from '@/navigation/vertical'
 import { useMenuStore } from '@/stores/menu'
+import { useMenuTranslation } from '@/composables/useMenuTranslation'
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -16,7 +17,10 @@ import NavBarI18n from '@core/components/I18n.vue'
 import { VerticalNavLayout } from '@layouts'
 
 const menuStore = useMenuStore()
-const navItems = computed(() => menuStore.verticalNavItems)
+const { translateMenuItems } = useMenuTranslation()
+
+// Traducir los elementos del menú
+const navItems = computed(() => translateMenuItems(menuStore.verticalNavItems))
 const { isAdmin } = useCurrentUser()
 </script>
 

@@ -50,5 +50,7 @@ declare module 'vue-router/auto-routes' {
     'profile-account-settings-tab': RouteRecordInfo<'profile-account-settings-tab', '/profile/account-settings/:tab', { tab: ParamValue<true> }, { tab: ParamValue<false> }>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,
     'roles': RouteRecordInfo<'roles', '/roles', Record<never, never>, Record<never, never>>,
+    'tenant-error': RouteRecordInfo<'tenant-error', '/tenant-error', Record<never, never>, Record<never, never>>,
+    'tenant-loading': RouteRecordInfo<'tenant-loading', '/tenant-loading', Record<never, never>, Record<never, never>>,
   }
 }

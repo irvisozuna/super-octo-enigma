@@ -3,7 +3,6 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { ApiService } from '@/services/apiService'
 import { rawApi } from '@/services/api'
 import { useGlobalSnackbar } from '@/composables/useGlobalSnackbar'
 import BackgroundTaskPanel from '@/components/BackgroundTaskPanel.vue'

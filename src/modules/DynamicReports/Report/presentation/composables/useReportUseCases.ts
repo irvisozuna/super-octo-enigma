@@ -3,7 +3,7 @@
  * Provides access to all report-related use cases with dependency injection
  */
 
-import { inject } from 'vue'
+import { computed, inject, reactive, readonly, ref, toRef } from 'vue'
 import type {
   ExportReportUseCase,
   GetReportDataUseCase,
@@ -53,7 +53,7 @@ export const SHARE_REPORT_USECASE_KEY = Symbol('ShareReportUseCase')
  * </script>
  * ```
  */
-export const useReportUseCases = () => {
+export const useReportUseCases = async () => {
   // Try to inject use cases first (if already provided)
   const getReportDataUseCase = inject<GetReportDataUseCase>(GET_REPORT_DATA_USECASE_KEY)
   const exportReportUseCase = inject<ExportReportUseCase>(EXPORT_REPORT_USECASE_KEY)
@@ -166,8 +166,8 @@ export const setupReportServices = (
  * </script>
  * ```
  */
-export const useReportManager = (reportId: string) => {
-  const { getReportDataUseCase, exportReportUseCase, shareReportUseCase } = useReportUseCases()
+export const useReportManager = async (reportId: string) => {
+  const { getReportDataUseCase, exportReportUseCase, shareReportUseCase } = await useReportUseCases()
 
   const state = reactive({
     reportData: null as any,
@@ -429,6 +429,3 @@ export const useReportSorting = () => {
     hasSorting: computed(() => sortingRules.value.length > 0),
   }
 }
-
-// Re-export common dependencies
-export { reactive, ref, computed, readonly, toRef } from 'vue'

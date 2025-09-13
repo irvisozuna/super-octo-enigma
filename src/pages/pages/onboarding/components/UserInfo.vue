@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { UserInfoType } from '../../../../types/types'
 
@@ -9,6 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:formData', value: UserInfoType): void
+  (e: 'complete', value: UserInfoType): void
 }>()
 
 const { t } = useI18n()
@@ -64,9 +65,13 @@ const initialsImage = computed(() => generateInitialsImage(initials.value))
 const isComplete = computed(() => {
   return !!formData.value.firstName
          && !!formData.value.lastName
-
          && !!formData.value.contact && isPhoneValid.value // Assuming contact is not nullish when valid
-    nextTick(() => { // Ensure formData is updated before emitting
+})
+
+// Watch for completion status
+watch(isComplete, complete => {
+  if (complete) {
+    nextTick(() => {
       emit('complete', formData.value)
     })
   }
@@ -75,6 +80,12 @@ const isComplete = computed(() => {
 // Function to update contact number
 const updateContact = (contact: string) => {
   formData.value.contact = contact
+}
+
+// Function to validate phone
+const validatePhone = () => {
+  // Phone validation logic can be added here if needed
+  // For now, we rely on the VPhoneInput component's built-in validation
 }
 
 const imageError = ref('') // Mensaje de error para la imagen
@@ -91,15 +102,15 @@ const onFileChange = (event: Event) => {
     // Validar tipo de archivo
     if (!allowedTypes.includes(file.type)) {
       imageError.value = 'Solo se permiten imágenes PNG o JPEG.'
-      
-return;
+
+      return
     }
 
     // Validar tamaño en KB
     if (file.size > maxImageSizeKB * 1024) {
       imageError.value = `El tamaño de la imagen no debe exceder ${maxImageSizeKB} KB.`
-      
-return;
+
+      return
     }
 
     // Validar dimensiones de la imagen
@@ -108,8 +119,8 @@ return;
     img.onload = () => {
       if (img.width > maxWidth || img.height > maxHeight) {
         imageError.value = `Las dimensiones de la imagen deben ser máximo ${maxWidth}x${maxHeight} píxeles.`
-        
-return;
+
+        return
       }
 
       // Si todas las validaciones pasan, cargar la imagen
@@ -125,33 +136,29 @@ return;
 }
 </script>
 
-<script lang="ts">
-export default {
-  name: 'UserInfo',
-
-  // Otros opciones del componente si las tienes
-}
-</script>
-
 <template>
   <div class="user-info-container">
     <h2 class="title">
-{{ $t('onboarding.userInfoTitle') }}
-</h2>
+      {{ $t('onboarding.userInfoTitle') }}
+    </h2>
     <p class="subtitle">
-{{ $t('onboarding.userInfoSubtitle') }}
-</p>
+      {{ $t('onboarding.userInfoSubtitle') }}
+    </p>
     <div class="profile-image-wrapper">
-      <label for="profile-image-upload"
-class="profile-image-label">
+      <label
+        for="profile-image-upload"
+        class="profile-image-label"
+      >
         <img
           v-if="formData.profileImage"
           :src="formData.profileImage"
           alt="Profile Image"
           class="profile-preview"
         >
-        <div v-else
-class="initials-placeholder">
+        <div
+          v-else
+          class="initials-placeholder"
+        >
           {{ initials }}
           <VIcon
             icon="tabler-camera-plus"
@@ -163,15 +170,16 @@ class="initials-placeholder">
       <input
         id="profile-image-upload"
         type="file"
-        class="profile-image-input" 
-        @change="onFileChange" 
+        class="profile-image-input"
+        @change="onFileChange"
       >
-
     </div>
-    <div v-if="imageError"
-class="error-message">
-{{ imageError }}
-</div>
+    <div
+      v-if="imageError"
+      class="error-message"
+    >
+      {{ imageError }}
+    </div>
     <VForm>
       <VRow>
         <VCol cols="12">
@@ -195,28 +203,30 @@ class="error-message">
         <VCol cols="12">
           <!-- 👉 WhatsApp -->
           <!--
- <vue-tel-input
+            <vue-tel-input
             v-model="formData.contact"
             defaultCountry="mx"
             :preferredCountries="['mx', 'us']"
             @on-input="updateContact"
             placeholder="Número de 10 dígitos"
-            /> 
--->
+            />
+          -->
           <VPhoneInput
             v-model="formData.contact"
-              :label="$t('phone')"
+            :label="$t('phone')"
             country-icon-mode="svg"
-            :guessCountry="true"
+            :guess-country="true"
             :country-label="$t('Country')"
             :rules="rules"
             :error:isPhoneValid="!isPhoneValid"
             @blur="validatePhone"
           />
-          <div v-if="!isPhoneValid"
-class="error-message">
-Número de teléfono inválido
-</div>
+          <div
+            v-if="!isPhoneValid"
+            class="error-message"
+          >
+            Número de teléfono inválido
+          </div>
         </VCol>
       </VRow>
     </VForm>

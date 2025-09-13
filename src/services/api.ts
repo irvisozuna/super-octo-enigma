@@ -63,7 +63,18 @@ export async function rawApi(
   }
 
   // 5. Si tenemos token, lo añadimos al header
-  const organization = (import.meta as any).env?.VITE_API_ORGANIZATION
+  // Obtener organización del tenant store o usar fallback
+  let organization = ''
+  try {
+    const { useTenantStore } = await import('@/stores/tenant.store')
+    const tenantStore = useTenantStore()
+
+    organization = tenantStore.organization || (import.meta as any).env?.VITE_API_ORGANIZATION || ''
+  }
+  catch (error) {
+    // Fallback a variable de entorno si hay error
+    organization = (import.meta as any).env?.VITE_API_ORGANIZATION || ''
+  }
 
   if (accessToken) {
     fetchOptions.headers = {

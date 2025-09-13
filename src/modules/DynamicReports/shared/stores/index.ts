@@ -3,31 +3,30 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useModuleStore = defineStore('module', () => {{
+export const useModuleStore = defineStore('module', () => {
   const notifications = ref<any[]>([])
-  
-  const addNotification = (notification: any) => {{
+
+  const addNotification = (notification: any) => {
     notifications.value.push({
       id: Date.now(),
-      ...notification
+      ...notification,
     })
-  }}
-  
-  const removeNotification = (id: number) => {{
+  }
+
+  const removeNotification = (id: number) => {
     const index = notifications.value.findIndex(n => n.id === id)
-    if (index > -1) {
+    if (index > -1)
       notifications.value.splice(index, 1)
-    }
-  }}
-  
-  const clearNotifications = () => {{
+  }
+
+  const clearNotifications = () => {
     notifications.value = []
-  }}
-  
-  return {{
+  }
+
+  return {
     notifications,
     addNotification,
     removeNotification,
-    clearNotifications
-  }}
-}})
+    clearNotifications,
+  }
+})

@@ -11,15 +11,6 @@ const emit = defineEmits(['next', 'back'])
 
 const { buildFullSql, getHighlightedSql, generateTableAlias } = useSqlExpressionPreview()
 
-// Función para generar alias de tabla (copiada del paso 1)
-function generateTableAlias(tableName: string, index: number = 0): string {
-  // Tomar las primeras 3 letras de cada palabra del nombre de la tabla
-  const words = tableName.split('_')
-  const alias = words.map(word => word.substring(0, 3)).join('').toLowerCase()
-
-  return index === 0 ? alias : `${alias}${index}`
-}
-
 // Campos disponibles según el tipo de origen
 const availableFields = computed(() => {
   if (props.stepData.type === 'table') {
