@@ -44,10 +44,18 @@ export class AppDatabase extends Dexie {
       // console.log('Esquema de IndexedDB aplicado:', schema);
     }
 
-    // 3. Define las tablas en una versión concreta (por ejemplo, 1)
-    //    Si en producción ya tienes "version(1)", deberías usar
-    //    "version(2)" con una función upgrade(...).
-    this.version(1).stores(schema);
+    // 3. Define las tablas en una versión concreta
+    //    Versión 1: tablas originales
+    //    Versión 2: agregar contractRegistry
+    this.version(1).stores({
+      offlineQueue: '++id, storeId, type, itemId, createdAt',
+    });
+
+    this.version(2).stores(schema).upgrade(trans => {
+      // Migración de la versión 1 a la 2
+      // No necesitamos hacer nada especial aquí ya que solo agregamos nuevas tablas
+      console.log('Migrando IndexedDB de versión 1 a 2');
+    });
 
     // Opcional: si quieres tipar la tabla offlineQueue (para autocompletado)
     this.offlineQueue = this.table('offlineQueue');

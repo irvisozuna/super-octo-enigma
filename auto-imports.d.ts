@@ -162,6 +162,7 @@ declare global {
   const urlValidator: typeof import('./src/@core/utils/validators')['urlValidator']
   const useAbility: typeof import('./src/plugins/casl/composables/useAbility')['useAbility']
   const useAbs: typeof import('@vueuse/math')['useAbs']
+  const useAccountTypes: typeof import('./src/composables/useAccountTypes')['useAccountTypes']
   const useActiveElement: typeof import('@vueuse/core')['useActiveElement']
   const useAnimate: typeof import('@vueuse/core')['useAnimate']
   const useApi: typeof import('./src/composables/useApi')['useApi']
@@ -183,6 +184,7 @@ declare global {
   const useAsyncState: typeof import('@vueuse/core')['useAsyncState']
   const useAttrs: typeof import('vue')['useAttrs']
   const useAverage: typeof import('@vueuse/math')['useAverage']
+  const useBanks: typeof import('./src/composables/useBanks')['useBanks']
   const useBase64: typeof import('@vueuse/core')['useBase64']
   const useBattery: typeof import('@vueuse/core')['useBattery']
   const useBluetooth: typeof import('@vueuse/core')['useBluetooth']
@@ -197,6 +199,9 @@ declare global {
   const useCloned: typeof import('@vueuse/core')['useCloned']
   const useColorMode: typeof import('@vueuse/core')['useColorMode']
   const useConfirmDialog: typeof import('@vueuse/core')['useConfirmDialog']
+  const useConfirmationWord: typeof import('./src/composables/useConfirmationWord')['useConfirmationWord']
+  const useContractValidation: typeof import('./src/composables/useContractValidation')['useContractValidation']
+  const useControlNumber: typeof import('./src/composables/useControlNumber')['useControlNumber']
   const useCookie: typeof import('./src/@core/composable/useCookie')['useCookie']
   const useCounter: typeof import('@vueuse/core')['useCounter']
   const useCrud: typeof import('./src/composables/useCrud')['useCrud']
@@ -536,6 +541,7 @@ declare module 'vue' {
     readonly urlValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['urlValidator']>
     readonly useAbility: UnwrapRef<typeof import('./src/plugins/casl/composables/useAbility')['useAbility']>
     readonly useAbs: UnwrapRef<typeof import('@vueuse/math')['useAbs']>
+    readonly useAccountTypes: UnwrapRef<typeof import('./src/composables/useAccountTypes')['useAccountTypes']>
     readonly useActiveElement: UnwrapRef<typeof import('@vueuse/core')['useActiveElement']>
     readonly useAnimate: UnwrapRef<typeof import('@vueuse/core')['useAnimate']>
     readonly useApi: UnwrapRef<typeof import('./src/composables/useApi')['useApi']>
@@ -557,6 +563,7 @@ declare module 'vue' {
     readonly useAsyncState: UnwrapRef<typeof import('@vueuse/core')['useAsyncState']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
     readonly useAverage: UnwrapRef<typeof import('@vueuse/math')['useAverage']>
+    readonly useBanks: UnwrapRef<typeof import('./src/composables/useBanks')['useBanks']>
     readonly useBase64: UnwrapRef<typeof import('@vueuse/core')['useBase64']>
     readonly useBattery: UnwrapRef<typeof import('@vueuse/core')['useBattery']>
     readonly useBluetooth: UnwrapRef<typeof import('@vueuse/core')['useBluetooth']>
@@ -571,6 +578,9 @@ declare module 'vue' {
     readonly useCloned: UnwrapRef<typeof import('@vueuse/core')['useCloned']>
     readonly useColorMode: UnwrapRef<typeof import('@vueuse/core')['useColorMode']>
     readonly useConfirmDialog: UnwrapRef<typeof import('@vueuse/core')['useConfirmDialog']>
+    readonly useConfirmationWord: UnwrapRef<typeof import('./src/composables/useConfirmationWord')['useConfirmationWord']>
+    readonly useContractValidation: UnwrapRef<typeof import('./src/composables/useContractValidation')['useContractValidation']>
+    readonly useControlNumber: UnwrapRef<typeof import('./src/composables/useControlNumber')['useControlNumber']>
     readonly useCookie: UnwrapRef<typeof import('./src/@core/composable/useCookie')['useCookie']>
     readonly useCounter: UnwrapRef<typeof import('@vueuse/core')['useCounter']>
     readonly useCrud: UnwrapRef<typeof import('./src/composables/useCrud')['useCrud']>
