@@ -1,168 +1,166 @@
-/**
- * Vehicle DTOs - Data Transfer Objects
- *
- * Define the structure of data exchanged between layers
- */
-
-import type { EntityStatus, VehicleType } from '../../../shared/types'
-
-// List and pagination DTOs
-export interface VehicleListResponseDto {
-  data: VehicleDto[]
-  pagination: {
-    current_page: number
-    total: number
-    per_page: number
-    last_page: number
-  }
-  meta?: {
-    filters?: any
-    sort?: any
-  }
-}
-
-export interface VehicleDto {
-  id: string
+// Vehicle DTOs
+export interface VehicleCreateDto {
   plate_number: string
-  vin?: string
+  vin: string
   brand: string
   model: string
   year: number
-  color?: string
-  vehicle_type: VehicleType
+  color: string
+  vehicle_type: 'BUS' | 'TAXI' | 'MICROBUS' | 'TRUCK'
   capacity: number
+  status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'RETIRED'
+  registration_date: string
   concession_id?: string
+  drivers?: DriverCreateDto[]
+}
+
+export interface VehicleUpdateDto {
+  plate_number?: string
+  vin?: string
+  brand?: string
+  model?: string
+  year?: number
+  color?: string
+  vehicle_type?: 'BUS' | 'TAXI' | 'MICROBUS' | 'TRUCK'
+  capacity?: number
+  status?: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'RETIRED'
   registration_date?: string
-  last_inspection_date?: string
-  next_inspection_date?: string
-  status: EntityStatus
-  company_id: string
+  concession_id?: string
+}
 
-  // Computed fields
-  age?: number
-  days_until_inspection?: number
-  is_inspection_due?: boolean
-
-  // Relationships
-  concession?: any
-  drivers?: any[]
-  fines?: any[]
-  documents?: any[]
-
-  // Timestamps
+export interface VehicleListDto {
+  id: string
+  plate_number: string
+  vin: string
+  brand: string
+  model: string
+  year: number
+  color: string
+  vehicle_type: string
+  vehicle_type_label: string
+  capacity: number
+  status: string
+  status_label: string
+  registration_date: string
+  concession_id?: string
+  concession_number?: string
   created_at: string
   updated_at: string
-  deleted_at?: string | null
+  drivers?: DriverListDto[]
 }
 
-export interface CreateVehicleDto {
-  plate_number: string
-  vin?: string
-  brand: string
-  model: string
-  year: number
-  color?: string
-  vehicle_type: VehicleType
-  capacity: number
-  concession_id?: string
-  registration_date?: string
+export interface VehicleDetailDto extends VehicleListDto {
   last_inspection_date?: string
   next_inspection_date?: string
-  status: EntityStatus
-}
-
-export interface UpdateVehicleDto extends Partial<CreateVehicleDto> {
-  id: string
+  insurance_expiry?: string
+  drivers: DriverListDto[]
 }
 
 export interface VehicleFilterDto {
   search?: string
-  plate_number?: string
-  brand?: string
-  model?: string
-  vehicle_type?: VehicleType
-  status?: EntityStatus
-  year_from?: number
-  year_to?: number
+  status?: string
+  vehicle_type?: string
   concession_id?: string
-  capacity_from?: number
-  capacity_to?: number
-  inspection_due?: boolean
-  created_from?: string
-  created_to?: string
   page?: number
   per_page?: number
   sort_by?: string
   sort_order?: 'asc' | 'desc'
-  include?: string
 }
 
-export interface VehicleStatsDto {
+// Driver DTOs
+export interface DriverCreateDto {
+  first_name: string
+  last_name: string
+  birth_date: string
+  license_number: string
+  license_type: 'A' | 'B' | 'C' | 'D'
+  license_issue_date: string
+  license_expiration_date: string
+  license_issuing_state: string
+  vehicle_id?: string
+  concession_id?: string
+}
+
+export interface DriverUpdateDto {
+  first_name?: string
+  last_name?: string
+  birth_date?: string
+  license_number?: string
+  license_type?: 'A' | 'B' | 'C' | 'D'
+  license_issue_date?: string
+  license_expiration_date?: string
+  license_issuing_state?: string
+  vehicle_id?: string
+  concession_id?: string
+}
+
+export interface DriverListDto {
+  id: string
+  first_name: string
+  last_name: string
+  full_name: string
+  birth_date: string
+  license_number: string
+  license_type: string
+  license_type_label: string
+  license_issue_date: string
+  license_expiration_date: string
+  license_issuing_state: string
+  status: string
+  status_label: string
+  vehicle_id?: string
+  vehicle_plate?: string
+  concession_id?: string
+  concession_number?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DriverDetailDto extends DriverListDto {
+  phone?: string
+  email?: string
+  address?: string
+  emergency_contact?: string
+  emergency_phone?: string
+}
+
+export interface DriverFilterDto {
+  search?: string
+  status?: string
+  license_type?: string
+  vehicle_id?: string
+  concession_id?: string
+  page?: number
+  per_page?: number
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+// Pagination DTOs
+export interface PaginationLinksDto {
+  first: string | null
+  last: string | null
+  prev: string | null
+  next: string | null
+}
+
+export interface PaginationMetaDto {
+  current_page: number
+  from: number
+  last_page: number
+  links: Array<{
+    url: string | null
+    label: string
+    active: boolean
+  }>
+  path: string
+  per_page: number
+  to: number
   total: number
-  by_status: Record<EntityStatus, number>
-  by_type: Record<VehicleType, number>
-  by_brand: Record<string, number>
-  average_age: number
-  inspection_due_count: number
-  recent_count: number
 }
 
-export interface VehicleExportDto {
-  format: 'csv' | 'excel' | 'pdf'
-  filters?: VehicleFilterDto
-  fields?: string[]
-  include_relationships?: boolean
-}
-
-// Validation DTOs
-export interface VehicleValidationDto {
-  plate_number: string
-  vin?: string
-  exclude_id?: string
-}
-
-export interface VehicleValidationResponseDto {
-  is_valid: boolean
-  errors: {
-    plate_number?: string[]
-    vin?: string[]
-    general?: string[]
-  }
-  warnings?: string[]
-}
-
-// Inspection DTOs
-export interface VehicleInspectionDto {
-  vehicle_id: string
-  inspection_date: string
-  next_inspection_date: string
-  inspector_name?: string
-  notes?: string
-  passed: boolean
-  certificate_number?: string
-}
-
-export interface VehicleMaintenanceDto {
-  vehicle_id: string
-  maintenance_type: string
-  date: string
-  description: string
-  cost?: number
-  mechanic?: string
-  next_maintenance_date?: string
-}
-
-// Assignment DTOs
-export interface VehicleDriverAssignmentDto {
-  vehicle_id: string
-  driver_id: string
-  assignment_date: string
-  notes?: string
-}
-
-export interface VehicleConcessionAssignmentDto {
-  vehicle_id: string
-  concession_id: string
-  assignment_date: string
-  notes?: string
+export interface PaginatedResponseDto<T> {
+  data: T[]
+  links: PaginationLinksDto
+  meta: PaginationMetaDto
 }

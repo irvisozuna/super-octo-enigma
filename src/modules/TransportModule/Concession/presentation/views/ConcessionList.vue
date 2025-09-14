@@ -18,7 +18,7 @@ const headers = [
   { title: t('TransportModule.concession.fields.service_area'), key: 'serviceArea' },
   { title: t('TransportModule.concession.fields.holder'), key: 'holderName' },
   { title: t('TransportModule.concession.fields.expiry_date'), key: 'expiryDate' },
-  { title: t('common.status'), key: 'status' },
+  { title: t('common.status'), key: 'statusLabel' },
   { title: t('common.actions'), key: 'actions', sortable: false },
 ]
 
@@ -237,13 +237,13 @@ onMounted(() => {
         </template>
 
         <!-- Slot para estatus -->
-        <template #[`item.status`]="{ item }">
+        <template #[`item.statusLabel`]="{ item }">
           <VChip
             :color="getStatusColor(item.status)"
             size="small"
             variant="tonal"
           >
-            {{ getStatusText(item.status) }}
+            {{ item.statusLabel || getStatusText(item.status) }}
           </VChip>
         </template>
 

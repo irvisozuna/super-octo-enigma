@@ -65,61 +65,16 @@
     "recent_activity": "Actividad Reciente",
     "quick_actions": "Acciones Rápidas"
   },
-  "vehicle": {
-    "title": "Vehículos",
-    "list_title": "Gestión de Vehículos",
-    "create_title": "Agregar Nuevo Vehículo",
-    "edit_title": "Editar Vehículo",
-    "view_title": "Detalles del Vehículo",
-    "search_placeholder": "Buscar vehículos...",
-    "no_data": "No se encontraron vehículos",
-    "no_data_description": "Comience agregando su primer vehículo al sistema",
-    "fields": {
-      "plate_number": "Número de Placa",
-      "make": "Marca",
-      "model": "Modelo",
-      "year": "Año",
-      "color": "Color",
-      "vin": "VIN",
-      "engine_number": "Número de Motor",
-      "fuel_type": "Tipo de Combustible",
-      "transmission": "Transmisión",
-      "seating_capacity": "Capacidad de Asientos",
-      "registration_date": "Fecha de Registro",
-      "last_inspection": "Última Inspección",
-      "insurance_expiry": "Vencimiento del Seguro",
-      "notes": "Notas"
-    },
-    "placeholders": {
-      "plate_number": "Ej. ABC-123",
-      "make": "Ej. Toyota",
-      "model": "Ej. Corolla",
-      "year": "Ej. 2022",
-      "color": "Ej. Blanco",
-      "vin": "Número de identificación del vehículo",
-      "engine_number": "Número del motor",
-      "seating_capacity": "Ej. 5",
-      "notes": "Información adicional sobre el vehículo..."
-    },
-    "fuel_types": {
-      "gasoline": "Gasolina",
-      "diesel": "Diésel",
-      "electric": "Eléctrico",
-      "hybrid": "Híbrido",
-      "lpg": "GLP",
-      "cng": "GNC"
-    },
-    "transmission_types": {
-      "manual": "Manual",
-      "automatic": "Automático",
-      "cvt": "CVT"
-    },
-    "messages": {
-      "created": "Vehículo creado exitosamente",
-      "updated": "Vehículo actualizado exitosamente",
-      "deleted": "Vehículo eliminado exitosamente",
-      "delete_confirm": "¿Está seguro de eliminar este vehículo?",
-      "delete_warning": "Esta acción no se puede deshacer."
+  "documents": {
+    "filtered_by_entity": "Filtrado por {entityType} (ID: {entityId})",
+    "entity_types": {
+      "concession": "Concesión",
+      "vehicle": "Vehículo", 
+      "driver": "Conductor",
+      "concession_holder": "Concesionario",
+      "fine": "Multa",
+      "payment": "Pago",
+      "insurance": "Seguro"
     }
   },
   "concession": {
@@ -197,6 +152,29 @@
       "expiry_date": "Fecha de Vencimiento",
       "expiry_description": "La concesión vence pronto - se requiere renovación",
       "expiry_scheduled": "Fecha de vencimiento programada"
+    },
+    "tabs": {
+      "vehicles": "Vehículos",
+      "fines": "Multas",
+      "documents": "Documentos",
+      "insurance": "Seguros",
+      "history": "Historial",
+      "holders": "Concesionarios"
+    },
+    "vehicles": {
+      "assign_vehicle": "Asignar Vehículo"
+    },
+    "fine": {
+      "unpaid": "Pendiente"
+    },
+    "document": {
+      "evidence_photos": "Fotos de Evidencia"
+    },
+    "holders": {
+      "current_holder": "Concesionario Actual",
+      "ownership_history": "Historial de Propiedad",
+      "transfer_reason": "Motivo de Transferencia",
+      "no_history": "Sin Historial"
     }
   },
   "concession_holder": {
@@ -506,5 +484,88 @@
     "not_found": "No encontrado",
     "unauthorized": "No autorizado",
     "forbidden": "Prohibido"
+  },
+  "vehicle": {
+    "actions": {
+      "create_vehicle": "Crear Vehículo",
+      "assign_vehicle": "Asignar Vehículo",
+      "assign": "Asignar",
+      "include_driver": "Incluir Conductor"
+    },
+    "sections": {
+      "vehicle_info": "Información del Vehículo",
+      "selected_vehicle": "Vehículo Seleccionado"
+    },
+    "fields": {
+      "plate_number": "Número de Placa",
+      "vin": "VIN",
+      "brand": "Marca",
+      "model": "Modelo",
+      "year": "Año",
+      "color": "Color",
+      "vehicle_type": "Tipo de Vehículo",
+      "capacity": "Capacidad",
+      "status": "Estado",
+      "registration_date": "Fecha de Registro",
+      "select_vehicle": "Seleccionar Vehículo"
+    },
+    "types": {
+      "bus": "Autobús",
+      "taxi": "Taxi",
+      "microbus": "Microbús",
+      "truck": "Camión"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "maintenance": "Mantenimiento",
+      "retired": "Retirado"
+    },
+    "rules": {
+      "business_rule": "Regla de Negocio",
+      "one_vehicle_per_concession": "Solo se permite un vehículo activo por concesión. Al asignar un nuevo vehículo, se desasignará automáticamente el anterior."
+    },
+    "messages": {
+      "select_vehicle_to_assign": "Seleccione el vehículo que desea asignar a esta concesión:",
+      "no_vehicles_available": "No hay vehículos disponibles"
+    },
+    "validation": {
+      "plate_format": "Formato inválido. Use: ABC-123 (3 letras, guión, 3 números)",
+      "vin_format": "Formato inválido. Use 17 caracteres alfanuméricos (sin I, O, Q)"
+    },
+    "hints": {
+      "status_default": "Los vehículos nuevos siempre se crean como ACTIVOS",
+      "year_range": "Rango válido: {min} - {max}",
+      "capacity_range": "Rango válido: 1 - 100 pasajeros"
+    }
+  },
+  "driver": {
+    "sections": {
+      "driver_info": "Información del Conductor"
+    },
+    "fields": {
+      "first_name": "Nombre",
+      "last_name": "Apellido",
+      "birth_date": "Fecha de Nacimiento",
+      "license_number": "Número de Licencia",
+      "license_type": "Tipo de Licencia",
+      "license_issue_date": "Fecha de Emisión",
+      "license_expiration_date": "Fecha de Vencimiento",
+      "license_issuing_state": "Estado Emisor"
+    },
+    "license_types": {
+      "a": "Tipo A",
+      "b": "Tipo B",
+      "c": "Tipo C",
+      "d": "Tipo D"
+    },
+    "validation": {
+      "license_format": "Formato inválido. Use 6-12 caracteres alfanuméricos",
+      "state_format": "Formato inválido. Use solo letras y espacios (2-30 caracteres)"
+    },
+    "hints": {
+      "license_format": "Formato: LIC123456 (6-12 caracteres alfanuméricos)",
+      "state_format": "Formato: Sonora (solo letras y espacios)"
+    }
   }
 }

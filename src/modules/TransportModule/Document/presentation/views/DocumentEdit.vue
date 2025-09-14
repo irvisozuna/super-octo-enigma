@@ -24,7 +24,7 @@ const newFile = ref<File[]>([])
 
 const form = ref<DocumentUpdateDto>({
   document_type: '',
-  status: '',
+  status: 'PENDING',
   document_number: '',
   issuing_authority: '',
   issue_date: '',

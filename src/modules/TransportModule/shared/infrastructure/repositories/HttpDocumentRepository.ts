@@ -61,19 +61,28 @@ export class HttpDocumentRepository implements DocumentRepository {
   }
 
   async findByEntity(documentableId: string, entityType: EntityType): Promise<DocumentEntity[]> {
+    console.log('🔍 Fetching documents for entity:', { documentableId, entityType })
+
     const params = {
       documentable_id: documentableId,
       entity_type: entityType,
     }
+
+    console.log('📤 Sending params to API:', params)
 
     const response = await rawApi(this.baseUrl, {
       method: 'GET',
       params,
     })
 
+    console.log('📥 API response:', response)
+
     // API returns { data: [...], links: {...}, meta: {...} } format
     // Map the response to add missing entity_type and uploaded_at
     const documents = response.data || []
+
+    console.log('📋 Filtered documents count:', documents.length)
+    console.log('📋 Documents:', documents.map(doc => ({ id: doc.id, title: doc.title, documentable_id: doc.documentable_id, entity_type: doc.entity_type })))
 
     return documents.map((doc: any) => ({
       ...doc,

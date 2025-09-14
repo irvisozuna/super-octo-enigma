@@ -12,17 +12,15 @@ export function useMenuTranslation() {
   const translateMenuItems = (items: VerticalNavItems): VerticalNavItems => {
     return items.map(item => {
       const translatedItem = { ...item }
-      
+
       // Traducir el título principal si es una clave de traducción
-      if (item.title && typeof item.title === 'string' && item.title.includes('.')) {
+      if (item.title && typeof item.title === 'string' && item.title.includes('.'))
         translatedItem.title = t(item.title)
-      }
-      
+
       // Traducir los hijos si existen
-      if (item.children && item.children.length > 0) {
+      if (item.children && item.children.length > 0)
         translatedItem.children = translateMenuItems(item.children)
-      }
-      
+
       return translatedItem
     })
   }
@@ -32,15 +30,13 @@ export function useMenuTranslation() {
    */
   const translateMenuItem = (item: any) => {
     const translatedItem = { ...item }
-    
-    if (item.title && typeof item.title === 'string' && item.title.includes('.')) {
+
+    if (item.title && typeof item.title === 'string' && item.title.includes('.'))
       translatedItem.title = t(item.title)
-    }
-    
-    if (item.children && item.children.length > 0) {
+
+    if (item.children && item.children.length > 0)
       translatedItem.children = translateMenuItems(item.children)
-    }
-    
+
     return translatedItem
   }
 

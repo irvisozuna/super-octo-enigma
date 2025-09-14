@@ -4,40 +4,65 @@
  * Data Transfer Objects for concession-related operations
  */
 
+export interface AuthorizedService {
+  code: string
+  description: string
+  category: string
+}
+
+export interface RestrictionItem {
+  code: string
+  description: string
+  value: string
+  label: string
+}
+
+export interface ServiceOption {
+  label: string
+  description: string
+  category: string
+}
+
+export interface RestrictionOption {
+  label: string
+  description: string
+  options: Record<string, string>
+}
+
 export interface ConcessionListDto {
   id: string
-  concession_number: string
-  concession_type: 'TAXI' | 'BUS' | 'MICROBUS' | 'TRUCK'
-  route_description?: string
-  service_area: string
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'EXPIRED'
-  issue_date: string
-  expiry_date: string
-  renewal_date?: string
+  number: string
+  modality: 'URBAN' | 'SUBURBAN' | 'RURAL' | 'TOURIST' | 'SCHOLAR' | 'WORKER' | 'TAXI' | 'INTERCITY' | 'CHARTER' | 'SHUTTLE'
+  municipality: string
+  status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED' | 'EXPIRED' | 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED'
+  valid_from: string
+  valid_to: string
+  route_or_site?: string
+  authorized_services?: AuthorizedService[]
+  restrictions?: RestrictionItem[]
   holder_id: string
-  holder_name: string
-  fee_amount: number
-  fee_paid: boolean
-  last_payment_date?: string
+  holder_name?: string
+  metadata?: Record<string, any>
   created_at: string
   updated_at: string
 }
 
 export interface ConcessionCreateDto {
+
+  // Required fields
+  holder_id: string
   number: string
-  modality: string
+  modality: 'URBAN' | 'SUBURBAN' | 'RURAL' | 'TOURIST' | 'SCHOLAR' | 'WORKER' | 'TAXI' | 'INTERCITY' | 'CHARTER' | 'SHUTTLE'
   municipality: string
   valid_from: string
   valid_to: string
-  concession_type?: 'TAXI' | 'BUS' | 'MICROBUS' | 'TRUCK'
-  route_description?: string
-  service_area?: string
-  issue_date?: string
-  expiry_date?: string
-  holder_id?: string
-  fee_amount?: number
-  terms_conditions?: string
-  notes?: string
+
+  // Optional fields
+  status?: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED' | 'EXPIRED' | 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED'
+  route_or_site?: string
+  authorized_services?: AuthorizedService[]
+  restrictions?: RestrictionItem[]
+  metadata?: Record<string, any>
 }
 
 export interface ConcessionUpdateDto {
@@ -119,5 +144,22 @@ export interface ConcessionApiResponseDto<T> {
     last_page: number
     per_page: number
     total: number
+  }
+}
+
+export interface ConcessionValidValuesDto {
+  authorized_services: Record<string, ServiceOption>
+  restrictions: Record<string, RestrictionOption>
+  statuses: Record<string, string>
+  modalities: Record<string, string>
+}
+
+export interface ConcessionValidValuesResponseDto {
+  data: ConcessionValidValuesDto
+  meta: {
+    resource: string
+    version: string
+    description: string
+    source: string
   }
 }

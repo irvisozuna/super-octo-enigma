@@ -116,7 +116,8 @@ const getActivityTypeLabel = (type: string) => {
 </script>
 
 <template>
-  <VCardText class="pa-6">
+  <VCard>
+    <VCardText class="pa-6">
     <h4 class="text-h6 mb-6 d-flex align-center">
       <VIcon class="me-2">
         tabler-history
@@ -213,7 +214,8 @@ const getActivityTypeLabel = (type: string) => {
         {{ t('concession.history.load_more') }}
       </VBtn>
     </div>
-  </VCardText>
+    </VCardText>
+  </VCard>
 </template>
 
 <style scoped>

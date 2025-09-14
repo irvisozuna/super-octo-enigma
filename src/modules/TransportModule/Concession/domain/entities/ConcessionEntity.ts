@@ -7,47 +7,29 @@
 import type { BaseEntity, ConcessionType, EntityStatus } from '../../../shared/types'
 
 export interface ConcessionEntity extends BaseEntity {
+  // Required fields
+  number: string
+  modality: 'URBAN' | 'SUBURBAN' | 'RURAL' | 'TOURIST' | 'SCHOLAR' | 'WORKER' | 'TAXI' | 'INTERCITY' | 'CHARTER' | 'SHUTTLE'
+  municipality: string
+  validFrom: string
+  validTo: string
+  holderId: string
 
-  // Basic Information
-  concession_number: string
-  type: ConcessionType
-  description?: string
+  // Optional fields
+  status?: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED' | 'EXPIRED' | 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED'
+  routeOrSite?: string
+  authorizedServices?: string[]
+  restrictions?: string[]
+  metadata?: Record<string, any>
 
-  // Holder Information
-  holder_id: string
-
-  // Dates
-  issue_date: string
-  expiration_date: string
-  renewal_date?: string
-
-  // Route Information
-  route_origin?: string
-  route_destination?: string
-  route_description?: string
-  authorized_capacity?: number
-
-  // Status and Control
-  status: EntityStatus
-  is_active: boolean
-  is_renewable: boolean
-
-  // Fees and Payments
-  annual_fee?: number
-  last_payment_date?: string
-  next_payment_due?: string
-
-  // Legal Information
-  legal_document?: string
-  observations?: string
-
-  // Relationship IDs
-  company_id: string
+  // Computed/relationship fields
+  holderName?: string
+  companyId?: string
 
   // Computed Fields (from API)
-  days_until_expiration?: number
-  is_expired?: boolean
-  is_expiring_soon?: boolean
+  daysUntilExpiration?: number
+  isExpired?: boolean
+  isExpiringSoon?: boolean
   days_since_issue?: number
   renewal_status?: string
 

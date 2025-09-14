@@ -45,4 +45,41 @@ export class ConcessionApiService {
   async exportConcessions(params: any) {
     return await rawApi(`${this.baseUrl}/export`, { method: 'GET', params })
   }
+
+  async getValidValues() {
+    return await rawApi(`${this.baseUrl}/valid-values`, { method: 'GET' })
+  }
+
+  // Additional methods needed by repository
+  async findByConcessionNumber(concessionNumber: string) {
+    return await rawApi(`${this.baseUrl}/by-number/${concessionNumber}`, { method: 'GET' })
+  }
+
+  async findByHolderId(holderId: string) {
+    return await rawApi(`${this.baseUrl}/by-holder/${holderId}`, { method: 'GET' })
+  }
+
+  async findExpiringConcessions(days?: number) {
+    const params = days ? { days } : {}
+    return await rawApi(`${this.baseUrl}/expiring`, { method: 'GET', params })
+  }
+
+  async findByServiceArea(serviceArea: string) {
+    return await rawApi(`${this.baseUrl}/by-service-area`, { method: 'GET', params: { service_area: serviceArea } })
+  }
+
+  async getStatistics() {
+    return await rawApi(`${this.baseUrl}/statistics`, { method: 'GET' })
+  }
+
+  async isConcessionNumberAvailable(concessionNumber: string, excludeId?: string) {
+    const params = excludeId ? { exclude_id: excludeId } : {}
+    const response = await rawApi(`${this.baseUrl}/check-number/${concessionNumber}`, { method: 'GET', params })
+    return response.available
+  }
+
+  async export(filter?: any, format?: string) {
+    const params = { ...filter, format }
+    return await rawApi(`${this.baseUrl}/export`, { method: 'GET', params })
+  }
 }

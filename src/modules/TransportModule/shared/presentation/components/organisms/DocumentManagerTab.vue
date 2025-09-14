@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { EntityType } from '../../../domain/entities/DocumentEntity'
 import { useDocumentManager } from '../../composables/useDocumentManager'
@@ -17,18 +17,27 @@ interface Props {
 const props = defineProps<Props>()
 const { t } = useI18n()
 
+// Watch para cambios en las props (opcional, para debugging)
+watch(() => props.entityId, (newEntityId, oldEntityId) => {
+  console.log('📋 DocumentManagerTab entityId changed:', {
+    from: oldEntityId,
+    to: newEntityId,
+    hasValue: !!newEntityId,
+  })
+}, { immediate: true })
+
 // Document manager
 const documentManager = useDocumentManager({
   entityId: props.entityId,
   entityType: props.entityType,
-  autoLoad: true,
+  autoLoad: true, // Ahora siempre auto-load porque las props son obligatorias
 })
 
 // Local state
 const uploadDialogVisible = ref(false)
 const previewDialogVisible = ref(false)
 const documentToPreview = ref<any>(null)
-const viewMode = ref<'grid' | 'list'>('grid')
+const viewMode = ref<'grid' | 'list'>('list')
 const deleteDialogVisible = ref(false)
 const bulkDeleteDialogVisible = ref(false)
 const documentToDelete = ref<any>(null)
@@ -38,10 +47,6 @@ const verificationAction = ref<'verify' | 'reject' | 'pending'>('verify')
 
 // Computed
 const documentStats = computed(() => {
-  console.log('Computing document stats...')
-  console.log('documentManager.documents:', documentManager.documents.value)
-  console.log('documents length:', documentManager.documents.value.length)
-
   const total = documentManager.documents.value.length
   const expired = documentManager.expiredDocuments.value.length
   const expiring = documentManager.expiringDocuments.value.length
@@ -211,10 +216,16 @@ onMounted(async () => {
   <VCard>
     <!-- Header -->
     <VCardTitle class="d-flex align-center justify-space-between">
-      <span>
-        <VIcon class="me-2">tabler-files</VIcon>
-        {{ title || 'Documentos' }}
-      </span>
+      <div class="d-flex align-center">
+        <VIcon class="me-2">
+          tabler-files
+        </VIcon>
+        <div>
+          <div class="text-h6">
+            {{ title || 'Documentos' }}
+          </div>
+        </div>
+      </div>
 
       <div class="d-flex align-center gap-2">
         <!-- Bulk Actions -->
@@ -270,24 +281,26 @@ onMounted(async () => {
     <VCardText>
       <!-- Stats Cards -->
       <VRow class="mb-4">
-        <VCol
+        <!--
+          <VCol
           cols="6"
           md="3"
-        >
-          <VCard
-            variant="tonal"
-            color="primary"
           >
-            <VCardText class="text-center">
-              <div class="text-h5 font-weight-bold">
-                {{ documentStats.total }}
-              </div>
-              <div class="text-caption">
-                Total Documentos
-              </div>
-            </VCardText>
+          <VCard
+          variant="tonal"
+          color="primary"
+          >
+          <VCardText class="text-center">
+          <div class="text-h5 font-weight-bold">
+          {{ documentStats.total }}
+          </div>
+          <div class="text-caption">
+          Total Documentos
+          </div>
+          </VCardText>
           </VCard>
-        </VCol>
+          </VCol>
+        -->
 
         <VCol
           cols="6"
@@ -345,7 +358,7 @@ onMounted(async () => {
             </VCardText>
           </VCard>
         </VCol>
-        
+
         <VCol
           cols="6"
           md="3"
@@ -408,8 +421,11 @@ onMounted(async () => {
         <h6 class="text-h6 mb-2">
           No hay documentos
         </h6>
-        <p class="text-body-2 mb-4">
-          Comienza subiendo tu primer documento
+        <p class="text-body-2 mb-2">
+          No se encontraron documentos para esta {{ t(`TransportModule.documents.entity_types.${props.entityType.toLowerCase()}`) }}
+        </p>
+        <p class="text-caption text-medium-emphasis mb-4">
+          ID: {{ props.entityId }} | Tipo: {{ props.title }}
         </p>
         <VBtn
           color="primary"
@@ -467,7 +483,7 @@ onMounted(async () => {
                 >
                   {{ getStatusLabel(document.status) }}
                 </VChip>
-                
+
                 <!-- Verification Badge -->
                 <VChip
                   v-if="document.is_verified"
@@ -483,7 +499,7 @@ onMounted(async () => {
                   </VIcon>
                   Verificado
                 </VChip>
-                
+
                 <VChip
                   v-else-if="document.status === 'PENDING_VALIDATION'"
                   size="x-small"
@@ -498,7 +514,7 @@ onMounted(async () => {
                   </VIcon>
                   Pendiente
                 </VChip>
-                
+
                 <VChip
                   v-else-if="document.status === 'REJECTED' || document.status === 'REVOKED'"
                   size="x-small"
@@ -513,7 +529,7 @@ onMounted(async () => {
                   </VIcon>
                   {{ document.status === 'REVOKED' ? 'Revocado' : 'Rechazado' }}
                 </VChip>
-                
+
                 <VChip
                   v-else
                   size="x-small"
@@ -564,56 +580,8 @@ onMounted(async () => {
               </VAlert>
 
               <!-- Actions -->
-              <div class="d-flex flex-wrap gap-1 mt-auto">
-                <!-- Verification Actions -->
-                <VBtn
-                  v-if="document.status === 'PENDING_VALIDATION' || !document.is_verified"
-                  size="small"
-                  variant="outlined"
-                  color="success"
-                  icon
-                  @click="handleVerifyClick(document)"
-                >
-                  <VIcon>tabler-check-circle</VIcon>
-                  <VTooltip activator="parent">Verificar</VTooltip>
-                </VBtn>
-
-                <VBtn
-                  v-if="document.status !== 'REVOKED'"
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  icon
-                  @click="handleRejectClick(document)"
-                >
-                  <VIcon>tabler-x-circle</VIcon>
-                  <VTooltip activator="parent">Rechazar</VTooltip>
-                </VBtn>
-
-                <VBtn
-                  v-if="document.status !== 'PENDING_VALIDATION'"
-                  size="small"
-                  variant="outlined"
-                  color="warning"
-                  icon
-                  @click="handlePendingClick(document)"
-                >
-                  <VIcon>tabler-clock</VIcon>
-                  <VTooltip activator="parent">Marcar Pendiente</VTooltip>
-                </VBtn>
-
-                <!-- Regular Actions -->
-                <VBtn
-                  size="small"
-                  variant="outlined"
-                  color="primary"
-                  icon
-                  @click="handleDownload(document)"
-                >
-                  <VIcon>tabler-download</VIcon>
-                  <VTooltip activator="parent">Descargar</VTooltip>
-                </VBtn>
-
+              <div class="d-flex gap-1 mt-auto justify-center">
+                <!-- Preview Action -->
                 <VBtn
                   size="small"
                   variant="outlined"
@@ -622,19 +590,88 @@ onMounted(async () => {
                   @click="handlePreview(document)"
                 >
                   <VIcon>tabler-eye</VIcon>
-                  <VTooltip activator="parent">Ver</VTooltip>
+                  <VTooltip activator="parent">
+                    Ver
+                  </VTooltip>
                 </VBtn>
 
-                <VBtn
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  icon
-                  @click="handleDeleteClick(document)"
-                >
-                  <VIcon>tabler-trash</VIcon>
-                  <VTooltip activator="parent">Eliminar</VTooltip>
-                </VBtn>
+                <!-- Menu with all actions -->
+                <VMenu>
+                  <template #activator="{ props }">
+                    <VBtn
+                      size="small"
+                      variant="outlined"
+                      color="default"
+                      icon
+                      v-bind="props"
+                    >
+                      <VIcon>tabler-dots-vertical</VIcon>
+                      <VTooltip activator="parent">
+                        Más acciones
+                      </VTooltip>
+                    </VBtn>
+                  </template>
+
+                  <VList>
+                    <!-- Verification Actions -->
+                    <VListItem
+                      v-if="document.status === 'PENDING_VALIDATION' || !document.is_verified"
+                      @click="handleVerifyClick(document)"
+                    >
+                      <template #prepend>
+                        <VIcon color="success">
+                          tabler-circle-check
+                        </VIcon>
+                      </template>
+                      <VListItemTitle>Verificar</VListItemTitle>
+                    </VListItem>
+
+                    <VListItem
+                      v-if="document.status !== 'REVOKED'"
+                      @click="handleRejectClick(document)"
+                    >
+                      <template #prepend>
+                        <VIcon color="error">
+                          tabler-circle-x
+                        </VIcon>
+                      </template>
+                      <VListItemTitle>Rechazar</VListItemTitle>
+                    </VListItem>
+
+                    <VListItem
+                      v-if="document.status !== 'PENDING_VALIDATION'"
+                      @click="handlePendingClick(document)"
+                    >
+                      <template #prepend>
+                        <VIcon color="warning">
+                          tabler-clock
+                        </VIcon>
+                      </template>
+                      <VListItemTitle>Marcar Pendiente</VListItemTitle>
+                    </VListItem>
+
+                    <VDivider />
+
+                    <!-- Regular Actions -->
+                    <VListItem @click="handleDownload(document)">
+                      <template #prepend>
+                        <VIcon color="primary">
+                          tabler-download
+                        </VIcon>
+                      </template>
+                      <VListItemTitle>Descargar</VListItemTitle>
+                    </VListItem>
+
+                    <VListItem @click="handleDeleteClick(document)">
+                      <template #prepend>
+                        <VIcon color="error">
+                          tabler-trash
+                        </VIcon>
+                      </template>
+                      <VListItemTitle>Eliminar</VListItemTitle>
+                    </VListItem>
+                  </VList>
+                </VMenu>
               </div>
             </VCardText>
           </VCard>
@@ -649,6 +686,7 @@ onMounted(async () => {
           { title: 'Documento', key: 'title' },
           { title: 'Tipo', key: 'document_type' },
           { title: 'Estado', key: 'status' },
+          { title: 'Verificación', key: 'verification', sortable: false },
           { title: 'Tamaño', key: 'file_size' },
           { title: 'Vencimiento', key: 'expiration_date' },
           { title: 'Acciones', key: 'actions', sortable: false },
@@ -670,9 +708,40 @@ onMounted(async () => {
               :icon="getFileTypeIcon(item.mime_type)"
               class="me-2"
             />
-            <div>
-              <div class="font-weight-medium">
-                {{ item.title }}
+            <div class="flex-grow-1">
+              <div class="d-flex align-center gap-2">
+                <span class="font-weight-medium">
+                  {{ item.title }}
+                </span>
+                <!-- Quick verification indicator -->
+                <VIcon
+                  v-if="item.is_verified"
+                  color="success"
+                  size="16"
+                >
+                  tabler-shield-check
+                </VIcon>
+                <VIcon
+                  v-else-if="item.status === 'PENDING_VALIDATION'"
+                  color="info"
+                  size="16"
+                >
+                  tabler-clock
+                </VIcon>
+                <VIcon
+                  v-else-if="item.status === 'REJECTED' || item.status === 'REVOKED'"
+                  color="error"
+                  size="16"
+                >
+                  tabler-shield-x
+                </VIcon>
+                <VIcon
+                  v-else
+                  color="warning"
+                  size="16"
+                >
+                  tabler-alert-circle
+                </VIcon>
               </div>
               <div class="text-caption text-medium-emphasis">
                 {{ formatDate(item.uploaded_at) }}
@@ -688,6 +757,70 @@ onMounted(async () => {
           >
             {{ getStatusLabel(item.status) }}
           </VChip>
+        </template>
+
+        <template #[`item.verification`]="{ item }">
+          <div class="d-flex align-center">
+            <VChip
+              v-if="item.is_verified"
+              size="small"
+              color="success"
+              variant="outlined"
+            >
+              <VIcon
+                start
+                size="14"
+              >
+                tabler-shield-check
+              </VIcon>
+              Verificado
+            </VChip>
+
+            <VChip
+              v-else-if="item.status === 'PENDING_VALIDATION'"
+              size="small"
+              color="info"
+              variant="outlined"
+            >
+              <VIcon
+                start
+                size="14"
+              >
+                tabler-clock
+              </VIcon>
+              Pendiente
+            </VChip>
+
+            <VChip
+              v-else-if="item.status === 'REJECTED' || item.status === 'REVOKED'"
+              size="small"
+              color="error"
+              variant="outlined"
+            >
+              <VIcon
+                start
+                size="14"
+              >
+                tabler-shield-x
+              </VIcon>
+              {{ item.status === 'REVOKED' ? 'Revocado' : 'Rechazado' }}
+            </VChip>
+
+            <VChip
+              v-else
+              size="small"
+              color="warning"
+              variant="outlined"
+            >
+              <VIcon
+                start
+                size="14"
+              >
+                tabler-alert-circle
+              </VIcon>
+              Sin Verificar
+            </VChip>
+          </div>
         </template>
 
         <template #[`item.file_size`]="{ item }">
@@ -721,64 +854,8 @@ onMounted(async () => {
         </template>
 
         <template #[`item.actions`]="{ item }">
-          <div class="d-flex flex-wrap gap-1">
-            <!-- Verification Actions -->
-            <VBtn
-              v-if="item.status === 'PENDING_VALIDATION' || !item.is_verified"
-              size="small"
-              variant="text"
-              color="success"
-              icon
-              @click="handleVerifyClick(item)"
-            >
-              <VIcon>tabler-check-circle</VIcon>
-              <VTooltip activator="parent">
-                Verificar
-              </VTooltip>
-            </VBtn>
-
-            <VBtn
-              v-if="item.status !== 'REVOKED'"
-              size="small"
-              variant="text"
-              color="error"
-              icon
-              @click="handleRejectClick(item)"
-            >
-              <VIcon>tabler-x-circle</VIcon>
-              <VTooltip activator="parent">
-                Rechazar
-              </VTooltip>
-            </VBtn>
-
-            <VBtn
-              v-if="item.status !== 'PENDING_VALIDATION'"
-              size="small"
-              variant="text"
-              color="warning"
-              icon
-              @click="handlePendingClick(item)"
-            >
-              <VIcon>tabler-clock</VIcon>
-              <VTooltip activator="parent">
-                Marcar Pendiente
-              </VTooltip>
-            </VBtn>
-
-            <!-- Regular Actions -->
-            <VBtn
-              size="small"
-              variant="text"
-              color="primary"
-              icon
-              @click="handleDownload(item)"
-            >
-              <VIcon>tabler-download</VIcon>
-              <VTooltip activator="parent">
-                Descargar
-              </VTooltip>
-            </VBtn>
-
+          <div class="d-flex gap-1">
+            <!-- Preview Action -->
             <VBtn
               size="small"
               variant="text"
@@ -792,18 +869,83 @@ onMounted(async () => {
               </VTooltip>
             </VBtn>
 
-            <VBtn
-              size="small"
-              variant="text"
-              color="error"
-              icon
-              @click="handleDeleteClick(item)"
-            >
-              <VIcon>tabler-trash</VIcon>
-              <VTooltip activator="parent">
-                Eliminar
-              </VTooltip>
-            </VBtn>
+            <!-- Menu with all actions -->
+            <VMenu>
+              <template #activator="{ props }">
+                <VBtn
+                  size="small"
+                  variant="text"
+                  color="default"
+                  icon
+                  v-bind="props"
+                >
+                  <VIcon>tabler-dots-vertical</VIcon>
+                  <VTooltip activator="parent">
+                    Más acciones
+                  </VTooltip>
+                </VBtn>
+              </template>
+
+              <VList>
+                <!-- Verification Actions -->
+                <VListItem
+                  v-if="item.status === 'PENDING_VALIDATION' || !item.is_verified"
+                  @click="handleVerifyClick(item)"
+                >
+                  <template #prepend>
+                    <VIcon color="success">
+                      tabler-circle-check
+                    </VIcon>
+                  </template>
+                  <VListItemTitle>Verificar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status !== 'REVOKED'"
+                  @click="handleRejectClick(item)"
+                >
+                  <template #prepend>
+                    <VIcon color="error">
+                      tabler-circle-x
+                    </VIcon>
+                  </template>
+                  <VListItemTitle>Rechazar</VListItemTitle>
+                </VListItem>
+
+                <VListItem
+                  v-if="item.status !== 'PENDING_VALIDATION'"
+                  @click="handlePendingClick(item)"
+                >
+                  <template #prepend>
+                    <VIcon color="warning">
+                      tabler-clock
+                    </VIcon>
+                  </template>
+                  <VListItemTitle>Marcar Pendiente</VListItemTitle>
+                </VListItem>
+
+                <VDivider />
+
+                <!-- Regular Actions -->
+                <VListItem @click="handleDownload(item)">
+                  <template #prepend>
+                    <VIcon color="primary">
+                      tabler-download
+                    </VIcon>
+                  </template>
+                  <VListItemTitle>Descargar</VListItemTitle>
+                </VListItem>
+
+                <VListItem @click="handleDeleteClick(item)">
+                  <template #prepend>
+                    <VIcon color="error">
+                      tabler-trash
+                    </VIcon>
+                  </template>
+                  <VListItemTitle>Eliminar</VListItemTitle>
+                </VListItem>
+              </VList>
+            </VMenu>
           </div>
         </template>
       </VDataTable>

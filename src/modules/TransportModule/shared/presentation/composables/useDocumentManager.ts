@@ -185,14 +185,43 @@ export function useDocumentManager(options: DocumentManagerOptions) {
     try {
       state.loading = true
       state.error = null
-      console.log('Loading documents for:', { entityId: options.entityId, entityType: options.entityType })
-      state.documents = await repository.findByEntity(options.entityId, options.entityType)
-      console.log('Documents loaded:', state.documents)
-      console.log('Documents count:', state.documents.length)
+      console.log('🔄 Loading documents for:', { entityId: options.entityId, entityType: options.entityType })
+
+      // Validar que tenemos los datos necesarios
+      if (!options.entityId)
+        throw new Error('entityId es requerido para cargar documentos')
+
+      if (!options.entityType)
+        throw new Error('entityType es requerido para cargar documentos')
+
+      const allDocuments = await repository.findByEntity(options.entityId, options.entityType)
+
+      // Additional client-side filtering to ensure data integrity
+      const filteredDocuments = allDocuments.filter(doc => {
+        const matchesEntityId = doc.documentable_id === options.entityId
+        const matchesEntityType = doc.entity_type === options.entityType
+
+        if (!matchesEntityId || !matchesEntityType) {
+          console.warn('🚨 Document filtered out:', {
+            docId: doc.id,
+            docTitle: doc.title,
+            docEntityId: doc.documentable_id,
+            docEntityType: doc.entity_type,
+            expectedEntityId: options.entityId,
+            expectedEntityType: options.entityType,
+          })
+        }
+
+        return matchesEntityId && matchesEntityType
+      })
+
+      state.documents = filteredDocuments
+      console.log('✅ Documents loaded and filtered:', state.documents)
+      console.log('📊 Final documents count:', state.documents.length)
     }
     catch (error: any) {
       state.error = error.message || 'Error al cargar documentos'
-      console.error('Error loading documents:', error)
+      console.error('❌ Error loading documents:', error)
     }
     finally {
       state.loading = false
@@ -422,6 +451,7 @@ export function useDocumentManager(options: DocumentManagerOptions) {
     catch (error: any) {
       state.error = error.message || 'Error al verificar documento'
       console.error('Error verifying document:', error)
+
       return false
     }
     finally {
@@ -446,6 +476,7 @@ export function useDocumentManager(options: DocumentManagerOptions) {
     catch (error: any) {
       state.error = error.message || 'Error al rechazar documento'
       console.error('Error rejecting document:', error)
+
       return false
     }
     finally {
@@ -470,6 +501,7 @@ export function useDocumentManager(options: DocumentManagerOptions) {
     catch (error: any) {
       state.error = error.message || 'Error al marcar documento como pendiente'
       console.error('Error marking document as pending:', error)
+
       return false
     }
     finally {
@@ -487,6 +519,7 @@ export function useDocumentManager(options: DocumentManagerOptions) {
     catch (error: any) {
       state.error = error.message || 'Error al obtener historial de verificación'
       console.error('Error getting verification history:', error)
+
       return null
     }
     finally {

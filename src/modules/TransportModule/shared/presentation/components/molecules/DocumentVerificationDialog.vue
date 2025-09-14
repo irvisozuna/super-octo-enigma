@@ -68,12 +68,16 @@ const isValid = computed(() => {
 })
 
 const statusColor = computed(() => {
-  if (!props.document?.status) return 'default'
+  if (!props.document?.status)
+    return 'default'
+
   return DocumentDomain.getStatusColor(props.document.status)
 })
 
 const statusLabel = computed(() => {
-  if (!props.document?.status) return ''
+  if (!props.document?.status)
+    return ''
+
   return DocumentDomain.getStatusLabel(props.document.status)
 })
 
@@ -92,9 +96,10 @@ function handleClose() {
 }
 
 function handleConfirm() {
-  if (!isValid.value) return
+  if (!isValid.value)
+    return
 
-  let data: any = {
+  const data: any = {
     notes: notes.value.trim() || undefined,
   }
 
@@ -121,12 +126,14 @@ function resetForm() {
 }
 
 function formatDate(dateString?: string) {
-  if (!dateString) return '-'
+  if (!dateString)
+    return '-'
+
   return new Date(dateString).toLocaleDateString('es-MX')
 }
 
 // Watch for visibility changes to reset form
-watch(() => props.visible, (newVisible) => {
+watch(() => props.visible, newVisible => {
   if (newVisible)
     resetForm()
 })
@@ -166,8 +173,10 @@ watch(() => props.visible, (newVisible) => {
       <!-- Document Info -->
       <VCardText class="pa-4">
         <div class="mb-4">
-          <h6 class="text-subtitle-1 mb-3">Información del Documento</h6>
-          
+          <h6 class="text-subtitle-1 mb-3">
+            Información del Documento
+          </h6>
+
           <VCard
             variant="outlined"
             class="mb-4"
@@ -180,7 +189,9 @@ watch(() => props.visible, (newVisible) => {
                   size="24"
                 />
                 <div class="flex-grow-1">
-                  <div class="font-weight-medium">{{ document.title }}</div>
+                  <div class="font-weight-medium">
+                    {{ document.title }}
+                  </div>
                   <div class="text-caption text-medium-emphasis">
                     {{ document.document_type }} • {{ fileSize }}
                   </div>
@@ -192,7 +203,7 @@ watch(() => props.visible, (newVisible) => {
                   {{ statusLabel }}
                 </VChip>
               </div>
-              
+
               <div class="text-body-2">
                 <VRow dense>
                   <VCol cols="6">

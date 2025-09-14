@@ -33,4 +33,7 @@ export interface ConcessionRepository {
 
   // Export operations
   export(filter?: ConcessionFilter, format?: 'csv' | 'excel' | 'pdf'): Promise<Blob>
+
+  // Configuration operations
+  getValidValues(): Promise<ApiResponse<any>>
 }

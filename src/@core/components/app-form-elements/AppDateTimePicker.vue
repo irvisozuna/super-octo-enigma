@@ -3,7 +3,7 @@ import FlatPickr from 'vue-flatpickr-component'
 import { useTheme } from 'vuetify'
 
 // @ts-expect-error There won't be declaration file for it
-import { VField, filterFieldProps, makeVFieldProps } from 'vuetify/lib/components/VField/VField'
+import { VField, makeVFieldProps } from 'vuetify/lib/components/VField/VField'
 
 // @ts-expect-error There won't be declaration file for it
 import { VInput, makeVInputProps } from 'vuetify/lib/components/VInput/VInput'
@@ -54,6 +54,25 @@ interface Emit {
 
 const configStore = useConfigStore()
 const attrs = useAttrs()
+
+// Custom filterFieldProps function since it's not exported in Vuetify 3.10.0
+const filterFieldProps = (props: any) => {
+  const fieldPropsKeys = [
+    'appendInnerIcon', 'bgColor', 'clearable', 'clearIcon', 'active', 'centerAffix',
+    'color', 'baseColor', 'details', 'dirty', 'disabled', 'glow', 'error', 'flat',
+    'iconColor', 'label', 'persistentClear', 'prependInnerIcon', 'reverse', 'singleLine',
+    'variant', 'onClick:clear', 'onClick:appendInner', 'onClick:prependInner'
+  ]
+  
+  const filtered: any = {}
+  fieldPropsKeys.forEach(key => {
+    if (props[key] !== undefined) {
+      filtered[key] = props[key]
+    }
+  })
+  
+  return filtered
+}
 
 const [rootAttrs, compAttrs] = filterInputAttrs(attrs)
 const inputProps = ref(VInput.filterProps(props))

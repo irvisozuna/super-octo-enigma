@@ -1,136 +1,126 @@
-/**
- * Vehicle Store - Presentation Layer
- *
- * Pinia store for vehicle state management
- */
-
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { VehicleRepositoryImpl } from '../../infrastructure/persistence/repositories/VehicleRepositoryImpl'
-import { VehicleApplicationService } from '../../application/services/VehicleApplicationService'
-import type { CreateVehicleRequest, UpdateVehicleRequest, VehicleEntity } from '../../domain/entities/VehicleEntity'
-import type { VehicleFilter } from '../../../shared/types'
+import { ref, computed } from 'vue'
+import { VehicleApiService } from '../../infrastructure/api/services/VehicleApiService'
+import type {
+  VehicleCreateDto,
+  VehicleUpdateDto,
+  VehicleListDto,
+  VehicleDetailDto,
+  VehicleFilterDto,
+  DriverCreateDto,
+  DriverUpdateDto,
+  DriverListDto,
+  DriverDetailDto,
+  DriverFilterDto,
+  PaginatedResponseDto,
+} from '../../application/dtos/VehicleDtos'
 
-export const useVehicleStore = defineStore('transport-vehicle', () => {
+export const useVehicleStore = defineStore('vehicle', () => {
   // State
-  const items = ref<VehicleEntity[]>([])
-  const currentItem = ref<VehicleEntity | null>(null)
+  const items = ref<VehicleListDto[]>([])
+  const currentItem = ref<VehicleDetailDto | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-
-  // Pagination
-  const page = ref(1)
-  const itemsPerPage = ref(20)
-  const total = ref(0)
-  const totalPages = ref(0)
+  const pagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+  })
 
   // Filters
-  const filters = ref<VehicleFilter>({})
+  const filters = ref<VehicleFilterDto>({
+    search: '',
+    status: '',
+    vehicle_type: '',
+    concession_id: '',
+    page: 1,
+    per_page: 15,
+    sort_by: 'created_at',
+    sort_order: 'desc',
+  })
 
-  // Selection
-  const selectedItems = ref<VehicleEntity[]>([])
+  // API Service
+  const apiService = new VehicleApiService()
 
-  // Statistics
-  const statistics = ref<any>(null)
-  const statisticsLoading = ref(false)
-
-  // Computed
-  const currentPage = computed(() => page.value)
-  const perPage = computed(() => itemsPerPage.value)
+  // Getters
   const hasItems = computed(() => items.value.length > 0)
-  const hasSelection = computed(() => selectedItems.value.length > 0)
-
-  // Services
-  const repository = new VehicleRepositoryImpl()
-  const applicationService = new VehicleApplicationService(repository)
+  const totalPages = computed(() => pagination.value.last_page)
+  const currentPage = computed(() => pagination.value.current_page)
+  const totalItems = computed(() => pagination.value.total)
 
   // Actions
-  const fetchList = async () => {
+  const fetchList = async (customFilters?: Partial<VehicleFilterDto>) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await applicationService.getVehicles({
-        page: page.value,
-        per_page: itemsPerPage.value,
-        ...filters.value,
-      })
-
+      const mergedFilters = { ...filters.value, ...customFilters }
+      const response: PaginatedResponseDto<VehicleListDto> = await apiService.getList(mergedFilters)
+      
       items.value = response.data
-      total.value = response.pagination.total
-      totalPages.value = Math.ceil(response.pagination.total / itemsPerPage.value)
-    }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch vehicles'
+      pagination.value = {
+        current_page: response.meta.current_page,
+        last_page: response.meta.last_page,
+        per_page: response.meta.per_page,
+        total: response.meta.total,
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error al cargar vehículos'
       items.value = []
-    }
-    finally {
+    } finally {
       loading.value = false
     }
   }
 
-  const fetchById = async (id: string, include?: string) => {
+  const fetchById = async (id: string) => {
     loading.value = true
     error.value = null
 
     try {
-      const vehicle = await applicationService.getVehicleById(id, include)
-
-      currentItem.value = vehicle
-
-      return vehicle
-    }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch vehicle'
+      currentItem.value = await apiService.getById(id)
+    } catch (err: any) {
+      error.value = err.message || 'Error al cargar vehículo'
       currentItem.value = null
-      throw err
-    }
-    finally {
+    } finally {
       loading.value = false
     }
   }
 
-  const createItem = async (data: CreateVehicleRequest) => {
+  const createItem = async (data: VehicleCreateDto) => {
     loading.value = true
     error.value = null
 
     try {
-      const vehicle = await applicationService.createVehicle(data)
-
-      await fetchList()
-
-      return vehicle
-    }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create vehicle'
+      const newItem = await apiService.create(data)
+      items.value.unshift(newItem)
+      return newItem
+    } catch (err: any) {
+      error.value = err.message || 'Error al crear vehículo'
       throw err
-    }
-    finally {
+    } finally {
       loading.value = false
     }
   }
 
-  const updateItem = async (id: string, data: Partial<UpdateVehicleRequest>) => {
+  const updateItem = async (id: string, data: VehicleUpdateDto) => {
     loading.value = true
     error.value = null
 
     try {
-      const vehicle = await applicationService.updateVehicle(id, data)
-
-      if (currentItem.value?.id === id)
-        currentItem.value = vehicle
-
+      const updatedItem = await apiService.update(id, data)
       const index = items.value.findIndex(item => item.id === id)
-      if (index !== -1)
-        items.value[index] = vehicle
-
-      return vehicle
-    }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update vehicle'
+      if (index !== -1) {
+        items.value[index] = updatedItem
+      }
+      if (currentItem.value?.id === id) {
+        currentItem.value = updatedItem
+      }
+      return updatedItem
+    } catch (err: any) {
+      error.value = err.message || 'Error al actualizar vehículo'
       throw err
-    }
-    finally {
+    } finally {
       loading.value = false
     }
   }
@@ -140,34 +130,89 @@ export const useVehicleStore = defineStore('transport-vehicle', () => {
     error.value = null
 
     try {
-      await applicationService.deleteVehicle(id)
-
-      if (currentItem.value?.id === id)
-        currentItem.value = null
-
+      await apiService.delete(id)
       items.value = items.value.filter(item => item.id !== id)
-      selectedItems.value = selectedItems.value.filter(item => item.id !== id)
-      total.value = Math.max(0, total.value - 1)
-    }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete vehicle'
+      if (currentItem.value?.id === id) {
+        currentItem.value = null
+      }
+    } catch (err: any) {
+      error.value = err.message || 'Error al eliminar vehículo'
       throw err
-    }
-    finally {
+    } finally {
       loading.value = false
     }
   }
 
-  const setPage = (newPage: number) => {
-    page.value = newPage
+  const getVehiclesByConcession = async (concessionId: string) => {
+    try {
+      return await apiService.getVehiclesByConcession(concessionId)
+    } catch (err: any) {
+      error.value = err.message || 'Error al cargar vehículos de la concesión'
+      return []
+    }
+  }
+
+  const assignToConcession = async (vehicleId: string, concessionId: string) => {
+    try {
+      return await apiService.assignVehicleToConcession(vehicleId, concessionId)
+    } catch (err: any) {
+      error.value = err.message || 'Error al asignar vehículo'
+      throw err
+    }
+  }
+
+  const unassignFromConcession = async (vehicleId: string) => {
+    try {
+      return await apiService.unassignVehicleFromConcession(vehicleId)
+    } catch (err: any) {
+      error.value = err.message || 'Error al desasignar vehículo'
+      throw err
+    }
+  }
+
+  // Driver actions
+  const createDriver = async (data: DriverCreateDto) => {
+    try {
+      return await apiService.createDriver(data)
+    } catch (err: any) {
+      error.value = err.message || 'Error al crear conductor'
+      throw err
+    }
+  }
+
+  const addDriverToVehicle = async (vehicleId: string, driverData: DriverCreateDto) => {
+    try {
+      return await apiService.addDriverToVehicle(vehicleId, driverData)
+    } catch (err: any) {
+      error.value = err.message || 'Error al agregar conductor al vehículo'
+      throw err
+    }
+  }
+
+  const getVehicleDrivers = async (vehicleId: string) => {
+    try {
+      return await apiService.getVehicleDrivers(vehicleId)
+    } catch (err: any) {
+      error.value = err.message || 'Error al cargar conductores del vehículo'
+      return []
+    }
   }
 
   const clearError = () => {
     error.value = null
   }
 
-  const exportItems = (type: string) => {
-    console.log('Exporting vehicles as', type)
+  const reset = () => {
+    items.value = []
+    currentItem.value = null
+    loading.value = false
+    error.value = null
+    pagination.value = {
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0,
+    }
   }
 
   return {
@@ -176,20 +221,14 @@ export const useVehicleStore = defineStore('transport-vehicle', () => {
     currentItem,
     loading,
     error,
-
-    // Pagination
-    page,
-    itemsPerPage,
-    total,
-    totalPages,
-    currentPage,
-    perPage,
-
-    // Filters
+    pagination,
     filters,
 
-    // Selection
-    selectedItems,
+    // Getters
+    hasItems,
+    totalPages,
+    currentPage,
+    totalItems,
 
     // Actions
     fetchList,
@@ -197,8 +236,16 @@ export const useVehicleStore = defineStore('transport-vehicle', () => {
     createItem,
     updateItem,
     deleteItem,
-    setPage,
+    getVehiclesByConcession,
+    assignToConcession,
+    unassignFromConcession,
+    createDriver,
+    addDriverToVehicle,
+    getVehicleDrivers,
     clearError,
-    exportItems,
+    reset,
+
+    // API Service for direct access
+    applicationService: apiService,
   }
 })

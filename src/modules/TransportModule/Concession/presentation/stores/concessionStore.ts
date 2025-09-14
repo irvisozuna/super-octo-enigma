@@ -45,6 +45,14 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     expiring_soon: 0,
   })
 
+  // Valid values
+  const validValues = ref({
+    authorized_services: {},
+    restrictions: {},
+    statuses: {},
+    modalities: {},
+  })
+
   // Computed
   const currentPage = computed(() => page.value)
   const perPage = computed(() => itemsPerPage.value)
@@ -66,19 +74,23 @@ export const useConcessionStore = defineStore('transport-concession', () => {
 
       items.value = response.data.map(dto => ({
         id: dto.id,
-        concessionNumber: dto.concession_number,
-        concessionType: dto.concession_type,
-        routeDescription: dto.route_description,
-        serviceArea: dto.service_area,
+        concessionNumber: dto.number,
+        concessionType: dto.modality_label,
+        routeDescription: dto.route_or_site,
+        serviceArea: dto.municipality,
         status: dto.status,
-        issueDate: dto.issue_date,
-        expiryDate: dto.expiry_date,
-        renewalDate: dto.renewal_date,
-        holderId: dto.holder_id,
-        holderName: dto.holder_name,
-        feeAmount: dto.fee_amount,
-        feePaid: dto.fee_paid,
-        lastPaymentDate: dto.last_payment_date,
+        statusLabel: dto.status_label,
+        issueDate: dto.valid_from,
+        expiryDate: dto.valid_to,
+        holderId: dto.concession_holder_id,
+        holderName: dto.holder?.full_name,
+        municipality: dto.municipality,
+        modalityLabel: dto.modality_label,
+        validFrom: dto.valid_from,
+        validTo: dto.valid_to,
+        isActive: dto.is_active,
+        isExpired: dto.is_expired,
+        daysUntilExpiration: dto.days_until_expiration,
         createdAt: dto.created_at,
         updatedAt: dto.updated_at,
       }))
@@ -105,21 +117,32 @@ export const useConcessionStore = defineStore('transport-concession', () => {
 
       currentItem.value = {
         id: dto.id,
-        concessionNumber: dto.concession_number,
-        concessionType: dto.concession_type,
-        routeDescription: dto.route_description,
-        serviceArea: dto.service_area,
+        companyId: dto.company_id,
+        concessionHolderId: dto.concession_holder_id,
+        concessionNumber: dto.number,
         status: dto.status,
-        issueDate: dto.issue_date,
-        expiryDate: dto.expiry_date,
-        renewalDate: dto.renewal_date,
-        holderId: dto.holder_id,
-        holderName: dto.holder_name,
-        feeAmount: dto.fee_amount,
-        feePaid: dto.fee_paid,
-        lastPaymentDate: dto.last_payment_date,
-        termsConditions: dto.terms_conditions,
-        notes: dto.notes,
+        statusLabel: dto.status_label,
+        modality: dto.modality,
+        modalityLabel: dto.modality_label,
+        municipality: dto.municipality,
+        validFrom: dto.valid_from,
+        validTo: dto.valid_to,
+        routeOrSite: dto.route_or_site,
+        authorizedServices: dto.authorized_services || [],
+        restrictions: dto.restrictions || [],
+        metadata: dto.metadata || {},
+        isActive: dto.is_active,
+        isExpired: dto.is_expired,
+        daysUntilExpiration: dto.days_until_expiration,
+        expirationStatus: dto.expiration_status,
+        holder: dto.holder ? {
+          id: dto.holder.id,
+          fullName: dto.holder.full_name,
+          holderType: dto.holder.holder_type,
+          holderTypeLabel: dto.holder.holder_type_label,
+          email: dto.holder.email,
+          phone: dto.holder.phone,
+        } : null,
         createdAt: dto.created_at,
         updatedAt: dto.updated_at,
       }
@@ -139,15 +162,22 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     error.value = null
 
     try {
+      console.log('Store: creating concession with data:', data)
       const response = await concessionApiService.create(data)
+      console.log('Store: API response:', response)
 
+      // Refresh the list after creation
       await fetchList()
 
       return response.data
     }
-    catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create concession'
-      throw err
+    catch (err: any) {
+      console.error('Store: Create concession error:', err)
+      const errorMessage = err?.response?.data?.message
+        || err?.message
+        || 'Failed to create concession'
+      error.value = errorMessage
+      throw new Error(errorMessage)
     }
     finally {
       loading.value = false
@@ -290,6 +320,17 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     }
   }
 
+  const fetchValidValues = async () => {
+    try {
+      const response = await concessionApiService.getValidValues()
+
+      validValues.value = response.data
+    }
+    catch (err) {
+      console.error('Failed to fetch valid values:', err)
+    }
+  }
+
   return {
     // State
     items,
@@ -297,6 +338,7 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     loading,
     error,
     stats,
+    validValues,
 
     // Pagination
     page,
@@ -328,5 +370,6 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     clearFilters,
     fetchStats,
     exportItems,
+    fetchValidValues,
   }
 })

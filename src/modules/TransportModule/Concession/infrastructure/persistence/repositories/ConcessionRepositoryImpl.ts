@@ -127,4 +127,13 @@ export class ConcessionRepositoryImpl implements ConcessionRepository {
   async export(filter?: ConcessionFilter, format?: 'csv' | 'excel' | 'pdf'): Promise<Blob> {
     return await this.apiService.export(filter as any, format)
   }
+
+  async getValidValues(): Promise<ApiResponse<any>> {
+    const response = await this.apiService.getValidValues()
+
+    return {
+      data: response.data,
+      meta: response.meta,
+    }
+  }
 }

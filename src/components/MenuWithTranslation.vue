@@ -1,12 +1,4 @@
 <!-- components/MenuWithTranslation.vue -->
-<template>
-  <component
-    :is="menuComponent"
-    :items="translatedItems"
-    v-bind="$attrs"
-  />
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMenuStore } from '@/stores/menu'
@@ -32,3 +24,11 @@ const sourceItems = computed(() => props.items || menuStore.verticalNavItems)
 // Traducir los elementos del menú
 const translatedItems = computed(() => translateMenuItems(sourceItems.value))
 </script>
+
+<template>
+  <component
+    :is="menuComponent"
+    :items="translatedItems"
+    v-bind="$attrs"
+  />
+</template>
