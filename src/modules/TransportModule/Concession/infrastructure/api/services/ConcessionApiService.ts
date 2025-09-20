@@ -82,4 +82,23 @@ export class ConcessionApiService {
     const params = { ...filter, format }
     return await rawApi(`${this.baseUrl}/export`, { method: 'GET', params })
   }
+
+  // Verification
+  async verifyConcession(id: string, data: { verification_notes?: string }) {
+    // Backend expects: POST /api/transport/concessions/{id}/verify
+    // rawApi will prepend base URL if configured
+    return await rawApi(`${this.baseUrl}/${id}/verify`, { method: 'POST', body: { verification_notes: data?.verification_notes || '' } })
+  }
+
+  // Suspension
+  async suspendConcession(id: string, data: { suspension_reason: string; suspension_notes?: string; suspension_duration_days?: number; }) {
+    return await rawApi(`${this.baseUrl}/${id}/suspend`, {
+      method: 'POST',
+      body: {
+        suspension_reason: data.suspension_reason,
+        suspension_notes: data?.suspension_notes,
+        suspension_duration_days: data?.suspension_duration_days,
+      },
+    })
+  }
 }

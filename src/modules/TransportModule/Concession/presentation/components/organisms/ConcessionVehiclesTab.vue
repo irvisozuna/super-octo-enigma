@@ -395,10 +395,10 @@ onMounted(() => {
                   sm="3"
                 >
                   <div class="text-caption text-medium-emphasis">
-                    Tipo de Combustible
+                    Tipo de Vehiculo
                   </div>
                   <div class="font-weight-medium">
-                    {{ vehicle.fuelType || '-' }}
+                    {{ vehicle.vehicle_type || '-' }}
                   </div>
                 </VCol>
 
@@ -410,7 +410,7 @@ onMounted(() => {
                     Capacidad de Asientos
                   </div>
                   <div class="font-weight-medium">
-                    {{ vehicle.seatingCapacity || '-' }}
+                    {{ vehicle.capacity || '-' }}
                   </div>
                 </VCol>
 

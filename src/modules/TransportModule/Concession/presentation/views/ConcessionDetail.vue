@@ -31,6 +31,7 @@ const concessionId = computed(() => route.params.id as string)
 const editDialogVisible = ref(false)
 const deleteDialogVisible = ref(false)
 const verificationDialogVisible = ref(false)
+const verificationDialogMode = ref<'verify' | 'suspend'>('verify')
 
 // Computed
 const concession = computed(() => concessionStore.currentItem)
@@ -100,11 +101,11 @@ const tabs = ref([
     icon: 'tabler-files',
     component: markRaw(DocumentManagerTab),
   },
-  {
-    title: 'Historial',
-    icon: 'tabler-history',
-    component: markRaw(ConcessionHistoryTab),
-  },
+  // {
+  //   title: 'Historial',
+  //   icon: 'tabler-history',
+  //   component: markRaw(ConcessionHistoryTab),
+  // },
 ])
 
 
@@ -141,7 +142,13 @@ const openDeleteDialog = () => {
   deleteDialogVisible.value = true
 }
 
-const openVerificationDialog = () => {
+const openVerifyDialog = () => {
+  verificationDialogMode.value = 'verify'
+  verificationDialogVisible.value = true
+}
+
+const openSuspendDialog = () => {
+  verificationDialogMode.value = 'suspend'
   verificationDialogVisible.value = true
 }
 
@@ -167,10 +174,12 @@ const getStatusColor = (status: string) => {
     EXPIRED: 'error',
     SUSPENDED: 'error',
     PENDING: 'info',
-    REVOKED: 'error'
-  }
+    REVOKED: 'error',
+  } as const
 
-  return colors[status?.toUpperCase()] || 'default'
+  const key = (status || '').toUpperCase() as keyof typeof colors
+
+  return colors[key] || 'default'
 }
 
 const getStatusIcon = (status: string) => {
@@ -180,10 +189,12 @@ const getStatusIcon = (status: string) => {
     EXPIRED: 'tabler-calendar-x',
     SUSPENDED: 'tabler-pause',
     PENDING: 'tabler-clock',
-    REVOKED: 'tabler-ban'
-  }
+    REVOKED: 'tabler-ban',
+  } as const
 
-  return icons[status?.toUpperCase()] || 'tabler-help-circle'
+  const key = (status || '').toUpperCase() as keyof typeof icons
+
+  return icons[key] || 'tabler-help-circle'
 }
 
 const getComplianceStatus = () => {
@@ -219,7 +230,9 @@ const getComplianceColor = () => {
   return colors[status] || 'default'
 }
 
-const getDocumentComplianceStatus = () => {
+type DocumentCompliance = 'missing' | 'expiring' | 'expired' | 'pending' | 'complete' | 'unknown'
+
+const getDocumentComplianceStatus = (): DocumentCompliance => {
   // This would normally check the actual document status from the API
   // For now, simulate document compliance checking
   if (!concession.value) return 'unknown'
@@ -234,14 +247,16 @@ const getDocumentComplianceStatus = () => {
 
 const getDocumentComplianceLabel = () => {
   const status = getDocumentComplianceStatus()
-  const labels = {
-    'missing': 'Docs. Faltantes',
-    'expiring': 'Docs. por Vencer',
-    'expired': 'Docs. Vencidos',
-    'pending': 'Docs. Pendientes'
+  const labels: Record<DocumentCompliance, string> = {
+    missing: 'Docs. Faltantes',
+    expiring: 'Docs. por Vencer',
+    expired: 'Docs. Vencidos',
+    pending: 'Docs. Pendientes',
+    complete: 'Completo',
+    unknown: 'Verificar Docs.',
   }
 
-  return labels[status] || 'Verificar Docs.'
+  return labels[status]
 }
 
 const isExpiringSoon = (expiryDate: string, days = 90) => {
@@ -287,7 +302,7 @@ onMounted(() => {
                 </VBtn>
                 <span class="text-h6">Concesión:</span>
                 <span class="text-h6 ms-2">
-                  <VChip color="primary">{{ concession?.concessionNumber || 'Cargando...' }}</VChip>
+                  <VChip color="primary">{{ concession?.number || 'Cargando...' }} </VChip>
                 </span>
                 <span class="text-h6 ms-4">Modalidad:</span>
                 <span class="text-h6 ms-2">
@@ -355,7 +370,7 @@ onMounted(() => {
 
                 <!-- Document Status -->
                 <VChip
-                  v-if="getDocumentComplianceStatus() !== 'complete'"
+                  v-if="getDocumentComplianceStatus() !== 'complete' && getDocumentComplianceStatus() !== 'unknown'"
                   :color="getDocumentComplianceStatus() === 'missing' ? 'error' : 'warning'"
                   size="small"
                   variant="outlined"
@@ -423,7 +438,7 @@ onMounted(() => {
                       v-if="canVerify && concession?.status === 'PENDING'"
                       color="success"
                       size="large"
-                      @click="openVerificationDialog"
+                      @click="openVerifyDialog"
                     >
                       <VIcon
                         icon="tabler-shield-check"
@@ -435,7 +450,7 @@ onMounted(() => {
                       v-else-if="canVerify && concession?.status === 'ACTIVE'"
                       color="warning"
                       variant="outlined"
-                      @click="openVerificationDialog"
+                      @click="openSuspendDialog"
                     >
                       <VIcon
                         icon="tabler-pause"
@@ -447,7 +462,7 @@ onMounted(() => {
                       v-else-if="canVerify && concession?.status === 'SUSPENDED'"
                       color="info"
                       variant="outlined"
-                      @click="openVerificationDialog"
+                      @click="openVerifyDialog"
                     >
                       <VIcon
                         icon="tabler-play"
@@ -567,7 +582,7 @@ onMounted(() => {
                 <DocumentManagerTab
                   v-if="concession?.id"
                   :entity-id="concession.id"
-                  entity-type="CONCESSION"
+                  entity-type="concession"
                   title="Documentos de Concesión"
                 />
                 <!-- Estado de carga para DocumentManagerTab -->
@@ -629,6 +644,7 @@ onMounted(() => {
     <ConcessionVerificationDialogMolecule
       v-model="verificationDialogVisible"
       :concession="concession"
+      :mode="verificationDialogMode"
       @success="handleVerificationSuccess"
       @cancel="verificationDialogVisible = false"
     />

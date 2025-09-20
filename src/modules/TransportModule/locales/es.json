@@ -114,7 +114,11 @@
       "taxi": "Taxi",
       "bus": "Autobús",
       "microbus": "Microbús",
-      "truck": "Camión"
+      "truck": "Camión",
+      "van": "Van",
+      "motorcycle": "Motocicleta",
+      "other": "Otro",
+      "auto": "Auto"
     },
     "placeholders": {
       "service_area": "Ej. Centro de la ciudad",
@@ -510,10 +514,14 @@
       "select_vehicle": "Seleccionar Vehículo"
     },
     "types": {
-      "bus": "Autobús",
       "taxi": "Taxi",
+      "bus": "Autobús",
       "microbus": "Microbús",
-      "truck": "Camión"
+      "truck": "Camión",
+      "van": "Van",
+      "motorcycle": "Motocicleta",
+      "other": "Otro",
+      "auto": "Auto"
     },
     "status": {
       "active": "Activo",

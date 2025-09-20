@@ -363,6 +363,51 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     }
   }
 
+  const verify = async (id: string, data: { verification_notes?: string }) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await concessionApiService.verifyConcession(id, { verification_notes: data?.verification_notes || '' })
+
+      // Refresh current item to reflect new status and metadata
+      await fetchById(id)
+
+      return response
+    }
+    catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to verify concession'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  const suspend = async (id: string, data: { suspension_reason: string; suspension_notes?: string; suspension_duration_days?: number }) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      if (!data?.suspension_reason?.trim())
+        throw new Error('La razón de la suspensión es requerida')
+
+      const response = await concessionApiService.suspendConcession(id, data)
+
+      // Refresh current item to reflect suspended status
+      await fetchById(id)
+
+      return response
+    }
+    catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to suspend concession'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
   const setPage = (newPage: number) => {
     page.value = newPage
   }
@@ -469,6 +514,8 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     updateItem,
     deleteItem,
     renewConcession,
+    verify,
+    suspend,
     setPage,
     setFilters,
     clearError,

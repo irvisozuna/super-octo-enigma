@@ -13,6 +13,23 @@ export interface ConcessionWizardData extends ConcessionCreateDto {
   validationErrors?: Record<string, string[]>
 }
 
+// Helper function to map status from API to wizard format
+const mapStatusForWizard = (apiStatus: string): string => {
+  const statusMap: Record<string, string> = {
+    'PENDING': 'ACTIVE',
+    'UNDER_REVIEW': 'ACTIVE',
+    'APPROVED': 'ACTIVE',
+    'REJECTED': 'SUSPENDED',
+    'CANCELLED': 'SUSPENDED',
+    'ACTIVE': 'ACTIVE',
+    'SUSPENDED': 'SUSPENDED',
+    'EXPIRED': 'EXPIRED',
+    'INACTIVE': 'SUSPENDED'
+  }
+
+  return statusMap[apiStatus?.toUpperCase()] || 'ACTIVE'
+}
+
 export const useConcessionWizardStore = defineStore('transport-concession-wizard', () => {
   // State
   const wizardData = ref<ConcessionWizardData>({
@@ -65,8 +82,8 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
   const initializeWizard = (isEdit: boolean = false, concessionId?: string) => {
     if (isEdit && concessionId) {
       // Load existing concession data
-      // This would typically load from API
       console.log('Loading concession for edit:', concessionId)
+      // Don't generate new number for edit mode
     } else {
       // Initialize new concession
       generateConcessionNumber()
@@ -74,6 +91,48 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
 
     isInitialized.value = true
     autoSave()
+  }
+
+  const loadConcessionForEdit = (concessionData: any) => {
+    // Helper function to convert date from ISO format to YYYY-MM-DD
+    const formatDateForInput = (isoDate: string) => {
+      if (!isoDate) return ''
+      try {
+        return new Date(isoDate).toISOString().split('T')[0]
+      } catch (error) {
+        console.warn('Invalid date format:', isoDate)
+        return ''
+      }
+    }
+
+    // Map concession data from API to wizard format
+    wizardData.value = {
+      holder_id: concessionData.holder_id || '',
+      number: concessionData.number || '',
+      modality: concessionData.modality || 'URBAN',
+      municipality: concessionData.municipality || '',
+      valid_from: formatDateForInput(concessionData.valid_from),
+      valid_to: formatDateForInput(concessionData.valid_to),
+      status: mapStatusForWizard(concessionData.status) || 'ACTIVE',
+      route_or_site: concessionData.route_or_site || '',
+      authorized_services: concessionData.authorized_services || [] as AuthorizedService[],
+      restrictions: concessionData.restrictions || [] as RestrictionItem[],
+      metadata: concessionData.metadata || {},
+    }
+
+    // Validate all steps after loading data
+    validateAllSteps()
+
+    // Auto-save the loaded data
+    autoSave()
+
+    console.log('Concession data loaded for editing:', wizardData.value)
+    console.log('Mapped dates:', {
+      valid_from_original: concessionData.valid_from,
+      valid_from_mapped: wizardData.value.valid_from,
+      valid_to_original: concessionData.valid_to,
+      valid_to_mapped: wizardData.value.valid_to
+    })
   }
 
   const generateConcessionNumber = () => {
@@ -293,6 +352,7 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
 
     // Actions
     initializeWizard,
+    loadConcessionForEdit,
     generateConcessionNumber,
     updateHolderInfo,
     updateBasicInfo,

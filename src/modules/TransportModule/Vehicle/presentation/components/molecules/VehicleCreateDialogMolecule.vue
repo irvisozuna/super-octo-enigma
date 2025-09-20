@@ -42,7 +42,7 @@ const form = ref<VehicleCreateDto>({
   model: '',
   year: new Date().getFullYear(),
   color: '',
-  vehicle_type: 'BUS',
+  vehicle_type: 'AUTO',
   capacity: 1,
   status: 'ACTIVE', // Siempre activo por defecto
   registration_date: new Date().toISOString().split('T')[0],
@@ -65,10 +65,14 @@ const driverForm = ref<DriverCreateDto>({
 
 // Options
 const vehicleTypeOptions = [
+{ title: t('TransportModule.vehicle.types.auto'), value: 'AUTO' },
   { title: t('TransportModule.vehicle.types.bus'), value: 'BUS' },
   { title: t('TransportModule.vehicle.types.taxi'), value: 'TAXI' },
   { title: t('TransportModule.vehicle.types.microbus'), value: 'MICROBUS' },
   { title: t('TransportModule.vehicle.types.truck'), value: 'TRUCK' },
+  { title: t('TransportModule.vehicle.types.van'), value: 'VAN' },
+  { title: t('TransportModule.vehicle.types.motorcycle'), value: 'MOTORCYCLE' },
+  { title: t('TransportModule.vehicle.types.other'), value: 'OTHER' }
 ]
 
 const statusOptions = [

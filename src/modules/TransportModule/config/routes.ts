@@ -110,7 +110,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/concessions/edit/:id',
+    path: '/concessions/:id/edit',
     name: 'concessionsEdit',
     component: () => import('@/modules/TransportModule/Concession/presentation/views/ConcessionEdit.vue'),
     meta: {

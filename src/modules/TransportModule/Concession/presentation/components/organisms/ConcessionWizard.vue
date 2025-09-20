@@ -151,6 +151,43 @@ const previousStep = () => {
   }
 }
 
+// Helper function to map wizard data to update DTO
+const mapWizardDataToUpdateDto = (wizardData: any) => {
+  const statusMap: Record<string, 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'INACTIVE'> = {
+    'ACTIVE': 'ACTIVE',
+    'SUSPENDED': 'SUSPENDED',
+    'EXPIRED': 'EXPIRED',
+    'PENDING': 'INACTIVE',
+    'UNDER_REVIEW': 'INACTIVE',
+    'APPROVED': 'ACTIVE',
+    'REJECTED': 'INACTIVE',
+    'CANCELLED': 'INACTIVE'
+  }
+
+  const getConcessionType = (modality: string): 'TAXI' | 'BUS' | 'MICROBUS' | 'TRUCK' => {
+    switch (modality?.toUpperCase()) {
+      case 'TAXI': return 'TAXI'
+      case 'MICROBUS': return 'MICROBUS'
+      case 'TRUCK': return 'TRUCK'
+      default: return 'BUS'
+    }
+  }
+
+  return {
+    concession_type: getConcessionType(wizardData.modality),
+    route_description: wizardData.route_or_site || '',
+    service_area: wizardData.municipality || '',
+    status: statusMap[wizardData.status] || 'ACTIVE',
+    expiry_date: wizardData.valid_to || '',
+    renewal_date: wizardData.valid_from || '',
+    fee_amount: 0, // Default values, could be added to wizard later
+    fee_paid: true,
+    last_payment_date: new Date().toISOString().split('T')[0],
+    terms_conditions: '',
+    notes: JSON.stringify(wizardData.metadata || {}),
+  }
+}
+
 const handleSubmit = async () => {
   try {
     if (isTransitioning.value) {
@@ -163,7 +200,9 @@ const handleSubmit = async () => {
     console.log('🚀 Submitting concession data:', wizardStore.wizardData)
 
     if (isEdit.value) {
-      await concessionStore.updateItem(route.params.id as string, wizardStore.wizardData)
+      // Map wizard data to update DTO format
+      const updateData = mapWizardDataToUpdateDto(wizardStore.wizardData)
+      await concessionStore.updateItem(route.params.id as string, updateData)
     } else {
       await concessionStore.createItem(wizardStore.wizardData)
     }
@@ -216,7 +255,11 @@ onMounted(async () => {
     if (isEdit.value && route.params.id) {
       // Load existing concession data
       await concessionStore.fetchById(route.params.id as string)
-      // TODO: Map store data to wizard data
+
+      // Map store data to wizard data
+      if (concessionStore.currentItem) {
+        wizardStore.loadConcessionForEdit(concessionStore.currentItem)
+      }
     }
 
     await nextTick()
@@ -407,7 +450,7 @@ onUnmounted(() => {
               <!-- Step 5: Services -->
               <VWindowItem :value="4">
                 <ConcessionServicesStep
-                  :authorized-services="wizardStore.wizardData.authorized_services"
+                  :authorized-services="wizardStore.wizardData.authorized_services || []"
                   :valid-values="concessionStore.validValues"
                   @update:services="wizardStore.updateServices"
                   @validate="(isValid: boolean) => handleStepValidation(4, isValid)"
@@ -417,7 +460,7 @@ onUnmounted(() => {
               <!-- Step 6: Restrictions -->
               <VWindowItem :value="5">
                 <ConcessionRestrictionsStep
-                  :restrictions="wizardStore.wizardData.restrictions"
+                  :restrictions="wizardStore.wizardData.restrictions || []"
                   :valid-values="concessionStore.validValues"
                   @update:restrictions="wizardStore.updateRestrictions"
                   @validate="(isValid: boolean) => handleStepValidation(5, isValid)"
