@@ -49,6 +49,9 @@ async function onFormSubmit(values: any) {
     console.error('Error al guardar el usuario:', error)
   }
 }
+
+// Crear handler de submit compatible con el evento del formulario
+const submit = handleSubmit(onFormSubmit)
 </script>
 
 <template>
@@ -65,7 +68,7 @@ async function onFormSubmit(values: any) {
       <!-- Formulario -->
       <VForm
         class="mt-6"
-        :on-submit="handleSubmit(onFormSubmit)"
+        @submit.prevent="submit"
       >
         <VRow>
           <VCol

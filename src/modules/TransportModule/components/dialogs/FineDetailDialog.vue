@@ -130,6 +130,20 @@ const getSeverityColor = (severity: string) => {
   return colors[severity as keyof typeof colors] || 'grey'
 }
 
+// Evidence helpers
+function getPhotoUrl(photo: any): string {
+  // Prefer direct download_url from API; fallback to url or storage path
+  return photo?.download_url
+    || photo?.url
+    || (photo?.photo_path ? `/storage/${photo.photo_path}` : '')
+}
+
+function openPhoto(photo: any) {
+  const url = getPhotoUrl(photo)
+  if (url)
+    window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 // Lifecycle
 onMounted(() => {
   if (props.fineId) {
@@ -494,12 +508,14 @@ watch(() => props.fineId, (newId) => {
               <VRow>
                 <VCol cols="12">
                   <VCard variant="outlined">
-                    <VCardTitle class="text-h6">
-                      <VIcon
-                        icon="tabler-camera"
-                        class="me-2"
-                      />
-                      Evidencias Fotográficas
+                    <VCardTitle class="text-h6 d-flex align-center justify-space-between">
+                      <div>
+                        <VIcon icon="tabler-camera" class="me-2" />
+                        Evidencias Fotográficas
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        {{ fine.photos.length }} archivo(s)
+                      </div>
                     </VCardTitle>
                     <VCardText>
                       <VRow>
@@ -509,24 +525,36 @@ watch(() => props.fineId, (newId) => {
                           cols="12"
                           sm="6"
                           md="4"
+                          lg="3"
                         >
-                          <VCard
-                            variant="outlined"
-                            class="photo-card"
-                          >
+                          <VCard variant="outlined" class="photo-card h-100 d-flex flex-column">
                             <VImg
-                              :src="photo.url"
-                              :alt="photo.description"
-                              height="200"
+                              :src="getPhotoUrl(photo)"
+                              :alt="photo.description || photo.photo_filename"
+                              height="180"
                               cover
                               class="cursor-pointer"
-                              @click="() => {}"
+                              @click="openPhoto(photo)"
                             />
-                            <VCardText v-if="photo.description">
-                              <p class="text-caption text-medium-emphasis mb-0">
-                                {{ photo.description }}
-                              </p>
+                            <VCardText class="flex-grow-1">
+                              <div class="d-flex align-center justify-space-between mb-1">
+                                <VChip size="x-small" color="info" variant="tonal">{{ photo.file_extension?.toUpperCase() || 'IMG' }}</VChip>
+                                <span class="text-caption text-medium-emphasis">{{ photo.file_size_formatted }}</span>
+                              </div>
+                              <div class="text-caption text-medium-emphasis">
+                                {{ photo.description || photo.photo_filename }}
+                              </div>
                             </VCardText>
+                            <VCardActions class="pt-0">
+                              <VBtn size="small" variant="text" @click="openPhoto(photo)">
+                                <VIcon start size="16">tabler-eye</VIcon>
+                                Ver
+                              </VBtn>
+                              <VBtn size="small" variant="text" :href="getPhotoUrl(photo)" target="_blank" download>
+                                <VIcon start size="16">tabler-download</VIcon>
+                                Descargar
+                              </VBtn>
+                            </VCardActions>
                           </VCard>
                         </VCol>
                       </VRow>

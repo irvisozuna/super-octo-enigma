@@ -10,7 +10,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/shared/presentation/views/TransportDashboard.vue'),
     meta: {
       action: 'read',
-      subject: 'transport',
+      subject: 'transportmanagement',
     },
   },
 
@@ -21,7 +21,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Vehicle/presentation/views/VehicleList.vue'),
     meta: {
       action: 'read',
-      subject: 'vehicles',
+      subject: 'vehicle',
     },
   },
   {
@@ -30,7 +30,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Vehicle/presentation/views/VehicleCreate.vue'),
     meta: {
       action: 'create',
-      subject: 'vehicles',
+      subject: 'vehicle',
     },
   },
   {
@@ -39,7 +39,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Vehicle/presentation/views/VehicleEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'vehicles',
+      subject: 'vehicle',
     },
   },
   {
@@ -48,7 +48,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Vehicle/presentation/views/VehicleView.vue'),
     meta: {
       action: 'read',
-      subject: 'vehicles',
+      subject: 'vehicle',
     },
   },
 
@@ -59,7 +59,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Driver/presentation/views/DriverList.vue'),
     meta: {
       action: 'read',
-      subject: 'drivers',
+      subject: 'driver',
     },
   },
   {
@@ -68,7 +68,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Driver/presentation/views/DriverCreate.vue'),
     meta: {
       action: 'create',
-      subject: 'drivers',
+      subject: 'driver',
     },
   },
   {
@@ -77,7 +77,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Driver/presentation/views/DriverEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'drivers',
+      subject: 'driver',
     },
   },
   {
@@ -86,7 +86,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Driver/presentation/views/DriverView.vue'),
     meta: {
       action: 'read',
-      subject: 'drivers',
+      subject: 'driver',
     },
   },
 
@@ -97,7 +97,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Concession/presentation/views/ConcessionList.vue'),
     meta: {
       action: 'read',
-      subject: 'concessions',
+      subject: 'concession',
     },
   },
   {
@@ -106,7 +106,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Concession/presentation/views/ConcessionCreate.vue'),
     meta: {
       action: 'create',
-      subject: 'concessions',
+      subject: 'concession',
     },
   },
   {
@@ -115,7 +115,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Concession/presentation/views/ConcessionEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'concessions',
+      subject: 'concession',
     },
   },
   {
@@ -124,7 +124,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Concession/presentation/views/ConcessionDetail.vue'),
     meta: {
       action: 'read',
-      subject: 'concessions',
+      subject: 'concession',
     },
   },
 
@@ -135,7 +135,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/ConcessionHolder/presentation/views/ConcessionHolderList.vue'),
     meta: {
       action: 'read',
-      subject: 'concession-holders',
+      subject: 'concessionholder',
     },
   },
   {
@@ -144,7 +144,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/ConcessionHolder/presentation/views/ConcessionHolderCreate.vue'),
     meta: {
       action: 'create',
-      subject: 'concession-holders',
+      subject: 'concessionholder',
     },
   },
   {
@@ -153,7 +153,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/ConcessionHolder/presentation/views/ConcessionHolderEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'concession-holders',
+      subject: 'concessionholder',
     },
   },
   {
@@ -162,7 +162,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/ConcessionHolder/presentation/views/ConcessionHolderDetail.vue'),
     meta: {
       action: 'read',
-      subject: 'concession-holders',
+      subject: 'concessionholder',
     },
   },
 
@@ -173,7 +173,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Fine/presentation/views/FineList.vue'),
     meta: {
       action: 'read',
-      subject: 'fines',
+      subject: 'fine',
     },
   },
   {
@@ -182,7 +182,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Fine/presentation/views/FineCreate.vue'),
     meta: {
       action: 'create',
-      subject: 'fines',
+      subject: 'fine',
     },
   },
   {
@@ -191,7 +191,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Fine/presentation/views/FineEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'fines',
+      subject: 'fine',
     },
   },
   {
@@ -200,7 +200,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Fine/presentation/views/FineView.vue'),
     meta: {
       action: 'read',
-      subject: 'fines',
+      subject: 'fine',
     },
   },
   {
@@ -209,7 +209,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Fine/presentation/views/FinePayment.vue'),
     meta: {
       action: 'update',
-      subject: 'fines',
+      subject: 'fine',
     },
   },
 
@@ -220,7 +220,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Document/presentation/views/DocumentList.vue'),
     meta: {
       action: 'read',
-      subject: 'documents',
+      subject: 'document',
     },
   },
   {
@@ -229,7 +229,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Document/presentation/views/DocumentUpload.vue'),
     meta: {
       action: 'create',
-      subject: 'documents',
+      subject: 'document',
     },
   },
   {
@@ -238,7 +238,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Document/presentation/views/DocumentEdit.vue'),
     meta: {
       action: 'update',
-      subject: 'documents',
+      subject: 'document',
     },
   },
   {
@@ -247,7 +247,7 @@ const TransportModuleRoutes: RouteRecordRaw[] = [
     component: () => import('@/modules/TransportModule/Document/presentation/views/DocumentView.vue'),
     meta: {
       action: 'read',
-      subject: 'documents',
+      subject: 'document',
     },
   },
 ]

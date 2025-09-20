@@ -1,4 +1,5 @@
-import type { RouteRecordRaw } from 'vue-router/auto'
+import type { RouteRecordRaw } from 'vue-router'
+import { useCookie } from '@/@core/composable/useCookie'
 
 // 👉 Redirects
 export const redirects: RouteRecordRaw[] = [
@@ -7,19 +8,22 @@ export const redirects: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'index',
-    redirect: to => {
+    redirect: (to: any) => {
       // TODO: Get type from backend
-      const userData = useCookie<Record<string, unknown> | null | undefined>('userData')
-      const userRole = userData.value?.roles[0].name as string
+      const userData = useCookie<Record<string, any> | null | undefined>('userData')
+      const accessToken = useCookie<string | null | undefined>('accessToken')
+      const roleName = (userData.value as any)?.roles?.[0]?.name?.toString()?.toLowerCase()
 
-      if (userRole === 'admin')
+      // If logged in (has userData), route to a default home even if role isn't matched explicitly
+      if (userData.value || accessToken.value) {
+        if (roleName === 'admin')
+          return { name: 'dashboards-crm' }
+
+        // Default landing for any authenticated role
         return { name: 'dashboards-crm' }
-      if (userRole === 'user')
-        return { name: 'supportsList' }
+      }
 
-      // if (userRole !== 'client')
-      //   return { name: 'dashboards-default' }
-
+      // Not logged in → go to login preserving query
       return { name: 'login', query: to.query }
     },
   },

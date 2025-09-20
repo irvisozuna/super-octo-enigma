@@ -31,6 +31,12 @@ const route = useRoute()
 const router = useRouter()
 
 const ability = useAbility()
+const userCookie = useCookie('userData')
+const accessTokenCookie = useCookie('accessToken')
+const profileCookie = useCookie('profile')
+const companyCookie = useCookie('company')
+const userDataCookie = useCookie('userData')
+const abilityRulesCookie = useCookie('userAbilityRules')
 
 const errors = ref<Record<string, string | undefined>>({
   email: undefined,
@@ -64,28 +70,34 @@ const login = async () => {
       },
     })
 
+    
     const { accessToken, userData, userAbilityRules, profile, company } = res.data
 
     if (res.dolibarrToken !== undefined)
       useCookie('dolibarrToken').value = res.dolibarrToken
 
-    // insert abilities default
-    useCookie('userAbilityRules').value = userAbilityRules
-
-    // insert abilities default
-
+    // Persist abilities in sessionStorage (no límite de cookie) y actualiza CASL
+    try {
+      sessionStorage.setItem('userAbilityRules', JSON.stringify(userAbilityRules))
+    }
+    catch (e) {
+      console.error('No se pudieron guardar las abilities en sessionStorage', e)
+    }
     ability.update(userAbilityRules)
 
+    debugger
+    // Persist auth/session cookies via the same refs (avoid race with watch)
+    userCookie.value = userData
+    accessTokenCookie.value = accessToken
+    profileCookie.value = profile
+    companyCookie.value = company
+    userDataCookie.value = userData
     useCookie('userData').value = userData
-    useCookie('accessToken').value = accessToken
-    useCookie('profile').value = profile
-    useCookie('company').value = company
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
-    await nextTick(() => {
-      router.replace(route.query.to ? String(route.query.to) : '/')
-    })
+    await nextTick()
+    router.replace(route.query.to ? String(route.query.to) : '/')
   }
   catch (err) {
     console.error(err)

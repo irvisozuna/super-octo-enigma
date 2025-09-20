@@ -66,10 +66,10 @@ const filteredStats = computed(() => {
     unpaid: filtered.filter(f => f.status === 'ISSUED' || f.status === 'OVERDUE').length,
     paid: filtered.filter(f => f.status === 'PAID').length,
     overdue: filtered.filter(f => f.status === 'OVERDUE').length,
-    total_amount: filtered.reduce((sum, f) => sum + f.total_amount, 0),
+    total_amount: filtered.reduce((sum, f) => sum + parseFloat(f.total_amount), 0),
     unpaid_amount: filtered
       .filter(f => f.status === 'ISSUED' || f.status === 'OVERDUE')
-      .reduce((sum, f) => sum + f.remaining_amount, 0),
+      .reduce((sum, f) => sum + parseFloat(f.total_amount), 0),
   }
 })
 
@@ -220,7 +220,7 @@ watch(() => props.concessionId || props.concession?.id, newId => {
 
           <div class="text-center">
             <div class="text-h6 font-weight-bold text-error">
-              {{ formatCurrency(filteredStats.unpaid_amount) }}
+              {{ formatCurrency(filteredStats.unpaid_amount) }} MXN
             </div>
             <div class="text-caption text-medium-emphasis">
               Monto Pendiente

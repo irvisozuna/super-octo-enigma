@@ -8,7 +8,7 @@ const TransportModuleMenu: VerticalNavItems = [
     icon: { icon: 'tabler-truck' },
     to: 'transportDashboard',
     action: 'read',
-    subject: 'transport',
+    subject: 'transportmanagement',
     children: [
       // {
       //   title: 'TransportModule.menu.vehicles',
@@ -29,21 +29,21 @@ const TransportModuleMenu: VerticalNavItems = [
         icon: { icon: 'tabler-users' },
         to: 'concessionHoldersList',
         action: 'read',
-        subject: 'concession-holders',
+        subject: 'concessionholder',
       },
       {
         title: 'TransportModule.menu.concessions',
         icon: { icon: 'tabler-certificate' },
         to: 'concessionsList',
         action: 'read',
-        subject: 'concessions',
+        subject: 'concession',
       },
       {
         title: 'TransportModule.menu.fines',
         icon: { icon: 'tabler-receipt' },
         to: 'finesList',
         action: 'read',
-        subject: 'fines',
+        subject: 'fine',
       },
 
       // {

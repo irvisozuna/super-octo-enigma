@@ -2,6 +2,8 @@ import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 import type { User } from '@/types/types'
 import { canNavigate } from '@layouts/plugins/casl'
 import { useTenantStore } from '@/stores/tenant.store'
+import { useCookie } from '@/@core/composable/useCookie'
+import { useAbility } from '@casl/vue'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
@@ -32,8 +34,10 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
      * Check if user is logged in by checking if token & user data exists in local storage
      * Feel free to update this logic to suit your needs
      */
-    const isLoggedIn = !!(useCookie('userData').value && useCookie('accessToken').value)
-    const user = useCookie('userData').value
+    const userCookie = useCookie('userData')
+    const tokenCookie = useCookie('accessToken')
+    const isLoggedIn = !!(userCookie.value || tokenCookie.value)
+    const user = userCookie.value
     const userData = user as unknown as User
 
     /*
@@ -46,6 +50,20 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
         return '/'
       else
         return undefined
+    }
+
+    // Rehidratar CASL desde sessionStorage si existe (antes de evaluar permisos)
+    const cached = sessionStorage.getItem('userAbilityRules')
+    if (cached) {
+      try {
+        const rules = JSON.parse(cached)
+        const ability = useAbility()
+        ability.update(rules)
+      }
+      catch (e) {
+        // Si hay problema con el JSON o estado, lo ignoramos
+        console.warn('No se pudieron restaurar abilities desde sessionStorage')
+      }
     }
 
     if (!canNavigate(to) && to.matched.length) {
@@ -64,16 +82,14 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
 
     // Verificar el wizardStep y redirigir si es necesario
     if (isLoggedIn && userData) {
-      const wizardStep = userData.wizardStep || 0
+      const wizardStep = (userData as any).wizardStep ?? (userData as any)?.metadata?.wizardStep ?? 0
 
       // Si el wizardStep es menor a 3 y no está en una ruta de onboarding, redirigir a onboarding
-      if (wizardStep < 3 && !to.path.startsWith('/pages/onboarding')) {
+      if (wizardStep < 3 && !to.path.startsWith('/pages/onboarding'))
         return 'pages/onboarding'
-      }
-      else if (wizardStep >= 3 && to.path.startsWith('/pages/onboarding')) {
-        // Si el wizardStep es mayor o igual a 3 y está en una ruta de onboarding, redirigir a la página de inicio
+      // Si el wizardStep es mayor o igual a 3 y está en una ruta de onboarding, redirigir a home
+      if (wizardStep >= 3 && to.path.startsWith('/pages/onboarding'))
         return '/'
-      }
     }
 
     // return 'login'
