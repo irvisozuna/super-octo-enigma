@@ -107,7 +107,7 @@ const getHolderTypeColor = (type: string) => {
   case 'INDIVIDUAL': return 'secondary'
   case 'LEGAL': return 'info'
   case 'COMPANY': return 'success'
-  case 'PHYSICAL': return 'warning'
+  case 'NATURAL': return 'warning'
   default: return 'default'
   }
 }

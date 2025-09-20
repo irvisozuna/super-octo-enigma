@@ -313,6 +313,18 @@
   "Roles & Permissions": "Roles & Permissions",
   "roles_list": "Roles List",
   "roles_list_description": "A role provides access to predefined menus and functions so that, depending on the assigned role, an administrator has access to what they need.",
+  "select_all_crud": "Select all CRUD permissions",
+  "select_all_crud_description": "Select all basic permissions (CRUD) from all modules",
+  "select_all": "Select all",
+  "basic_permissions": "Basic permissions",
+  "special_permissions": "Special permissions",
+  "module_overview": "Module Overview",
+  "expand_collapse_description": "Expand or collapse all modules for an overview",
+  "expand_all": "Expand All",
+  "collapse_all": "Collapse All",
+  "configure": "Configure",
+  "main_module_permissions": "Main Module Permissions",
+  "submodules": "Submodules",
   "Save": "Save",
   "save": "Save",
   "Save changes": "Save Changes",
@@ -539,5 +551,114 @@
   "logic": {
     "and": "AND",
     "or": "OR"
+  },
+  "TransportModule": {
+    "concession": {
+      "tabs": {
+        "fines": "Fines"
+      }
+    },
+    "fine": {
+      "title": "Fines",
+      "list_title": "Transport fines management",
+      "unpaid": "Unpaid",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "all": "All",
+      "search_placeholder": "Search fines...",
+      "no_fines": "No fines registered",
+      "no_fines_filtered": "No fines match this filter",
+      "fields": {
+        "fine_number": "Fine Number",
+        "status": "Status",
+        "amount": "Amount",
+        "base_amount": "Base Amount",
+        "total_amount": "Total Amount",
+        "issued_at": "Issued Date",
+        "due_date": "Due Date",
+        "created_by": "Created By",
+        "violation_type": "Violation Type",
+        "concession_info": "Concession Info",
+        "concession_holder": "Concession Holder",
+        "subject_type": "Subject Type",
+        "payment_status": "Payment Status",
+        "remaining": "Remaining"
+      },
+      "status": {
+        "draft": "Draft",
+        "issued": "Issued",
+        "paid": "Paid",
+        "cancelled": "Cancelled",
+        "overdue": "Overdue",
+        "appealed": "Appealed"
+      },
+      "subject_type": {
+        "concession": "Concession",
+        "concession_holder": "Concession Holder",
+        "driver": "Driver"
+      },
+      "payment_status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "partial": "Partial"
+      },
+      "filters": {
+        "advanced": "Advanced Filters",
+        "clear": "Clear Filters",
+        "all_statuses": "All Statuses",
+        "all_subject_types": "All Subject Types",
+        "all_payment_statuses": "All Payment Statuses",
+        "date_from": "Date From",
+        "date_to": "Date To",
+        "amount_min": "Min Amount",
+        "amount_max": "Max Amount"
+      },
+      "actions": {
+        "issue_fine": "Issue Fine",
+        "pay": "Pay",
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "details": {
+        "title": "Fine Details",
+        "fine_number": "Fine Number",
+        "status": "Status",
+        "base_amount": "Base Amount",
+        "total_amount": "Total Amount",
+        "issued_at": "Issued Date",
+        "due_date": "Due Date",
+        "place": "Place",
+        "notes": "Notes",
+        "subject": "Fine Subject",
+        "violation_type": "Violation Type",
+        "location": "Fine Location",
+        "evidence_photos": "Evidence Photos",
+        "payment_history": "Payment History",
+        "view_detail": "View Details",
+        "pay": "Pay",
+        "contest": "Contest"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "ISSUED": "Issued",
+        "PAID": "Paid",
+        "CANCELLED": "Cancelled",
+        "OVERDUE": "Overdue",
+        "APPEALED": "Appealed"
+      },
+      "subject_type": {
+        "concession": "Concession",
+        "concession_holder": "Concession Holder",
+        "driver": "Driver"
+      },
+      "severity": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      }
+    }
   }
 }

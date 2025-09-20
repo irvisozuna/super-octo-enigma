@@ -130,7 +130,7 @@ function getHolderTypeColor(type: string) {
   const colors = {
     natural: 'blue',
     legal: 'green',
-    physical: 'purple',
+    NATURAL: 'purple',
     individual: 'blue',
     company: 'green',
     cooperative: 'purple',
@@ -169,7 +169,7 @@ function getHolderTypeIcon(type: string) {
   const icons = {
     natural: 'tabler-user',
     legal: 'tabler-building',
-    physical: 'tabler-user',
+    NATURAL: 'tabler-user',
     individual: 'tabler-user',
     company: 'tabler-building',
     cooperative: 'tabler-users',

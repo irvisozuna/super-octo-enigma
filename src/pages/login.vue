@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { VForm } from 'vuetify/components/VForm'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import authV2LoginIllustrationLight from '@images/image_login.png'
+const authV2LoginIllustrationLight = '/images/simos_logo (2).png'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'

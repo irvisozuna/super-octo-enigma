@@ -83,7 +83,7 @@ export class ConcessionHolderMapper {
     const typeMap: Record<string, string> = {
       NATURAL: 'Natural',
       LEGAL: 'Legal',
-      PHYSICAL: 'Physical',
+      NATURAL: 'NATURAL',
       INDIVIDUAL: 'Individual',
       COMPANY: 'Company',
       COOPERATIVE: 'Cooperative',

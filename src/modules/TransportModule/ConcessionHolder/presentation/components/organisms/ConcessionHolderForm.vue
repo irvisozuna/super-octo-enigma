@@ -46,14 +46,14 @@ watch(() => props.initialData, newData => {
 }, { immediate: true })
 
 // Options
-const holderTypes = computed(() => [
-  { title: t('TransportModule.concession_holder.types.natural'), value: 'NATURAL' },
-  { title: t('TransportModule.concession_holder.types.legal'), value: 'LEGAL' },
-])
+const holderTypes = [
+  { title: 'Persona Física', value: 'NATURAL' },
+  { title: 'Persona Moral', value: 'LEGAL' },
+]
 
 // Computed for conditional field visibility
 const showCurpField = computed(() => {
-  return ['NATURAL', 'PHYSICAL'].includes(form.value.holder_type)
+  return form.value.holder_type === 'NATURAL'
 })
 
 const showLegalRepresentativeField = computed(() => {
@@ -87,7 +87,7 @@ const onHolderTypeChange = () => {
   if (form.value.holder_type !== 'LEGAL')
     form.value.legal_representative = ''
 
-  if (!['NATURAL', 'PHYSICAL'].includes(form.value.holder_type))
+  if (form.value.holder_type !== 'NATURAL')
     form.value.curp = ''
 }
 

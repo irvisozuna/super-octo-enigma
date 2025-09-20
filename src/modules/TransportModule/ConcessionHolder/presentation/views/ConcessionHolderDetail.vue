@@ -46,11 +46,11 @@ const tabs = ref([
     icon: 'tabler-files',
     component: ConcessionHolderDocumentsTab,
   },
-  {
-    title: 'Historial',
-    icon: 'tabler-history',
-    component: ConcessionHolderHistoryTab,
-  },
+  // {
+  //   title: 'Historial',
+  //   icon: 'tabler-history',
+  //   component: ConcessionHolderHistoryTab,
+  // },
 ])
 
 async function loadHolderDetail() {

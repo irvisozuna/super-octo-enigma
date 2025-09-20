@@ -19,13 +19,58 @@ export class FineRepositoryImpl implements FineRepository {
     try {
       const response = await this.apiService.getFines(filters)
 
-      if (response.success && Array.isArray(response.data))
-        return response.data.map(item => FineMapper.fromApiResponse(item))
+      console.log('🔍 FineRepositoryImpl response:', response)
 
+      // Manejar diferentes formatos de respuesta
+      if (response && Array.isArray(response)) {
+        // Si la respuesta es directamente un array
+        return response.map(item => FineMapper.fromApiResponse(item))
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Si la respuesta tiene estructura { data: [...] }
+        return response.data.map(item => FineMapper.fromApiResponse(item))
+      } else if (response && response.success && response.data && Array.isArray(response.data)) {
+        // Si la respuesta tiene estructura { success: true, data: [...] }
+        return response.data.map(item => FineMapper.fromApiResponse(item))
+      }
+
+      console.warn('⚠️ Unexpected response format:', response)
       return []
     }
     catch (error) {
       console.error('Error in FineRepositoryImpl.findAll:', error)
+      throw error
+    }
+  }
+
+  // Nuevo método que devuelve tanto datos como meta en una sola petición
+  async findAllWithMeta(filters: FineFilterDto = {}): Promise<{ data: FineEntity[], meta: any }> {
+    try {
+      const response = await this.apiService.getFines(filters)
+
+      console.log('🔍 FineRepositoryImpl findAllWithMeta response:', response)
+
+      let data: FineEntity[] = []
+      let meta: any = {}
+
+      // Manejar diferentes formatos de respuesta
+      if (response && Array.isArray(response)) {
+        // Si la respuesta es directamente un array
+        data = response.map(item => FineMapper.fromApiResponse(item))
+        meta = { total: response.length }
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Si la respuesta tiene estructura { data: [...], meta: {...} }
+        data = response.data.map(item => FineMapper.fromApiResponse(item))
+        meta = response.meta || { total: response.data.length }
+      } else if (response && response.success && response.data && Array.isArray(response.data)) {
+        // Si la respuesta tiene estructura { success: true, data: [...], meta: {...} }
+        data = response.data.map(item => FineMapper.fromApiResponse(item))
+        meta = response.meta || { total: response.data.length }
+      }
+
+      return { data, meta }
+    }
+    catch (error) {
+      console.error('Error in FineRepositoryImpl.findAllWithMeta:', error)
       throw error
     }
   }
@@ -117,7 +162,18 @@ export class FineRepositoryImpl implements FineRepository {
       const filtersWithPagination = { ...filters, page: 1, per_page: 1 }
       const response = await this.apiService.getFines(filtersWithPagination)
 
-      return response.meta?.total || 0
+      console.log('🔍 FineRepositoryImpl count response:', response)
+
+      // Manejar diferentes formatos de respuesta para el count
+      if (response && response.meta && typeof response.meta.total === 'number') {
+        return response.meta.total
+      } else if (response && typeof response.total === 'number') {
+        return response.total
+      } else if (Array.isArray(response)) {
+        return response.length
+      }
+
+      return 0
     }
     catch (error) {
       console.error('Error in FineRepositoryImpl.count:', error)

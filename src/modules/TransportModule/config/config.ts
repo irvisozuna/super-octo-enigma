@@ -51,6 +51,20 @@ export const TransportModuleConfig = {
     locale: 'es-MX',
   },
 
+  // Numbering configuration
+  numbering: {
+    concession: {
+      // Pattern tokens supported:
+      // {YYYY} {YY} {MM} {DD} {HH} {mm} {ss} {TS} {TS6} {RNDn}
+      // Example default: CON-20250920-123456
+      pattern: 'CON-{YYYY}{MM}{DD}-{TS6}',
+      // Allow users to switch to manual entry in UI
+      allowManual: true,
+      // Default mode when creating: 'auto' or 'manual'
+      defaultMode: 'auto',
+    },
+  },
+
   // Feature flags
   features: {
     enableVehicleTracking: true,

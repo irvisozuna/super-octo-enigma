@@ -29,6 +29,10 @@ export class FineApiService {
     return await rawApi(this.baseUrl, { method: 'GET', params })
   }
 
+  async getFines(params: any) {
+    return await rawApi('/fines/list', { method: 'GET', params })
+  }
+
   // Fine specific methods
   async payFine(id: string, data: any) {
     return await rawApi(`${this.baseUrl}/${id}/pay`, { method: 'POST', body: data })

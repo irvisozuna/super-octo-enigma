@@ -172,7 +172,7 @@ const handleSubmit = async () => {
     wizardStore.clearDraft(wizardStore.wizardData.holder_id)
 
     emit('submit', wizardStore.wizardData)
-    await router.push('/transport/concessions')
+    await router.push('/concessions')
   } catch (error) {
     console.error('❌ Submit error:', error)
     // Show error message (could use global snackbar here)
@@ -183,7 +183,7 @@ const handleSubmit = async () => {
 
 const handleCancel = async () => {
   emit('cancel')
-  await router.push('/transport/concessions')
+  await router.push('/concessions')
 }
 
 // Validation handlers for each step
@@ -528,11 +528,12 @@ onUnmounted(() => {
 .stepper-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
   border-radius: 8px;
-  transition: all 0.2s ease;
   cursor: default;
+  gap: 12px;
+  padding-block: 8px;
+  padding-inline: 12px;
+  transition: all 0.2s ease;
 }
 
 .stepper-item--clickable {
@@ -544,36 +545,36 @@ onUnmounted(() => {
 }
 
 .stepper-item--active {
-  background-color: rgba(var(--v-theme-primary), 0.08);
   border: 1px solid rgba(var(--v-theme-primary), 0.2);
+  background-color: rgba(var(--v-theme-primary), 0.08);
 }
 
 .stepper-indicator {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  border: 2px solid rgba(var(--v-theme-outline), 0.3);
   border-radius: 50%;
   background-color: rgba(var(--v-theme-surface-variant), 1);
-  border: 2px solid rgba(var(--v-theme-outline), 0.3);
-  flex-shrink: 0;
+  block-size: 24px;
+  inline-size: 24px;
 }
 
 .stepper-item--active .stepper-indicator {
-  background-color: rgba(var(--v-theme-primary), 1);
   border-color: rgba(var(--v-theme-primary), 1);
+  background-color: rgba(var(--v-theme-primary), 1);
 }
 
 .stepper-item--completed .stepper-indicator {
-  background-color: rgba(var(--v-theme-success), 1);
   border-color: rgba(var(--v-theme-success), 1);
+  background-color: rgba(var(--v-theme-success), 1);
 }
 
 .stepper-number {
+  color: rgba(var(--v-theme-on-surface), 0.6);
   font-size: 12px;
   font-weight: 600;
-  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .stepper-item--active .stepper-number {
@@ -582,21 +583,21 @@ onUnmounted(() => {
 
 .stepper-content {
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
 }
 
 .stepper-title {
+  color: rgba(var(--v-theme-on-surface), 0.87);
   font-size: 14px;
   font-weight: 500;
   line-height: 1.2;
-  color: rgba(var(--v-theme-on-surface), 0.87);
 }
 
 .stepper-subtitle {
+  color: rgba(var(--v-theme-on-surface), 0.6);
   font-size: 12px;
   line-height: 1.2;
-  color: rgba(var(--v-theme-on-surface), 0.6);
-  margin-top: 2px;
+  margin-block-start: 2px;
 }
 
 .stepper-item--active .stepper-title {

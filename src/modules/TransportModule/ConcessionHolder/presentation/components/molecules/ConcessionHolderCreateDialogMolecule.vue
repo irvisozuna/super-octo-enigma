@@ -22,7 +22,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: 'Add Concession Holder',
+  title: 'Agregar Titular de Concesión',
   loading: false,
   modelValue: false,
 })

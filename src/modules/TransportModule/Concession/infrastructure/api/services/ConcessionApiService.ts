@@ -55,8 +55,8 @@ export class ConcessionApiService {
     return await rawApi(`${this.baseUrl}/by-number/${concessionNumber}`, { method: 'GET' })
   }
 
-  async findByHolderId(holderId: string) {
-    return await rawApi(`${this.baseUrl}/by-holder/${holderId}`, { method: 'GET' })
+  async findByHolderId(holderId: string, params?: any) {
+    return await rawApi(`${this.baseUrl}/holder/${holderId}`, { method: 'GET', params })
   }
 
   async findExpiringConcessions(days?: number) {

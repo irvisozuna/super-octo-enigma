@@ -1,4 +1,31 @@
 {
+  "EDUCATION": "Educación",
+  "HEALTH": "Salud",
+  "PASSENGER_TRANSPORT": "Transporte de Pasajeros",
+  "REGULAR_SERVICE": "Servicio Regular",
+  "EXPRESS_SERVICE": "Servicio Express",
+  "SCHOOL_TRANSPORT": "Transporte Escolar",
+  "TOURIST_TRANSPORT": "Transporte Turístico",
+  "WORKER_TRANSPORT": "Transporte de Trabajadores",
+  "TAXI_SERVICE": "Servicio de Taxi",
+  "DELIVERY_SERVICE": "Servicio de Entrega",
+  "SPECIAL_EVENTS": "Eventos Especiales",
+  "NIGHT_SERVICE": "Servicio de Noche",
+  "WEEKEND_SERVICE": "Servicio de Fin de Semana",
+  "HOLIDAY_SERVICE": "Servicio de Feriado",
+  "AIRPORT_SERVICE": "Servicio de Aeropuerto",
+  "HOSPITAL_SERVICE": "Servicio de Hospital",
+  "UNIVERSITY_SERVICE": "Servicio Universitario",
+  "CONNECTIVITY": "Conectividad",
+  "TIME_RESTRICTIONS": "Restricciones de Tiempo",
+  "ROUTE_RESTRICTIONS": "Restricciones de Ruta",
+  "ZONE_RESTRICTIONS": "Restricciones de Zona",
+  "SPEED_LIMITS": "Límites de Velocidad",
+  "ENVIRONMENTAL_RESTRICTIONS": "Restricciones Ambientales",
+  "SAFETY_EQUIPMENT": "Equipo de Seguridad",
+  "DRIVER_QUALIFICATIONS": "Calificaciones del Conductor",
+  "VEHICLE_TYPE": "Tipo de Vehículo",
+  "CAPACITY_LIMIT": "Límite de Capacidad",
   "2": "2",
   "3": "3",
   "5": "5",
@@ -316,6 +343,18 @@
   "Roles & Permissions": "Roles y Permisos",
   "roles_list": "Lista de Roles",
   "roles_list_description": "A un rol se le proporciona acceso a menús y funciones predefinidos para que, dependiendo del rol asignado, un administrador pueda tener acceso a lo que necesita.",
+  "select_all_crud": "Seleccionar todos los permisos CRUD",
+  "select_all_crud_description": "Selecciona todos los permisos básicos (CRUD) de todos los módulos",
+  "select_all": "Seleccionar todo",
+  "basic_permissions": "Permisos básicos",
+  "special_permissions": "Permisos especiales",
+  "module_overview": "Vista general de módulos",
+  "expand_collapse_description": "Expande o colapsa todos los módulos para una vista general",
+  "expand_all": "Expandir todo",
+  "collapse_all": "Colapsar todo",
+  "configure": "Configurar",
+  "main_module_permissions": "Permisos del módulo principal",
+  "submodules": "Submódulos",
   "Save": "Guardar",
   "save": "Guardar",
   "Save changes": "Guardar cambios",
@@ -534,7 +573,9 @@
     "error": "Error",
     "next": "Siguiente",
     "previous": "Anterior",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "status": "Estado",
+    "actions": "Acciones"
   },
   "close": "Cerrar",
   "period": "Periodo",
@@ -644,4 +685,113 @@
   "deleteModule": "Eliminar {moduleName}",
   "deleteItemDescription": "¿Está seguro de que desea eliminar este elemento?",
   "confirmDelete": "Confirmar eliminación",
+  "TransportModule": {
+    "concession": {
+      "tabs": {
+        "fines": "Multas"
+      }
+    },
+    "fine": {
+      "title": "Multas",
+      "list_title": "Gestión de multas del transporte",
+      "unpaid": "Pendientes",
+      "paid": "Pagadas",
+      "overdue": "Vencidas",
+      "all": "Todas",
+      "search_placeholder": "Buscar multas...",
+      "no_fines": "Sin multas registradas",
+      "no_fines_filtered": "No hay multas con este filtro",
+      "fields": {
+        "fine_number": "Número de Multa",
+        "status": "Estado",
+        "amount": "Monto",
+        "base_amount": "Monto Base",
+        "total_amount": "Monto Total",
+        "issued_at": "Fecha de Emisión",
+        "due_date": "Fecha Límite",
+        "created_by": "Creado por",
+        "violation_type": "Tipo de Violación",
+        "concession_info": "Información de Concesión",
+        "concession_holder": "Concesionario",
+        "subject_type": "Tipo de Sujeto",
+        "payment_status": "Estado de Pago",
+        "remaining": "Restante"
+      },
+      "status": {
+        "draft": "Borrador",
+        "issued": "Emitida",
+        "paid": "Pagada",
+        "cancelled": "Cancelada",
+        "overdue": "Vencida",
+        "appealed": "Impugnada"
+      },
+      "subject_type": {
+        "concession": "Concesión",
+        "concession_holder": "Concesionario",
+        "driver": "Conductor"
+      },
+      "payment_status": {
+        "paid": "Pagada",
+        "pending": "Pendiente",
+        "overdue": "Vencida",
+        "partial": "Parcial"
+      },
+      "filters": {
+        "advanced": "Filtros Avanzados",
+        "clear": "Limpiar Filtros",
+        "all_statuses": "Todos los Estados",
+        "all_subject_types": "Todos los Tipos de Sujeto",
+        "all_payment_statuses": "Todos los Estados de Pago",
+        "date_from": "Fecha Desde",
+        "date_to": "Fecha Hasta",
+        "amount_min": "Monto Mínimo",
+        "amount_max": "Monto Máximo"
+      },
+      "actions": {
+        "issue_fine": "Emitir Multa",
+        "pay": "Pagar",
+        "view": "Ver",
+        "edit": "Editar",
+        "delete": "Eliminar"
+      },
+      "details": {
+        "title": "Detalle de Multa",
+        "fine_number": "Número de Multa",
+        "status": "Estado",
+        "base_amount": "Monto Base",
+        "total_amount": "Monto Total",
+        "issued_at": "Fecha de Emisión",
+        "due_date": "Fecha Límite",
+        "place": "Lugar",
+        "notes": "Notas",
+        "subject": "Sujeto de la Multa",
+        "violation_type": "Tipo de Violación",
+        "location": "Ubicación de la Multa",
+        "evidence_photos": "Evidencias Fotográficas",
+        "payment_history": "Historial de Pagos",
+        "view_detail": "Ver Detalle",
+        "pay": "Pagar",
+        "contest": "Impugnar"
+      },
+      "status": {
+        "DRAFT": "Borrador",
+        "ISSUED": "Emitida",
+        "PAID": "Pagada",
+        "CANCELLED": "Cancelada",
+        "OVERDUE": "Vencida",
+        "APPEALED": "Impugnada"
+      },
+      "subject_type": {
+        "concession": "Concesión",
+        "concession_holder": "Concesionario",
+        "driver": "Conductor"
+      },
+      "severity": {
+        "LOW": "Baja",
+        "MEDIUM": "Media",
+        "HIGH": "Alta",
+        "CRITICAL": "Crítica"
+      }
+    }
+  }
 }

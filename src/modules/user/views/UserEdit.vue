@@ -48,19 +48,67 @@ function close(result: 'close' | 'submit' | 'cancel' = 'close') {
   closeDialog(result)
 }
 
+// Manejar click del botón guardar
+async function handleSaveClick() {
+  console.log('=== handleSaveClick called ===')
+  console.log('Current form values:', { name: name.value, email: email.value, password: password.value, roles: roles.value })
+  
+  // Validación manual simple
+  if (!name.value || !email.value) {
+    console.log('Validation failed: name and email are required')
+    return
+  }
+  
+  if (roles.value && roles.value.length === 0) {
+    console.log('Validation failed: at least one role is required')
+    return
+  }
+  
+  // Llamar directamente a onFormSubmit
+  try {
+    console.log('Calling onFormSubmit directly...')
+    await onFormSubmit({
+      name: name.value,
+      email: email.value,
+      password: password.value,
+      roles: roles.value
+    })
+  } catch (error) {
+    console.error('Error in handleSaveClick:', error)
+  }
+}
+
 // Enviar el formulario
 async function onFormSubmit(values: any) {
+  console.log('=== onFormSubmit called ===')
   console.log('Form values:', values)
+  console.log('Props item:', props.item)
+  
   try {
     // Asumiendo que tu store espera (id, data)
     // Si tu API necesita userId, asegúrate de tenerlo en props.item
     if (!props.item.id) {
       console.warn('No ID found in props.item, cannot update.')
-
       return
     }
 
-    await userStore.updateItem(props.item.id, values)
+    // Preparar los datos para enviar a la API
+    const updateData: any = {
+      name: values.name,
+      email: values.email,
+      roles: values.roles || [],
+    }
+
+    // Solo incluir password si se proporcionó
+    if (values.password && values.password.trim() !== '') {
+      updateData.password = values.password
+    }
+
+    console.log('Sending update data:', updateData)
+    console.log('Calling userStore.updateItem with ID:', props.item.id)
+    
+    await userStore.updateItem(props.item.id, updateData)
+    console.log('Update successful, closing dialog')
     close('submit')
   }
   catch (error) {
@@ -81,7 +129,7 @@ async function onFormSubmit(values: any) {
       </p>
       <VForm
         class="mt-6"
-        :on-submit="handleSubmit(onFormSubmit)"
+        @submit.prevent="handleSubmit(onFormSubmit)"
       >
         <VRow>
           <VCol cols="12">
@@ -141,7 +189,7 @@ async function onFormSubmit(values: any) {
                   :items="roleOptions"
                   item-title="name"
                   item-value="id"
-                  label="Select Role"
+                  :label="t('roles')"
                   variant="outlined"
                   dense
                   clearable
@@ -168,7 +216,7 @@ async function onFormSubmit(values: any) {
             cols="12"
             class="d-flex flex-wrap justify-center gap-4"
           >
-            <VBtn type="submit">
+            <VBtn @click="handleSaveClick">
               {{ t('save') }}
             </VBtn>
             <VBtn
@@ -184,3 +232,4 @@ async function onFormSubmit(values: any) {
     </VCardText>
   </VCard>
 </template>
+

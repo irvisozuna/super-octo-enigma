@@ -39,10 +39,8 @@ const formData = ref({
 })
 
 const holderTypes = [
-  { title: 'Persona Natural', value: 'NATURAL' },
-  { title: 'Persona Individual', value: 'INDIVIDUAL' },
-  { title: 'Empresa', value: 'COMPANY' },
-  { title: 'Cooperativa', value: 'COOPERATIVE' },
+  { title: 'Persona Física', value: 'NATURAL' },
+  { title: 'Persona Moral', value: 'LEGAL' },
 ]
 
 const statusOptions = [
@@ -70,14 +68,15 @@ const loadHolderData = async () => {
       }
 
       // Campos adicionales para el formulario
+      const nameParts = holder.value.full_name?.split(' ') || []
       formData.value = {
-        first_name: holder.value.full_name?.split(' ')[0] || '',
-        last_name: holder.value.full_name?.split(' ').slice(1).join(' ') || '',
-        company_name: holder.value.company_name || '',
-        identification_number: holder.value.curp || holder.value.rfc || '',
-        address: holder.value.address || '',
-        city: holder.value.city || '',
-        notes: holder.value.notes || '',
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
+        company_name: holder.value.full_name || '', // Para persona moral, usar full_name como company_name
+        identification_number: '', // Ya no se usa, se usan campos separados para CURP y RFC
+        address: '', // Campo adicional, mantener vacío si no viene del API
+        city: '', // Campo adicional, mantener vacío si no viene del API
+        notes: '', // Campo adicional, mantener vacío si no viene del API
       }
     }
   }
@@ -97,9 +96,9 @@ const submitForm = async () => {
     // Preparar los datos para el update
     const updateData: ConcessionHolderUpdateDto = {
       ...form.value,
-      full_name: `${formData.value.first_name} ${formData.value.last_name}`.trim(),
-      curp: formData.value.identification_number,
-      rfc: formData.value.identification_number,
+      full_name: form.value.holder_type === 'LEGAL'
+        ? formData.value.company_name || `${formData.value.first_name} ${formData.value.last_name}`.trim()
+        : `${formData.value.first_name} ${formData.value.last_name}`.trim(),
     }
 
     await updateHolder(holderId, updateData)
@@ -132,7 +131,7 @@ onMounted(() => loadHolderData())
               <VIcon>tabler-arrow-left</VIcon>
             </VBtn>
             <h1 class="text-h4 ml-4">
-              Edit Concession Holder
+              Editar Titular de Concesión
             </h1>
           </div>
         </VCol>
@@ -216,13 +215,13 @@ onMounted(() => loadHolderData())
                     />
                   </VCol>
                   <VCol
-                    v-if="form.holder_type !== 'INDIVIDUAL'"
+                    v-if="form.holder_type === 'LEGAL'"
                     cols="12"
                     md="6"
                   >
                     <VTextField
                       v-model="formData.company_name"
-                      :label="`${form.holder_type === 'COOPERATIVE' ? 'Nombre de Cooperativa' : 'Nombre de Empresa'}`"
+                      label="Razón Social"
                     />
                   </VCol>
                   <VCol
@@ -230,9 +229,20 @@ onMounted(() => loadHolderData())
                     md="6"
                   >
                     <VTextField
-                      v-model="formData.identification_number"
-                      label="CURP/RFC *"
-                      :rules="[v => !!v || 'Required']"
+                      v-model="form.curp"
+                      label="CURP"
+                      :rules="form.holder_type === 'NATURAL' ? [v => !!v || 'CURP es requerido para persona física'] : []"
+                      :required="form.holder_type === 'NATURAL'"
+                    />
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <VTextField
+                      v-model="form.rfc"
+                      label="RFC *"
+                      :rules="[v => !!v || 'RFC es requerido']"
                       required
                     />
                   </VCol>

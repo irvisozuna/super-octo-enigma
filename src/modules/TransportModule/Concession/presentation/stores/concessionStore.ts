@@ -15,8 +15,8 @@ const concessionApiService = new ConcessionApiService()
 
 export const useConcessionStore = defineStore('transport-concession', () => {
   // State
-  const items = ref<ConcessionEntity[]>([])
-  const currentItem = ref<ConcessionEntity | null>(null)
+  const items = ref<any[]>([])
+  const currentItem = ref<any | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -72,7 +72,7 @@ export const useConcessionStore = defineStore('transport-concession', () => {
 
       const response = await concessionApiService.getList(filterParams)
 
-      items.value = response.data.map(dto => ({
+      items.value = response.data.map((dto: any) => ({
         id: dto.id,
         concessionNumber: dto.number,
         concessionType: dto.modality_label,
@@ -118,8 +118,8 @@ export const useConcessionStore = defineStore('transport-concession', () => {
       currentItem.value = {
         id: dto.id,
         companyId: dto.company_id,
-        concessionHolderId: dto.concession_holder_id,
-        concessionNumber: dto.number,
+        holderId: dto.concession_holder_id,
+        number: dto.number,
         status: dto.status,
         statusLabel: dto.status_label,
         modality: dto.modality,
@@ -151,6 +151,110 @@ export const useConcessionStore = defineStore('transport-concession', () => {
       error.value = err instanceof Error ? err.message : 'Failed to fetch concession'
       currentItem.value = null
       throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  const fetchByHolderId = async (holderId: string, params?: any) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await concessionApiService.findByHolderId(holderId, params)
+      console.log('API Response:', response)
+      
+      // Handle the response structure based on the API response format
+      if (response.data && Array.isArray(response.data)) {
+        // If the response has a data property with array (current API format)
+        items.value = response.data.map((dto: any) => ({
+          id: dto.id,
+          number: dto.number,
+          modality: dto.modality,
+          modalityLabel: dto.modality_label || dto.modality,
+          municipality: dto.municipality,
+          validFrom: dto.valid_from,
+          validTo: dto.valid_to,
+          status: dto.status,
+          statusLabel: dto.status_label || dto.status,
+          routeOrSite: dto.route_or_site,
+          authorizedServices: dto.authorized_services || [],
+          restrictions: dto.restrictions || [],
+          metadata: dto.metadata || {},
+          holderId: dto.concession_holder_id,
+          holderName: dto.holder?.full_name,
+          isActive: dto.is_active,
+          isExpired: dto.is_expired,
+          daysUntilExpiration: dto.days_until_expiration,
+          createdAt: dto.created_at,
+          updatedAt: dto.updated_at,
+        }))
+        
+        total.value = response.meta?.total || response.data.length
+        console.log('Mapped items:', items.value)
+      } else if (response.concessions) {
+        // If the response has a concessions property with data array
+        items.value = response.concessions.data?.map((dto: any) => ({
+          id: dto.id,
+          number: dto.number,
+          modality: dto.modality,
+          modalityLabel: dto.modality_label || dto.modality,
+          municipality: dto.municipality,
+          validFrom: dto.valid_from,
+          validTo: dto.valid_to,
+          status: dto.status,
+          statusLabel: dto.status_label || dto.status,
+          routeOrSite: dto.route_or_site,
+          authorizedServices: dto.authorized_services || [],
+          restrictions: dto.restrictions || [],
+          metadata: dto.metadata || {},
+          holderId: dto.concession_holder_id,
+          holderName: dto.holder?.full_name,
+          isActive: dto.is_active,
+          isExpired: dto.is_expired,
+          daysUntilExpiration: dto.days_until_expiration,
+          createdAt: dto.created_at,
+          updatedAt: dto.updated_at,
+        })) || []
+        
+        total.value = response.concessions.total || 0
+      } else if (Array.isArray(response)) {
+        // If the response is directly an array
+        items.value = response.map((dto: any) => ({
+          id: dto.id,
+          number: dto.number,
+          modality: dto.modality,
+          modalityLabel: dto.modality_label || dto.modality,
+          municipality: dto.municipality,
+          validFrom: dto.valid_from,
+          validTo: dto.valid_to,
+          status: dto.status,
+          statusLabel: dto.status_label || dto.status,
+          routeOrSite: dto.route_or_site,
+          authorizedServices: dto.authorized_services || [],
+          restrictions: dto.restrictions || [],
+          metadata: dto.metadata || {},
+          holderId: dto.concession_holder_id,
+          holderName: dto.holder?.full_name,
+          isActive: dto.is_active,
+          isExpired: dto.is_expired,
+          daysUntilExpiration: dto.days_until_expiration,
+          createdAt: dto.created_at,
+          updatedAt: dto.updated_at,
+        }))
+        
+        total.value = response.length
+      } else {
+        items.value = []
+        total.value = 0
+      }
+      
+      totalPages.value = Math.ceil(total.value / itemsPerPage.value)
+    }
+    catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch holder concessions'
+      items.value = []
     }
     finally {
       loading.value = false
@@ -240,7 +344,7 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     error.value = null
 
     try {
-      const response = await concessionApiService.renewConcession(renewalData)
+      const response = await concessionApiService.renewConcession(renewalData.concession_id, renewalData)
 
       await fetchList()
 
@@ -360,6 +464,7 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     // Actions
     fetchList,
     fetchById,
+    fetchByHolderId,
     createItem,
     updateItem,
     deleteItem,

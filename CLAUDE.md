@@ -191,3 +191,32 @@ Components from these directories are auto-imported:
 - Modern browsers with ES2020+ support
 - Vue 3 requirements apply
 - Responsive design for mobile and desktop
+
+### Additional Integrations
+
+#### MSW (Mock Service Worker)
+- **MSW Integration**: Mock Service Worker configured for API mocking during development
+- **Initialization**: `npm run msw:init` - Initialize MSW for browser mocking
+- **Location**: Service worker files in `public/` directory
+- **Auto-setup**: MSW initializes automatically on `npm install` via postinstall
+
+#### Maps Integration
+- **Mapbox GL**: Integrated for mapping functionality (v3.5.2)
+- **Google Maps**: Available via Google Maps API loader and services
+- **Configuration**: Map configuration in `src/config/mapbox.ts`
+- **Components**: Map components available in `src/components/`
+
+#### Real-time Features
+- **Laravel Echo**: WebSocket client for real-time communication (v1.17.1)
+- **Pusher**: WebSocket service integration (v8.4.0-rc2)
+- **Configuration**: Real-time plugins configured in `src/plugins/`
+
+#### Database & Storage
+- **Dexie**: IndexedDB wrapper for client-side storage (v4.0.10)
+- **Offline Support**: Client-side data persistence and caching capabilities
+
+#### Development Tools
+- **MSW**: Mock Service Worker for API mocking during development
+- **Video.js**: Video player integration for media content
+- **Shepherd.js**: User tour and onboarding guides
+- **Flag Icons**: Country flag icon library integration

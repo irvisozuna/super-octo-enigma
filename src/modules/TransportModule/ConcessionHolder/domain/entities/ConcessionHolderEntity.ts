@@ -12,7 +12,7 @@ export interface ConcessionHolderEntity extends BaseEntity {
   local_id: number
   company_id: string
   full_name: string
-  holder_type: 'NATURAL' | 'LEGAL' | 'PHYSICAL' | 'INDIVIDUAL' | 'COMPANY' | 'COOPERATIVE'
+  holder_type: 'NATURAL' | 'LEGAL' | 'NATURAL' | 'INDIVIDUAL' | 'COMPANY' | 'COOPERATIVE'
   holder_type_label: string
 
   // Document Information
@@ -79,7 +79,7 @@ export interface ConcessionHolderEntity extends BaseEntity {
 
 export interface CreateConcessionHolderRequest {
   full_name: string
-  holder_type: 'NATURAL' | 'LEGAL' | 'PHYSICAL'
+  holder_type: 'NATURAL' | 'LEGAL' | 'NATURAL'
   curp?: string
   rfc?: string
   phone?: string

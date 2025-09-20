@@ -45,6 +45,7 @@
     "destr": "2.0.3",
     "dexie": "^4.0.10",
     "eslint-plugin-regexp": "2.7.0",
+    "flag-icons": "^7.5.0",
     "highlight": "^0.2.4",
     "highlight.js": "^11.11.1",
     "inquirer": "^12.3.2",

@@ -22,7 +22,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: 'Edit Concession Holder',
+  title: 'Editar Titular de Concesión',
   loading: false,
   item: null,
   visible: false,
@@ -43,9 +43,10 @@ const initialData = ref<Partial<ConcessionHolderCreateDto>>({})
 // Watch for item changes to populate form
 watch(() => props.item, newItem => {
   if (newItem) {
+    console.log('newItem', newItem)
     initialData.value = {
-      full_name: newItem.full_name,
-      holder_type: newItem.holder_type as any,
+      full_name: newItem.full_name || newItem.fullName,
+      holder_type: newItem.holder_type as any || newItem.holderType as any,
       curp: newItem.curp || '',
       rfc: newItem.rfc || '',
       phone: newItem.phone || '',

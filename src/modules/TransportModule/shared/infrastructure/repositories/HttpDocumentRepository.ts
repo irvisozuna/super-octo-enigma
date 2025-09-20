@@ -24,7 +24,8 @@ export class HttpDocumentRepository implements DocumentRepository {
   private readonly baseUrl = '/transport/documents'
 
   async getEntityTypes(): Promise<EntityTypesResponse> {
-    return await rawApi(`${this.baseUrl}/entity-types`)
+    const response = await rawApi(`${this.baseUrl}/entity-types`)
+    return response.data
   }
 
   async findAll(

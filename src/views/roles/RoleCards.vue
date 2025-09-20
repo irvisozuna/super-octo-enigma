@@ -2,25 +2,39 @@
 import AddEditRoleDialog from './components/AddEditRoleDialog.vue'
 import girlUsingMobile from '@images/pages/girl-using-mobile.png'
 
-interface Permission {
+interface SpecialPermission {
   name: string
-  read: boolean
-  update: boolean
-  create: boolean
-  delete: boolean
+  action: string
+  label: string
+  selected?: boolean
+}
+
+interface ModulePermission {
+  module: string
+  moduleLabel: string
+  isSubModule: boolean
+  parentModule: string | null
+  crud: {
+    read: boolean
+    create: boolean
+    update: boolean
+    delete: boolean
+  }
+  special: SpecialPermission[]
+  subModules: ModulePermission[]
 }
 
 interface RoleDetails {
   id: string
   name: string
-  permissions: Permission[]
+  permissions: ModulePermission[]
 }
 
 interface Roles {
   id: string
-  role: string
+  name: string
   users: string[]
-  details: RoleDetails
+  permissions: ModulePermission[]
 }
 
 // 👉 Roles List
@@ -40,7 +54,6 @@ const isLoadingRoles = ref(false)
 const fetchRoles = async () => {
   try {
     const { data, error, isFetching } = await useApi<Roles[]>('/company/roles')
-
     roles.value = data.value ?? []
   }
   catch (error) {
@@ -57,9 +70,16 @@ const handleRolePermissions = (role: any) => {
   fetchRoles()
 }
 
-const editPermission = (value: RoleDetails) => {
+const editPermission = (value: Roles) => {
+  console.log('Editing role - full value:', value)
+  console.log('Editing role - name:', value.name)
+  console.log('Editing role - permissions:', value.permissions)
   isRoleDialogVisible.value = true
-  roleDetail.value = value
+  roleDetail.value = {
+    id: value.id,
+    name: value.name,
+    permissions: value.permissions
+  }
 }
 </script>
 
@@ -73,7 +93,7 @@ const editPermission = (value: RoleDetails) => {
     <!-- 👉 Roles -->
     <VCol
       v-for="item in roles"
-      :key="item.role"
+      :key="item.name"
       cols="12"
       sm="6"
       lg="4"
@@ -118,12 +138,12 @@ const editPermission = (value: RoleDetails) => {
           <div class="d-flex justify-space-between align-center">
             <div>
               <h5 class="text-h5">
-                {{ item.role }}
+                {{ item.name }}
               </h5>
               <div class="d-flex align-center">
                 <a
                   href="javascript:void(0)"
-                  @click="editPermission(item.details)"
+                  @click="editPermission(item)"
                 >
                   {{ $t('edit') }}
                 </a>
@@ -181,6 +201,7 @@ const editPermission = (value: RoleDetails) => {
       </VCard>
       <AddEditRoleDialog
         v-model:is-dialog-visible="isAddRoleDialogVisible"
+        :role-permissions="undefined"
         @update:role-permissions="handleRolePermissions"
       />
     </VCol>
@@ -188,7 +209,7 @@ const editPermission = (value: RoleDetails) => {
 
   <AddEditRoleDialog
     v-model:is-dialog-visible="isRoleDialogVisible"
-    v-model:role-permissions="roleDetail"
+    :role-permissions="roleDetail"
     @update:role-permissions="handleRolePermissions"
   />
 </template>

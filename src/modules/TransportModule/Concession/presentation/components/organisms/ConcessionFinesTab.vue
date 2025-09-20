@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useFineStore } from '../../../../stores/fineStore'
+import FineDetailDialog from '../../../../components/dialogs/FineDetailDialog.vue'
+import type { Fine } from '../../../../types/fine'
 
 interface Props {
   concession: any
+  concessionId?: string
   loading?: boolean
 }
 
@@ -15,168 +19,178 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
+// Store
+const fineStore = useFineStore()
+
+// State
+const selectedFine = ref<Fine | null>(null)
+const showFineDetail = ref(false)
+const activeFilter = ref<'all' | 'unpaid' | 'paid' | 'overdue'>('all')
+const searchQuery = ref('')
+
 // Computed
 const fines = computed(() => {
-  // Get fines from different entities related to this concession
-  const concessionFines = props.concession?.fines || []
-  const holderFines = props.concession?.holder?.fines || []
-  const vehicleFines = props.concession?.vehicle?.fines || []
-  const driverFines = props.concession?.drivers?.flatMap(driver => driver.fines || []) || []
+  let filteredFines = fineStore.list
 
-  // Combine all fines and add entity information
-  const allFines = [
-    ...concessionFines.map(fine => ({ ...fine, entityType: 'CONCESSION', entityName: 'Concesión' })),
-    ...holderFines.map(fine => ({ ...fine, entityType: 'HOLDER', entityName: 'Concesionario' })),
-    ...vehicleFines.map(fine => ({ ...fine, entityType: 'VEHICLE', entityName: 'Vehículo' })),
-    ...driverFines.map(fine => ({ ...fine, entityType: 'DRIVER', entityName: 'Conductor' })),
-  ]
+  // Apply status filter
+  if (activeFilter.value === 'unpaid')
+    filteredFines = filteredFines.filter(fine => fine.status === 'ISSUED' || fine.status === 'OVERDUE')
+  else if (activeFilter.value === 'paid')
+    filteredFines = filteredFines.filter(fine => fine.status === 'PAID')
+  else if (activeFilter.value === 'overdue')
+    filteredFines = filteredFines.filter(fine => fine.status === 'OVERDUE')
 
-  // Sort by issue date (newest first)
-  return allFines.sort((a, b) => new Date(b.issue_date) - new Date(a.issue_date))
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+
+    filteredFines = filteredFines.filter(fine =>
+      fine.id.toLowerCase().includes(query)
+      || fine.violation_type?.name.toLowerCase().includes(query)
+      || fine.place?.toLowerCase().includes(query)
+      || fine.concession_holder?.name.toLowerCase().includes(query)
+      || fine.vehicle?.plate_number.toLowerCase().includes(query),
+    )
+  }
+
+  return filteredFines
 })
 
-const unpaidFines = computed(() => fines.value.filter(fine => fine.status === 'unpaid' || fine.status === 'overdue'))
+const stats = computed(() => fineStore.stats)
 
-const totalUnpaidAmount = computed(() =>
-  unpaidFines.value.reduce((sum, fine) => sum + (fine.amount || 0), 0),
-)
+const filteredStats = computed(() => {
+  const filtered = fines.value
 
-const finesByEntity = computed(() => {
-  return fines.value.reduce((acc, fine) => {
-    if (!acc[fine.entityType])
-      acc[fine.entityType] = []
-
-    acc[fine.entityType].push(fine)
-
-    return acc
-  }, {})
+  return {
+    total: filtered.length,
+    unpaid: filtered.filter(f => f.status === 'ISSUED' || f.status === 'OVERDUE').length,
+    paid: filtered.filter(f => f.status === 'PAID').length,
+    overdue: filtered.filter(f => f.status === 'OVERDUE').length,
+    total_amount: filtered.reduce((sum, f) => sum + f.total_amount, 0),
+    unpaid_amount: filtered
+      .filter(f => f.status === 'ISSUED' || f.status === 'OVERDUE')
+      .reduce((sum, f) => sum + f.remaining_amount, 0),
+  }
 })
 
 // Methods
-const formatCurrency = (amount: number) => {
-  if (!amount)
-    return '$0.00'
+const loadFines = async () => {
+  const concessionId = props.concessionId || props.concession?.id
+  if (!concessionId)
+    return
 
-  return new Intl.NumberFormat('en-US', {
+  try {
+    await fineStore.fetchList(concessionId, {
+      include_computed: ['subject_type', 'formatted_amount', 'status_label', 'formatted_location'],
+      include_relations: ['vehicle', 'concession_holder', 'violation_type'],
+    })
+  }
+  catch (error) {
+    console.error('Error loading fines:', error)
+  }
+}
+
+const openFineDetail = (fine: Fine) => {
+  selectedFine.value = fine
+  showFineDetail.value = true
+}
+
+const closeFineDetail = () => {
+  showFineDetail.value = false
+  selectedFine.value = null
+}
+
+const refresh = () => {
+  loadFines()
+  emit('refresh')
+}
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('es-MX', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'MXN',
   }).format(amount)
 }
 
 const formatDate = (date: string) => {
-  if (!date)
-    return '-'
-
-  return new Date(date).toLocaleDateString()
+  return new Date(date).toLocaleDateString('es-MX')
 }
 
 const getStatusColor = (status: string) => {
   const colors = {
-    paid: 'success',
-    unpaid: 'warning',
-    overdue: 'error',
-    cancelled: 'secondary',
-    contested: 'info',
+    DRAFT: 'grey',
+    ISSUED: 'warning',
+    PAID: 'success',
+    CANCELLED: 'secondary',
+    OVERDUE: 'error',
+    APPEALED: 'info',
   }
 
-  return colors[status?.toLowerCase()] || 'grey'
+  return colors[status as keyof typeof colors] || 'grey'
 }
 
-const getViolationColor = (type: string) => {
+const getSubjectTypeColor = (subjectType: string) => {
   const colors = {
-    speeding: 'error',
-    parking: 'warning',
-    no_license: 'error',
-    reckless_driving: 'error',
-    traffic_light: 'warning',
-    expired_documents: 'info',
-    unauthorized_route: 'error',
-    overcapacity: 'warning',
-    safety_violation: 'error',
-    environmental: 'info',
-    administrative: 'secondary',
-    other: 'grey',
+    concession: 'primary',
+    concession_holder: 'success',
+    driver: 'info',
   }
 
-  return colors[type?.toLowerCase()] || 'grey'
+  return colors[subjectType as keyof typeof colors] || 'secondary'
 }
 
-const getEntityColor = (entityType: string) => {
-  const colors = {
-    CONCESSION: 'primary',
-    HOLDER: 'success',
-    VEHICLE: 'warning',
-    DRIVER: 'info',
+const getSubjectTypeLabel = (subjectType: string) => {
+  const labels = {
+    concession: 'Concesión',
+    concession_holder: 'Concesionario',
+    driver: 'Conductor',
   }
 
-  return colors[entityType] || 'secondary'
+  return labels[subjectType as keyof typeof labels] || subjectType
 }
 
-const getEntityIcon = (entityType: string) => {
+const getSubjectTypeIcon = (subjectType: string) => {
   const icons = {
-    CONCESSION: 'tabler-certificate',
-    HOLDER: 'tabler-user',
-    VEHICLE: 'tabler-car',
-    DRIVER: 'tabler-user-check',
+    concession: 'tabler-certificate',
+    concession_holder: 'tabler-user',
+    driver: 'tabler-user-check',
   }
 
-  return icons[entityType] || 'tabler-file'
+  return icons[subjectType as keyof typeof icons] || 'tabler-file'
 }
 
-const isOverdue = (dueDate: string, status: string) => {
-  if (status === 'paid')
-    return false
-  if (!dueDate)
-    return false
-
-  const due = new Date(dueDate)
-  const today = new Date()
-
-  return due < today
+const isOverdue = (fine: Fine) => {
+  return fine.status === 'OVERDUE' || (fine.days_overdue && fine.days_overdue > 0)
 }
 
-const openFineDetail = (fine: any) => {
-  console.log('Opening fine detail:', fine.id)
+// Lifecycle
+onMounted(() => {
+  loadFines()
+})
 
-  // TODO: Navigate to fine detail when routes are available
-  // router.push(`/fines/${fine.id}`)
-}
-
-const openPaymentDialog = (fine: any) => {
-  console.log('Open payment for fine:', fine.id)
-
-  // TODO: Implement payment dialog
-}
-
-const openContestDialog = (fine: any) => {
-  console.log('Open contest for fine:', fine.id)
-
-  // TODO: Implement contest dialog
-}
-
-const openPhotoViewer = (photos: any) => {
-  console.log('Open photo viewer:', photos)
-
-  // TODO: Implement photo viewer
-}
+watch(() => props.concessionId || props.concession?.id, newId => {
+  if (newId)
+    loadFines()
+})
 </script>
 
 <template>
   <VCard>
     <VCardText class="pa-6">
+      <!-- Header with Stats -->
       <div class="d-flex align-center justify-space-between mb-6">
         <h4 class="text-h6 d-flex align-center">
           <VIcon class="me-2">
             tabler-file-dollar
           </VIcon>
-          {{ t('TransportModule.concession.tabs.fines') }}
+          Multas de la Concesión
           <VChip
-            v-if="unpaidFines.length > 0"
+            v-if="filteredStats.unpaid > 0"
             color="error"
             size="small"
             class="ms-3"
           >
-            {{ unpaidFines.length }} {{ t('TransportModule.fine.unpaid') }}
+            {{ filteredStats.unpaid }} Pendientes
           </VChip>
         </h4>
 
@@ -184,10 +198,10 @@ const openPhotoViewer = (photos: any) => {
         <div class="d-flex align-center gap-4">
           <div class="text-center">
             <div class="text-h6 font-weight-bold">
-              {{ fines.length }}
+              {{ filteredStats.total }}
             </div>
             <div class="text-caption text-medium-emphasis">
-              Total de Multas
+              Total
             </div>
           </div>
 
@@ -195,7 +209,7 @@ const openPhotoViewer = (photos: any) => {
 
           <div class="text-center">
             <div class="text-h6 font-weight-bold text-warning">
-              {{ unpaidFines.length }}
+              {{ filteredStats.unpaid }}
             </div>
             <div class="text-caption text-medium-emphasis">
               Pendientes
@@ -206,7 +220,7 @@ const openPhotoViewer = (photos: any) => {
 
           <div class="text-center">
             <div class="text-h6 font-weight-bold text-error">
-              {{ formatCurrency(totalUnpaidAmount) }}
+              {{ formatCurrency(filteredStats.unpaid_amount) }}
             </div>
             <div class="text-caption text-medium-emphasis">
               Monto Pendiente
@@ -215,9 +229,75 @@ const openPhotoViewer = (photos: any) => {
         </div>
       </div>
 
+      <!-- Filters and Search -->
+      <VRow class="mb-4">
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <VTextField
+            v-model="searchQuery"
+            placeholder="Buscar multas..."
+            prepend-inner-icon="tabler-search"
+            variant="outlined"
+            density="compact"
+            clearable
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <VBtnGroup
+            variant="outlined"
+            density="compact"
+          >
+            <VBtn
+              :variant="activeFilter === 'all' ? 'flat' : 'outlined'"
+              @click="activeFilter = 'all'"
+            >
+              Todas ({{ stats.total }})
+            </VBtn>
+            <VBtn
+              :variant="activeFilter === 'unpaid' ? 'flat' : 'outlined'"
+              @click="activeFilter = 'unpaid'"
+            >
+              Pendientes ({{ stats.unpaid }})
+            </VBtn>
+            <VBtn
+              :variant="activeFilter === 'paid' ? 'flat' : 'outlined'"
+              @click="activeFilter = 'paid'"
+            >
+              Pagadas ({{ stats.paid }})
+            </VBtn>
+            <VBtn
+              :variant="activeFilter === 'overdue' ? 'flat' : 'outlined'"
+              @click="activeFilter = 'overdue'"
+            >
+              Vencidas ({{ stats.overdue }})
+            </VBtn>
+          </VBtnGroup>
+        </VCol>
+      </VRow>
+
+      <!-- Loading State -->
+      <div
+        v-if="fineStore.loading"
+        class="text-center py-12"
+      >
+        <VProgressCircular
+          indeterminate
+          color="primary"
+          size="64"
+        />
+        <p class="mt-4 text-h6 text-medium-emphasis">
+          Cargando multas...
+        </p>
+      </div>
+
       <!-- No Fines -->
       <div
-        v-if="fines.length === 0"
+        v-else-if="fines.length === 0"
         class="text-center py-12"
       >
         <VIcon
@@ -228,10 +308,13 @@ const openPhotoViewer = (photos: any) => {
           tabler-shield-check
         </VIcon>
         <h6 class="text-h6 mb-2">
-          Sin Multas Registradas
+          {{ activeFilter === 'all' ? 'Sin Multas Registradas' : 'No hay multas con este filtro' }}
         </h6>
         <p class="text-body-2">
-          Esta concesión y sus entidades relacionadas (concesionario, vehículo, conductores) no tienen multas registradas.
+          {{ activeFilter === 'all'
+            ? 'Esta concesión no tiene multas registradas.'
+            : 'Intenta cambiar los filtros para ver más resultados.'
+          }}
         </p>
       </div>
 
@@ -245,8 +328,9 @@ const openPhotoViewer = (photos: any) => {
         >
           <VCard
             variant="elevated"
-            :color="isOverdue(fine.due_date, fine.status) ? 'error' : undefined"
+            :color="isOverdue(fine) ? 'error' : undefined"
             class="fine-card h-100"
+            @click="openFineDetail(fine)"
           >
             <VCardText class="pa-4">
               <!-- Header -->
@@ -254,20 +338,20 @@ const openPhotoViewer = (photos: any) => {
                 <div class="d-flex align-center">
                   <VAvatar
                     size="40"
-                    :color="getViolationColor(fine.violation_type)"
+                    :color="getSubjectTypeColor(fine.subject_type)"
                     variant="tonal"
                     class="me-3"
                   >
-                    <VIcon>tabler-alert-triangle</VIcon>
+                    <VIcon>{{ getSubjectTypeIcon(fine.subject_type) }}</VIcon>
                   </VAvatar>
 
                   <div>
                     <div class="d-flex align-center gap-2 mb-1">
                       <h6 class="text-h6 font-weight-bold">
-                        {{ fine.fine_number || fine.number }}
+                        {{ fine.id.slice(-8) }}
                       </h6>
                       <VChip
-                        :color="getEntityColor(fine.entityType)"
+                        :color="getSubjectTypeColor(fine.subject_type)"
                         size="x-small"
                         variant="outlined"
                         class="text-caption"
@@ -276,17 +360,17 @@ const openPhotoViewer = (photos: any) => {
                           start
                           size="10"
                         >
-                          {{ getEntityIcon(fine.entityType) }}
+                          {{ getSubjectTypeIcon(fine.subject_type) }}
                         </VIcon>
-                        {{ fine.entityName }}
+                        {{ getSubjectTypeLabel(fine.subject_type) }}
                       </VChip>
                     </div>
                     <VChip
-                      :color="getViolationColor(fine.violation_type)"
+                      :color="getStatusColor(fine.status)"
                       size="small"
                       variant="tonal"
                     >
-                      {{ fine.violation_type_label || fine.violation_type }}
+                      {{ fine.status_label }}
                     </VChip>
                   </div>
                 </div>
@@ -297,10 +381,10 @@ const openPhotoViewer = (photos: any) => {
                     size="small"
                     variant="tonal"
                   >
-                    {{ fine.status_label || fine.status }}
+                    {{ fine.status_label }}
                   </VChip>
                   <VChip
-                    v-if="isOverdue(fine.due_date, fine.status)"
+                    v-if="isOverdue(fine)"
                     color="error"
                     size="x-small"
                     variant="outlined"
@@ -324,7 +408,7 @@ const openPhotoViewer = (photos: any) => {
                       Monto
                     </div>
                     <div class="font-weight-bold text-h6 text-error">
-                      {{ formatCurrency(fine.amount) }}
+                      {{ fine.formatted_amount }}
                     </div>
                   </VCol>
                   <VCol cols="6">
@@ -332,14 +416,14 @@ const openPhotoViewer = (photos: any) => {
                       Fecha de Emisión
                     </div>
                     <div class="font-weight-medium">
-                      {{ formatDate(fine.issue_date) }}
+                      {{ formatDate(fine.issued_at) }}
                     </div>
                   </VCol>
                   <VCol cols="6">
                     <div class="text-caption text-medium-emphasis">
                       Fecha Límite
                     </div>
-                    <div :class="{ 'text-error font-weight-bold': isOverdue(fine.due_date, fine.status) }">
+                    <div :class="{ 'text-error font-weight-bold': isOverdue(fine) }">
                       {{ formatDate(fine.due_date) }}
                     </div>
                   </VCol>
@@ -348,101 +432,39 @@ const openPhotoViewer = (photos: any) => {
                       Ubicación
                     </div>
                     <div class="font-weight-medium">
-                      {{ fine.location || 'No especificada' }}
-                    </div>
-                  </VCol>
-                  <VCol
-                    v-if="fine.officer_name"
-                    cols="12"
-                  >
-                    <div class="text-caption text-medium-emphasis">
-                      Oficial
-                    </div>
-                    <div class="font-weight-medium">
-                      {{ fine.officer_name }}
+                      {{ fine.place || 'No especificada' }}
                     </div>
                   </VCol>
                 </VRow>
               </div>
 
-              <!-- Photos Section -->
-              <div
-                v-if="fine.photos && fine.photos.length > 0"
-                class="mb-4"
-              >
-                <div class="text-subtitle-2 font-weight-medium mb-2 d-flex align-center">
-                  <VIcon
-                    class="me-2"
-                    size="18"
-                  >
-                    tabler-camera
-                  </VIcon>
-                  {{ t('TransportModule.fine.evidence_photos') }}
+              <!-- Violation Type -->
+              <div class="mb-4">
+                <div class="text-caption text-medium-emphasis">
+                  Tipo de Violación
                 </div>
-
-                <div class="d-flex gap-2 flex-wrap">
-                  <VCard
-                    v-for="photo in fine.photos.slice(0, 3)"
-                    :key="photo.id"
-                    variant="tonal"
-                    class="photo-thumbnail"
-                    width="64"
-                    height="64"
-                  >
-                    <VImg
-                      :src="photo.thumbnail_url"
-                      :alt="photo.description"
-                      cover
-                      class="rounded cursor-pointer"
-                      @click="openPhotoViewer(photo)"
-                    />
-                  </VCard>
-
-                  <VCard
-                    v-if="fine.photos.length > 3"
-                    variant="tonal"
-                    color="grey"
-                    width="64"
-                    height="64"
-                    class="d-flex align-center justify-center cursor-pointer"
-                    @click="openPhotoViewer(fine.photos)"
-                  >
-                    <span class="text-caption font-weight-bold">+{{ fine.photos.length - 3 }}</span>
-                  </VCard>
+                <div class="font-weight-medium">
+                  {{ fine.violation_type?.name || 'No especificado' }}
                 </div>
               </div>
 
-              <!-- Description -->
-              <div
-                v-if="fine.description || fine.notes"
-                class="mb-4"
-              >
-                <div class="text-subtitle-2 font-weight-medium mb-1">
-                  Descripción
-                </div>
-                <p class="text-body-2 mb-0">
-                  {{ fine.description || fine.notes }}
-                </p>
-              </div>
-
-              <!-- Entity Details -->
+              <!-- Subject Details -->
               <div class="mb-4">
                 <VAlert
-                  :color="getEntityColor(fine.entityType)"
+                  :color="getSubjectTypeColor(fine.subject_type)"
                   variant="tonal"
                   density="compact"
                   class="text-caption"
                 >
                   <template #prepend>
                     <VIcon size="16">
-                      {{ getEntityIcon(fine.entityType) }}
+                      {{ getSubjectTypeIcon(fine.subject_type) }}
                     </VIcon>
                   </template>
-                  <span class="font-weight-medium">{{ fine.entityName }}:</span>
-                  <span v-if="fine.entityType === 'CONCESSION'">{{ props.concession?.concessionNumber }}</span>
-                  <span v-else-if="fine.entityType === 'HOLDER'">{{ props.concession?.holder?.fullName }}</span>
-                  <span v-else-if="fine.entityType === 'VEHICLE'">{{ fine.vehicle_plate || 'Vehículo asociado' }}</span>
-                  <span v-else-if="fine.entityType === 'DRIVER'">{{ fine.driver_name || 'Conductor asociado' }}</span>
+                  <span class="font-weight-medium">{{ getSubjectTypeLabel(fine.subject_type) }}:</span>
+                  <span v-if="fine.subject_type === 'concession'">{{ props.concession?.concessionNumber }}</span>
+                  <span v-else-if="fine.subject_type === 'concession_holder'">{{ fine.concession_holder?.name }}</span>
+                  <span v-else-if="fine.subject_type === 'driver'">{{ fine.vehicle?.plate_number || 'Vehículo asociado' }}</span>
                 </VAlert>
               </div>
 
@@ -451,7 +473,7 @@ const openPhotoViewer = (photos: any) => {
                 <VBtn
                   variant="outlined"
                   size="small"
-                  @click="openFineDetail(fine)"
+                  @click.stop="openFineDetail(fine)"
                 >
                   <VIcon start>
                     tabler-eye
@@ -460,28 +482,15 @@ const openPhotoViewer = (photos: any) => {
                 </VBtn>
 
                 <VBtn
-                  v-if="fine.status === 'unpaid' || fine.status === 'overdue'"
+                  v-if="fine.status === 'ISSUED' || fine.status === 'OVERDUE'"
                   color="success"
                   size="small"
-                  @click="openPaymentDialog(fine)"
+                  @click.stop="() => {}"
                 >
                   <VIcon start>
                     tabler-credit-card
                   </VIcon>
                   Pagar
-                </VBtn>
-
-                <VBtn
-                  v-if="fine.status === 'unpaid' && fine.can_contest"
-                  color="info"
-                  variant="outlined"
-                  size="small"
-                  @click="openContestDialog(fine)"
-                >
-                  <VIcon start>
-                    tabler-gavel
-                  </VIcon>
-                  Impugnar
                 </VBtn>
               </div>
             </VCardText>
@@ -489,28 +498,24 @@ const openPhotoViewer = (photos: any) => {
         </VCol>
       </VRow>
     </VCardText>
+
+    <!-- Fine Detail Dialog -->
+    <FineDetailDialog
+      v-model:visible="showFineDetail"
+      :fine="selectedFine"
+      @close="closeFineDetail"
+    />
   </VCard>
 </template>
 
 <style scoped>
 .fine-card {
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .fine-card:hover {
   box-shadow: 0 4px 12px rgba(var(--v-theme-on-surface), 0.1);
   transform: translateY(-2px);
-}
-
-.photo-thumbnail {
-  transition: all 0.2s ease;
-}
-
-.photo-thumbnail:hover {
-  transform: scale(1.05);
-}
-
-.cursor-pointer {
-  cursor: pointer;
 }
 </style>

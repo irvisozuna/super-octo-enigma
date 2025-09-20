@@ -228,7 +228,7 @@
       "cooperative": "Cooperativa",
       "natural": "Persona Física",
       "legal": "Persona Moral",
-      "physical": "Persona Física"
+      "NATURAL": "Persona Física"
     },
     "id_types": {
       "national_id": "Cédula Nacional",

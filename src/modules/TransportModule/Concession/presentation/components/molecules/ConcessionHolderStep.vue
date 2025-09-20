@@ -150,13 +150,13 @@ onMounted(async () => {
                         variant="tonal"
                       >
                         <VIcon>
-                          {{ item.raw.holder_type === 'PHYSICAL' ? 'tabler-user' : 'tabler-building' }}
+                          {{ item.raw.holder_type === 'NATURAL' ? 'tabler-user' : 'tabler-building' }}
                         </VIcon>
                       </VAvatar>
                     </template>
                     <VListItemTitle>{{ item.raw.full_name }}</VListItemTitle>
                     <VListItemSubtitle>
-                      {{ item.raw.holder_type === 'PHYSICAL' ? 'Persona Física' : 'Persona Moral' }} •
+                      {{ item.raw.holder_type === 'NATURAL' ? 'Persona Física' : 'Persona Moral' }} •
                       {{ item.raw.identification_number }}
                     </VListItemSubtitle>
                   </VListItem>
@@ -204,7 +204,7 @@ onMounted(async () => {
             class="me-4"
           >
             <VIcon size="32">
-              {{ selectedHolder.holder_type === 'PHYSICAL' ? 'tabler-user' : 'tabler-building' }}
+              {{ selectedHolder.holder_type === 'NATURAL' ? 'tabler-user' : 'tabler-building' }}
             </VIcon>
           </VAvatar>
           <div class="flex-grow-1">
@@ -217,7 +217,7 @@ onMounted(async () => {
                 color="info"
                 variant="tonal"
               >
-                {{ selectedHolder.holder_type === 'PHYSICAL' ? 'Persona Física' : 'Persona Moral' }}
+                {{ selectedHolder.holder_type === 'NATURAL' ? 'Persona Física' : 'Persona Moral' }}
               </VChip>
               <VChip
                 size="small"
@@ -236,7 +236,7 @@ onMounted(async () => {
     </VCard>
 
     <!-- Create New Holder -->
-    <VCard
+    <!-- <VCard
       variant="outlined"
       class="mb-6"
     >
@@ -263,7 +263,7 @@ onMounted(async () => {
           Crear Nuevo Titular
         </VBtn>
       </VCardText>
-    </VCard>
+    </VCard> -->
 
     <!-- Validation Status -->
     <VAlert
@@ -290,6 +290,6 @@ onMounted(async () => {
 
 <style scoped>
 .concession-holder-step {
-  max-width: 800px;
+  max-inline-size: 800px;
 }
 </style>

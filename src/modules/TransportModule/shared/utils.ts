@@ -333,3 +333,48 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+/**
+ * Generate a code from a pattern with tokens.
+ * Supported tokens:
+ * - {YYYY} full year, {YY} two-digit year
+ * - {MM} month 01-12, {DD} day 01-31
+ * - {HH} hours 00-23, {mm} minutes 00-59, {ss} seconds 00-59
+ * - {TS} full timestamp (milliseconds since epoch)
+ * - {TS6} last 6 digits of timestamp
+ * - {RNDn} random alphanumeric of length n (e.g., {RND6})
+ */
+export function generateCodeFromPattern(pattern: string, now: Date = new Date()): string {
+  const year = now.getFullYear()
+  const shortYear = String(year).slice(-2)
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  const timestamp = String(now.getTime())
+
+  let result = pattern
+    .replace(/\{YYYY\}/g, String(year))
+    .replace(/\{YY\}/g, shortYear)
+    .replace(/\{MM\}/g, month)
+    .replace(/\{DD\}/g, day)
+    .replace(/\{HH\}/g, hours)
+    .replace(/\{mm\}/g, minutes)
+    .replace(/\{ss\}/g, seconds)
+    .replace(/\{TS\}/g, timestamp)
+    .replace(/\{TS6\}/g, timestamp.slice(-6))
+
+  // Replace {RNDn}
+  result = result.replace(/\{RND(\d+)\}/g, (_m, lenStr: string) => {
+    const length = Math.max(1, Math.min(64, Number(lenStr)))
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let rnd = ''
+    for (let i = 0; i < length; i++) {
+      rnd += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return rnd
+  })
+
+  return result
+}

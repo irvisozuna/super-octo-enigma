@@ -24,16 +24,33 @@ export class FineApplicationService {
 
   async getFines(filters: FineFilterDto) {
     try {
-      const fines = await this.fineRepository.findAll(filters)
+      // Llamar directamente al API service para evitar transformaciones innecesarias
+      const response = await (this.fineRepository as any).apiService.getFines(filters)
 
+      console.log('🔍 FineApplicationService raw response:', response)
+
+      // La respuesta del API ya tiene la estructura correcta
+      if (response && response.data && Array.isArray(response.data)) {
+        return {
+          success: true,
+          data: response.data, // Usar directamente los datos del API
+          meta: response.meta || {
+            total: response.data.length,
+            page: filters.page || 1,
+            per_page: filters.per_page || 20,
+          }
+        }
+      }
+
+      // Fallback si la estructura es diferente
       return {
         success: true,
-        data: fines.map(fine => FineMapper.toListDto(fine)),
+        data: Array.isArray(response) ? response : [],
         meta: {
-          total: await this.fineRepository.count(filters),
+          total: Array.isArray(response) ? response.length : 0,
           page: filters.page || 1,
           per_page: filters.per_page || 20,
-        },
+        }
       }
     }
     catch (error) {

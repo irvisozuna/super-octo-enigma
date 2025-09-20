@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { TransportModuleConfig } from '../../../../config/config'
+import { generateCodeFromPattern } from '../../../../shared/utils'
 
 // Props
 interface Props {
@@ -27,6 +29,10 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 // State
+const defaultAutoMode = TransportModuleConfig.numbering?.concession?.defaultMode === 'auto'
+const allowManual = TransportModuleConfig.numbering?.concession?.allowManual !== false
+const autoNumber = ref<boolean>(defaultAutoMode)
+
 const localData = ref({
   number: props.modelValue.number,
   modality: props.modelValue.modality,
@@ -49,13 +55,8 @@ const isValid = computed(() => {
 
 // Methods
 const generateConcessionNumber = () => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = (now.getMonth() + 1).toString().padStart(2, '0')
-  const day = now.getDate().toString().padStart(2, '0')
-  const timestamp = Date.now().toString().slice(-6)
-
-  localData.value.number = `CON-${year}${month}${day}-${timestamp}`
+  const pattern = TransportModuleConfig.numbering?.concession?.pattern || 'CON-{YYYY}{MM}{DD}-{TS6}'
+  localData.value.number = generateCodeFromPattern(pattern)
 }
 
 // Watchers
@@ -67,10 +68,15 @@ watch(isValid, (newValue) => {
   emit('validate', newValue)
 }, { immediate: true })
 
-// Initialize with generated number if empty
-if (!localData.value.number) {
+// Initialize with generated number if empty and auto mode
+if (autoNumber.value && !localData.value.number) {
   generateConcessionNumber()
 }
+
+// Toggle behavior: when switching to auto, (re)generate a number
+watch(autoNumber, (isAuto) => {
+  if (isAuto) generateConcessionNumber()
+})
 </script>
 
 <template>
@@ -111,30 +117,46 @@ if (!localData.value.number) {
             Número de Concesión
           </VCardTitle>
           <VCardText class="pt-1 pb-3">
+            <div
+              v-if="allowManual"
+              class="d-flex align-center justify-space-between mb-2"
+            >
+              <div class="text-body-2 text-medium-emphasis">Modo de número</div>
+              <VSwitch
+                v-model="autoNumber"
+                inset
+                color="primary"
+                :label="autoNumber ? 'Automático' : 'Manual'"
+                hide-details
+                density="compact"
+              />
+            </div>
             <VTextField
               v-model="localData.number"
               label="Número de Concesión *"
               :rules="[v => !!v || 'El número es requerido']"
               required
-              readonly
+              :readonly="autoNumber || !allowManual"
               prepend-inner-icon="tabler-certificate"
               variant="outlined"
               color="primary"
-              hint="Número único generado automáticamente"
+              :hint="(autoNumber || !allowManual) ? 'Número único generado automáticamente' : 'Puedes capturar el número manualmente'"
               persistent-hint
             >
               <template #append-inner>
-                <VTooltip text="Regenerar número">
-                  <template #activator="{ props: tooltipProps }">
-                    <VBtn
-                      v-bind="tooltipProps"
-                      icon="tabler-refresh"
-                      variant="text"
-                      size="small"
-                      @click="generateConcessionNumber"
-                    />
-                  </template>
-                </VTooltip>
+                <template v-if="autoNumber || !allowManual">
+                  <VTooltip text="Regenerar número">
+                    <template #activator="{ props: tooltipProps }">
+                      <VBtn
+                        v-bind="tooltipProps"
+                        icon="tabler-refresh"
+                        variant="text"
+                        size="small"
+                        @click="generateConcessionNumber"
+                      />
+                    </template>
+                  </VTooltip>
+                </template>
               </template>
             </VTextField>
           </VCardText>
@@ -279,6 +301,6 @@ if (!localData.value.number) {
 
 <style scoped>
 .concession-basic-info-step {
-  max-width: 1000px;
+  max-inline-size: 1000px;
 }
 </style>

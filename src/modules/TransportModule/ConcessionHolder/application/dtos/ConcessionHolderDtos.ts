@@ -8,7 +8,7 @@ export interface ConcessionHolderListDto {
   id: string
   company_id: string
   full_name: string
-  holder_type: 'NATURAL' | 'INDIVIDUAL' | 'LEGAL' | 'COMPANY' | 'PHYSICAL'
+  holder_type: 'NATURAL' | 'LEGAL' 
   created_at: string
   updated_at: string
   local_id: number
@@ -35,7 +35,7 @@ export interface ConcessionHolderListDto {
 
 export interface ConcessionHolderCreateDto {
   full_name: string
-  holder_type: 'NATURAL' | 'LEGAL' | 'INDIVIDUAL' | 'COMPANY' | 'PHYSICAL'
+  holder_type: 'NATURAL' | 'LEGAL' | 'INDIVIDUAL' | 'COMPANY' | 'NATURAL'
   curp?: string
   rfc?: string
   phone?: string
@@ -45,7 +45,7 @@ export interface ConcessionHolderCreateDto {
 }
 
 export interface ConcessionHolderUpdateDto {
-  holder_type?: 'NATURAL' | 'LEGAL' | 'INDIVIDUAL' | 'COMPANY' | 'PHYSICAL'
+  holder_type?: 'NATURAL' | 'LEGAL' | 'INDIVIDUAL' | 'COMPANY' | 'NATURAL'
   full_name?: string
   curp?: string
   rfc?: string

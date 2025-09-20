@@ -235,7 +235,7 @@ onMounted(async () => {
             class="me-4"
           >
             <VIcon size="32">
-              {{ selectedHolder.holderType === 'PHYSICAL' ? 'tabler-user' : 'tabler-building' }}
+              {{ selectedHolder.holderType === 'NATURAL' ? 'tabler-user' : 'tabler-building' }}
             </VIcon>
           </VAvatar>
           <div>
@@ -248,7 +248,7 @@ onMounted(async () => {
                 color="info"
                 variant="tonal"
               >
-                {{ selectedHolder.holderType === 'PHYSICAL' ? 'Persona Física' : 'Persona Moral' }}
+                {{ selectedHolder.holderType === 'NATURAL' ? 'Persona Física' : 'Persona Moral' }}
               </VChip>
               <VChip
                 size="small"
@@ -465,7 +465,7 @@ onMounted(async () => {
                       variant="flat"
                       class="mb-2"
                     >
-                      {{ service.code }}
+                      {{ $t(service.code) }}
                     </VChip>
                     <p class="text-body-2 mb-0">
                       {{ service.description }}
@@ -528,13 +528,14 @@ onMounted(async () => {
                     variant="flat"
                     class="mb-2"
                   >
-                    {{ restriction.code }}
+                   {{ $t(restriction.code) }}
                   </VChip>
                   <h5 class="text-subtitle-2 mb-1">
-                    {{ restriction.description }}
+                    {{ restriction.description }}:
                   </h5>
                   <p class="text-body-2 mb-0">
-                    <strong>{{ restriction.label }}:</strong> {{ restriction.value }}
+                    <!-- <strong>{{ restriction.label }}:</strong>  -->
+                    {{ restriction.value }}
                   </p>
                 </VCardText>
               </VCard>

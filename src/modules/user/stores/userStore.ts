@@ -5,6 +5,7 @@ import { createCrudStore } from '@/stores/crudFactory'
 export const useUserStore = createCrudStore<User>({
   id: 'users',
   baseEndpoint: ENDPOINTS.USERS || 'users',
+  updateSuffix: '/update',
   transformFetchListResponse(raw) {
     const data = raw?.data ?? []
     const total = raw?.pagination?.total ?? 0

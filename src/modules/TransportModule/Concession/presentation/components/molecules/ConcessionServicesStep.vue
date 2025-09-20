@@ -228,7 +228,7 @@ watch(isValid, (newValue) => {
                 variant="tonal"
                 class="me-2"
               >
-                {{ categoryNames[category] || category }}
+                {{ $t(categoryNames[category] || category ) }}
               </VChip>
               <span>{{ services.length }} servicios</span>
             </div>
@@ -299,6 +299,6 @@ watch(isValid, (newValue) => {
 
 <style scoped>
 .concession-services-step {
-  max-width: 1000px;
+  max-inline-size: 1000px;
 }
 </style>

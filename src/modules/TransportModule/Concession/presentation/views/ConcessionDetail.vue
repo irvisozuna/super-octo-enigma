@@ -484,7 +484,7 @@ onMounted(() => {
                     </VBtn>
 
                     <!-- Compliance Report -->
-                    <VBtn
+                    <!-- <VBtn
                       color="info"
                       variant="tonal"
                       @click="generateComplianceReport"
@@ -494,7 +494,7 @@ onMounted(() => {
                         class="me-2"
                       />
                       Reporte de Cumplimiento
-                    </VBtn>
+                    </VBtn> -->
 
                     <!-- Delete (restricted) -->
                     <VBtn
@@ -592,6 +592,7 @@ onMounted(() => {
                 v-else
                 :is="tab.component"
                 :concession="concession"
+                :concession-id="concession?.id"
                 :loading="loading"
                 @refresh="fetchConcessionDetail"
               />
