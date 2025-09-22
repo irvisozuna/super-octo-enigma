@@ -4,6 +4,13 @@ import type { VerticalNavItems } from '@layouts/types'
 
 const TransportModuleMenu: VerticalNavItems = [
   {
+    title: 'Dashboards',
+    icon: { icon: 'tabler-smart-home' },
+    action: 'read',
+    subject: 'transportmanagement',
+    to: 'dashboards-crm',
+  },
+  {
     title: 'TransportModule.menu.title',
     icon: { icon: 'tabler-truck' },
     to: 'transportDashboard',

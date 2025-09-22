@@ -10,11 +10,13 @@ const { t } = useI18n()
 // Methods
 const handleWizardSubmit = (data: any) => {
   console.log('Concession created successfully:', data)
+
   // The wizard handles the redirect
 }
 
 const handleWizardCancel = () => {
   console.log('Concession creation cancelled')
+
   // The wizard handles the redirect
 }
 </script>

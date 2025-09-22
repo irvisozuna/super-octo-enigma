@@ -93,37 +93,39 @@ const canProceedToNextStep = computed(() => {
 
 const stepStates = computed(() => {
   return steps.map((_, idx) => {
-    if (idx < currentStep.value) {
+    if (idx < currentStep.value)
       return wizardStore.stepValidations[idx] ? 'completed' : 'incomplete'
-    } else if (idx === currentStep.value) {
+    else if (idx === currentStep.value)
       return 'active'
-    } else {
+    else
       return 'pending'
-    }
   })
 })
 
 const headerTitle = computed(() =>
   isEdit.value
     ? `Editar Concesión${wizardStore.wizardData.number ? `: ${wizardStore.wizardData.number}` : ''}`
-    : 'Crear Concesión'
+    : 'Crear Concesión',
 )
 
 // Methods
 const navigateToStep = async (stepIdx: number) => {
   if (typeof stepIdx !== 'number' || stepIdx < 0 || stepIdx >= steps.length) {
     console.warn('❌ Invalid step navigation:', { stepIdx, currentStep: currentStep.value })
+
     return
   }
 
   if (isTransitioning.value) {
     console.warn('❌ Navigation blocked: transition in progress')
+
     return
   }
 
   // Check if we can navigate to this step
   if (!wizardStore.canNavigateToStep(stepIdx)) {
     console.warn(`❌ Cannot navigate to step ${stepIdx}: previous steps not completed`)
+
     return
   }
 
@@ -131,37 +133,37 @@ const navigateToStep = async (stepIdx: number) => {
   try {
     wizardStore.setCurrentStep(stepIdx)
     console.log('✅ Navigation successful to step:', stepIdx)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Navigation error:', error)
-  } finally {
+  }
+  finally {
     await nextTick()
     isTransitioning.value = false
   }
 }
 
 const nextStep = () => {
-  if (canProceedToNextStep.value && !isLastStep.value) {
+  if (canProceedToNextStep.value && !isLastStep.value)
     wizardStore.nextStep()
-  }
 }
 
 const previousStep = () => {
-  if (!isFirstStep.value) {
+  if (!isFirstStep.value)
     wizardStore.previousStep()
-  }
 }
 
 // Helper function to map wizard data to update DTO
 const mapWizardDataToUpdateDto = (wizardData: any) => {
   const statusMap: Record<string, 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'INACTIVE'> = {
-    'ACTIVE': 'ACTIVE',
-    'SUSPENDED': 'SUSPENDED',
-    'EXPIRED': 'EXPIRED',
-    'PENDING': 'INACTIVE',
-    'UNDER_REVIEW': 'INACTIVE',
-    'APPROVED': 'ACTIVE',
-    'REJECTED': 'INACTIVE',
-    'CANCELLED': 'INACTIVE'
+    ACTIVE: 'ACTIVE',
+    SUSPENDED: 'SUSPENDED',
+    EXPIRED: 'EXPIRED',
+    PENDING: 'INACTIVE',
+    UNDER_REVIEW: 'INACTIVE',
+    APPROVED: 'ACTIVE',
+    REJECTED: 'INACTIVE',
+    CANCELLED: 'INACTIVE',
   }
 
   const getConcessionType = (modality: string): 'TAXI' | 'BUS' | 'MICROBUS' | 'TRUCK' => {
@@ -192,6 +194,7 @@ const handleSubmit = async () => {
   try {
     if (isTransitioning.value) {
       console.warn('❌ Submit blocked: transition in progress')
+
       return
     }
 
@@ -202,8 +205,10 @@ const handleSubmit = async () => {
     if (isEdit.value) {
       // Map wizard data to update DTO format
       const updateData = mapWizardDataToUpdateDto(wizardStore.wizardData)
+
       await concessionStore.updateItem(route.params.id as string, updateData)
-    } else {
+    }
+    else {
       await concessionStore.createItem(wizardStore.wizardData)
     }
 
@@ -212,10 +217,13 @@ const handleSubmit = async () => {
 
     emit('submit', wizardStore.wizardData)
     await router.push('/concessions')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Submit error:', error)
+
     // Show error message (could use global snackbar here)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -240,8 +248,10 @@ const initializeWizard = async () => {
     wizardStore.initializeWizard(isEdit.value, props.concessionId)
 
     return true
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error initializing wizard:', error)
+
     return false
   }
 }
@@ -257,15 +267,16 @@ onMounted(async () => {
       await concessionStore.fetchById(route.params.id as string)
 
       // Map store data to wizard data
-      if (concessionStore.currentItem) {
+      if (concessionStore.currentItem)
         wizardStore.loadConcessionForEdit(concessionStore.currentItem)
-      }
     }
 
     await nextTick()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Error during wizard initialization:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 })
@@ -301,7 +312,10 @@ onUnmounted(() => {
         </div>
 
         <!-- Progress indicator -->
-        <div class="text-center" v-if="$vuetify.display.mdAndUp">
+        <div
+          v-if="$vuetify.display.mdAndUp"
+          class="text-center"
+        >
           <VCircularProgress
             :model-value="wizardStore.progress"
             size="48"
@@ -315,7 +329,10 @@ onUnmounted(() => {
     </VCardTitle>
 
     <!-- Mobile Progress Bar -->
-    <div v-if="$vuetify.display.smAndDown" class="px-4 py-3 border-b">
+    <div
+      v-if="$vuetify.display.smAndDown"
+      class="px-4 py-3 border-b"
+    >
       <VProgressLinear
         :model-value="wizardStore.progress"
         color="primary"
@@ -325,8 +342,12 @@ onUnmounted(() => {
       />
       <div class="d-flex justify-space-between align-center">
         <div>
-          <div class="text-subtitle-2">{{ steps[currentStep]?.title }}</div>
-          <div class="text-caption text-medium-emphasis">Paso {{ currentStep + 1 }} de {{ steps.length }}</div>
+          <div class="text-subtitle-2">
+            {{ steps[currentStep]?.title }}
+          </div>
+          <div class="text-caption text-medium-emphasis">
+            Paso {{ currentStep + 1 }} de {{ steps.length }}
+          </div>
         </div>
         <VChip
           color="primary"
@@ -355,7 +376,7 @@ onUnmounted(() => {
               :class="{
                 'stepper-item--active': index === currentStep,
                 'stepper-item--completed': stepStates[index] === 'completed',
-                'stepper-item--clickable': wizardStore.canNavigateToStep(index)
+                'stepper-item--clickable': wizardStore.canNavigateToStep(index),
               }"
               @click="wizardStore.canNavigateToStep(index) && navigateToStep(index)"
             >
@@ -366,11 +387,18 @@ onUnmounted(() => {
                   size="14"
                   color="success"
                 />
-                <span v-else class="stepper-number">{{ index + 1 }}</span>
+                <span
+                  v-else
+                  class="stepper-number"
+                >{{ index + 1 }}</span>
               </div>
               <div class="stepper-content">
-                <div class="stepper-title">{{ step.title }}</div>
-                <div class="stepper-subtitle">{{ step.subtitle }}</div>
+                <div class="stepper-title">
+                  {{ step.title }}
+                </div>
+                <div class="stepper-subtitle">
+                  {{ step.subtitle }}
+                </div>
               </div>
             </div>
           </div>
@@ -415,7 +443,7 @@ onUnmounted(() => {
                   :model-value="{
                     number: wizardStore.wizardData.number,
                     modality: wizardStore.wizardData.modality,
-                    status: wizardStore.wizardData.status
+                    status: wizardStore.wizardData.status,
                   }"
                   :valid-values="concessionStore.validValues"
                   @update:model-value="wizardStore.updateBasicInfo"
@@ -428,7 +456,7 @@ onUnmounted(() => {
                 <ConcessionLocationStep
                   :model-value="{
                     municipality: wizardStore.wizardData.municipality,
-                    route_or_site: wizardStore.wizardData.route_or_site
+                    route_or_site: wizardStore.wizardData.route_or_site,
                   }"
                   @update:model-value="wizardStore.updateLocationInfo"
                   @validate="(isValid: boolean) => handleStepValidation(2, isValid)"
@@ -440,7 +468,7 @@ onUnmounted(() => {
                 <ConcessionValidityStep
                   :model-value="{
                     valid_from: wizardStore.wizardData.valid_from,
-                    valid_to: wizardStore.wizardData.valid_to
+                    valid_to: wizardStore.wizardData.valid_to,
                   }"
                   @update:model-value="wizardStore.updateValidityDates"
                   @validate="(isValid: boolean) => handleStepValidation(3, isValid)"
@@ -496,7 +524,7 @@ onUnmounted(() => {
                 />
                 Atrás
               </VBtn>
-              <div v-else></div>
+              <div v-else />
 
               <div class="d-flex gap-2">
                 <!-- Cancel button -->

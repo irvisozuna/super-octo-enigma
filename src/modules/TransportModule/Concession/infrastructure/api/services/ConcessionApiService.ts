@@ -61,6 +61,7 @@ export class ConcessionApiService {
 
   async findExpiringConcessions(days?: number) {
     const params = days ? { days } : {}
+
     return await rawApi(`${this.baseUrl}/expiring`, { method: 'GET', params })
   }
 
@@ -75,11 +76,13 @@ export class ConcessionApiService {
   async isConcessionNumberAvailable(concessionNumber: string, excludeId?: string) {
     const params = excludeId ? { exclude_id: excludeId } : {}
     const response = await rawApi(`${this.baseUrl}/check-number/${concessionNumber}`, { method: 'GET', params })
+
     return response.available
   }
 
   async export(filter?: any, format?: string) {
     const params = { ...filter, format }
+
     return await rawApi(`${this.baseUrl}/export`, { method: 'GET', params })
   }
 
@@ -91,7 +94,7 @@ export class ConcessionApiService {
   }
 
   // Suspension
-  async suspendConcession(id: string, data: { suspension_reason: string; suspension_notes?: string; suspension_duration_days?: number; }) {
+  async suspendConcession(id: string, data: { suspension_reason: string; suspension_notes?: string; suspension_duration_days?: number }) {
     return await rawApi(`${this.baseUrl}/${id}/suspend`, {
       method: 'POST',
       body: {

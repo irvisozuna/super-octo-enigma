@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConcessionStore } from '../../stores/concessionStore'
 
@@ -29,7 +29,7 @@ const confirmationText = ref('')
 // Computed
 const dialogValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const canDelete = computed(() => {
@@ -55,15 +55,18 @@ const handleCancel = () => {
 }
 
 const handleDelete = async () => {
-  if (!canDelete.value || cannotDelete.value) return
+  if (!canDelete.value || cannotDelete.value)
+    return
 
   loading.value = true
   try {
     await concessionStore.deleteItem(props.concession.id)
     emit('success')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting concession:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -183,8 +186,8 @@ const handleDelete = async () => {
         <VBtn
           color="secondary"
           variant="text"
-          @click="handleCancel"
           :disabled="loading"
+          @click="handleCancel"
         >
           Cancelar
         </VBtn>

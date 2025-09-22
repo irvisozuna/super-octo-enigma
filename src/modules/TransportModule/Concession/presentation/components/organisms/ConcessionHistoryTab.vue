@@ -118,102 +118,102 @@ const getActivityTypeLabel = (type: string) => {
 <template>
   <VCard>
     <VCardText class="pa-6">
-    <h4 class="text-h6 mb-6 d-flex align-center">
-      <VIcon class="me-2">
-        tabler-history
-      </VIcon>
-      {{ t('concession.tabs.history') }}
-      <VChip
-        color="primary"
-        size="small"
-        class="ms-3"
-      >
-        {{ activityHistory.length }}
-      </VChip>
-    </h4>
-
-    <!-- History Timeline -->
-    <VTimeline
-      side="end"
-      density="compact"
-      class="history-timeline"
-    >
-      <VTimelineItem
-        v-for="activity in activityHistory"
-        :key="activity.id"
-        size="small"
-        :dot-color="activity.color"
-      >
-        <template #icon>
-          <VIcon
-            :icon="activity.icon"
-            size="16"
-          />
-        </template>
-
-        <VCard
-          variant="tonal"
-          :color="activity.color"
-          class="activity-card"
-        >
-          <VCardText class="pa-4">
-            <!-- Header -->
-            <div class="d-flex justify-space-between align-start mb-2">
-              <div>
-                <h6 class="text-subtitle-1 font-weight-bold mb-1">
-                  {{ activity.title }}
-                </h6>
-                <VChip
-                  :color="activity.color"
-                  size="x-small"
-                  variant="outlined"
-                >
-                  {{ getActivityTypeLabel(activity.type) }}
-                </VChip>
-              </div>
-
-              <div class="text-end">
-                <div class="text-caption text-medium-emphasis">
-                  {{ getTimeAgo(activity.timestamp) }}
-                </div>
-                <div class="text-caption">
-                  {{ formatDateTime(activity.timestamp) }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <p class="text-body-2 mb-2">
-              {{ activity.description }}
-            </p>
-
-            <!-- User Info -->
-            <div class="d-flex align-center">
-              <VIcon
-                size="16"
-                class="me-1"
-              >
-                tabler-user
-              </VIcon>
-              <span class="text-caption">{{ activity.user }}</span>
-            </div>
-          </VCardText>
-        </VCard>
-      </VTimelineItem>
-    </VTimeline>
-
-    <!-- Load More (if needed) -->
-    <div class="text-center mt-6">
-      <VBtn
-        variant="outlined"
-        @click="emit('refresh')"
-      >
-        <VIcon start>
-          tabler-refresh
+      <h4 class="text-h6 mb-6 d-flex align-center">
+        <VIcon class="me-2">
+          tabler-history
         </VIcon>
-        {{ t('concession.history.load_more') }}
-      </VBtn>
-    </div>
+        {{ t('concession.tabs.history') }}
+        <VChip
+          color="primary"
+          size="small"
+          class="ms-3"
+        >
+          {{ activityHistory.length }}
+        </VChip>
+      </h4>
+
+      <!-- History Timeline -->
+      <VTimeline
+        side="end"
+        density="compact"
+        class="history-timeline"
+      >
+        <VTimelineItem
+          v-for="activity in activityHistory"
+          :key="activity.id"
+          size="small"
+          :dot-color="activity.color"
+        >
+          <template #icon>
+            <VIcon
+              :icon="activity.icon"
+              size="16"
+            />
+          </template>
+
+          <VCard
+            variant="tonal"
+            :color="activity.color"
+            class="activity-card"
+          >
+            <VCardText class="pa-4">
+              <!-- Header -->
+              <div class="d-flex justify-space-between align-start mb-2">
+                <div>
+                  <h6 class="text-subtitle-1 font-weight-bold mb-1">
+                    {{ activity.title }}
+                  </h6>
+                  <VChip
+                    :color="activity.color"
+                    size="x-small"
+                    variant="outlined"
+                  >
+                    {{ getActivityTypeLabel(activity.type) }}
+                  </VChip>
+                </div>
+
+                <div class="text-end">
+                  <div class="text-caption text-medium-emphasis">
+                    {{ getTimeAgo(activity.timestamp) }}
+                  </div>
+                  <div class="text-caption">
+                    {{ formatDateTime(activity.timestamp) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <p class="text-body-2 mb-2">
+                {{ activity.description }}
+              </p>
+
+              <!-- User Info -->
+              <div class="d-flex align-center">
+                <VIcon
+                  size="16"
+                  class="me-1"
+                >
+                  tabler-user
+                </VIcon>
+                <span class="text-caption">{{ activity.user }}</span>
+              </div>
+            </VCardText>
+          </VCard>
+        </VTimelineItem>
+      </VTimeline>
+
+      <!-- Load More (if needed) -->
+      <div class="text-center mt-6">
+        <VBtn
+          variant="outlined"
+          @click="emit('refresh')"
+        >
+          <VIcon start>
+            tabler-refresh
+          </VIcon>
+          {{ t('concession.history.load_more') }}
+        </VBtn>
+      </div>
     </VCardText>
   </VCard>
 </template>

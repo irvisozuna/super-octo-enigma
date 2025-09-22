@@ -370,9 +370,9 @@ export function generateCodeFromPattern(pattern: string, now: Date = new Date())
     const length = Math.max(1, Math.min(64, Number(lenStr)))
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     let rnd = ''
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++)
       rnd += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
+
     return rnd
   })
 

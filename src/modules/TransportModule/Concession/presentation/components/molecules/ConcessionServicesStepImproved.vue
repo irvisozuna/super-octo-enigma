@@ -39,21 +39,23 @@ props.restrictions.forEach(r => {
 // Available options from API
 const availableServices = computed(() => {
   const services = props.validValues.authorized_services || {}
+
   return Object.entries(services).map(([code, service]: [string, any]) => ({
     code,
     title: service.description || service.label || code,
     category: service.category || 'GENERAL',
-    icon: getServiceIcon(service.category || 'GENERAL')
+    icon: getServiceIcon(service.category || 'GENERAL'),
   }))
 })
 
 const availableRestrictions = computed(() => {
   const restrictions = props.validValues.restrictions || {}
+
   return Object.entries(restrictions).map(([code, restriction]: [string, any]) => ({
     code,
     title: restriction.description || restriction.label || code,
     options: restriction.options || {},
-    icon: 'tabler-alert-circle'
+    icon: 'tabler-alert-circle',
   }))
 })
 
@@ -75,8 +77,9 @@ const getServiceIcon = (category: string) => {
     INTERCITY: 'tabler-road',
     TOURIST: 'tabler-map-2',
     SCHOOL: 'tabler-school',
-    SPECIAL: 'tabler-star'
+    SPECIAL: 'tabler-star',
   }
+
   return icons[category] || 'tabler-car'
 }
 
@@ -90,19 +93,22 @@ const getCategoryColor = (category: string) => {
     SCHOOL: 'orange',
     SPECIAL: 'error',
   }
+
   return colors[category] || 'primary'
 }
 
 // Update services when selection changes
-watch(selectedServiceCodes, (newCodes) => {
+watch(selectedServiceCodes, newCodes => {
   const services = newCodes.map(code => {
     const service = availableServices.value.find(s => s.code === code)
+
     return {
       code,
       description: service?.title || code,
-      category: service?.category || 'GENERAL'
+      category: service?.category || 'GENERAL',
     }
   })
+
   emit('update:services', services)
 }, { immediate: true })
 
@@ -118,13 +124,14 @@ watch([selectedRestrictionCodes, restrictionValues], ([newCodes, newValues]) => 
       code,
       description: restriction?.title || code,
       value,
-      label: restriction?.title || code
+      label: restriction?.title || code,
     }
   })
+
   emit('update:restrictions', restrictions)
 }, { deep: true, immediate: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 </script>

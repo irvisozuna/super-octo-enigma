@@ -75,7 +75,7 @@ export const useFineStore = defineStore('transport-fine', () => {
         fineNumber: item.fine_number,
         violationType: item.violation_type?.name || item.violation_type || 'N/A',
         violationDescription: item.violation_type?.description || 'N/A',
-        amount: parseFloat(item.total_amount) || 0,
+        amount: Number.parseFloat(item.total_amount) || 0,
         penaltyPoints: item.penalty_points || 0,
         status: item.status,
         issueDate: item.issued_at,
@@ -90,6 +90,7 @@ export const useFineStore = defineStore('transport-fine', () => {
         evidencePhotos: item.evidence_photos || [],
         createdAt: item.created_at,
         updatedAt: item.updated_at,
+
         // Campos adicionales del API
         subjectType: item.subject_type,
         paymentStatus: item.payment_status,
@@ -102,6 +103,7 @@ export const useFineStore = defineStore('transport-fine', () => {
         concession: item.concession,
         concessionHolder: item.concession_holder,
         createdByUser: item.created_by_user,
+
         // Mantener la estructura original para compatibilidad
         violation_type: item.violation_type,
         total_amount: item.total_amount,

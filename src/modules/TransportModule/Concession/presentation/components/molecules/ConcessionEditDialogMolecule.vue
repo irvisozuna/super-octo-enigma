@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConcessionStore } from '../../stores/concessionStore'
 
@@ -23,6 +23,7 @@ const concessionStore = useConcessionStore()
 
 // State
 const loading = ref(false)
+
 const editForm = ref({
   concession_number: '',
   concession_type: '',
@@ -30,15 +31,16 @@ const editForm = ref({
   route_description: '',
   issue_date: '',
   expiry_date: '',
-  status: 'PENDING'
+  status: 'PENDING',
 })
 
 // Computed
 const dialogValue = computed({
   get: () => props.visible,
-  set: (value) => {
-    if (!value) emit('close')
-  }
+  set: value => {
+    if (!value)
+      emit('close')
+  },
 })
 
 const concessionTypeOptions = [
@@ -47,7 +49,7 @@ const concessionTypeOptions = [
   { title: 'Foráneo', value: 'INTERCITY' },
   { title: 'Turístico', value: 'TOURIST' },
   { title: 'Escolar', value: 'SCHOOL' },
-  { title: 'Especializado', value: 'SPECIALIZED' }
+  { title: 'Especializado', value: 'SPECIALIZED' },
 ]
 
 const statusOptions = [
@@ -55,21 +57,21 @@ const statusOptions = [
   { title: 'Activo', value: 'ACTIVE' },
   { title: 'Inactivo', value: 'INACTIVE' },
   { title: 'Suspendido', value: 'SUSPENDED' },
-  { title: 'Expirado', value: 'EXPIRED' }
+  { title: 'Expirado', value: 'EXPIRED' },
 ]
 
 const isValid = computed(() => {
   return !!(
-    editForm.value.concession_number?.trim() &&
-    editForm.value.concession_type &&
-    editForm.value.service_area?.trim() &&
-    editForm.value.issue_date &&
-    editForm.value.expiry_date
+    editForm.value.concession_number?.trim()
+    && editForm.value.concession_type
+    && editForm.value.service_area?.trim()
+    && editForm.value.issue_date
+    && editForm.value.expiry_date
   )
 })
 
 // Watch for item changes to populate form
-watch(() => props.item, (newItem) => {
+watch(() => props.item, newItem => {
   if (newItem) {
     editForm.value = {
       concession_number: newItem.concessionNumber || '',
@@ -78,7 +80,7 @@ watch(() => props.item, (newItem) => {
       route_description: newItem.routeDescription || '',
       issue_date: newItem.issueDate || '',
       expiry_date: newItem.expiryDate || '',
-      status: newItem.status || 'PENDING'
+      status: newItem.status || 'PENDING',
     }
   }
 }, { immediate: true })
@@ -89,15 +91,18 @@ const handleCancel = () => {
 }
 
 const handleSave = async () => {
-  if (!isValid.value) return
+  if (!isValid.value)
+    return
 
   loading.value = true
   try {
     await concessionStore.updateItem(props.item.id, editForm.value)
     emit('success')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error updating concession:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -239,8 +244,8 @@ const handleSave = async () => {
         <VBtn
           color="secondary"
           variant="text"
-          @click="handleCancel"
           :disabled="loading"
+          @click="handleCancel"
         >
           Cancelar
         </VBtn>

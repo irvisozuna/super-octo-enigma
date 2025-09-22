@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { ApiService } from '@/services/apiService'
-import type { 
-  Fine, 
-  FineListResponse, 
-  FineDetailResponse, 
-  FineListParams, 
+import { computed, ref } from 'vue'
+import type {
+  Fine,
+  FineDetailResponse,
   FineFilters,
-  FineStats 
+  FineListParams,
+  FineListResponse,
+  FineStats,
 } from '../types/fine'
+import { ApiService } from '@/services/apiService'
 
 export const useFineStore = defineStore('fine', () => {
   // State
@@ -30,7 +30,7 @@ export const useFineStore = defineStore('fine', () => {
   // Stats computed
   const stats = computed<FineStats>(() => {
     const fines = list.value
-    
+
     return {
       total: fines.length,
       unpaid: fines.filter(f => f.status === 'ISSUED' || f.status === 'OVERDUE').length,
@@ -52,7 +52,7 @@ export const useFineStore = defineStore('fine', () => {
         CANCELLED: fines.filter(f => f.status === 'CANCELLED').length,
         OVERDUE: fines.filter(f => f.status === 'OVERDUE').length,
         APPEALED: fines.filter(f => f.status === 'APPEALED').length,
-      }
+      },
     }
   })
 
@@ -60,11 +60,12 @@ export const useFineStore = defineStore('fine', () => {
   const fetchList = async (concessionId: string, params?: Partial<FineListParams>) => {
     if (!concessionId) {
       console.error('Concession ID is required to fetch fines')
+
       return
     }
 
     loading.value = true
-    
+
     try {
       const queryParams: FineListParams = {
         per_page: itemsPerPage.value,
@@ -74,23 +75,23 @@ export const useFineStore = defineStore('fine', () => {
         include_computed: ['subject_type', 'formatted_amount', 'status_label', 'formatted_location'],
         include_relations: ['vehicle', 'concession_holder', 'violation_type'],
         ...filters.value,
-        ...params
+        ...params,
       }
 
       // Construir query string
       const queryString = new URLSearchParams()
+
       Object.entries(queryParams).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
+          if (Array.isArray(value))
             value.forEach(v => queryString.append(`${key}[]`, String(v)))
-          } else {
+          else
             queryString.append(key, String(value))
-          }
         }
       })
 
       const response = await ApiService.get<FineListResponse>(
-        `/transport/fines/concession/${concessionId}?${queryString.toString()}`
+        `/transport/fines/concession/${concessionId}?${queryString.toString()}`,
       )
 
       list.value = response.data || []
@@ -101,41 +102,44 @@ export const useFineStore = defineStore('fine', () => {
         count: list.value.length,
         total: total.value,
         page: page.value,
-        concessionId
+        concessionId,
       })
-
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error fetching fines:', error)
       list.value = []
       total.value = 0
       throw error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
 
   const fetchById = async (fineId: string) => {
     loading.value = true
-    
+
     try {
       const response = await ApiService.get<FineDetailResponse>(
-        `/transport/fines/${fineId}?include_computed[]=subject_type&include_computed[]=formatted_amount&include_computed[]=status_label&include_computed[]=formatted_location&include_relations[]=vehicle&include_relations[]=concession_holder&include_relations[]=violation_type&include_relations[]=payments&include_relations[]=photos`
+        `/transport/fines/${fineId}?include_computed[]=subject_type&include_computed[]=formatted_amount&include_computed[]=status_label&include_computed[]=formatted_location&include_relations[]=vehicle&include_relations[]=concession_holder&include_relations[]=violation_type&include_relations[]=payments&include_relations[]=photos`,
       )
 
       currentItem.value = response.data
-      
+
       console.log('✅ Fine detail loaded:', {
         id: fineId,
         status: response.data?.status,
-        amount: response.data?.formatted_amount
+        amount: response.data?.formatted_amount,
       })
 
       return response.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error fetching fine detail:', error)
       currentItem.value = null
       throw error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -184,13 +188,13 @@ export const useFineStore = defineStore('fine', () => {
     filters,
     sortBy,
     sortDesc,
-    
+
     // Computed
     hasItems,
     totalPages,
     currentPage,
     stats,
-    
+
     // Actions
     fetchList,
     fetchById,
@@ -199,6 +203,6 @@ export const useFineStore = defineStore('fine', () => {
     setPage,
     setItemsPerPage,
     setSorting,
-    reset
+    reset,
   }
 })

@@ -54,6 +54,7 @@ const isLoadingRoles = ref(false)
 const fetchRoles = async () => {
   try {
     const { data, error, isFetching } = await useApi<Roles[]>('/company/roles')
+
     roles.value = data.value ?? []
   }
   catch (error) {
@@ -78,7 +79,7 @@ const editPermission = (value: Roles) => {
   roleDetail.value = {
     id: value.id,
     name: value.name,
-    permissions: value.permissions
+    permissions: value.permissions,
   }
 }
 </script>

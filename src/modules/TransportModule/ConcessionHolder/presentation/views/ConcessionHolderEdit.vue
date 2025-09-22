@@ -69,6 +69,7 @@ const loadHolderData = async () => {
 
       // Campos adicionales para el formulario
       const nameParts = holder.value.full_name?.split(' ') || []
+
       formData.value = {
         first_name: nameParts[0] || '',
         last_name: nameParts.slice(1).join(' ') || '',

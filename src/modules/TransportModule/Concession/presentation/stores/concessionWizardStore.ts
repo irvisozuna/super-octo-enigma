@@ -6,9 +6,10 @@
 
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { ConcessionCreateDto, AuthorizedService, RestrictionItem } from '../../application/dtos/ConcessionDtos'
+import type { AuthorizedService, ConcessionCreateDto, RestrictionItem } from '../../application/dtos/ConcessionDtos'
 
 export interface ConcessionWizardData extends ConcessionCreateDto {
+
   // Additional wizard-specific data
   validationErrors?: Record<string, string[]>
 }
@@ -16,15 +17,15 @@ export interface ConcessionWizardData extends ConcessionCreateDto {
 // Helper function to map status from API to wizard format
 const mapStatusForWizard = (apiStatus: string): string => {
   const statusMap: Record<string, string> = {
-    'PENDING': 'ACTIVE',
-    'UNDER_REVIEW': 'ACTIVE',
-    'APPROVED': 'ACTIVE',
-    'REJECTED': 'SUSPENDED',
-    'CANCELLED': 'SUSPENDED',
-    'ACTIVE': 'ACTIVE',
-    'SUSPENDED': 'SUSPENDED',
-    'EXPIRED': 'EXPIRED',
-    'INACTIVE': 'SUSPENDED'
+    PENDING: 'ACTIVE',
+    UNDER_REVIEW: 'ACTIVE',
+    APPROVED: 'ACTIVE',
+    REJECTED: 'SUSPENDED',
+    CANCELLED: 'SUSPENDED',
+    ACTIVE: 'ACTIVE',
+    SUSPENDED: 'SUSPENDED',
+    EXPIRED: 'EXPIRED',
+    INACTIVE: 'SUSPENDED',
   }
 
   return statusMap[apiStatus?.toUpperCase()] || 'ACTIVE'
@@ -56,9 +57,9 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
     1: false, // Basic info
     2: false, // Location & service
     3: false, // Validity dates
-    4: true,  // Services (optional)
-    5: true,  // Restrictions (optional)
-    6: true,  // Summary (always valid for review)
+    4: true, // Services (optional)
+    5: true, // Restrictions (optional)
+    6: true, // Summary (always valid for review)
   })
 
   // Computed
@@ -83,8 +84,10 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
     if (isEdit && concessionId) {
       // Load existing concession data
       console.log('Loading concession for edit:', concessionId)
+
       // Don't generate new number for edit mode
-    } else {
+    }
+    else {
       // Initialize new concession
       generateConcessionNumber()
     }
@@ -96,11 +99,14 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
   const loadConcessionForEdit = (concessionData: any) => {
     // Helper function to convert date from ISO format to YYYY-MM-DD
     const formatDateForInput = (isoDate: string) => {
-      if (!isoDate) return ''
+      if (!isoDate)
+        return ''
       try {
         return new Date(isoDate).toISOString().split('T')[0]
-      } catch (error) {
+      }
+      catch (error) {
         console.warn('Invalid date format:', isoDate)
+
         return ''
       }
     }
@@ -131,7 +137,7 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
       valid_from_original: concessionData.valid_from,
       valid_from_mapped: wizardData.value.valid_from,
       valid_to_original: concessionData.valid_to,
-      valid_to_mapped: wizardData.value.valid_to
+      valid_to_mapped: wizardData.value.valid_to,
     })
   }
 
@@ -154,9 +160,9 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
   const updateBasicInfo = (data: { number: string; modality: string; status?: string }) => {
     wizardData.value.number = data.number
     wizardData.value.modality = data.modality as any
-    if (data.status) {
+    if (data.status)
       wizardData.value.status = data.status as any
-    }
+
     validateStep(1)
     autoSave()
   }
@@ -222,19 +228,18 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
     }
 
     stepValidations.value[stepIndex] = isStepValid
+
     return isStepValid
   }
 
   const validateAllSteps = () => {
-    for (let i = 0; i < totalSteps.value; i++) {
+    for (let i = 0; i < totalSteps.value; i++)
       validateStep(i)
-    }
   }
 
   const setCurrentStep = (step: number) => {
-    if (step >= 0 && step < totalSteps.value) {
+    if (step >= 0 && step < totalSteps.value)
       currentStep.value = step
-    }
   }
 
   const nextStep = () => {
@@ -250,15 +255,13 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
   }
 
   const canNavigateToStep = (stepIndex: number): boolean => {
-    if (stepIndex <= currentStep.value) {
+    if (stepIndex <= currentStep.value)
       return true // Can always go back
-    }
 
     // Check if all previous steps are valid
     for (let i = 0; i < stepIndex; i++) {
-      if (!stepValidations.value[i]) {
+      if (!stepValidations.value[i])
         return false
-      }
     }
 
     return true
@@ -274,7 +277,8 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
         step: currentStep.value,
       }))
       lastSaved.value = new Date().toISOString()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error saving draft:', error)
     }
   }
@@ -285,14 +289,18 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
       const draft = localStorage.getItem(draftKey)
       if (draft) {
         const { data, step } = JSON.parse(draft)
+
         wizardData.value = data
         currentStep.value = step
         validateAllSteps()
+
         return true
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error loading draft:', error)
     }
+
     return false
   }
 
@@ -301,7 +309,8 @@ export const useConcessionWizardStore = defineStore('transport-concession-wizard
     try {
       localStorage.removeItem(draftKey)
       lastSaved.value = null
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error clearing draft:', error)
     }
   }

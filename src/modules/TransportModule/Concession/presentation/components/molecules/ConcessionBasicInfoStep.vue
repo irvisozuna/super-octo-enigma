@@ -56,26 +56,27 @@ const isValid = computed(() => {
 // Methods
 const generateConcessionNumber = () => {
   const pattern = TransportModuleConfig.numbering?.concession?.pattern || 'CON-{YYYY}{MM}{DD}-{TS6}'
+
   localData.value.number = generateCodeFromPattern(pattern)
 }
 
 // Watchers
-watch(localData, (newValue) => {
+watch(localData, newValue => {
   emit('update:modelValue', newValue)
 }, { deep: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 
 // Initialize with generated number if empty and auto mode
-if (autoNumber.value && !localData.value.number) {
+if (autoNumber.value && !localData.value.number)
   generateConcessionNumber()
-}
 
 // Toggle behavior: when switching to auto, (re)generate a number
-watch(autoNumber, (isAuto) => {
-  if (isAuto) generateConcessionNumber()
+watch(autoNumber, isAuto => {
+  if (isAuto)
+    generateConcessionNumber()
 })
 </script>
 
@@ -121,7 +122,9 @@ watch(autoNumber, (isAuto) => {
               v-if="allowManual"
               class="d-flex align-center justify-space-between mb-2"
             >
-              <div class="text-body-2 text-medium-emphasis">Modo de número</div>
+              <div class="text-body-2 text-medium-emphasis">
+                Modo de número
+              </div>
               <VSwitch
                 v-model="autoNumber"
                 inset

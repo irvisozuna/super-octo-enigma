@@ -528,7 +528,7 @@ onMounted(async () => {
                     variant="flat"
                     class="mb-2"
                   >
-                   {{ $t(restriction.code) }}
+                    {{ $t(restriction.code) }}
                   </VChip>
                   <h5 class="text-subtitle-2 mb-1">
                     {{ restriction.description }}:

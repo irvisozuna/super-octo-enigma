@@ -135,14 +135,16 @@ export const useConcessionStore = defineStore('transport-concession', () => {
         isExpired: dto.is_expired,
         daysUntilExpiration: dto.days_until_expiration,
         expirationStatus: dto.expiration_status,
-        holder: dto.holder ? {
-          id: dto.holder.id,
-          fullName: dto.holder.full_name,
-          holderType: dto.holder.holder_type,
-          holderTypeLabel: dto.holder.holder_type_label,
-          email: dto.holder.email,
-          phone: dto.holder.phone,
-        } : null,
+        holder: dto.holder
+          ? {
+            id: dto.holder.id,
+            fullName: dto.holder.full_name,
+            holderType: dto.holder.holder_type,
+            holderTypeLabel: dto.holder.holder_type_label,
+            email: dto.holder.email,
+            phone: dto.holder.phone,
+          }
+          : null,
         createdAt: dto.created_at,
         updatedAt: dto.updated_at,
       }
@@ -163,8 +165,9 @@ export const useConcessionStore = defineStore('transport-concession', () => {
 
     try {
       const response = await concessionApiService.findByHolderId(holderId, params)
+
       console.log('API Response:', response)
-      
+
       // Handle the response structure based on the API response format
       if (response.data && Array.isArray(response.data)) {
         // If the response has a data property with array (current API format)
@@ -190,10 +193,11 @@ export const useConcessionStore = defineStore('transport-concession', () => {
           createdAt: dto.created_at,
           updatedAt: dto.updated_at,
         }))
-        
+
         total.value = response.meta?.total || response.data.length
         console.log('Mapped items:', items.value)
-      } else if (response.concessions) {
+      }
+      else if (response.concessions) {
         // If the response has a concessions property with data array
         items.value = response.concessions.data?.map((dto: any) => ({
           id: dto.id,
@@ -217,9 +221,10 @@ export const useConcessionStore = defineStore('transport-concession', () => {
           createdAt: dto.created_at,
           updatedAt: dto.updated_at,
         })) || []
-        
+
         total.value = response.concessions.total || 0
-      } else if (Array.isArray(response)) {
+      }
+      else if (Array.isArray(response)) {
         // If the response is directly an array
         items.value = response.map((dto: any) => ({
           id: dto.id,
@@ -243,13 +248,14 @@ export const useConcessionStore = defineStore('transport-concession', () => {
           createdAt: dto.created_at,
           updatedAt: dto.updated_at,
         }))
-        
+
         total.value = response.length
-      } else {
+      }
+      else {
         items.value = []
         total.value = 0
       }
-      
+
       totalPages.value = Math.ceil(total.value / itemsPerPage.value)
     }
     catch (err) {
@@ -267,7 +273,9 @@ export const useConcessionStore = defineStore('transport-concession', () => {
 
     try {
       console.log('Store: creating concession with data:', data)
+
       const response = await concessionApiService.create(data)
+
       console.log('Store: API response:', response)
 
       // Refresh the list after creation
@@ -277,9 +285,11 @@ export const useConcessionStore = defineStore('transport-concession', () => {
     }
     catch (err: any) {
       console.error('Store: Create concession error:', err)
+
       const errorMessage = err?.response?.data?.message
         || err?.message
         || 'Failed to create concession'
+
       error.value = errorMessage
       throw new Error(errorMessage)
     }

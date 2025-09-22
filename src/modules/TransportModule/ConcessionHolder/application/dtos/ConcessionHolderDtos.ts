@@ -8,7 +8,7 @@ export interface ConcessionHolderListDto {
   id: string
   company_id: string
   full_name: string
-  holder_type: 'NATURAL' | 'LEGAL' 
+  holder_type: 'NATURAL' | 'LEGAL'
   created_at: string
   updated_at: string
   local_id: number

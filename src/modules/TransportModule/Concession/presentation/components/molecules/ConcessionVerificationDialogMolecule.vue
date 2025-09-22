@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConcessionStore } from '../../stores/concessionStore'
 import { ConcessionApiService } from '../../../infrastructure/api/services/ConcessionApiService'
@@ -27,6 +27,7 @@ const concessionApi = new ConcessionApiService()
 
 // State
 const loading = ref(false)
+
 const verificationForm = ref({
   verification_notes: '',
 })
@@ -41,13 +42,14 @@ const suspensionForm = ref({
 // Computed
 const dialogValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const isValid = computed(() => {
   if (props.mode === 'suspend') {
     const hasReason = !!suspensionForm.value.suspension_reason?.trim()
     const days = suspensionForm.value.suspension_duration_days
+
     const durationValid = suspensionForm.value.indefinite
       || (typeof days === 'number'
         && Number.isInteger(days)
@@ -68,7 +70,8 @@ const handleCancel = () => {
 }
 
 const handleConfirm = async () => {
-  if (!isValid.value) return
+  if (!isValid.value)
+    return
 
   loading.value = true
   try {
@@ -89,9 +92,11 @@ const handleConfirm = async () => {
     }
 
     emit('success')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error processing concession action:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -105,13 +110,15 @@ const handleConfirm = async () => {
   >
     <VCard>
       <VCardTitle class="d-flex align-center">
-        <VIcon v-if="props.mode === 'verify'"
+        <VIcon
+          v-if="props.mode === 'verify'"
           icon="tabler-shield-check"
           size="20"
           class="me-2"
           color="success"
         />
-        <VIcon v-else
+        <VIcon
+          v-else
           icon="tabler-pause"
           size="20"
           class="me-2"
@@ -189,7 +196,7 @@ const handleConfirm = async () => {
                 type="number"
                 :disabled="suspensionForm.indefinite"
                 :rules="[
-                  v => suspensionForm.indefinite || (Number.isInteger(v) && v >= 1 && v <= 365) || 'Debe ser un entero entre 1 y 365'
+                  v => suspensionForm.indefinite || (Number.isInteger(v) && v >= 1 && v <= 365) || 'Debe ser un entero entre 1 y 365',
                 ]"
                 min="1"
                 max="365"
@@ -228,8 +235,8 @@ const handleConfirm = async () => {
         <VBtn
           color="secondary"
           variant="text"
-          @click="handleCancel"
           :disabled="loading"
+          @click="handleCancel"
         >
           Cancelar
         </VBtn>

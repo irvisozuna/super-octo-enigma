@@ -30,6 +30,7 @@ const selectAll = ref(false)
 // Available services from API
 const availableServices = computed(() => {
   const services = props.validValues.authorized_services || {}
+
   return Object.entries(services).map(([code, service]: [string, any]) => ({
     code,
     title: service.description || service.label || code,
@@ -41,24 +42,26 @@ const availableServices = computed(() => {
 // Group services by category
 const servicesByCategory = computed(() => {
   const grouped: Record<string, any[]> = {}
+
   availableServices.value.forEach(service => {
-    if (!grouped[service.category]) {
+    if (!grouped[service.category])
       grouped[service.category] = []
-    }
+
     grouped[service.category].push(service)
   })
+
   return grouped
 })
 
 const categoryNames: Record<string, string> = {
-  'BASIC': 'Básicos',
-  'PREMIUM': 'Premium',
-  'SPECIAL': 'Especiales',
-  'CORPORATE': 'Corporativos',
-  'ON_DEMAND': 'Bajo Demanda',
-  'LOGISTICS': 'Logística',
-  'EVENTS': 'Eventos',
-  'EXTENDED': 'Extendidos'
+  BASIC: 'Básicos',
+  PREMIUM: 'Premium',
+  SPECIAL: 'Especiales',
+  CORPORATE: 'Corporativos',
+  ON_DEMAND: 'Bajo Demanda',
+  LOGISTICS: 'Logística',
+  EVENTS: 'Eventos',
+  EXTENDED: 'Extendidos',
 }
 
 // Computed
@@ -68,24 +71,24 @@ const hasSelectedServices = computed(() => selectedServiceCodes.value.length > 0
 // Methods
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
-    'BASIC': 'primary',
-    'PREMIUM': 'info',
-    'SPECIAL': 'warning',
-    'CORPORATE': 'success',
-    'ON_DEMAND': 'purple',
-    'LOGISTICS': 'orange',
-    'EVENTS': 'pink',
-    'EXTENDED': 'indigo'
+    BASIC: 'primary',
+    PREMIUM: 'info',
+    SPECIAL: 'warning',
+    CORPORATE: 'success',
+    ON_DEMAND: 'purple',
+    LOGISTICS: 'orange',
+    EVENTS: 'pink',
+    EXTENDED: 'indigo',
   }
+
   return colors[category] || 'primary'
 }
 
 const toggleSelectAll = () => {
-  if (selectAll.value) {
+  if (selectAll.value)
     selectedServiceCodes.value = availableServices.value.map(s => s.code)
-  } else {
+  else
     selectedServiceCodes.value = []
-  }
 }
 
 const toggleCategory = (category: string) => {
@@ -93,56 +96,61 @@ const toggleCategory = (category: string) => {
   const categoryServiceCodes = categoryServices.map(s => s.code)
 
   const allSelected = categoryServiceCodes.every(code =>
-    selectedServiceCodes.value.includes(code)
+    selectedServiceCodes.value.includes(code),
   )
 
   if (allSelected) {
     // Deselect all in category
     selectedServiceCodes.value = selectedServiceCodes.value.filter(code =>
-      !categoryServiceCodes.includes(code)
+      !categoryServiceCodes.includes(code),
     )
-  } else {
+  }
+  else {
     // Select all in category
     categoryServiceCodes.forEach(code => {
-      if (!selectedServiceCodes.value.includes(code)) {
+      if (!selectedServiceCodes.value.includes(code))
         selectedServiceCodes.value.push(code)
-      }
     })
   }
 }
 
 const isCategorySelected = (category: string) => {
   const categoryServices = servicesByCategory.value[category] || []
+
   return categoryServices.length > 0 && categoryServices.every(service =>
-    selectedServiceCodes.value.includes(service.code)
+    selectedServiceCodes.value.includes(service.code),
   )
 }
 
 const isCategoryPartiallySelected = (category: string) => {
   const categoryServices = servicesByCategory.value[category] || []
+
   const selectedInCategory = categoryServices.filter(service =>
-    selectedServiceCodes.value.includes(service.code)
+    selectedServiceCodes.value.includes(service.code),
   )
+
   return selectedInCategory.length > 0 && selectedInCategory.length < categoryServices.length
 }
 
 // Watchers
-watch(selectedServiceCodes, (newCodes) => {
+watch(selectedServiceCodes, newCodes => {
   const services = newCodes.map(code => {
     const service = availableServices.value.find(s => s.code === code)
+
     return {
       code,
       description: service?.title || code,
-      category: service?.category || 'GENERAL'
+      category: service?.category || 'GENERAL',
     }
   })
+
   emit('update:services', services)
 
   // Update select all state
   selectAll.value = newCodes.length === availableServices.value.length
 }, { immediate: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 </script>
@@ -228,7 +236,7 @@ watch(isValid, (newValue) => {
                 variant="tonal"
                 class="me-2"
               >
-                {{ $t(categoryNames[category] || category ) }}
+                {{ $t(categoryNames[category] || category) }}
               </VChip>
               <span>{{ services.length }} servicios</span>
             </div>

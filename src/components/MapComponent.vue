@@ -15,7 +15,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   zoom: 18,
   height: '500px',
-  mapType: 'fine_location'
+  mapType: 'fine_location',
 })
 
 // Referencia al contenedor del mapa
@@ -31,28 +31,28 @@ const getMapConfig = () => {
       style: 'mapbox://styles/mapbox/streets-v11',
       pitch: 45,
       bearing: 0,
-      height: '500px'
+      height: '500px',
     },
     vehicle_tracking: {
       zoom: 15,
       style: 'mapbox://styles/mapbox/outdoors-v12',
       pitch: 30,
       bearing: 0,
-      height: '400px'
+      height: '400px',
     },
     concession_overview: {
       zoom: 12,
       style: 'mapbox://styles/mapbox/light-v11',
       pitch: 0,
       bearing: 0,
-      height: '300px'
-    }
+      height: '300px',
+    },
   }
-  
+
   return {
     ...configs[props.mapType],
     zoom: props.zoom || configs[props.mapType].zoom,
-    height: props.height || configs[props.mapType].height
+    height: props.height || configs[props.mapType].height,
   }
 }
 
@@ -63,12 +63,12 @@ onMounted(() => {
 
     // Configuración específica según el tipo de mapa
     const mapConfig = getMapConfig()
-    
+
     console.log('🗺️ Initializing map with coordinates:', {
       lat: props.latitude,
       lng: props.longitude,
       zoom: mapConfig.zoom,
-      type: props.mapType
+      type: props.mapType,
     })
 
     // Inicialización del mapa
@@ -89,6 +89,7 @@ onMounted(() => {
 
     // Agregar controles de navegación (zoom y rotación)
     const nav = new mapboxgl.NavigationControl({ showCompass: true, showZoom: true })
+
     map.addControl(nav, 'top-right') // Posición del control
 
     // Agregar control de escala
@@ -96,10 +97,12 @@ onMounted(() => {
       maxWidth: 100,
       unit: 'metric', // Puede ser 'imperial' o 'metric'
     })
+
     map.addControl(scale, 'bottom-left')
 
     // Crear un elemento HTML personalizado para el marcador
     const markerElement = document.createElement('div')
+
     markerElement.style.backgroundImage = 'url(https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png)'
     markerElement.style.width = '30px'
     markerElement.style.height = '38px'

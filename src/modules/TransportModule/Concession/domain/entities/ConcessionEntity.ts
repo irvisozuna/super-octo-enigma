@@ -7,6 +7,7 @@
 import type { BaseEntity, ConcessionType, EntityStatus } from '../../../shared/types'
 
 export interface ConcessionEntity extends BaseEntity {
+
   // Required fields
   number: string
   modality: 'URBAN' | 'SUBURBAN' | 'RURAL' | 'TOURIST' | 'SCHOLAR' | 'WORKER' | 'TAXI' | 'INTERCITY' | 'CHARTER' | 'SHUTTLE'

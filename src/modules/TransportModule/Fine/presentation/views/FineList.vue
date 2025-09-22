@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import debounce from 'lodash/debounce'
 import { useI18n } from 'vue-i18n'
 import { useFineStore } from '../stores/fineStore'
-import { useAppManager } from '@/composables/useAppManager'
 import type { FineStatus, SubjectType } from '../../types/fine'
+import { useAppManager } from '@/composables/useAppManager'
 
 // Composable para manejar diálogos
 const { navigateTo } = useAppManager()
@@ -99,86 +99,73 @@ function applyFilters() {
   // Verificar que el store esté disponible
   if (!fineStore) {
     console.error('FineStore not available')
+
     return
   }
-  
+
   const filters: any = {}
-  
+
   // Filtros básicos
-  if (fineStore.filters?.search) {
+  if (fineStore.filters?.search)
     filters.search = fineStore.filters.search
-  }
-  
+
   // Filtros avanzados
-  if (selectedStatus.value) {
+  if (selectedStatus.value)
     filters.status = selectedStatus.value
-  }
-  
-  if (selectedSubjectType.value) {
+
+  if (selectedSubjectType.value)
     filters.subject_type = selectedSubjectType.value
-  }
-  
-  if (dateFrom.value) {
+
+  if (dateFrom.value)
     filters.date_from = dateFrom.value
-  }
-  
-  if (dateTo.value) {
+
+  if (dateTo.value)
     filters.date_to = dateTo.value
-  }
-  
-  if (amountMin.value) {
-    filters.min_amount = parseFloat(amountMin.value)
-  }
-  
-  if (amountMax.value) {
-    filters.max_amount = parseFloat(amountMax.value)
-  }
-  
-  if (selectedConcessionId.value) {
+
+  if (amountMin.value)
+    filters.min_amount = Number.parseFloat(amountMin.value)
+
+  if (amountMax.value)
+    filters.max_amount = Number.parseFloat(amountMax.value)
+
+  if (selectedConcessionId.value)
     filters.concession_id = selectedConcessionId.value
-  }
-  
-  if (selectedConcessionHolderId.value) {
+
+  if (selectedConcessionHolderId.value)
     filters.concession_holder_id = selectedConcessionHolderId.value
-  }
-  
-  if (selectedViolationTypeId.value) {
+
+  if (selectedViolationTypeId.value)
     filters.violation_type_id = selectedViolationTypeId.value
-  }
-  
-  if (selectedCreatedBy.value) {
+
+  if (selectedCreatedBy.value)
     filters.created_by = selectedCreatedBy.value
-  }
-  
-  if (selectedPaymentStatus.value) {
+
+  if (selectedPaymentStatus.value)
     filters.payment_status = selectedPaymentStatus.value
-  }
-  
+
   // Actualizar filtros en el store directamente
-  if (fineStore.filters) {
+  if (fineStore.filters)
     fineStore.filters = { ...fineStore.filters, ...filters }
-  }
-  
+
   // Verificar que fetchList esté disponible
-  if (typeof fineStore.fetchList === 'function') {
+  if (typeof fineStore.fetchList === 'function')
     fineStore.fetchList()
-  } else {
+  else
     console.error('fetchList method not available in fineStore')
-  }
 }
 
 function clearFilters() {
   // Verificar que el store esté disponible
   if (!fineStore) {
     console.error('FineStore not available')
+
     return
   }
-  
+
   // Limpiar filtros del store directamente
-  if (fineStore.filters) {
+  if (fineStore.filters)
     fineStore.filters = {}
-  }
-  
+
   // Limpiar filtros locales
   selectedStatus.value = ''
   selectedSubjectType.value = ''
@@ -191,13 +178,12 @@ function clearFilters() {
   selectedViolationTypeId.value = ''
   selectedCreatedBy.value = ''
   selectedPaymentStatus.value = ''
-  
+
   // Recargar datos
-  if (typeof fineStore.fetchList === 'function') {
+  if (typeof fineStore.fetchList === 'function')
     fineStore.fetchList()
-  } else {
+  else
     console.error('fetchList method not available in fineStore')
-  }
 }
 
 function toggleAdvancedFilters() {
@@ -227,19 +213,17 @@ function exportItems(type: string) {
 
 function handleTableUpdate(options: any) {
   // Manejar cambios de paginación y ordenamiento directamente
-  if (options.page !== undefined) {
+  if (options.page !== undefined)
     fineStore.page = options.page
-  }
-  
-  if (options.itemsPerPage !== undefined) {
+
+  if (options.itemsPerPage !== undefined)
     fineStore.itemsPerPage = options.itemsPerPage
-  }
-  
+
   if (options.sortBy && options.sortBy.length > 0) {
     fineStore.sortBy = options.sortBy
     fineStore.sortDesc = options.sortDesc || []
   }
-  
+
   // Aplicar filtros con los nuevos parámetros
   applyFilters()
 }
@@ -426,7 +410,10 @@ onMounted(() => {
         >
           <VCardText>
             <VRow>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VSelect
                   v-model="selectedStatus"
                   :items="statusOptions"
@@ -437,8 +424,11 @@ onMounted(() => {
                   @update:model-value="applyFilters"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VSelect
                   v-model="selectedSubjectType"
                   :items="subjectTypeOptions"
@@ -449,8 +439,11 @@ onMounted(() => {
                   @update:model-value="applyFilters"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VSelect
                   v-model="selectedPaymentStatus"
                   :items="paymentStatusOptions"
@@ -461,8 +454,11 @@ onMounted(() => {
                   @update:model-value="applyFilters"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VTextField
                   v-model="selectedCreatedBy"
                   :label="t('TransportModule.fine.fields.created_by')"
@@ -471,8 +467,11 @@ onMounted(() => {
                   @input="debouncedFetchList"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VTextField
                   v-model="dateFrom"
                   :label="t('TransportModule.fine.filters.date_from')"
@@ -482,8 +481,11 @@ onMounted(() => {
                   @update:model-value="applyFilters"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VTextField
                   v-model="dateTo"
                   :label="t('TransportModule.fine.filters.date_to')"
@@ -493,8 +495,11 @@ onMounted(() => {
                   @update:model-value="applyFilters"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VTextField
                   v-model="amountMin"
                   :label="t('TransportModule.fine.filters.amount_min')"
@@ -505,8 +510,11 @@ onMounted(() => {
                   @input="debouncedFetchList"
                 />
               </VCol>
-              
-              <VCol cols="12" md="3">
+
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VTextField
                   v-model="amountMax"
                   :label="t('TransportModule.fine.filters.amount_max')"
@@ -544,7 +552,9 @@ onMounted(() => {
               tabler-file-dollar
             </VIcon>
             <div>
-              <div class="font-weight-medium">{{ item.id }}</div>
+              <div class="font-weight-medium">
+                {{ item.id }}
+              </div>
               <div class="text-caption text-medium-emphasis">
                 {{ item.fine_number || `#${item.id.slice(-8)}` }}
               </div>
@@ -588,15 +598,21 @@ onMounted(() => {
         <!-- Slot para usuario creador -->
         <template #[`item.created_by`]="{ item }">
           <div>
-            <div class="font-weight-medium">{{ item.created_by_name || 'N/A' }}</div>
-            <div class="text-caption text-medium-emphasis">{{ item.created_by_email || '' }}</div>
+            <div class="font-weight-medium">
+              {{ item.created_by_name || 'N/A' }}
+            </div>
+            <div class="text-caption text-medium-emphasis">
+              {{ item.created_by_email || '' }}
+            </div>
           </div>
         </template>
 
         <!-- Slot para tipo de violación -->
         <template #[`item.violation_type`]="{ item }">
           <div>
-            <div class="font-weight-medium">{{ item.violation_type?.name || 'N/A' }}</div>
+            <div class="font-weight-medium">
+              {{ item.violation_type?.name || 'N/A' }}
+            </div>
             <div class="text-caption text-medium-emphasis">
               {{ item.violation_type?.description || '' }}
             </div>
@@ -606,23 +622,33 @@ onMounted(() => {
         <!-- Slot para información de concesión -->
         <template #[`item.concession`]="{ item }">
           <div v-if="item.concession">
-            <div class="font-weight-medium">{{ item.concession.concession_number }}</div>
+            <div class="font-weight-medium">
+              {{ item.concession.concession_number }}
+            </div>
             <div class="text-caption text-medium-emphasis">
               {{ item.concession.modality || 'N/A' }} - {{ item.concession.municipality || 'N/A' }}
             </div>
           </div>
-          <span v-else class="text-medium-emphasis">N/A</span>
+          <span
+            v-else
+            class="text-medium-emphasis"
+          >N/A</span>
         </template>
 
         <!-- Slot para información del concesionario -->
         <template #[`item.concession_holder`]="{ item }">
           <div v-if="item.concession_holder">
-            <div class="font-weight-medium">{{ item.concession_holder.name }}</div>
+            <div class="font-weight-medium">
+              {{ item.concession_holder.name }}
+            </div>
             <div class="text-caption text-medium-emphasis">
               {{ item.concession_holder.type || 'N/A' }} - {{ item.concession_holder.document_number || 'N/A' }}
             </div>
           </div>
-          <span v-else class="text-medium-emphasis">N/A</span>
+          <span
+            v-else
+            class="text-medium-emphasis"
+          >N/A</span>
         </template>
 
         <!-- Slot para tipo de sujeto -->
@@ -646,7 +672,10 @@ onMounted(() => {
             >
               {{ t(`TransportModule.fine.payment_status.${item.payment_status}`) }}
             </VChip>
-            <div v-if="item.remaining_amount > 0" class="text-caption text-medium-emphasis mt-1">
+            <div
+              v-if="item.remaining_amount > 0"
+              class="text-caption text-medium-emphasis mt-1"
+            >
               {{ t('TransportModule.fine.fields.remaining') }}: {{ formatCurrency(item.remaining_amount) }}
             </div>
           </div>
@@ -665,7 +694,10 @@ onMounted(() => {
               <VIcon size="20">
                 tabler-eye
               </VIcon>
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 {{ t('common.view') }}
               </VTooltip>
             </VBtn>
@@ -681,7 +713,10 @@ onMounted(() => {
               <VIcon size="20">
                 tabler-credit-card
               </VIcon>
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 {{ t('TransportModule.fine.actions.pay') }}
               </VTooltip>
             </VBtn>
@@ -697,7 +732,10 @@ onMounted(() => {
               <VIcon size="20">
                 tabler-pencil
               </VIcon>
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 {{ t('common.edit') }}
               </VTooltip>
             </VBtn>
@@ -713,7 +751,10 @@ onMounted(() => {
               <VIcon size="20">
                 tabler-trash
               </VIcon>
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 {{ t('common.delete') }}
               </VTooltip>
             </VBtn>

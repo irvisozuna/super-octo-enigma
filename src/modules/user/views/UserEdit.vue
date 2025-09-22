@@ -52,18 +52,20 @@ function close(result: 'close' | 'submit' | 'cancel' = 'close') {
 async function handleSaveClick() {
   console.log('=== handleSaveClick called ===')
   console.log('Current form values:', { name: name.value, email: email.value, password: password.value, roles: roles.value })
-  
+
   // Validación manual simple
   if (!name.value || !email.value) {
     console.log('Validation failed: name and email are required')
+
     return
   }
-  
+
   if (roles.value && roles.value.length === 0) {
     console.log('Validation failed: at least one role is required')
+
     return
   }
-  
+
   // Llamar directamente a onFormSubmit
   try {
     console.log('Calling onFormSubmit directly...')
@@ -71,9 +73,10 @@ async function handleSaveClick() {
       name: name.value,
       email: email.value,
       password: password.value,
-      roles: roles.value
+      roles: roles.value,
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error in handleSaveClick:', error)
   }
 }
@@ -83,12 +86,13 @@ async function onFormSubmit(values: any) {
   console.log('=== onFormSubmit called ===')
   console.log('Form values:', values)
   console.log('Props item:', props.item)
-  
+
   try {
     // Asumiendo que tu store espera (id, data)
     // Si tu API necesita userId, asegúrate de tenerlo en props.item
     if (!props.item.id) {
       console.warn('No ID found in props.item, cannot update.')
+
       return
     }
 
@@ -100,13 +104,12 @@ async function onFormSubmit(values: any) {
     }
 
     // Solo incluir password si se proporcionó
-    if (values.password && values.password.trim() !== '') {
+    if (values.password && values.password.trim() !== '')
       updateData.password = values.password
-    }
 
     console.log('Sending update data:', updateData)
     console.log('Calling userStore.updateItem with ID:', props.item.id)
-    
+
     await userStore.updateItem(props.item.id, updateData)
     console.log('Update successful, closing dialog')
     close('submit')
@@ -232,4 +235,3 @@ async function onFormSubmit(values: any) {
     </VCardText>
   </VCard>
 </template>
-

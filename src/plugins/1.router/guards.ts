@@ -1,9 +1,9 @@
 import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
+import { useAbility } from '@casl/vue'
 import type { User } from '@/types/types'
 import { canNavigate } from '@layouts/plugins/casl'
 import { useTenantStore } from '@/stores/tenant.store'
 import { useCookie } from '@/@core/composable/useCookie'
-import { useAbility } from '@casl/vue'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
@@ -58,6 +58,7 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
       try {
         const rules = JSON.parse(cached)
         const ability = useAbility()
+
         ability.update(rules)
       }
       catch (e) {
@@ -87,6 +88,7 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
       // Si el wizardStep es menor a 3 y no está en una ruta de onboarding, redirigir a onboarding
       if (wizardStep < 3 && !to.path.startsWith('/pages/onboarding'))
         return 'pages/onboarding'
+
       // Si el wizardStep es mayor o igual a 3 y está en una ruta de onboarding, redirigir a home
       if (wizardStep >= 3 && to.path.startsWith('/pages/onboarding'))
         return '/'

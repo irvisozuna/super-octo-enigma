@@ -20,6 +20,7 @@ export default function (app: App) {
   // Fallback a cookie (legacy)
   if (!persistedRules?.length) {
     const userAbilityRules = useCookie<Rule[]>('userAbilityRules')
+
     persistedRules = userAbilityRules.value ?? []
   }
 

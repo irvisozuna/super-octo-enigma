@@ -36,7 +36,7 @@ const concessionHolders = computed(() =>
     holder_type: holder.holderType,
     identification_number: holder.identificationNumber,
     id: holder.id,
-  }))
+  })),
 )
 
 const selectedHolder = computed(() => {
@@ -52,16 +52,15 @@ const openCreateHolderDialog = () => {
   openDialog(
     ConcessionHolderCreateDialogMolecule,
     { title: 'Crear Nuevo Titular' },
-    { width: '800px', persistent: true }
+    { width: '800px', persistent: true },
   ).then(result => {
     if (result === 'submit') {
       // Refresh the holders list and select the new holder
       concessionHolderStore.fetchList().then(() => {
         // Find the newly created holder (assume it's the last one)
         const newHolder = concessionHolderStore.items[concessionHolderStore.items.length - 1]
-        if (newHolder) {
+        if (newHolder)
           selectedHolderId.value = newHolder.id
-        }
       })
     }
   })
@@ -72,11 +71,11 @@ const clearSelection = () => {
 }
 
 // Watchers
-watch(selectedHolderId, (newValue) => {
+watch(selectedHolderId, newValue => {
   emit('update:modelValue', newValue)
 })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 
@@ -85,9 +84,11 @@ onMounted(async () => {
   loadingHolders.value = true
   try {
     await concessionHolderStore.fetchList()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error loading concession holders:', error)
-  } finally {
+  }
+  finally {
     loadingHolders.value = false
   }
 })
@@ -236,34 +237,36 @@ onMounted(async () => {
     </VCard>
 
     <!-- Create New Holder -->
-    <!-- <VCard
+    <!--
+      <VCard
       variant="outlined"
       class="mb-6"
-    >
+      >
       <VCardTitle>
-        <VIcon
-          icon="tabler-user-plus"
-          class="me-2"
-        />
-        ¿No encuentras el titular?
+      <VIcon
+      icon="tabler-user-plus"
+      class="me-2"
+      />
+      ¿No encuentras el titular?
       </VCardTitle>
       <VCardText>
-        <p class="text-body-2 mb-4">
-          Si el titular no existe en el sistema, puedes crear uno nuevo.
-        </p>
-        <VBtn
-          color="primary"
-          variant="outlined"
-          size="large"
-          @click="openCreateHolderDialog"
-        >
-          <VIcon start>
-            tabler-user-plus
-          </VIcon>
-          Crear Nuevo Titular
-        </VBtn>
+      <p class="text-body-2 mb-4">
+      Si el titular no existe en el sistema, puedes crear uno nuevo.
+      </p>
+      <VBtn
+      color="primary"
+      variant="outlined"
+      size="large"
+      @click="openCreateHolderDialog"
+      >
+      <VIcon start>
+      tabler-user-plus
+      </VIcon>
+      Crear Nuevo Titular
+      </VBtn>
       </VCardText>
-    </VCard> -->
+      </VCard>
+    -->
 
     <!-- Validation Status -->
     <VAlert

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, markRaw } from 'vue'
+import { computed, markRaw, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useConcessionStore } from '../stores/concessionStore'
@@ -9,9 +9,7 @@ import ConcessionOverviewTab from '../components/organisms/ConcessionOverviewTab
 import ConcessionVehiclesTab from '../components/organisms/ConcessionVehiclesTab.vue'
 import ConcessionHoldersTab from '../components/organisms/ConcessionHoldersTab.vue'
 import ConcessionFinesTab from '../components/organisms/ConcessionFinesTab.vue'
-import ConcessionPaymentsTab from '../components/organisms/ConcessionPaymentsTab.vue'
 import DocumentManagerTab from '../../../shared/presentation/components/organisms/DocumentManagerTab.vue'
-import ConcessionHistoryTab from '../components/organisms/ConcessionHistoryTab.vue'
 
 // Dialogs
 import ConcessionEditDialogMolecule from '../components/molecules/ConcessionEditDialogMolecule.vue'
@@ -37,14 +35,14 @@ const verificationDialogMode = ref<'verify' | 'suspend'>('verify')
 const concession = computed(() => concessionStore.currentItem)
 
 // Log concession para debugging
-watch(concession, (newConcession) => {
+watch(concession, newConcession => {
   console.log('🏢 Concession loaded:', {
     id: newConcession?.id,
     idType: typeof newConcession?.id,
     idLength: newConcession?.id?.length,
     concessionNumber: newConcession?.concession_number,
     status: newConcession?.status,
-    fullObject: newConcession
+    fullObject: newConcession,
   })
 }, { immediate: true })
 
@@ -65,6 +63,7 @@ const canDelete = computed(() => {
 
 const generateComplianceReport = () => {
   console.log('Generating compliance report for concession:', concession.value?.id)
+
   // TODO: Implement compliance report generation
   // This would generate a detailed PDF report with:
   // - Current status and compliance level
@@ -101,13 +100,13 @@ const tabs = ref([
     icon: 'tabler-files',
     component: markRaw(DocumentManagerTab),
   },
+
   // {
   //   title: 'Historial',
   //   icon: 'tabler-history',
   //   component: markRaw(ConcessionHistoryTab),
   // },
 ])
-
 
 // Methods
 const fetchConcessionDetail = async () => {
@@ -123,6 +122,7 @@ const fetchConcessionDetail = async () => {
   }
   catch (error) {
     console.error('Error loading concession:', error)
+
     // Handle error - maybe show toast
   }
   finally {
@@ -198,24 +198,32 @@ const getStatusIcon = (status: string) => {
 }
 
 const getComplianceStatus = () => {
-  if (!concession.value) return 'PENDIENTE'
+  if (!concession.value)
+    return 'PENDIENTE'
 
   const c = concession.value
-  if (c.isExpired) return 'NO CUMPLE'
-  if (!c.isActive) return 'INACTIVA'
-  if (c.status === 'SUSPENDED') return 'SUSPENDIDA'
-  if (c.daysUntilExpiration <= 30) return 'POR REVISAR'
+  if (c.isExpired)
+    return 'NO CUMPLE'
+  if (!c.isActive)
+    return 'INACTIVA'
+  if (c.status === 'SUSPENDED')
+    return 'SUSPENDIDA'
+  if (c.daysUntilExpiration <= 30)
+    return 'POR REVISAR'
 
   // Check document compliance
   const docStatus = getDocumentComplianceStatus()
-  if (docStatus === 'missing') return 'DOCUMENTOS FALTANTES'
-  if (docStatus === 'expiring') return 'DOCS. POR VENCER'
+  if (docStatus === 'missing')
+    return 'DOCUMENTOS FALTANTES'
+  if (docStatus === 'expiring')
+    return 'DOCS. POR VENCER'
 
   return 'CUMPLE'
 }
 
 const getComplianceColor = () => {
   const status = getComplianceStatus()
+
   const colors = {
     'CUMPLE': 'success',
     'POR REVISAR': 'warning',
@@ -224,7 +232,7 @@ const getComplianceColor = () => {
     'INACTIVA': 'warning',
     'DOCUMENTOS FALTANTES': 'error',
     'DOCS. POR VENCER': 'warning',
-    'PENDIENTE': 'info'
+    'PENDIENTE': 'info',
   }
 
   return colors[status] || 'default'
@@ -235,7 +243,8 @@ type DocumentCompliance = 'missing' | 'expiring' | 'expired' | 'pending' | 'comp
 const getDocumentComplianceStatus = (): DocumentCompliance => {
   // This would normally check the actual document status from the API
   // For now, simulate document compliance checking
-  if (!concession.value) return 'unknown'
+  if (!concession.value)
+    return 'unknown'
 
   // In a real implementation, this would check:
   // - Required documents are uploaded and approved
@@ -247,6 +256,7 @@ const getDocumentComplianceStatus = (): DocumentCompliance => {
 
 const getDocumentComplianceLabel = () => {
   const status = getDocumentComplianceStatus()
+
   const labels: Record<DocumentCompliance, string> = {
     missing: 'Docs. Faltantes',
     expiring: 'Docs. por Vencer',
@@ -295,8 +305,8 @@ onMounted(() => {
                 <VBtn
                   icon
                   variant="text"
-                  @click="goBack"
                   class="me-4"
+                  @click="goBack"
                 >
                   <VIcon>tabler-arrow-left</VIcon>
                 </VBtn>
@@ -316,7 +326,12 @@ onMounted(() => {
                   class="me-2"
                   size="default"
                 >
-                  <VIcon start size="14">{{ getStatusIcon(concession?.status) }}</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    {{ getStatusIcon(concession?.status) }}
+                  </VIcon>
                   {{ concession?.statusLabel || 'Pendiente' }}
                 </VChip>
 
@@ -326,7 +341,12 @@ onMounted(() => {
                   class="me-2"
                   variant="outlined"
                 >
-                  <VIcon start size="14">tabler-shield-check</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    tabler-shield-check
+                  </VIcon>
                   {{ getComplianceStatus() }}
                 </VChip>
 
@@ -337,7 +357,12 @@ onMounted(() => {
                   class="me-2"
                   variant="flat"
                 >
-                  <VIcon start size="14">tabler-calendar-x</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    tabler-calendar-x
+                  </VIcon>
                   VENCIDA - REQUIERE RENOVACIÓN
                 </VChip>
                 <VChip
@@ -346,7 +371,12 @@ onMounted(() => {
                   class="me-2"
                   variant="flat"
                 >
-                  <VIcon start size="14">tabler-clock-exclamation</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    tabler-clock-exclamation
+                  </VIcon>
                   VENCE EN {{ concession?.daysUntilExpiration }} DÍAS
                 </VChip>
                 <VChip
@@ -355,7 +385,12 @@ onMounted(() => {
                   class="me-2"
                   variant="tonal"
                 >
-                  <VIcon start size="14">tabler-info-circle</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    tabler-info-circle
+                  </VIcon>
                   {{ concession?.daysUntilExpiration }} días restantes
                 </VChip>
                 <VChip
@@ -364,7 +399,12 @@ onMounted(() => {
                   class="me-2"
                   variant="tonal"
                 >
-                  <VIcon start size="14">tabler-circle-check</VIcon>
+                  <VIcon
+                    start
+                    size="14"
+                  >
+                    tabler-circle-check
+                  </VIcon>
                   VIGENTE
                 </VChip>
 
@@ -375,7 +415,12 @@ onMounted(() => {
                   size="small"
                   variant="outlined"
                 >
-                  <VIcon start size="12">tabler-file-alert</VIcon>
+                  <VIcon
+                    start
+                    size="12"
+                  >
+                    tabler-file-alert
+                  </VIcon>
                   {{ getDocumentComplianceLabel() }}
                 </VChip>
               </VSheet>
@@ -499,17 +544,19 @@ onMounted(() => {
                     </VBtn>
 
                     <!-- Compliance Report -->
-                    <!-- <VBtn
+                    <!--
+                      <VBtn
                       color="info"
                       variant="tonal"
                       @click="generateComplianceReport"
-                    >
+                      >
                       <VIcon
-                        icon="tabler-file-report"
-                        class="me-2"
+                      icon="tabler-file-report"
+                      class="me-2"
                       />
                       Reporte de Cumplimiento
-                    </VBtn> -->
+                      </VBtn>
+                    -->
 
                     <!-- Delete (restricted) -->
                     <VBtn
@@ -604,8 +651,8 @@ onMounted(() => {
               </template>
               <!-- Otros componentes con sus props específicas -->
               <component
-                v-else
                 :is="tab.component"
+                v-else
                 :concession="concession"
                 :concession-id="concession?.id"
                 :loading="loading"

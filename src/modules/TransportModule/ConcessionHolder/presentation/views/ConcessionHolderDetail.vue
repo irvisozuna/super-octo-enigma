@@ -9,7 +9,6 @@ import ConcessionHolderOverviewTab from '../components/organisms/ConcessionHolde
 import ConcessionHolderConcessionsTab from '../components/organisms/ConcessionHolderConcessionsTab.vue'
 import ConcessionHolderFinesTab from '../components/organisms/ConcessionHolderFinesTab.vue'
 import ConcessionHolderDocumentsTab from '../components/organisms/ConcessionHolderDocumentsTab.vue'
-import ConcessionHolderHistoryTab from '../components/organisms/ConcessionHolderHistoryTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,6 +45,7 @@ const tabs = ref([
     icon: 'tabler-files',
     component: ConcessionHolderDocumentsTab,
   },
+
   // {
   //   title: 'Historial',
   //   icon: 'tabler-history',

@@ -25,15 +25,18 @@ export class FineRepositoryImpl implements FineRepository {
       if (response && Array.isArray(response)) {
         // Si la respuesta es directamente un array
         return response.map(item => FineMapper.fromApiResponse(item))
-      } else if (response && response.data && Array.isArray(response.data)) {
+      }
+      else if (response && response.data && Array.isArray(response.data)) {
         // Si la respuesta tiene estructura { data: [...] }
         return response.data.map(item => FineMapper.fromApiResponse(item))
-      } else if (response && response.success && response.data && Array.isArray(response.data)) {
+      }
+      else if (response && response.success && response.data && Array.isArray(response.data)) {
         // Si la respuesta tiene estructura { success: true, data: [...] }
         return response.data.map(item => FineMapper.fromApiResponse(item))
       }
 
       console.warn('⚠️ Unexpected response format:', response)
+
       return []
     }
     catch (error) {
@@ -43,7 +46,7 @@ export class FineRepositoryImpl implements FineRepository {
   }
 
   // Nuevo método que devuelve tanto datos como meta en una sola petición
-  async findAllWithMeta(filters: FineFilterDto = {}): Promise<{ data: FineEntity[], meta: any }> {
+  async findAllWithMeta(filters: FineFilterDto = {}): Promise<{ data: FineEntity[]; meta: any }> {
     try {
       const response = await this.apiService.getFines(filters)
 
@@ -57,11 +60,13 @@ export class FineRepositoryImpl implements FineRepository {
         // Si la respuesta es directamente un array
         data = response.map(item => FineMapper.fromApiResponse(item))
         meta = { total: response.length }
-      } else if (response && response.data && Array.isArray(response.data)) {
+      }
+      else if (response && response.data && Array.isArray(response.data)) {
         // Si la respuesta tiene estructura { data: [...], meta: {...} }
         data = response.data.map(item => FineMapper.fromApiResponse(item))
         meta = response.meta || { total: response.data.length }
-      } else if (response && response.success && response.data && Array.isArray(response.data)) {
+      }
+      else if (response && response.success && response.data && Array.isArray(response.data)) {
         // Si la respuesta tiene estructura { success: true, data: [...], meta: {...} }
         data = response.data.map(item => FineMapper.fromApiResponse(item))
         meta = response.meta || { total: response.data.length }
@@ -165,13 +170,12 @@ export class FineRepositoryImpl implements FineRepository {
       console.log('🔍 FineRepositoryImpl count response:', response)
 
       // Manejar diferentes formatos de respuesta para el count
-      if (response && response.meta && typeof response.meta.total === 'number') {
+      if (response && response.meta && typeof response.meta.total === 'number')
         return response.meta.total
-      } else if (response && typeof response.total === 'number') {
+      else if (response && typeof response.total === 'number')
         return response.total
-      } else if (Array.isArray(response)) {
+      else if (Array.isArray(response))
         return response.length
-      }
 
       return 0
     }

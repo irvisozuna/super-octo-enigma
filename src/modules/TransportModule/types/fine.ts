@@ -23,7 +23,7 @@ export interface Fine {
   created_by: string
   created_at: string
   updated_at: string
-  
+
   // Campos calculados básicos
   status_label: string
   subject_type: SubjectType
@@ -43,7 +43,7 @@ export interface Fine {
   days_until_due: number
   days_overdue: number
   formatted_location?: string
-  
+
   // Relaciones
   vehicle?: Vehicle
   concession?: Concession
@@ -53,7 +53,7 @@ export interface Fine {
   photos?: Photo[]
 }
 
-export type FineStatus = 
+export type FineStatus =
   | 'DRAFT'
   | 'ISSUED'
   | 'PAID'
@@ -61,7 +61,7 @@ export type FineStatus =
   | 'OVERDUE'
   | 'APPEALED'
 
-export type SubjectType = 
+export type SubjectType =
   | 'concession'
   | 'concession_holder'
   | 'driver'
@@ -111,13 +111,13 @@ export interface Payment {
   reference?: string
 }
 
-export type PaymentMethod = 
+export type PaymentMethod =
   | 'CASH'
   | 'CARD'
   | 'BANK_TRANSFER'
   | 'ONLINE'
 
-export type PaymentStatus = 
+export type PaymentStatus =
   | 'PENDING'
   | 'COMPLETED'
   | 'FAILED'
@@ -132,7 +132,7 @@ export interface Photo {
   taken_at?: string
 }
 
-export type PhotoType = 
+export type PhotoType =
   | 'EVIDENCE'
   | 'DOCUMENT'
   | 'RECEIPT'

@@ -51,11 +51,11 @@ const characterCount = computed(() => {
 })
 
 // Watchers
-watch(localData, (newValue) => {
+watch(localData, newValue => {
   emit('update:modelValue', newValue)
 }, { deep: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 </script>

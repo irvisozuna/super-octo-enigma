@@ -64,7 +64,8 @@ const headers = [
 
 // Methods
 async function loadConcessions() {
-  if (!props.holder?.id) return
+  if (!props.holder?.id)
+    return
 
   const params = {
     per_page: 50,
@@ -76,7 +77,8 @@ async function loadConcessions() {
 
   try {
     await concessionStore.fetchByHolderId(props.holder.id, params)
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error loading concessions:', err)
   }
 }
@@ -99,33 +101,39 @@ function getStatusColor(status: string) {
     CANCELLED: 'error',
     PENDING: 'info',
   }
+
   return colors[status as keyof typeof colors] || 'default'
 }
 
 function formatDate(dateString: string) {
-  if (!dateString) return '-'
+  if (!dateString)
+    return '-'
+
   return new Date(dateString).toLocaleDateString('es-MX')
 }
 
 function getDaysUntilExpirationColor(days: number) {
-  if (days < 0) return 'error'
-  if (days <= 30) return 'warning'
+  if (days < 0)
+    return 'error'
+  if (days <= 30)
+    return 'warning'
+
   return 'success'
 }
 
 function viewConcession(concession: any) {
   // Navigate to concession detail page
-  router.push({ 
-    name: 'concessionsView', 
-    params: { id: concession.id } 
+  router.push({
+    name: 'concessionsView',
+    params: { id: concession.id },
   })
 }
 
 function editConcession(concession: any) {
   // Navigate to concession edit page
-  router.push({ 
-    name: 'concessionsEdit', 
-    params: { id: concession.id } 
+  router.push({
+    name: 'concessionsEdit',
+    params: { id: concession.id },
   })
 }
 
@@ -145,7 +153,10 @@ onMounted(() => {
     <VCardText>
       <!-- Filters -->
       <VRow class="mb-4">
-        <VCol cols="12" md="3">
+        <VCol
+          cols="12"
+          md="3"
+        >
           <VSelect
             v-model="statusFilter"
             :items="statusOptions"
@@ -157,7 +168,10 @@ onMounted(() => {
             @update:model-value="onFilterChange"
           />
         </VCol>
-        <VCol cols="12" md="3">
+        <VCol
+          cols="12"
+          md="3"
+        >
           <VSelect
             v-model="modalityFilter"
             :items="modalityOptions"
@@ -169,7 +183,11 @@ onMounted(() => {
             @update:model-value="onFilterChange"
           />
         </VCol>
-        <VCol cols="12" md="6" class="d-flex align-center">
+        <VCol
+          cols="12"
+          md="6"
+          class="d-flex align-center"
+        >
           <VSpacer />
           <VChip
             v-if="concessions.length > 0"

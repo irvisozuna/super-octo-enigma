@@ -25,6 +25,7 @@ export class HttpDocumentRepository implements DocumentRepository {
 
   async getEntityTypes(): Promise<EntityTypesResponse> {
     const response = await rawApi(`${this.baseUrl}/entity-types`)
+
     return response.data
   }
 

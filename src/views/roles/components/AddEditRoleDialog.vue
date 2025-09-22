@@ -60,15 +60,15 @@ const fetchPermissions = async () => {
       ...module,
       special: module.special.map(special => ({
         ...special,
-        selected: special.selected ?? false
+        selected: special.selected ?? false,
       })),
       subModules: module.subModules.map(subModule => ({
         ...subModule,
         special: subModule.special.map(special => ({
           ...special,
-          selected: special.selected ?? false
-        }))
-      }))
+          selected: special.selected ?? false,
+        })),
+      })),
     }))
   }
   catch (error) {
@@ -103,7 +103,8 @@ const checkedCrudCount = computed(() => {
 
   permissions.value.forEach(module => {
     Object.entries(module.crud).forEach(([key, value]) => {
-      if (value) counter++
+      if (value)
+        counter++
     })
   })
 
@@ -116,7 +117,8 @@ const checkedSpecialCount = computed(() => {
 
   permissions.value.forEach(module => {
     module.special.forEach(special => {
-      if (special.selected) counter++
+      if (special.selected)
+        counter++
     })
   })
 
@@ -124,12 +126,13 @@ const checkedSpecialCount = computed(() => {
 })
 
 const totalCrudPermissions = computed(() => permissions.value.length * 4)
-const totalSpecialPermissions = computed(() => 
-  permissions.value.reduce((total, module) => total + module.special.length, 0)
+
+const totalSpecialPermissions = computed(() =>
+  permissions.value.reduce((total, module) => total + module.special.length, 0),
 )
 
-const isIndeterminate = computed(() => 
-  checkedCrudCount.value > 0 && checkedCrudCount.value < totalCrudPermissions.value
+const isIndeterminate = computed(() =>
+  checkedCrudCount.value > 0 && checkedCrudCount.value < totalCrudPermissions.value,
 )
 
 // Select all CRUD permissions
@@ -141,13 +144,14 @@ watch(isSelectAll, val => {
       create: val,
       update: val,
       delete: val,
-    }
+    },
   }))
 })
 
 // Select all for specific module
 const selectAllModule = (moduleIndex: number, value: boolean) => {
   const module = mainModules.value[moduleIndex]
+
   module.crud = {
     read: value,
     create: value,
@@ -159,6 +163,7 @@ const selectAllModule = (moduleIndex: number, value: boolean) => {
 // Select all for specific submodule
 const selectAllSubModule = (moduleIndex: number, subModuleIndex: number, value: boolean) => {
   const module = mainModules.value[moduleIndex]
+
   module.subModules[subModuleIndex].crud = {
     read: value,
     create: value,
@@ -170,32 +175,35 @@ const selectAllSubModule = (moduleIndex: number, subModuleIndex: number, value: 
 // Select all special permissions for specific module
 const selectAllSpecialModule = (moduleIndex: number, value: boolean) => {
   const module = mainModules.value[moduleIndex]
+
   module.special = module.special.map(special => ({
     ...special,
-    selected: value
+    selected: value,
   }))
 }
 
 // Select all special permissions for specific submodule
 const selectAllSpecialSubModule = (moduleIndex: number, subModuleIndex: number, value: boolean) => {
   const module = mainModules.value[moduleIndex]
+
   module.subModules[subModuleIndex].special = module.subModules[subModuleIndex].special.map(special => ({
     ...special,
-    selected: value
+    selected: value,
   }))
 }
 
 // Get module icon based on module name
 const getModuleIcon = (moduleName: string) => {
   const iconMap: Record<string, string> = {
-    'concession': 'tabler-file-certificate',
-    'vehicle': 'tabler-car',
-    'concessionholder': 'tabler-user-check',
-    'concessionreport': 'tabler-chart-bar',
-    'concessionconfig': 'tabler-settings',
-    'concessionmodalities': 'tabler-list-check',
-    'concessionstatuses': 'tabler-status-change',
+    concession: 'tabler-file-certificate',
+    vehicle: 'tabler-car',
+    concessionholder: 'tabler-user-check',
+    concessionreport: 'tabler-chart-bar',
+    concessionconfig: 'tabler-settings',
+    concessionmodalities: 'tabler-list-check',
+    concessionstatuses: 'tabler-status-change',
   }
+
   return iconMap[moduleName] || 'tabler-package'
 }
 
@@ -203,9 +211,12 @@ const getModuleIcon = (moduleName: string) => {
 const getModuleStatusColor = (module: ModulePermission) => {
   const hasCrud = Object.values(module.crud).some(Boolean)
   const hasSpecial = module.special.some(special => special.selected)
-  
-  if (hasCrud && hasSpecial) return 'success'
-  if (hasCrud || hasSpecial) return 'warning'
+
+  if (hasCrud && hasSpecial)
+    return 'success'
+  if (hasCrud || hasSpecial)
+    return 'warning'
+
   return 'default'
 }
 
@@ -213,10 +224,14 @@ const getModuleStatusColor = (module: ModulePermission) => {
 const getModuleStatusText = (module: ModulePermission) => {
   const hasCrud = Object.values(module.crud).some(Boolean)
   const hasSpecial = module.special.some(special => special.selected)
-  
-  if (hasCrud && hasSpecial) return 'Completo'
-  if (hasCrud) return 'Básico'
-  if (hasSpecial) return 'Especial'
+
+  if (hasCrud && hasSpecial)
+    return 'Completo'
+  if (hasCrud)
+    return 'Básico'
+  if (hasSpecial)
+    return 'Especial'
+
   return 'Sin permisos'
 }
 
@@ -224,20 +239,21 @@ const getModuleStatusText = (module: ModulePermission) => {
 const toggleModule = (moduleName: string) => {
   if (expandedModules.value.has(moduleName)) {
     expandedModules.value.delete(moduleName)
+
     // Also collapse all submodules when collapsing main module
     expandedSubModules.value.clear()
-  } else {
+  }
+  else {
     expandedModules.value.add(moduleName)
   }
 }
 
 // Toggle submodule expansion
 const toggleSubModule = (subModuleName: string) => {
-  if (expandedSubModules.value.has(subModuleName)) {
+  if (expandedSubModules.value.has(subModuleName))
     expandedSubModules.value.delete(subModuleName)
-  } else {
+  else
     expandedSubModules.value.add(subModuleName)
-  }
 }
 
 // Toggle all modules
@@ -245,12 +261,15 @@ const toggleAllModules = () => {
   if (expandAll.value) {
     expandedModules.value.clear()
     expandedSubModules.value.clear()
-  } else {
+  }
+  else {
     expandedModules.value = new Set(mainModules.value.map(module => module.module))
+
     // Expand all submodules too
-    const allSubModules = mainModules.value.flatMap(module => 
-      module.subModules.map(subModule => subModule.module)
+    const allSubModules = mainModules.value.flatMap(module =>
+      module.subModules.map(subModule => subModule.module),
     )
+
     expandedSubModules.value = new Set(allSubModules)
   }
   expandAll.value = !expandAll.value
@@ -265,7 +284,6 @@ const isModuleExpanded = (moduleName: string) => {
 const isSubModuleExpanded = (subModuleName: string) => {
   return expandedSubModules.value.has(subModuleName)
 }
-
 
 // Check if all CRUD permissions are selected
 watch(permissions, () => {
@@ -282,16 +300,16 @@ watch(isIndeterminate, () => {
 })
 
 // if rolePermissions is not empty, then set permissions
-watch(() => props.rolePermissions, (newRolePermissions) => {
+watch(() => props.rolePermissions, newRolePermissions => {
   console.log('Role permissions changed:', newRolePermissions)
   if (newRolePermissions && newRolePermissions.name) {
     role.value = newRolePermissions.name
     console.log('Setting role name:', newRolePermissions.name)
   }
-  
+
   if (newRolePermissions && newRolePermissions.permissions && newRolePermissions.permissions.length) {
     console.log('Loading role permissions:', newRolePermissions)
-    
+
     // Merge role permissions with template permissions
     permissions.value = permissions.value.map(templateModule => {
       const roleModule = newRolePermissions?.permissions.find(item => item.module === templateModule.module)
@@ -303,9 +321,10 @@ watch(() => props.rolePermissions, (newRolePermissions) => {
           crud: roleModule.crud,
           special: templateModule.special.map(templateSpecial => {
             const roleSpecial = roleModule.special.find(rs => rs.name === templateSpecial.name)
+
             return {
               ...templateSpecial,
-              selected: roleSpecial ? roleSpecial.selected : false
+              selected: roleSpecial ? roleSpecial.selected : false,
             }
           }),
           subModules: templateModule.subModules.map(templateSubModule => {
@@ -316,17 +335,21 @@ watch(() => props.rolePermissions, (newRolePermissions) => {
                 crud: roleSubModule.crud,
                 special: templateSubModule.special.map(templateSubSpecial => {
                   const roleSubSpecial = roleSubModule.special.find(rss => rss.name === templateSubSpecial.name)
+
                   return {
                     ...templateSubSpecial,
-                    selected: roleSubSpecial ? roleSubSpecial.selected : false
+                    selected: roleSubSpecial ? roleSubSpecial.selected : false,
                   }
-                })
+                }),
               }
             }
+
             return templateSubModule
-          })
+          }),
         }
+
         console.log('Merged module:', mergedModule.module, mergedModule)
+
         return mergedModule
       }
 
@@ -336,14 +359,15 @@ watch(() => props.rolePermissions, (newRolePermissions) => {
 }, { immediate: true })
 
 // Watch for dialog visibility changes to reset form when opening
-watch(() => props.isDialogVisible, (isVisible) => {
+watch(() => props.isDialogVisible, isVisible => {
   if (isVisible) {
     console.log('Dialog opened, rolePermissions:', props.rolePermissions)
     if (props.rolePermissions && props.rolePermissions.name) {
       role.value = props.rolePermissions.name
       console.log('Setting role name on dialog open:', props.rolePermissions.name)
     }
-  } else {
+  }
+  else {
     // Reset form when closing
     role.value = ''
     expandedModules.value.clear()
@@ -364,7 +388,7 @@ const onSubmit = async () => {
       name: special.name,
       action: special.action,
       label: special.label,
-      selected: special.selected || false
+      selected: special.selected || false,
     })),
     subModules: module.subModules.map(subModule => ({
       module: subModule.module,
@@ -376,10 +400,10 @@ const onSubmit = async () => {
         name: special.name,
         action: special.action,
         label: special.label,
-        selected: special.selected || false
+        selected: special.selected || false,
       })),
-      subModules: []
-    }))
+      subModules: [],
+    })),
   }))
 
   const rolePermissions = {
@@ -436,8 +460,6 @@ const onReset = () => {
         <p class="text-body-1 text-center mb-6">
           Set Role Permissions
         </p>
-        
-
 
         <!-- 👉 Form -->
         <VForm ref="refPermissionForm">
@@ -448,7 +470,6 @@ const onReset = () => {
             placeholder="Enter Role Name"
             :disabled="role === 'admin'"
           />
-
 
           <h5 class="text-h5 my-6">
             Role Permissions
@@ -461,9 +482,9 @@ const onReset = () => {
               <VCardText class="pa-4">
                 <div class="d-flex justify-space-between align-center">
                   <div class="d-flex align-center gap-3">
-                    <VIcon 
-                      icon="tabler-shield-check" 
-                      size="24" 
+                    <VIcon
+                      icon="tabler-shield-check"
+                      size="24"
                       color="primary"
                     />
                     <div>
@@ -492,9 +513,9 @@ const onReset = () => {
               <VCardText class="pa-4">
                 <div class="d-flex justify-space-between align-center">
                   <div class="d-flex align-center gap-3">
-                    <VIcon 
-                      icon="tabler-layout-grid" 
-                      size="20" 
+                    <VIcon
+                      icon="tabler-layout-grid"
+                      size="20"
                       color="primary"
                     />
                     <div>
@@ -511,8 +532,8 @@ const onReset = () => {
                     :variant="expandAll ? 'flat' : 'outlined'"
                     @click="toggleAllModules"
                   >
-                    <VIcon 
-                      :icon="expandAll ? 'tabler-chevron-up' : 'tabler-chevron-down'" 
+                    <VIcon
+                      :icon="expandAll ? 'tabler-chevron-up' : 'tabler-chevron-down'"
                       class="me-2"
                     />
                     {{ expandAll ? $t('collapse_all') : $t('expand_all') }}
@@ -526,21 +547,24 @@ const onReset = () => {
               v-for="(module, moduleIndex) in mainModules"
               :key="module.module"
             >
-              <VCard class="mb-4 module-card" elevation="1">
+              <VCard
+                class="mb-4 module-card"
+                elevation="1"
+              >
                 <!-- Module Header (Always Visible) -->
                 <VCardText class="pa-4">
-                  <div 
+                  <div
                     class="module-header d-flex justify-space-between align-center cursor-pointer"
                     @click="toggleModule(module.module)"
                   >
                     <div class="d-flex align-center gap-3">
-                      <VAvatar 
-                        size="40" 
-                        color="primary" 
+                      <VAvatar
+                        size="40"
+                        color="primary"
                         variant="tonal"
                       >
-                        <VIcon 
-                          :icon="getModuleIcon(module.module)" 
+                        <VIcon
+                          :icon="getModuleIcon(module.module)"
                           size="20"
                         />
                       </VAvatar>
@@ -561,14 +585,13 @@ const onReset = () => {
                       >
                         {{ getModuleStatusText(module) }}
                       </VChip>
-                      <VIcon 
+                      <VIcon
                         :icon="isModuleExpanded(module.module) ? 'tabler-chevron-up' : 'tabler-chevron-down'"
                         size="20"
                         color="primary"
                       />
                     </div>
                   </div>
-
                 </VCardText>
 
                 <!-- Module Content (Expanded View) -->
@@ -577,11 +600,14 @@ const onReset = () => {
                     <VDivider />
                     <VCardText class="pa-6">
                       <!-- Main Module Permissions -->
-                      <div v-if="module.special.length > 0 || Object.values(module.crud).some(Boolean)" class="permission-section mb-6">
+                      <div
+                        v-if="module.special.length > 0 || Object.values(module.crud).some(Boolean)"
+                        class="permission-section mb-6"
+                      >
                         <h6 class="text-subtitle-1 font-weight-medium mb-4">
                           {{ $t('main_module_permissions') }}
                         </h6>
-                        
+
                         <!-- CRUD Permissions -->
                         <div class="mb-4">
                           <div class="d-flex justify-space-between align-center mb-3">
@@ -606,7 +632,8 @@ const onReset = () => {
                               sm="3"
                             >
                               <VCard
-                                :class="['permission-item', { 'permission-selected': value }]"
+                                class="permission-item"
+                                :class="[{ 'permission-selected': value }]"
                                 :color="value ? 'primary' : 'default'"
                                 variant="tonal"
                                 flat
@@ -660,7 +687,8 @@ const onReset = () => {
                               lg="4"
                             >
                               <VCard
-                                :class="['special-permission-item', { 'permission-selected': special.selected }]"
+                                class="special-permission-item"
+                                :class="[{ 'permission-selected': special.selected }]"
                                 :color="special.selected ? 'primary' : 'default'"
                                 variant="tonal"
                                 flat
@@ -683,7 +711,10 @@ const onReset = () => {
                       </div>
 
                       <!-- Submodules -->
-                      <div v-if="module.subModules.length > 0" class="submodules-section">
+                      <div
+                        v-if="module.subModules.length > 0"
+                        class="submodules-section"
+                      >
                         <h6 class="text-subtitle-1 font-weight-medium mb-4">
                           {{ $t('submodules') }}
                           <VChip
@@ -695,26 +726,30 @@ const onReset = () => {
                             {{ module.subModules.length }}
                           </VChip>
                         </h6>
-                        
+
                         <template
                           v-for="(subModule, subModuleIndex) in module.subModules"
                           :key="subModule.module"
                         >
-                          <VCard class="mb-3 submodule-card" elevation="0" variant="outlined">
+                          <VCard
+                            class="mb-3 submodule-card"
+                            elevation="0"
+                            variant="outlined"
+                          >
                             <!-- Submodule Header -->
                             <VCardText class="pa-4">
-                              <div 
+                              <div
                                 class="submodule-header d-flex justify-space-between align-center cursor-pointer"
                                 @click="toggleSubModule(subModule.module)"
                               >
                                 <div class="d-flex align-center gap-3">
-                                  <VAvatar 
-                                    size="32" 
-                                    color="secondary" 
+                                  <VAvatar
+                                    size="32"
+                                    color="secondary"
                                     variant="tonal"
                                   >
-                                    <VIcon 
-                                      :icon="getModuleIcon(subModule.module)" 
+                                    <VIcon
+                                      :icon="getModuleIcon(subModule.module)"
                                       size="16"
                                     />
                                   </VAvatar>
@@ -735,7 +770,7 @@ const onReset = () => {
                                   >
                                     {{ getModuleStatusText(subModule) }}
                                   </VChip>
-                                  <VIcon 
+                                  <VIcon
                                     :icon="isSubModuleExpanded(subModule.module) ? 'tabler-chevron-up' : 'tabler-chevron-down'"
                                     size="16"
                                     color="primary"
@@ -773,7 +808,8 @@ const onReset = () => {
                                         sm="3"
                                       >
                                         <VCard
-                                          :class="['permission-item', { 'permission-selected': value }]"
+                                          class="permission-item"
+                                          :class="[{ 'permission-selected': value }]"
                                           :color="value ? 'primary' : 'default'"
                                           variant="tonal"
                                           flat
@@ -827,7 +863,8 @@ const onReset = () => {
                                         lg="4"
                                       >
                                         <VCard
-                                          :class="['special-permission-item', { 'permission-selected': special.selected }]"
+                                          class="special-permission-item"
+                                          :class="[{ 'permission-selected': special.selected }]"
                                           :color="special.selected ? 'primary' : 'default'"
                                           variant="tonal"
                                           flat

@@ -38,7 +38,7 @@ export class FineApplicationService {
             total: response.data.length,
             page: filters.page || 1,
             per_page: filters.per_page || 20,
-          }
+          },
         }
       }
 
@@ -50,7 +50,7 @@ export class FineApplicationService {
           total: Array.isArray(response) ? response.length : 0,
           page: filters.page || 1,
           per_page: filters.per_page || 20,
-        }
+        },
       }
     }
     catch (error) {

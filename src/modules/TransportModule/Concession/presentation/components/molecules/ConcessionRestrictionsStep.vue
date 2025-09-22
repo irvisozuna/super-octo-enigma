@@ -26,11 +26,13 @@ const { t } = useI18n()
 // State
 const selectedRestrictions = ref<Record<string, any>>({})
 const customValues = ref<Record<string, string>>({})
-const customRestrictions = ref<Array<{code: string, title: string, value: string}>>([])
+const customRestrictions = ref<Array<{ code: string; title: string; value: string }>>([])
+
 const customRestrictionForm = ref({
   title: '',
-  value: ''
+  value: '',
 })
+
 const showCustomDialog = ref(false)
 
 // Initialize from props
@@ -42,6 +44,7 @@ props.restrictions.forEach(restriction => {
 // Available restrictions from API
 const availableRestrictions = computed(() => {
   const restrictions = props.validValues.restrictions || {}
+
   return Object.entries(restrictions).map(([code, restriction]: [string, any]) => ({
     code,
     title: restriction.description || restriction.label || code,
@@ -54,12 +57,13 @@ const availableRestrictions = computed(() => {
 
 // Computed
 const isValid = computed(() => true) // Optional step
+
 const hasSelectedRestrictions = computed(() =>
-  Object.values(selectedRestrictions.value).some(Boolean) || customRestrictions.value.length > 0
+  Object.values(selectedRestrictions.value).some(Boolean) || customRestrictions.value.length > 0,
 )
 
 const selectedCount = computed(() =>
-  Object.values(selectedRestrictions.value).filter(Boolean).length + customRestrictions.value.length
+  Object.values(selectedRestrictions.value).filter(Boolean).length + customRestrictions.value.length,
 )
 
 // Methods
@@ -67,14 +71,15 @@ const toggleRestriction = (code: string) => {
   if (selectedRestrictions.value[code]) {
     selectedRestrictions.value[code] = false
     delete customValues.value[code]
-  } else {
+  }
+  else {
     selectedRestrictions.value[code] = true
+
     // Set default value if available
     const restriction = availableRestrictions.value.find(r => r.code === code)
     const defaultOption = Object.keys(restriction?.options || {})[0]
-    if (defaultOption) {
+    if (defaultOption)
       customValues.value[code] = defaultOption
-    }
   }
 }
 
@@ -83,9 +88,8 @@ const selectAll = () => {
     selectedRestrictions.value[restriction.code] = true
     if (!customValues.value[restriction.code]) {
       const defaultOption = Object.keys(restriction.options)[0]
-      if (defaultOption) {
+      if (defaultOption)
         customValues.value[restriction.code] = defaultOption
-      }
     }
   })
 }
@@ -99,19 +103,21 @@ const clearAll = () => {
 const openCustomDialog = () => {
   customRestrictionForm.value = {
     title: '',
-    value: ''
+    value: '',
   }
   showCustomDialog.value = true
 }
 
 const saveCustomRestriction = () => {
-  if (!customRestrictionForm.value.title.trim()) return
+  if (!customRestrictionForm.value.title.trim())
+    return
 
   const customCode = `CUSTOM_${Date.now()}`
+
   customRestrictions.value.push({
     code: customCode,
     title: customRestrictionForm.value.title,
-    value: customRestrictionForm.value.value
+    value: customRestrictionForm.value.value,
   })
 
   showCustomDialog.value = false
@@ -123,15 +129,16 @@ const removeCustomRestriction = (index: number) => {
 
 const getRestrictionIcon = (code: string) => {
   const icons: Record<string, string> = {
-    'MAX_PASSENGERS': 'tabler-users',
-    'SCHEDULE_RESTRICTION': 'tabler-clock',
-    'ROUTE_LIMITATION': 'tabler-map-pin',
-    'VEHICLE_TYPE': 'tabler-car',
-    'SPEED_LIMIT': 'tabler-speed',
-    'LOAD_CAPACITY': 'tabler-weight',
-    'ZONE_RESTRICTION': 'tabler-map-2',
-    'TIME_LIMIT': 'tabler-hourglass',
+    MAX_PASSENGERS: 'tabler-users',
+    SCHEDULE_RESTRICTION: 'tabler-clock',
+    ROUTE_LIMITATION: 'tabler-map-pin',
+    VEHICLE_TYPE: 'tabler-car',
+    SPEED_LIMIT: 'tabler-speed',
+    LOAD_CAPACITY: 'tabler-weight',
+    ZONE_RESTRICTION: 'tabler-map-2',
+    TIME_LIMIT: 'tabler-hourglass',
   }
+
   return icons[code] || 'tabler-alert-circle'
 }
 
@@ -145,18 +152,17 @@ watch([selectedRestrictions, customValues, customRestrictions], () => {
       let value = customValues.value[code] || ''
 
       // Handle "Others" option with custom value
-      if (value === 'OTHERS' && customValues.value[code + '_custom']) {
-        value = customValues.value[code + '_custom']
-      }
+      if (value === 'OTHERS' && customValues.value[`${code}_custom`])
+        value = customValues.value[`${code}_custom`]
 
       const options = restriction?.options || {}
-      const valueLabel = value === 'OTHERS' ? customValues.value[code + '_custom'] : (options[value] || value)
+      const valueLabel = value === 'OTHERS' ? customValues.value[`${code}_custom`] : (options[value] || value)
 
       return {
         code,
         description: restriction?.title || code,
         value,
-        label: restriction?.title || code
+        label: restriction?.title || code,
       }
     })
 
@@ -165,14 +171,15 @@ watch([selectedRestrictions, customValues, customRestrictions], () => {
     code: custom.code,
     description: custom.title,
     value: custom.value,
-    label: custom.title
+    label: custom.title,
   }))
 
   const allRestrictions = [...standardRestrictions, ...customRestrictionsFormatted]
+
   emit('update:restrictions', allRestrictions)
 }, { deep: true, immediate: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 </script>
@@ -303,7 +310,7 @@ watch(isValid, (newValue) => {
                 v-model="customValues[restriction.code]"
                 :items="[
                   ...Object.entries(restriction.options).map(([value, label]) => ({ title: label, value })),
-                  { title: 'Otros', value: 'OTHERS' }
+                  { title: 'Otros', value: 'OTHERS' },
                 ]"
                 label="Selecciona un valor"
                 variant="outlined"
@@ -314,7 +321,7 @@ watch(isValid, (newValue) => {
               <!-- Custom input when Others is selected -->
               <VTextField
                 v-if="customValues[restriction.code] === 'OTHERS'"
-                v-model="customValues[restriction.code + '_custom']"
+                v-model="customValues[`${restriction.code}_custom`]"
                 label="Especifica el valor personalizado"
                 variant="outlined"
                 density="compact"
@@ -360,7 +367,10 @@ watch(isValid, (newValue) => {
     </div>
 
     <!-- Custom Restrictions Section -->
-    <div v-if="customRestrictions.length > 0" class="mb-3">
+    <div
+      v-if="customRestrictions.length > 0"
+      class="mb-3"
+    >
       <VCard
         variant="outlined"
         color="primary"
@@ -468,8 +478,8 @@ watch(isValid, (newValue) => {
             </VListItemTitle>
             <VListItemSubtitle v-if="customValues[code]">
               Valor: {{
-                customValues[code] === 'OTHERS' && customValues[code + '_custom']
-                  ? customValues[code + '_custom']
+                customValues[code] === 'OTHERS' && customValues[`${code}_custom`]
+                  ? customValues[`${code}_custom`]
                   : customValues[code]
               }}
             </VListItemSubtitle>

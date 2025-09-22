@@ -58,19 +58,39 @@ const attrs = useAttrs()
 // Custom filterFieldProps function since it's not exported in Vuetify 3.10.0
 const filterFieldProps = (props: any) => {
   const fieldPropsKeys = [
-    'appendInnerIcon', 'bgColor', 'clearable', 'clearIcon', 'active', 'centerAffix',
-    'color', 'baseColor', 'details', 'dirty', 'disabled', 'glow', 'error', 'flat',
-    'iconColor', 'label', 'persistentClear', 'prependInnerIcon', 'reverse', 'singleLine',
-    'variant', 'onClick:clear', 'onClick:appendInner', 'onClick:prependInner'
+    'appendInnerIcon',
+    'bgColor',
+    'clearable',
+    'clearIcon',
+    'active',
+    'centerAffix',
+    'color',
+    'baseColor',
+    'details',
+    'dirty',
+    'disabled',
+    'glow',
+    'error',
+    'flat',
+    'iconColor',
+    'label',
+    'persistentClear',
+    'prependInnerIcon',
+    'reverse',
+    'singleLine',
+    'variant',
+    'onClick:clear',
+    'onClick:appendInner',
+    'onClick:prependInner',
   ]
-  
+
   const filtered: any = {}
+
   fieldPropsKeys.forEach(key => {
-    if (props[key] !== undefined) {
+    if (props[key] !== undefined)
       filtered[key] = props[key]
-    }
   })
-  
+
   return filtered
 }
 

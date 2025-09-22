@@ -1,12 +1,29 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import MapComponent from './MapComponent.vue'
+
+const latitude = ref(19.4326)
+const longitude = ref(-99.1332)
+
+const mapboxToken = computed(() =>
+  import.meta.env.VITE_MAPBOX_KEY || '',
+)
+</script>
+
 <template>
   <VCard>
     <VCardTitle>
-      <VIcon class="me-2">tabler-map</VIcon>
+      <VIcon class="me-2">
+        tabler-map
+      </VIcon>
       Test de Mapa
     </VCardTitle>
     <VCardText>
       <VRow>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <VTextField
             v-model.number="latitude"
             label="Latitud"
@@ -14,7 +31,10 @@
             step="0.000001"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <VTextField
             v-model.number="longitude"
             label="Longitud"
@@ -23,7 +43,7 @@
           />
         </VCol>
       </VRow>
-      
+
       <VAlert
         v-if="!mapboxToken"
         type="warning"
@@ -37,7 +57,7 @@
           Configura VITE_MAPBOX_KEY en tu archivo .env
         </div>
       </VAlert>
-      
+
       <VAlert
         v-else
         type="success"
@@ -49,7 +69,7 @@
         Token de Mapbox configurado correctamente
       </VAlert>
     </VCardText>
-    
+
     <VCardText class="pt-0">
       <div style=" border: 1px solid #ccc; border-radius: 8px;block-size: 500px;">
         <MapComponent
@@ -63,15 +83,3 @@
     </VCardText>
   </VCard>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import MapComponent from './MapComponent.vue'
-
-const latitude = ref(19.4326)
-const longitude = ref(-99.1332)
-
-const mapboxToken = computed(() => 
-  import.meta.env.VITE_MAPBOX_KEY || ''
-)
-</script>

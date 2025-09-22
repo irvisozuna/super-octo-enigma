@@ -29,33 +29,39 @@ const localData = ref({
 
 // Computed
 const isValid = computed(() => {
-  return !!(localData.value.valid_from && localData.value.valid_to &&
-           new Date(localData.value.valid_from) < new Date(localData.value.valid_to))
+  return !!(localData.value.valid_from && localData.value.valid_to
+           && new Date(localData.value.valid_from) < new Date(localData.value.valid_to))
 })
 
 const validFromFormatted = computed(() => {
-  if (!localData.value.valid_from) return ''
+  if (!localData.value.valid_from)
+    return ''
+
   return new Date(localData.value.valid_from).toLocaleDateString('es-MX', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 })
 
 const validToFormatted = computed(() => {
-  if (!localData.value.valid_to) return ''
+  if (!localData.value.valid_to)
+    return ''
+
   return new Date(localData.value.valid_to).toLocaleDateString('es-MX', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 })
 
 const durationInDays = computed(() => {
-  if (!localData.value.valid_from || !localData.value.valid_to) return 0
+  if (!localData.value.valid_from || !localData.value.valid_to)
+    return 0
   const from = new Date(localData.value.valid_from)
   const to = new Date(localData.value.valid_to)
   const diffTime = Math.abs(to.getTime() - from.getTime())
+
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 })
 
@@ -68,12 +74,12 @@ const remainingDays = computed(() => {
 })
 
 const dateValidationMessage = computed(() => {
-  if (!localData.value.valid_from || !localData.value.valid_to) {
+  if (!localData.value.valid_from || !localData.value.valid_to)
     return 'Ambas fechas son requeridas'
-  }
-  if (new Date(localData.value.valid_from) >= new Date(localData.value.valid_to)) {
+
+  if (new Date(localData.value.valid_from) >= new Date(localData.value.valid_to))
     return 'La fecha de inicio debe ser anterior a la fecha de fin'
-  }
+
   return ''
 })
 
@@ -81,6 +87,7 @@ const dateValidationMessage = computed(() => {
 const setCommonPeriod = (years: number) => {
   const startDate = new Date()
   const endDate = new Date()
+
   endDate.setFullYear(startDate.getFullYear() + years)
 
   localData.value.valid_from = startDate.toISOString().split('T')[0]
@@ -92,18 +99,21 @@ const minDate = computed(() => {
 })
 
 const minToDate = computed(() => {
-  if (!localData.value.valid_from) return minDate.value
+  if (!localData.value.valid_from)
+    return minDate.value
   const fromDate = new Date(localData.value.valid_from)
+
   fromDate.setDate(fromDate.getDate() + 1)
+
   return fromDate.toISOString().split('T')[0]
 })
 
 // Watchers
-watch(localData, (newValue) => {
+watch(localData, newValue => {
   emit('update:modelValue', newValue)
 }, { deep: true })
 
-watch(isValid, (newValue) => {
+watch(isValid, newValue => {
   emit('validate', newValue)
 }, { immediate: true })
 </script>
@@ -358,15 +368,23 @@ watch(isValid, (newValue) => {
                 dot-color="success"
                 size="small"
               >
-                <div class="text-caption">Inicio</div>
-                <div class="text-body-2">{{ validFromFormatted }}</div>
+                <div class="text-caption">
+                  Inicio
+                </div>
+                <div class="text-body-2">
+                  {{ validFromFormatted }}
+                </div>
               </VTimelineItem>
               <VTimelineItem
                 dot-color="warning"
                 size="small"
               >
-                <div class="text-caption">Vencimiento</div>
-                <div class="text-body-2">{{ validToFormatted }}</div>
+                <div class="text-caption">
+                  Vencimiento
+                </div>
+                <div class="text-body-2">
+                  {{ validToFormatted }}
+                </div>
               </VTimelineItem>
             </VTimeline>
           </VCol>

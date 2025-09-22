@@ -1,18 +1,14 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { VehicleApiService } from '../../infrastructure/api/services/VehicleApiService'
 import type {
+  DriverCreateDto,
+  PaginatedResponseDto,
   VehicleCreateDto,
-  VehicleUpdateDto,
-  VehicleListDto,
   VehicleDetailDto,
   VehicleFilterDto,
-  DriverCreateDto,
-  DriverUpdateDto,
-  DriverListDto,
-  DriverDetailDto,
-  DriverFilterDto,
-  PaginatedResponseDto,
+  VehicleListDto,
+  VehicleUpdateDto,
 } from '../../application/dtos/VehicleDtos'
 
 export const useVehicleStore = defineStore('vehicle', () => {
@@ -21,6 +17,7 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const currentItem = ref<VehicleDetailDto | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+
   const pagination = ref({
     current_page: 1,
     last_page: 1,
@@ -57,7 +54,7 @@ export const useVehicleStore = defineStore('vehicle', () => {
     try {
       const mergedFilters = { ...filters.value, ...customFilters }
       const response: PaginatedResponseDto<VehicleListDto> = await apiService.getList(mergedFilters)
-      
+
       items.value = response.data
       pagination.value = {
         current_page: response.meta.current_page,
@@ -65,10 +62,12 @@ export const useVehicleStore = defineStore('vehicle', () => {
         per_page: response.meta.per_page,
         total: response.meta.total,
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al cargar vehículos'
       items.value = []
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -79,10 +78,12 @@ export const useVehicleStore = defineStore('vehicle', () => {
 
     try {
       currentItem.value = await apiService.getById(id)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al cargar vehículo'
       currentItem.value = null
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -93,12 +94,16 @@ export const useVehicleStore = defineStore('vehicle', () => {
 
     try {
       const newItem = await apiService.create(data)
+
       items.value.unshift(newItem)
+
       return newItem
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al crear vehículo'
       throw err
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -110,17 +115,19 @@ export const useVehicleStore = defineStore('vehicle', () => {
     try {
       const updatedItem = await apiService.update(id, data)
       const index = items.value.findIndex(item => item.id === id)
-      if (index !== -1) {
+      if (index !== -1)
         items.value[index] = updatedItem
-      }
-      if (currentItem.value?.id === id) {
+
+      if (currentItem.value?.id === id)
         currentItem.value = updatedItem
-      }
+
       return updatedItem
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al actualizar vehículo'
       throw err
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -132,13 +139,14 @@ export const useVehicleStore = defineStore('vehicle', () => {
     try {
       await apiService.delete(id)
       items.value = items.value.filter(item => item.id !== id)
-      if (currentItem.value?.id === id) {
+      if (currentItem.value?.id === id)
         currentItem.value = null
-      }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al eliminar vehículo'
       throw err
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -146,8 +154,10 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const getVehiclesByConcession = async (concessionId: string) => {
     try {
       return await apiService.getVehiclesByConcession(concessionId)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al cargar vehículos de la concesión'
+
       return []
     }
   }
@@ -155,7 +165,8 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const assignToConcession = async (vehicleId: string, concessionId: string) => {
     try {
       return await apiService.assignVehicleToConcession(vehicleId, concessionId)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al asignar vehículo'
       throw err
     }
@@ -164,7 +175,8 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const unassignFromConcession = async (vehicleId: string) => {
     try {
       return await apiService.unassignVehicleFromConcession(vehicleId)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al desasignar vehículo'
       throw err
     }
@@ -174,7 +186,8 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const createDriver = async (data: DriverCreateDto) => {
     try {
       return await apiService.createDriver(data)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al crear conductor'
       throw err
     }
@@ -183,7 +196,8 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const addDriverToVehicle = async (vehicleId: string, driverData: DriverCreateDto) => {
     try {
       return await apiService.addDriverToVehicle(vehicleId, driverData)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al agregar conductor al vehículo'
       throw err
     }
@@ -192,8 +206,10 @@ export const useVehicleStore = defineStore('vehicle', () => {
   const getVehicleDrivers = async (vehicleId: string) => {
     try {
       return await apiService.getVehicleDrivers(vehicleId)
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Error al cargar conductores del vehículo'
+
       return []
     }
   }

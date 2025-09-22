@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { VForm } from 'vuetify/components/VForm'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-const authV2LoginIllustrationLight = '/images/simos_logo (2).png'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -11,6 +10,8 @@ import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+
+const authV2LoginIllustrationLight = '/images/simos_logo (2).png'
 
 let authThemeImg = useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
 if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas')
@@ -70,7 +71,6 @@ const login = async () => {
       },
     })
 
-    
     const { accessToken, userData, userAbilityRules, profile, company } = res.data
 
     if (res.dolibarrToken !== undefined)
@@ -85,14 +85,22 @@ const login = async () => {
     }
     ability.update(userAbilityRules)
 
-    debugger
+    
+    // Remover userAbilityRules y permissions de roles antes de guardar en cookies
+    const rolesSlim = Array.isArray(userData.roles)
+      ? userData.roles.map((r: any) => {
+          const { permissions, ...rest } = r
+          return rest
+        })
+      : []
+    const slimUserData = { ...userData, roles: rolesSlim }
+
     // Persist auth/session cookies via the same refs (avoid race with watch)
-    userCookie.value = userData
+    userCookie.value = slimUserData
     accessTokenCookie.value = accessToken
     profileCookie.value = profile
     companyCookie.value = company
-    userDataCookie.value = userData
-    useCookie('userData').value = userData
+    userDataCookie.value = slimUserData
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect

@@ -575,7 +575,9 @@
     "previous": "Anterior",
     "submit": "Enviar",
     "status": "Estado",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "cancel": "Cancelar",
+    "create": "Crear"
   },
   "close": "Cerrar",
   "period": "Periodo",

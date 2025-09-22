@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFineStore } from '../../stores/fineStore'
 import type { Fine } from '../../types/fine'
@@ -31,27 +31,33 @@ const fine = computed(() => props.fine || fineStore.currentItem)
 
 const hasLocation = computed(() => {
   const hasCoords = fine.value?.latitude && fine.value?.longitude
+
   console.log('🗺️ Fine location check:', {
     fine: fine.value?.id,
     latitude: fine.value?.latitude,
     longitude: fine.value?.longitude,
-    hasLocation: hasCoords
+    hasLocation: hasCoords,
   })
+
   return hasCoords
 })
 
 const mapCenter = computed(() => {
   const center = {
     lat: fine.value?.latitude || 19.4326,
-    lng: fine.value?.longitude || -99.1332
+    lng: fine.value?.longitude || -99.1332,
   }
+
   console.log('🗺️ Map center:', center)
+
   return center
 })
 
 const mapboxToken = computed(() => {
   const token = import.meta.env.VITE_MAPBOX_KEY || ''
+
   console.log('🗺️ Mapbox token:', token ? 'Configured' : 'Not configured')
+
   return token
 })
 
@@ -61,14 +67,17 @@ const close = () => {
 }
 
 const loadFineDetail = async () => {
-  if (!props.fineId || props.fine) return
+  if (!props.fineId || props.fine)
+    return
 
   loading.value = true
   try {
     await fineStore.fetchById(props.fineId)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error loading fine detail:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -86,7 +95,7 @@ const formatDate = (date: string) => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -99,6 +108,7 @@ const getStatusColor = (status: string) => {
     OVERDUE: 'error',
     APPEALED: 'info',
   }
+
   return colors[status as keyof typeof colors] || 'grey'
 }
 
@@ -108,6 +118,7 @@ const getSubjectTypeColor = (subjectType: string) => {
     concession_holder: 'success',
     driver: 'info',
   }
+
   return colors[subjectType as keyof typeof colors] || 'secondary'
 }
 
@@ -117,6 +128,7 @@ const getSubjectTypeLabel = (subjectType: string) => {
     concession_holder: 'Concesionario',
     driver: 'Conductor',
   }
+
   return labels[subjectType as keyof typeof labels] || subjectType
 }
 
@@ -127,6 +139,7 @@ const getSeverityColor = (severity: string) => {
     HIGH: 'error',
     CRITICAL: 'error',
   }
+
   return colors[severity as keyof typeof colors] || 'grey'
 }
 
@@ -146,15 +159,13 @@ function openPhoto(photo: any) {
 
 // Lifecycle
 onMounted(() => {
-  if (props.fineId) {
+  if (props.fineId)
     loadFineDetail()
-  }
 })
 
-watch(() => props.fineId, (newId) => {
-  if (newId && props.visible) {
+watch(() => props.fineId, newId => {
+  if (newId && props.visible)
     loadFineDetail()
-  }
 })
 </script>
 
@@ -183,7 +194,7 @@ watch(() => props.fineId, (newId) => {
             </p>
           </div>
         </div>
-        
+
         <VBtn
           icon
           variant="text"
@@ -249,7 +260,10 @@ watch(() => props.fineId, (newId) => {
             <VCardText class="pa-6">
               <VRow>
                 <!-- Información Principal -->
-                <VCol cols="12" md="8">
+                <VCol
+                  cols="12"
+                  md="8"
+                >
                   <VCard variant="outlined">
                     <VCardTitle class="text-h6">
                       Información de la Multa
@@ -304,16 +318,19 @@ watch(() => props.fineId, (newId) => {
                           <div class="text-caption text-medium-emphasis">
                             Fecha Límite
                           </div>
-                          <div 
-                            :class="{ 
+                          <div
+                            :class="{
                               'text-error font-weight-bold': fine.is_overdue,
-                              'font-weight-medium': !fine.is_overdue 
+                              'font-weight-medium': !fine.is_overdue,
                             }"
                           >
                             {{ formatDate(fine.due_date) }}
                           </div>
                         </VCol>
-                        <VCol cols="12" v-if="fine.place">
+                        <VCol
+                          v-if="fine.place"
+                          cols="12"
+                        >
                           <div class="text-caption text-medium-emphasis">
                             Lugar
                           </div>
@@ -321,7 +338,10 @@ watch(() => props.fineId, (newId) => {
                             {{ fine.place }}
                           </div>
                         </VCol>
-                        <VCol cols="12" v-if="fine.notes">
+                        <VCol
+                          v-if="fine.notes"
+                          cols="12"
+                        >
                           <div class="text-caption text-medium-emphasis">
                             Notas
                           </div>
@@ -335,7 +355,10 @@ watch(() => props.fineId, (newId) => {
                 </VCol>
 
                 <!-- Información del Sujeto -->
-                <VCol cols="12" md="4">
+                <VCol
+                  cols="12"
+                  md="4"
+                >
                   <VCard variant="outlined">
                     <VCardTitle class="text-h6">
                       Sujeto de la Multa
@@ -348,8 +371,8 @@ watch(() => props.fineId, (newId) => {
                           variant="tonal"
                         >
                           <VIcon size="32">
-                            {{ fine.subject_type === 'concession' ? 'tabler-certificate' : 
-                               fine.subject_type === 'concession_holder' ? 'tabler-user' : 'tabler-user-check' }}
+                            {{ fine.subject_type === 'concession' ? 'tabler-certificate'
+                              : fine.subject_type === 'concession_holder' ? 'tabler-user' : 'tabler-user-check' }}
                           </VIcon>
                         </VAvatar>
                         <div class="mt-2">
@@ -406,7 +429,7 @@ watch(() => props.fineId, (newId) => {
                   </VCard>
 
                   <!-- Tipo de Violación -->
-                  <VCard 
+                  <VCard
                     v-if="fine.violation_type"
                     variant="outlined"
                     class="mt-4"
@@ -427,7 +450,7 @@ watch(() => props.fineId, (newId) => {
                         <div class="font-weight-bold">
                           {{ fine.violation_type.name }}
                         </div>
-                        <div 
+                        <div
                           v-if="fine.violation_type.description"
                           class="text-caption text-medium-emphasis mt-2"
                         >
@@ -464,9 +487,12 @@ watch(() => props.fineId, (newId) => {
                           map-type="fine_location"
                         />
                       </div>
-                      
+
                       <!-- Sin ubicación -->
-                      <div v-else class="text-center py-12">
+                      <div
+                        v-else
+                        class="text-center py-12"
+                      >
                         <VIcon
                           size="64"
                           color="warning"
@@ -510,7 +536,10 @@ watch(() => props.fineId, (newId) => {
                   <VCard variant="outlined">
                     <VCardTitle class="text-h6 d-flex align-center justify-space-between">
                       <div>
-                        <VIcon icon="tabler-camera" class="me-2" />
+                        <VIcon
+                          icon="tabler-camera"
+                          class="me-2"
+                        />
                         Evidencias Fotográficas
                       </div>
                       <div class="text-caption text-medium-emphasis">
@@ -527,7 +556,10 @@ watch(() => props.fineId, (newId) => {
                           md="4"
                           lg="3"
                         >
-                          <VCard variant="outlined" class="photo-card h-100 d-flex flex-column">
+                          <VCard
+                            variant="outlined"
+                            class="photo-card h-100 d-flex flex-column"
+                          >
                             <VImg
                               :src="getPhotoUrl(photo)"
                               :alt="photo.description || photo.photo_filename"
@@ -538,7 +570,13 @@ watch(() => props.fineId, (newId) => {
                             />
                             <VCardText class="flex-grow-1">
                               <div class="d-flex align-center justify-space-between mb-1">
-                                <VChip size="x-small" color="info" variant="tonal">{{ photo.file_extension?.toUpperCase() || 'IMG' }}</VChip>
+                                <VChip
+                                  size="x-small"
+                                  color="info"
+                                  variant="tonal"
+                                >
+                                  {{ photo.file_extension?.toUpperCase() || 'IMG' }}
+                                </VChip>
                                 <span class="text-caption text-medium-emphasis">{{ photo.file_size_formatted }}</span>
                               </div>
                               <div class="text-caption text-medium-emphasis">
@@ -546,12 +584,32 @@ watch(() => props.fineId, (newId) => {
                               </div>
                             </VCardText>
                             <VCardActions class="pt-0">
-                              <VBtn size="small" variant="text" @click="openPhoto(photo)">
-                                <VIcon start size="16">tabler-eye</VIcon>
+                              <VBtn
+                                size="small"
+                                variant="text"
+                                @click="openPhoto(photo)"
+                              >
+                                <VIcon
+                                  start
+                                  size="16"
+                                >
+                                  tabler-eye
+                                </VIcon>
                                 Ver
                               </VBtn>
-                              <VBtn size="small" variant="text" :href="getPhotoUrl(photo)" target="_blank" download>
-                                <VIcon start size="16">tabler-download</VIcon>
+                              <VBtn
+                                size="small"
+                                variant="text"
+                                :href="getPhotoUrl(photo)"
+                                target="_blank"
+                                download
+                              >
+                                <VIcon
+                                  start
+                                  size="16"
+                                >
+                                  tabler-download
+                                </VIcon>
                                 Descargar
                               </VBtn>
                             </VCardActions>
@@ -590,8 +648,8 @@ watch(() => props.fineId, (newId) => {
                               variant="tonal"
                             >
                               <VIcon>
-                                {{ payment.method === 'CASH' ? 'tabler-cash' : 
-                                   payment.method === 'CARD' ? 'tabler-credit-card' : 'tabler-building-bank' }}
+                                {{ payment.method === 'CASH' ? 'tabler-cash'
+                                  : payment.method === 'CARD' ? 'tabler-credit-card' : 'tabler-building-bank' }}
                               </VIcon>
                             </VAvatar>
                           </template>
