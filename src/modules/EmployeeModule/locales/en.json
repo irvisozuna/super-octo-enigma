@@ -1,0 +1,160 @@
+{
+  "employee": {
+    "title": "Employees",
+    "list_title": "Employee List",
+    "list_description": "Complete employee management system",
+    "search_placeholder": "Search by name, code or email",
+    "no_data": "No employees registered",
+    "no_data_description": "Start by adding your first employee to the system",
+    "no_skills": "No skills registered for this employee",
+    "not_found": "Employee not found",
+    "years_experience": "years of experience",
+
+    "fields": {
+      "employee_code": "Employee Code",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "full_name": "Full Name",
+      "date_of_birth": "Date of Birth",
+      "gender": "Gender",
+      "tax_id": "Tax ID",
+      "photo_url": "Photo",
+      "primary_phone": "Primary Phone",
+      "secondary_phone": "Secondary Phone",
+      "email": "Email",
+      "address_line_1": "Address Line 1",
+      "address_line_2": "Address Line 2",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "postal_code": "Postal Code",
+      "country": "Country",
+      "emergency_contact_name": "Emergency Contact Name",
+      "emergency_contact_phone": "Emergency Phone",
+      "emergency_contact": "Emergency Contact",
+      "hire_date": "Hire Date",
+      "termination_date": "Termination Date",
+      "position": "Position",
+      "department": "Department",
+      "employment_type": "Employment Type",
+      "salary_amount": "Salary",
+      "salary_currency": "Currency"
+    },
+
+    "positions": {
+      "operator": "Operator",
+      "helper": "Helper",
+      "manager": "Manager",
+      "supervisor": "Supervisor",
+      "admin": "Administrator"
+    },
+
+    "employment_types": {
+      "full_time": "Full Time",
+      "part_time": "Part Time",
+      "contractor": "Contractor",
+      "temporary": "Temporary"
+    },
+
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "terminated": "Terminated",
+      "vacation": "Vacation"
+    },
+
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+
+    "proficiency": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "expert": "Expert"
+    },
+
+    "sections": {
+      "basic_info": "Basic Information",
+      "contact_info": "Contact Information",
+      "emergency_contact": "Emergency Contact",
+      "employment_info": "Employment Information"
+    },
+
+    "tabs": {
+      "info": "Information",
+      "contact": "Contact",
+      "employment": "Employment",
+      "skills": "Skills",
+      "certifications": "Certifications",
+      "history": "History"
+    },
+
+    "actions": {
+      "add": "Add Employee",
+      "create": "Create Employee",
+      "edit": "Edit Employee",
+      "view": "View Employee",
+      "delete": "Delete Employee",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "terminate": "Terminate"
+    },
+
+    "messages": {
+      "created_success": "Employee created successfully",
+      "updated_success": "Employee updated successfully",
+      "deleted_success": "Employee deleted successfully",
+      "suspended_success": "Employee suspended successfully",
+      "reactivated_success": "Employee reactivated successfully",
+      "terminated_success": "Employee terminated successfully",
+      "error_loading": "Error loading employee",
+      "error_creating": "Error creating employee",
+      "error_updating": "Error updating employee",
+      "error_deleting": "Error deleting employee"
+    },
+
+    "confirm_delete": "Are you sure you want to delete employee {name}?",
+    "confirm_suspend": "Are you sure you want to suspend employee {name}?",
+    "confirm_reactivate": "Are you sure you want to reactivate employee {name}?",
+    "confirm_terminate": "Are you sure you want to terminate employee {name}? This action cannot be undone.",
+
+    "validation": {
+      "employee_code_required": "Employee code is required",
+      "employee_code_taken": "Employee code is already in use",
+      "first_name_required": "First name is required",
+      "last_name_required": "Last name is required",
+      "hire_date_required": "Hire date is required",
+      "position_required": "Position is required",
+      "employment_type_required": "Employment type is required",
+      "email_invalid": "Email is invalid",
+      "phone_invalid": "Phone number is invalid",
+      "min_age": "Employee must be over 18 years old"
+    }
+  },
+
+  "common": {
+    "status": "Status",
+    "actions": "Actions",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "export": "Export",
+    "export_excel": "Export to Excel",
+    "export_pdf": "Export to PDF",
+    "export_csv": "Export to CSV",
+    "loading": "Loading...",
+    "no_results": "No results",
+    "search": "Search",
+    "filter": "Filter",
+    "clear_filters": "Clear Filters",
+    "yes": "Yes",
+    "no": "No"
+  }
+}

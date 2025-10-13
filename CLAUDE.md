@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Tech Stack
 - **Frontend Framework**: Vue 3 with Composition API
 - **Build Tool**: Vite
-- **UI Framework**: Vuetify 3.7.5
+- **UI Framework**: Vuetify 3.10+
 - **State Management**: Pinia
 - **TypeScript**: Full TypeScript support with vue-tsc
 - **Testing**: Vitest (unit) + Cypress (e2e)
@@ -47,27 +47,45 @@ The project follows Domain-Driven Design (DDD) principles with modules in `src/m
 
 ```
 src/modules/<ModuleName>/
-├── domain/           # Business logic and entities
-├── application/      # Use cases and application services
-├── infrastructure/   # External integrations and data access
-├── presentation/     # Vue components, stores, composables
-├── shared/          # Shared utilities within module
-├── tests/           # Module-specific tests
-├── container.ts     # Dependency injection
-├── types.ts         # Module types
-├── index.ts         # Module exports
-└── README.md        # Module documentation
+├── domain/              # Business logic and entities
+├── application/         # Use cases and application services
+├── infrastructure/      # External integrations and data access
+├── presentation/        # Vue components, stores, composables
+├── views/               # Module-specific view components
+├── components/          # Module-specific reusable components
+├── stores/              # Module-specific Pinia stores
+├── composables/         # Module-specific composables
+├── locales/             # Module-specific i18n translations
+├── shared/              # Shared utilities within module
+├── tests/               # Module-specific tests
+├── container.ts         # Dependency injection
+├── types.ts             # Module types
+├── routes.ts            # Module route definitions
+├── menu.ts              # Module menu configuration
+├── module.config.ts     # Module configuration
+├── indexedDbConfig.ts   # IndexedDB configuration (optional)
+├── index.ts             # Module exports
+└── README.md            # Module documentation
 ```
+
+**Note**: Some complex modules may contain sub-modules (e.g., `DynamicReports` has `Connection`, `DataSource`, `Report` sub-modules), each following a similar structure.
 
 #### Core Directories
 - `src/@core/` - Shared core components and utilities
 - `src/@layouts/` - Layout components
 - `src/components/` - Global components (auto-imported)
 - `src/composables/` - Vue composables (auto-imported)
-- `src/stores/` - Pinia stores
+- `src/stores/` - Global Pinia stores
 - `src/plugins/` - Vue plugins and configurations
 - `src/pages/` - File-based routing pages
+- `src/views/` - View components
 - `src/utils/` - Utility functions (auto-imported)
+- `src/navigation/` - Navigation menus and breadcrumbs
+- `src/layouts/` - Page layout templates
+- `src/services/` - API services and business logic
+- `src/validations/` - Shared validation schemas
+- `src/types/` - Global TypeScript type definitions
+- `src/config/` - Application configuration files
 
 ### Design System
 
@@ -108,7 +126,11 @@ This creates a complete module with:
 - Application use cases and DTOs
 - Infrastructure API services
 - Presentation components and stores
+- Module-specific routes and menu configuration
+- Module-specific views and components
+- Module-specific locales (i18n)
 - TypeScript type definitions
+- IndexedDB configuration (for offline support)
 - Basic test structure
 
 #### Module Features
@@ -186,6 +208,10 @@ Components from these directories are auto-imported:
 - `@layouts/` → `src/@layouts/`
 - `@images/` → `src/assets/images/`
 - `@styles/` → `src/assets/styles/`
+- `@themeConfig` → `themeConfig.ts`
+- `@validators` → `src/@core/utils/validators`
+- `@db/` → `src/plugins/fake-api/handlers/`
+- `@api-utils/` → `src/plugins/fake-api/utils/`
 
 ### Browser Support
 - Modern browsers with ES2020+ support

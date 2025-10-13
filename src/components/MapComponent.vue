@@ -22,6 +22,8 @@ const props = withDefaults(defineProps<Props>(), {
 const mapContainer = ref<HTMLElement | null>(null)
 let map: mapboxgl.Map | null = null
 let marker: mapboxgl.Marker | null = null
+const mapError = ref<string | null>(null)
+const hasMapError = ref(false)
 
 // Configuración específica según el tipo de mapa
 const getMapConfig = () => {
@@ -58,62 +60,70 @@ const getMapConfig = () => {
 
 onMounted(() => {
   if (mapContainer.value) {
-    // Asignación del token de acceso de Mapbox
-    mapboxgl.accessToken = props.accessToken
+    try {
+      // Asignación del token de acceso de Mapbox
+      mapboxgl.accessToken = props.accessToken
 
-    // Configuración específica según el tipo de mapa
-    const mapConfig = getMapConfig()
+      // Configuración específica según el tipo de mapa
+      const mapConfig = getMapConfig()
 
-    console.log('🗺️ Initializing map with coordinates:', {
-      lat: props.latitude,
-      lng: props.longitude,
-      zoom: mapConfig.zoom,
-      type: props.mapType,
-    })
+      console.log('🗺️ Initializing map with coordinates:', {
+        lat: props.latitude,
+        lng: props.longitude,
+        zoom: mapConfig.zoom,
+        type: props.mapType,
+      })
 
-    // Inicialización del mapa
-    map = new mapboxgl.Map({
-      container: mapContainer.value,
-      style: mapConfig.style,
-      center: [props.longitude, props.latitude],
-      zoom: mapConfig.zoom,
-      pitch: mapConfig.pitch,
-      bearing: mapConfig.bearing,
-      antialias: true, // Suaviza los bordes
-    })
+      // Inicialización del mapa
+      map = new mapboxgl.Map({
+        container: mapContainer.value,
+        style: mapConfig.style,
+        center: [props.longitude, props.latitude],
+        zoom: mapConfig.zoom,
+        pitch: mapConfig.pitch,
+        bearing: mapConfig.bearing,
+        antialias: true, // Suaviza los bordes
+      })
 
-    map.addControl(new mapboxgl.AttributionControl({
-      compact: true,
-      customAttribution: 'Mapa diseñado por Aquasoft',
-    }), 'bottom-right')
+      map.addControl(new mapboxgl.AttributionControl({
+        compact: true,
+        customAttribution: 'Mapa diseñado por Aquasoft',
+      }), 'bottom-right')
 
-    // Agregar controles de navegación (zoom y rotación)
-    const nav = new mapboxgl.NavigationControl({ showCompass: true, showZoom: true })
+      // Agregar controles de navegación (zoom y rotación)
+      const nav = new mapboxgl.NavigationControl({ showCompass: true, showZoom: true })
 
-    map.addControl(nav, 'top-right') // Posición del control
+      map.addControl(nav, 'top-right') // Posición del control
 
-    // Agregar control de escala
-    const scale = new mapboxgl.ScaleControl({
-      maxWidth: 100,
-      unit: 'metric', // Puede ser 'imperial' o 'metric'
-    })
+      // Agregar control de escala
+      const scale = new mapboxgl.ScaleControl({
+        maxWidth: 100,
+        unit: 'metric', // Puede ser 'imperial' o 'metric'
+      })
 
-    map.addControl(scale, 'bottom-left')
+      map.addControl(scale, 'bottom-left')
 
-    // Crear un elemento HTML personalizado para el marcador
-    const markerElement = document.createElement('div')
+      // Crear un elemento HTML personalizado para el marcador
+      const markerElement = document.createElement('div')
 
-    markerElement.style.backgroundImage = 'url(https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png)'
-    markerElement.style.width = '30px'
-    markerElement.style.height = '38px'
-    markerElement.style.backgroundSize = '100%'
+      markerElement.style.backgroundImage = 'url(https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png)'
+      markerElement.style.width = '30px'
+      markerElement.style.height = '38px'
+      markerElement.style.backgroundSize = '100%'
 
-    // Agregar el marcador al mapa con el elemento personalizado
-    marker = new mapboxgl.Marker({ element: markerElement })
-      .setLngLat([props.longitude, props.latitude])
-      .addTo(map)
+      // Agregar el marcador al mapa con el elemento personalizado
+      marker = new mapboxgl.Marker({ element: markerElement })
+        .setLngLat([props.longitude, props.latitude])
+        .addTo(map)
 
-    console.log('✅ Map and marker initialized successfully')
+      console.log('✅ Map and marker initialized successfully')
+    }
+    catch (error) {
+      hasMapError.value = true
+      mapError.value = error instanceof Error ? error.message : 'Error al inicializar el mapa'
+      console.error('❌ Error al inicializar el mapa de Mapbox:', error)
+      console.warn('⚠️ La aplicación continuará funcionando sin el mapa')
+    }
   }
 })
 
@@ -138,10 +148,33 @@ watch(
 
 <template>
   <div
+    v-if="!hasMapError"
     ref="mapContainer"
     :style="{ height: getMapConfig().height }"
     class="map-container"
   />
+  <div
+    v-else
+    :style="{ height: getMapConfig().height }"
+    class="map-error-container"
+  >
+    <div class="map-error-content">
+      <v-icon
+        icon="mdi-map-marker-off"
+        size="48"
+        color="warning"
+      />
+      <h3 class="text-h6 mt-4 mb-2">
+        Mapa no disponible
+      </h3>
+      <p class="text-body-2 text-medium-emphasis">
+        {{ mapError }}
+      </p>
+      <p class="text-caption mt-2 text-medium-emphasis">
+        La aplicación continuará funcionando normalmente
+      </p>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -151,5 +184,22 @@ watch(
   border-radius: 8px;
   block-size: 500px; /* Aumentado para mejor visualización */
   inline-size: 100%;
+}
+
+.map-error-container {
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgb(var(--v-theme-warning));
+  border-radius: 8px;
+  background-color: rgb(var(--v-theme-surface));
+  inline-size: 100%;
+}
+
+.map-error-content {
+  padding: 24px;
+  max-inline-size: 400px;
+  text-align: center;
 }
 </style>

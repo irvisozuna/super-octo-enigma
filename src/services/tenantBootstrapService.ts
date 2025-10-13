@@ -75,14 +75,24 @@ export class TenantBootstrapService {
    * Aplica el tema del tenant
    */
   private applyTheme(theme: TenantData['theme']): void {
-    // Aplicar variables CSS globales
-    if (theme.primary) {
-      document.documentElement.style.setProperty('--color-primary', theme.primary)
-      document.documentElement.style.setProperty('--initial-loader-color', theme.primary)
+    const normalizeHex = (value?: string) => {
+      if (!value)
+        return value
+      const trimmed = value.trim()
+      return trimmed.startsWith('#') ? trimmed : `#${trimmed}`
     }
 
-    if (theme.secondary)
-      document.documentElement.style.setProperty('--color-secondary', theme.secondary)
+    const normalizedPrimary = normalizeHex(theme.primary)
+    const normalizedSecondary = normalizeHex(theme.secondary)
+
+    // Aplicar variables CSS globales
+    if (normalizedPrimary) {
+      document.documentElement.style.setProperty('--color-primary', normalizedPrimary)
+      document.documentElement.style.setProperty('--initial-loader-color', normalizedPrimary)
+    }
+
+    if (normalizedSecondary)
+      document.documentElement.style.setProperty('--color-secondary', normalizedSecondary)
 
     // Aplicar modo oscuro
     if (theme.dark)
@@ -91,8 +101,8 @@ export class TenantBootstrapService {
       document.documentElement.classList.remove('dark')
 
     // Guardar en localStorage para persistencia
-    if (theme.primary)
-      localStorage.setItem('aquasoft-initial-loader-color', theme.primary)
+    if (normalizedPrimary)
+      localStorage.setItem('aquasoft-initial-loader-color', normalizedPrimary)
   }
 
   /**

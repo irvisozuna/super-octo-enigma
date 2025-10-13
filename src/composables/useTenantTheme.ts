@@ -2,6 +2,7 @@ import { computed, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { useTenantStore } from '@/stores/tenant.store'
 import { useConfigStore } from '@core/stores/config'
+import { cookieRef } from '@layouts/stores/config'
 
 export function useTenantTheme() {
   const tenantStore = useTenantStore()
@@ -15,19 +16,40 @@ export function useTenantTheme() {
 
     const { primary, secondary, dark } = tenantStore.data.theme
 
-    // Actualizar colores primarios
-    if (primary) {
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.primary = primary
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['primary-darken-1'] = primary
+    const normalizeHex = (value?: string) => {
+      if (!value)
+        return value
+      const trimmed = value.trim()
+      if (trimmed.startsWith('#'))
+        return trimmed
+      return `#${trimmed}`
+    }
 
-      // Guardar en localStorage para persistencia (usando el mismo patrón que config.ts)
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, primary)
+    const normalizedPrimary = normalizeHex(primary)
+    const normalizedSecondary = normalizeHex(secondary)
+
+    // Actualizar colores primarios
+    if (normalizedPrimary) {
+      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.primary = normalizedPrimary
+      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['primary-darken-1'] = normalizedPrimary
+
+      // Guardar en localStorage y cookies para persistencia
+      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, normalizedPrimary)
+      cookieRef<string | null>('lightThemePrimaryColor', null).value = normalizedPrimary
+      cookieRef<string | null>('lightThemePrimaryDarkenColor', null).value = normalizedPrimary
+      cookieRef<string | null>('darkThemePrimaryColor', null).value = normalizedPrimary
+      cookieRef<string | null>('darkThemePrimaryDarkenColor', null).value = normalizedPrimary
     }
 
     // Actualizar colores secundarios
-    if (secondary) {
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.secondary = secondary
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['secondary-darken-1'] = secondary
+    if (normalizedSecondary) {
+      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.secondary = normalizedSecondary
+      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['secondary-darken-1'] = normalizedSecondary
+
+      cookieRef<string | null>('lightThemeSecondaryColor', null).value = normalizedSecondary
+      cookieRef<string | null>('lightThemeSecondaryDarkenColor', null).value = normalizedSecondary
+      cookieRef<string | null>('darkThemeSecondaryColor', null).value = normalizedSecondary
+      cookieRef<string | null>('darkThemeSecondaryDarkenColor', null).value = normalizedSecondary
     }
 
     // Aplicar modo oscuro - respetar la preferencia del usuario si no está forzada por el tenant
@@ -51,17 +73,29 @@ export function useTenantTheme() {
 
     const { primary, secondary, dark } = tenantStore.data.theme
 
-    if (primary) {
-      document.documentElement.style.setProperty('--color-primary', primary)
-      document.documentElement.style.setProperty('--initial-loader-color', primary)
-
-      // También actualizar las variables que usa el sistema existente
-      document.documentElement.style.setProperty('--v-theme-primary', primary)
+    const normalizeHex = (value?: string) => {
+      if (!value)
+        return value
+      const trimmed = value.trim()
+      if (trimmed.startsWith('#'))
+        return trimmed
+      return `#${trimmed}`
     }
 
-    if (secondary) {
-      document.documentElement.style.setProperty('--color-secondary', secondary)
-      document.documentElement.style.setProperty('--v-theme-secondary', secondary)
+    const normalizedPrimary = normalizeHex(primary)
+    const normalizedSecondary = normalizeHex(secondary)
+
+    if (normalizedPrimary) {
+      document.documentElement.style.setProperty('--color-primary', normalizedPrimary)
+      document.documentElement.style.setProperty('--initial-loader-color', normalizedPrimary)
+
+      // También actualizar las variables que usa el sistema existente
+      document.documentElement.style.setProperty('--v-theme-primary', normalizedPrimary)
+    }
+
+    if (normalizedSecondary) {
+      document.documentElement.style.setProperty('--color-secondary', normalizedSecondary)
+      document.documentElement.style.setProperty('--v-theme-secondary', normalizedSecondary)
     }
 
     // Aplicar clase dark al documento - solo si el tenant lo especifica
@@ -130,15 +164,38 @@ export function useTenantTheme() {
 
     const { primary, secondary } = tenantStore.data.theme
 
-    // Actualizar el store de configuración para que sea consistente
-    if (primary) {
-      // Guardar en localStorage usando el mismo patrón que config.ts
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, primary)
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryDarkenColor`, primary)
+    const normalizeHex = (value?: string) => {
+      if (!value)
+        return value
+      const trimmed = value.trim()
+      if (trimmed.startsWith('#'))
+        return trimmed
+      return `#${trimmed}`
     }
 
-    if (secondary)
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemeSecondaryColor`, secondary)
+    const normalizedPrimary = normalizeHex(primary)
+    const normalizedSecondary = normalizeHex(secondary)
+
+    // Actualizar el store de configuración para que sea consistente
+    if (normalizedPrimary) {
+      // Guardar en localStorage usando el mismo patrón que config.ts
+      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, normalizedPrimary)
+      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryDarkenColor`, normalizedPrimary)
+
+      cookieRef<string | null>('lightThemePrimaryColor', null).value = normalizedPrimary
+      cookieRef<string | null>('lightThemePrimaryDarkenColor', null).value = normalizedPrimary
+      cookieRef<string | null>('darkThemePrimaryColor', null).value = normalizedPrimary
+      cookieRef<string | null>('darkThemePrimaryDarkenColor', null).value = normalizedPrimary
+    }
+
+    if (normalizedSecondary) {
+      localStorage.setItem(`${vuetifyTheme.name.value}ThemeSecondaryColor`, normalizedSecondary)
+
+      cookieRef<string | null>('lightThemeSecondaryColor', null).value = normalizedSecondary
+      cookieRef<string | null>('lightThemeSecondaryDarkenColor', null).value = normalizedSecondary
+      cookieRef<string | null>('darkThemeSecondaryColor', null).value = normalizedSecondary
+      cookieRef<string | null>('darkThemeSecondaryDarkenColor', null).value = normalizedSecondary
+    }
   }
 
   // Watcher para aplicar cambios automáticamente
