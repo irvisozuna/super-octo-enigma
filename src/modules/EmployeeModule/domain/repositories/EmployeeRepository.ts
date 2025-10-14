@@ -22,6 +22,7 @@ import type {
 } from '../../shared/types'
 
 export interface EmployeeRepository {
+
   /**
    * Get paginated list of employees
    */
@@ -96,19 +97,24 @@ export interface EmployeeRepository {
   /**
    * Suspend employee
    */
-  suspend(id: string): Promise<ApiResponse<EmployeeEntity>>
+  suspend(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>>
 
   /**
    * Reactivate employee
    */
-  reactivate(id: string): Promise<ApiResponse<EmployeeEntity>>
+  reactivate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>>
 
   /**
    * Terminate employee
    */
-  terminate(id: string): Promise<ApiResponse<EmployeeEntity>>
+  terminate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>>
 
   // Skills Management
+  /**
+   * Get employee skills
+   */
+  getSkills(employeeId: string): Promise<ApiResponse<EmployeeSkillEntity[]>>
+
   /**
    * Add skill to employee
    */
@@ -125,6 +131,11 @@ export interface EmployeeRepository {
   deleteSkill(employeeId: string, skillId: string): Promise<void>
 
   // Certifications Management
+  /**
+   * Get employee certifications
+   */
+  getCertifications(employeeId: string): Promise<ApiResponse<EmployeeCertificationEntity[]>>
+
   /**
    * Add certification to employee
    */

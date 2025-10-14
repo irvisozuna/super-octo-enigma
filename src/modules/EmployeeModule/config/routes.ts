@@ -12,6 +12,8 @@ const employeeRoutes: RouteRecordRaw[] = [
     meta: {
       title: 'Empleados',
       requiresAuth: true,
+      action: 'read',
+      subject: 'employees',
     },
   },
   {
@@ -21,6 +23,8 @@ const employeeRoutes: RouteRecordRaw[] = [
     meta: {
       title: 'Crear Empleado',
       requiresAuth: true,
+      action: 'create',
+      subject: 'employees',
     },
   },
   {
@@ -30,6 +34,8 @@ const employeeRoutes: RouteRecordRaw[] = [
     meta: {
       title: 'Detalle del Empleado',
       requiresAuth: true,
+      action: 'read',
+      subject: 'employees',
     },
   },
   {
@@ -39,6 +45,8 @@ const employeeRoutes: RouteRecordRaw[] = [
     meta: {
       title: 'Editar Empleado',
       requiresAuth: true,
+      action: 'update',
+      subject: 'employees',
     },
   },
 ]

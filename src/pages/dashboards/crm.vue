@@ -116,13 +116,15 @@ definePage({
     </VCol>
 
     <!-- 👉 Revenue Growth -->
-    <!-- <VCol
+    <!--
+      <VCol
       cols="12"
       md="8"
       lg="4"
-    >
+      >
       <CrmRevenueGrowth />
-    </VCol> -->
+      </VCol>
+    -->
 
     <!-- 👉 Recent Activity -->
     <VCol
@@ -132,7 +134,5 @@ definePage({
     >
       <RecentActivityCard />
     </VCol>
-
- 
   </VRow>
 </template>

@@ -7,6 +7,7 @@
 import type { NotificationOptions } from '../types'
 
 export interface INotificationService {
+
   /**
    * Show a notification to the user
    */

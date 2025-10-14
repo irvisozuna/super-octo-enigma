@@ -64,6 +64,7 @@ export default function (app: App) {
     if (!value)
       return undefined
     const trimmed = value.trim()
+
     return trimmed.startsWith('#') ? trimmed : `#${trimmed}`
   }
 
@@ -73,8 +74,10 @@ export default function (app: App) {
       return
     const p = normalizeHex(lightPrimary.value) || staticPrimaryColor
     const pd = normalizeHex(lightPrimaryDarken.value) || staticPrimaryDarkenColor
+
     theme.colors.primary = p
     theme.colors['primary-darken-1'] = pd
+
     const s = normalizeHex(lightSecondary.value)
     const sd = normalizeHex(lightSecondaryDarken.value)
     if (s)
@@ -89,8 +92,10 @@ export default function (app: App) {
       return
     const p = normalizeHex(darkPrimary.value) || staticPrimaryColor
     const pd = normalizeHex(darkPrimaryDarken.value) || staticPrimaryDarkenColor
+
     theme.colors.primary = p
     theme.colors['primary-darken-1'] = pd
+
     const s = normalizeHex(darkSecondary.value)
     const sd = normalizeHex(darkSecondaryDarken.value)
     if (s)

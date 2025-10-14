@@ -7,6 +7,7 @@
 import type { BaseEntity, EmployeePosition, EmployeeStatus, EmploymentType, Gender } from '../../shared/types'
 
 export interface EmployeeEntity extends BaseEntity {
+
   // Basic Information
   employee_code: string
   first_name: string
@@ -219,7 +220,8 @@ export class EmployeeDomain {
    * Validate email format
    */
   static isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
+
     return emailRegex.test(email)
   }
 
@@ -228,6 +230,7 @@ export class EmployeeDomain {
    */
   static isValidPhone(phone: string): boolean {
     const cleanPhone = phone.replace(/\D/g, '')
+
     return cleanPhone.length === 10
   }
 
@@ -268,6 +271,7 @@ export class EmployeeDomain {
     // Cannot delete if has recent activity (less than 30 days since termination)
     if (employee.termination_date) {
       const terminationDate = new Date(employee.termination_date)
+
       const daysSinceTermination = Math.floor(
         (new Date().getTime() - terminationDate.getTime()) / (1000 * 60 * 60 * 24),
       )
@@ -392,6 +396,7 @@ export class EmployeeDomain {
 
     const expirationDate = new Date(certification.expiration_date)
     const today = new Date()
+
     const daysUntilExpiration = Math.floor(
       (expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     )

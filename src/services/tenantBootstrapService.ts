@@ -79,6 +79,7 @@ export class TenantBootstrapService {
       if (!value)
         return value
       const trimmed = value.trim()
+
       return trimmed.startsWith('#') ? trimmed : `#${trimmed}`
     }
 

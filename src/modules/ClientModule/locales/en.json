@@ -1,0 +1,286 @@
+{
+  "client": {
+    "title": "Clients",
+    "list_title": "Client List",
+    "list_description": "Complete client management system",
+    "search_placeholder": "Search by code, name or RFC",
+    "no_data": "No clients registered",
+    "no_data_description": "Start by adding your first client to the system",
+    "not_found": "Client not found",
+
+    "fields": {
+      "client_code": "Client Code",
+      "business_type": "Business Type",
+      "company_name": "Company Name",
+      "trade_name": "Trade Name",
+      "contact_person": "Contact Person",
+      "email": "Email",
+      "phone": "Phone",
+      "mobile": "Mobile",
+      "website": "Website",
+      "address_line_1": "Address Line 1",
+      "address_line_2": "Address Line 2",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "postal_code": "Postal Code",
+      "country": "Country",
+      "rfc": "Tax ID (RFC)",
+      "tax_regime": "Tax Regime",
+      "cfdi_use": "CFDI Use",
+      "payment_terms": "Payment Terms",
+      "credit_limit": "Credit Limit",
+      "credit_days": "Credit Days",
+      "discount_percentage": "Discount Percentage",
+      "notes": "Notes",
+      "tags": "Tags",
+      "status": "Status"
+    },
+
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "blacklisted": "Blacklisted"
+    },
+
+    "business_types": {
+      "company": "Company",
+      "individual": "Individual"
+    },
+
+    "payment_terms": {
+      "immediate": "Immediate",
+      "net_15": "Net 15 days",
+      "net_30": "Net 30 days",
+      "net_45": "Net 45 days",
+      "net_60": "Net 60 days",
+      "net_90": "Net 90 days",
+      "custom": "Custom"
+    },
+
+    "tax_regimes": {
+      "601": "General Law Legal Entities",
+      "603": "Legal Entities with Non-Profit Purposes",
+      "605": "Salaries and Wages and Similar Income",
+      "606": "Rental",
+      "608": "Other income",
+      "610": "Non-residents without Permanent Establishment in Mexico",
+      "611": "Dividend Income (partners and shareholders)",
+      "612": "Individuals with Business and Professional Activities",
+      "614": "Interest income",
+      "616": "Without tax obligations",
+      "620": "Production Cooperatives that choose to defer their income",
+      "621": "Tax Incorporation",
+      "622": "Agricultural, Livestock, Forestry and Fishing Activities",
+      "623": "Optional for Corporate Groups",
+      "624": "Coordinated",
+      "625": "Business Activities Regime with income through Technology Platforms",
+      "626": "Simplified Trust Regime"
+    },
+
+    "cfdi_uses": {
+      "G01": "Acquisition of goods",
+      "G02": "Returns, discounts or bonuses",
+      "G03": "General expenses",
+      "I01": "Constructions",
+      "I02": "Office furniture and equipment for investments",
+      "I03": "Transportation equipment",
+      "I04": "Computer equipment and accessories",
+      "I05": "Dies, molds, matrices and tooling",
+      "I06": "Telephone communications",
+      "I07": "Satellite communications",
+      "I08": "Other machinery and equipment",
+      "D01": "Medical, dental fees and hospital expenses",
+      "D02": "Medical expenses for disability or disability",
+      "D03": "Funeral expenses",
+      "D04": "Donations",
+      "D05": "Real interest actually paid for mortgage loans (home)",
+      "D06": "Voluntary contributions to SAR",
+      "D07": "Medical insurance premiums",
+      "D08": "Mandatory school transportation expenses",
+      "D09": "Deposits in savings accounts, premiums based on pension plans",
+      "D10": "Payments for educational services (tuition)",
+      "P01": "To be defined",
+      "S01": "Without tax effects"
+    },
+
+    "sections": {
+      "basic_info": "Basic Information",
+      "contact_info": "Contact Information",
+      "address_info": "Address Information",
+      "fiscal_info": "Fiscal Information",
+      "credit_info": "Credit Information",
+      "additional_info": "Additional Information"
+    },
+
+    "tabs": {
+      "info": "Information",
+      "contacts": "Contacts",
+      "history": "History",
+      "documents": "Documents",
+      "transactions": "Transactions",
+      "statistics": "Statistics"
+    },
+
+    "actions": {
+      "add": "Add Client",
+      "create": "Create Client",
+      "edit": "Edit Client",
+      "view": "View Client",
+      "delete": "Delete Client",
+      "activate": "Activate",
+      "suspend": "Suspend",
+      "deactivate": "Deactivate",
+      "blacklist": "Blacklist",
+      "update_credit_limit": "Update Credit Limit"
+    },
+
+    "messages": {
+      "created_success": "Client created successfully",
+      "updated_success": "Client updated successfully",
+      "deleted_success": "Client deleted successfully",
+      "activated_success": "Client activated successfully",
+      "suspended_success": "Client suspended successfully",
+      "deactivated_success": "Client deactivated successfully",
+      "blacklisted_success": "Client blacklisted successfully",
+      "credit_limit_updated": "Credit limit updated successfully",
+      "error_loading": "Error loading client",
+      "error_creating": "Error creating client",
+      "error_updating": "Error updating client",
+      "error_deleting": "Error deleting client"
+    },
+
+    "confirm_delete": "Are you sure you want to delete client {name}?",
+    "confirm_activate": "Are you sure you want to activate client {name}?",
+    "confirm_suspend": "Are you sure you want to suspend client {name}?",
+    "confirm_deactivate": "Are you sure you want to deactivate client {name}?",
+    "confirm_blacklist": "Are you sure you want to blacklist client {name}? This action requires special authorization.",
+
+    "validation": {
+      "client_code_required": "Client code is required",
+      "client_code_taken": "Client code is already in use",
+      "business_type_required": "Business type is required",
+      "company_name_required": "Company name is required",
+      "contact_person_required": "Contact person is required",
+      "email_invalid": "Email is invalid",
+      "phone_invalid": "Phone number is invalid",
+      "rfc_invalid": "Tax ID (RFC) is invalid",
+      "rfc_required": "Tax ID (RFC) is required",
+      "credit_limit_invalid": "Credit limit must be a positive number",
+      "credit_days_invalid": "Credit days must be a positive number",
+      "discount_invalid": "Discount percentage must be between 0 and 100",
+      "name_required": "Name is required"
+    },
+
+    "contacts": {
+      "title": "Contacts",
+      "description": "Manage client contacts",
+      "add": "Add Contact",
+      "edit": "Edit Contact",
+      "delete": "Delete Contact",
+      "primary": "Primary",
+      "set_primary": "Set as Primary",
+      "no_contacts": "No contacts registered for this client",
+      "confirm_delete_title": "Confirm Deletion",
+      "confirm_delete_message": "Are you sure you want to delete contact {name}?",
+
+      "fields": {
+        "name": "Name",
+        "position": "Position",
+        "email": "Email",
+        "phone": "Phone",
+        "mobile": "Mobile",
+        "is_primary": "Primary Contact",
+        "notes": "Notes"
+      },
+
+      "messages": {
+        "created_success": "Contact created successfully",
+        "updated_success": "Contact updated successfully",
+        "deleted_success": "Contact deleted successfully",
+        "primary_updated": "Primary contact updated successfully",
+        "error_creating": "Error creating contact",
+        "error_updating": "Error updating contact",
+        "error_deleting": "Error deleting contact"
+      }
+    },
+
+    "history": {
+      "title": "Status History",
+      "description": "Timeline of client status changes",
+      "no_history": "No events registered in status history",
+      "changed_by": "By",
+      "reason": "Reason",
+      "notes": "Notes",
+      "effective_date": "Effective Date",
+
+      "events": {
+        "created": "Client Created",
+        "activated": "Client Activated",
+        "suspended": "Client Suspended",
+        "deactivated": "Client Deactivated",
+        "blacklisted": "Client Blacklisted",
+        "status_change": "Status Change",
+        "credit_limit_change": "Credit Limit Change"
+      }
+    },
+
+    "statistics": {
+      "title": "Client Statistics",
+      "total_clients": "Total Clients",
+      "active_clients": "Active Clients",
+      "inactive_clients": "Inactive Clients",
+      "suspended_clients": "Suspended Clients",
+      "blacklisted_clients": "Blacklisted Clients",
+      "total_companies": "Total Companies",
+      "total_individuals": "Total Individuals",
+      "total_credit_limit": "Total Credit Limit",
+      "average_credit_days": "Average Credit Days"
+    }
+  },
+
+  "common": {
+    "status": "Status",
+    "actions": "Actions",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "export": "Export",
+    "export_excel": "Export to Excel",
+    "export_pdf": "Export to PDF",
+    "export_csv": "Export to CSV",
+    "loading": "Loading...",
+    "no_results": "No results",
+    "search": "Search",
+    "filter": "Filter",
+    "clear_filters": "Clear Filters",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "select": "Select",
+    "selected": "Selected",
+    "total": "Total",
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "time": "Time",
+    "created_at": "Created at",
+    "updated_at": "Updated at",
+    "created_by": "Created by",
+    "updated_by": "Updated by"
+  },
+
+  "navigation": {
+    "clients": "Clients",
+    "clients_list": "Client List",
+    "clients_create": "New Client",
+    "clients_statistics": "Statistics"
+  }
+}

@@ -194,31 +194,78 @@ export class EmployeeApiService {
   /**
    * Suspend employee
    */
-  async suspend(id: string): Promise<{ data: EmployeeDetailDto }> {
+  async suspend(id: string, reason?: string, notes?: string, effective_date?: string): Promise<{ data: EmployeeDetailDto }> {
+    const body: Record<string, any> = {}
+
+    if (reason)
+      body.reason = reason
+
+    if (notes)
+      body.notes = notes
+
+    if (effective_date)
+      body.effective_date = effective_date
+
+    console.log('🔍 Suspend API Call - Body:', body, { reason, notes, effective_date })
+
     return await rawApi(`${this.baseUrl}/${id}/suspend`, {
       method: 'POST',
+      body,
     })
   }
 
   /**
    * Reactivate employee
    */
-  async reactivate(id: string): Promise<{ data: EmployeeDetailDto }> {
+  async reactivate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<{ data: EmployeeDetailDto }> {
+    const body: Record<string, any> = {}
+
+    if (reason)
+      body.reason = reason
+
+    if (notes)
+      body.notes = notes
+
+    if (effective_date)
+      body.effective_date = effective_date
+
     return await rawApi(`${this.baseUrl}/${id}/reactivate`, {
       method: 'POST',
+      body,
     })
   }
 
   /**
    * Terminate employee
    */
-  async terminate(id: string): Promise<{ data: EmployeeDetailDto }> {
+  async terminate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<{ data: EmployeeDetailDto }> {
+    const body: Record<string, any> = {}
+
+    if (reason)
+      body.reason = reason
+
+    if (notes)
+      body.notes = notes
+
+    if (effective_date)
+      body.effective_date = effective_date
+
     return await rawApi(`${this.baseUrl}/${id}/terminate`, {
       method: 'POST',
+      body,
     })
   }
 
   // Skills Management
+
+  /**
+   * Get employee skills
+   */
+  async getSkills(employeeId: string): Promise<{ data: EmployeeSkillDto[] }> {
+    return await rawApi(`${this.baseUrl}/${employeeId}/skills`, {
+      method: 'GET',
+    })
+  }
 
   /**
    * Add skill to employee
@@ -250,6 +297,15 @@ export class EmployeeApiService {
   }
 
   // Certifications Management
+
+  /**
+   * Get employee certifications
+   */
+  async getCertifications(employeeId: string): Promise<{ data: EmployeeCertificationDto[] }> {
+    return await rawApi(`${this.baseUrl}/${employeeId}/certifications`, {
+      method: 'GET',
+    })
+  }
 
   /**
    * Add certification to employee

@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useEmployeeStore } from '../stores/employeeStore'
 import { EmployeeDomain } from '../../domain/entities/EmployeeEntity'
+import SkillsListOrganism from '../components/organisms/SkillsListOrganism.vue'
+import CertificationsListOrganism from '../components/organisms/CertificationsListOrganism.vue'
+import EmploymentHistoryOrganism from '../components/organisms/EmploymentHistoryOrganism.vue'
+import type { EmployeeCertificationEntity, EmployeeSkillEntity } from '../../domain/entities/EmployeeEntity'
+import ActionConfirmationDialog from '@/components/shared/ActionConfirmationDialog.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -15,9 +20,16 @@ const employee = computed(() => employeeStore.currentItem)
 
 const tabs = ref('info')
 
+// Action confirmation dialog state
+const showSuspendDialog = ref(false)
+const showReactivateDialog = ref(false)
+const showTerminateDialog = ref(false)
+const actionLoading = ref(false)
+
 // Métodos
 async function loadEmployee() {
   const id = route.params.id as string
+
   loading.value = true
 
   try {
@@ -36,45 +48,74 @@ function navigateToEdit() {
   router.push({ name: 'employees-edit', params: { id: route.params.id } })
 }
 
-async function suspendEmployee() {
+function openSuspendDialog() {
+  showSuspendDialog.value = true
+}
+
+function openReactivateDialog() {
+  showReactivateDialog.value = true
+}
+
+function openTerminateDialog() {
+  showTerminateDialog.value = true
+}
+
+async function handleSuspendConfirm(data: { reason?: string; notes?: string; effective_date?: string }) {
   if (!employee.value)
     return
 
-  if (confirm(t('employee.confirm_suspend', { name: employee.value.full_name }))) {
-    try {
-      await employeeStore.suspendEmployee(employee.value.id)
-    }
-    catch (error) {
-      console.error('Error suspending employee:', error)
-    }
+  console.log('🔍 EmployeeDetail - handleSuspendConfirm called with:', data)
+
+  actionLoading.value = true
+
+  try {
+    await employeeStore.suspendEmployee(employee.value.id, data.reason, data.notes, data.effective_date)
+    showSuspendDialog.value = false
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error suspending employee:', error)
+  }
+  finally {
+    actionLoading.value = false
   }
 }
 
-async function reactivateEmployee() {
+async function handleReactivateConfirm(data: { reason?: string; notes?: string; effective_date?: string }) {
   if (!employee.value)
     return
 
-  if (confirm(t('employee.confirm_reactivate', { name: employee.value.full_name }))) {
-    try {
-      await employeeStore.reactivateEmployee(employee.value.id)
-    }
-    catch (error) {
-      console.error('Error reactivating employee:', error)
-    }
+  actionLoading.value = true
+
+  try {
+    await employeeStore.reactivateEmployee(employee.value.id, data.reason, data.notes, data.effective_date)
+    showReactivateDialog.value = false
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error reactivating employee:', error)
+  }
+  finally {
+    actionLoading.value = false
   }
 }
 
-async function terminateEmployee() {
+async function handleTerminateConfirm(data: { reason?: string; notes?: string; effective_date?: string }) {
   if (!employee.value)
     return
 
-  if (confirm(t('employee.confirm_terminate', { name: employee.value.full_name }))) {
-    try {
-      await employeeStore.terminateEmployee(employee.value.id)
-    }
-    catch (error) {
-      console.error('Error terminating employee:', error)
-    }
+  actionLoading.value = true
+
+  try {
+    await employeeStore.terminateEmployee(employee.value.id, data.reason, data.notes, data.effective_date)
+    showTerminateDialog.value = false
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error terminating employee:', error)
+  }
+  finally {
+    actionLoading.value = false
   }
 }
 
@@ -87,6 +128,86 @@ function formatDate(date?: string) {
     return '-'
 
   return new Date(date).toLocaleDateString()
+}
+
+// Skills management
+async function handleAddSkill(data: Partial<EmployeeSkillEntity>) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.addSkill(employee.value.id, data)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error adding skill:', error)
+  }
+}
+
+async function handleUpdateSkill(skillId: string, data: Partial<EmployeeSkillEntity>) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.updateSkill(employee.value.id, skillId, data)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error updating skill:', error)
+  }
+}
+
+async function handleDeleteSkill(skillId: string) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.deleteSkill(employee.value.id, skillId)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error deleting skill:', error)
+  }
+}
+
+// Certifications management
+async function handleAddCertification(data: Partial<EmployeeCertificationEntity>) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.addCertification(employee.value.id, data)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error adding certification:', error)
+  }
+}
+
+async function handleUpdateCertification(certId: string, data: Partial<EmployeeCertificationEntity>) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.updateCertification(employee.value.id, certId, data)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error updating certification:', error)
+  }
+}
+
+async function handleDeleteCertification(certId: string) {
+  if (!employee.value)
+    return
+
+  try {
+    await employeeStore.deleteCertification(employee.value.id, certId)
+    await loadEmployee()
+  }
+  catch (error) {
+    console.error('Error deleting certification:', error)
+  }
 }
 
 onMounted(() => {
@@ -128,14 +249,14 @@ onMounted(() => {
                   size="small"
                   variant="tonal"
                 >
-                  {{ t(`employee.positions.${employee.position}`) }}
+                  {{ t(`EmployeeModule.employee.positions.${employee.position}`) }}
                 </VChip>
                 <VChip
                   size="small"
                   :color="getStatusColor(employee.status)"
                   variant="tonal"
                 >
-                  {{ t(`employee.status.${employee.status}`) }}
+                  {{ t(`EmployeeModule.employee.status.${employee.status}`) }}
                 </VChip>
                 <span class="text-body-2 text-disabled">
                   {{ employee.employee_code }}
@@ -152,31 +273,31 @@ onMounted(() => {
               <VIcon start>
                 tabler-arrow-left
               </VIcon>
-              {{ t('common.back') }}
+              {{ t('EmployeeModule.common.back') }}
             </VBtn>
 
             <VBtn
               v-if="employee.status === 'active'"
               color="warning"
-              @click="suspendEmployee"
+              @click="openSuspendDialog"
             >
-              {{ t('employee.actions.suspend') }}
+              {{ t('EmployeeModule.employee.actions.suspend') }}
             </VBtn>
 
             <VBtn
               v-if="employee.status === 'suspended'"
               color="success"
-              @click="reactivateEmployee"
+              @click="openReactivateDialog"
             >
-              {{ t('employee.actions.reactivate') }}
+              {{ t('EmployeeModule.employee.actions.reactivate') }}
             </VBtn>
 
             <VBtn
               v-if="employee.status === 'active' || employee.status === 'suspended'"
               color="error"
-              @click="terminateEmployee"
+              @click="openTerminateDialog"
             >
-              {{ t('employee.actions.terminate') }}
+              {{ t('EmployeeModule.employee.actions.terminate') }}
             </VBtn>
 
             <VBtn
@@ -186,7 +307,7 @@ onMounted(() => {
               <VIcon start>
                 tabler-pencil
               </VIcon>
-              {{ t('common.edit') }}
+              {{ t('EmployeeModule.common.edit') }}
             </VBtn>
           </div>
         </div>
@@ -200,28 +321,53 @@ onMounted(() => {
           <VIcon start>
             tabler-info-circle
           </VIcon>
-          {{ t('employee.tabs.info') }}
+          {{ t('EmployeeModule.employee.tabs.info') }}
         </VTab>
         <VTab value="contact">
           <VIcon start>
             tabler-phone
           </VIcon>
-          {{ t('employee.tabs.contact') }}
+          {{ t('EmployeeModule.employee.tabs.contact') }}
         </VTab>
         <VTab value="employment">
           <VIcon start>
             tabler-briefcase
           </VIcon>
-          {{ t('employee.tabs.employment') }}
+          {{ t('EmployeeModule.employee.tabs.employment') }}
         </VTab>
-        <VTab
-          v-if="employee.skills && employee.skills.length > 0"
-          value="skills"
-        >
+        <VTab value="skills">
+          <VIcon start>
+            tabler-bulb
+          </VIcon>
+          Habilidades
+          <VChip
+            v-if="employee.skills && employee.skills.length > 0"
+            size="x-small"
+            color="primary"
+            class="ml-2"
+          >
+            {{ employee.skills.length }}
+          </VChip>
+        </VTab>
+        <VTab value="certifications">
           <VIcon start>
             tabler-certificate
           </VIcon>
-          {{ t('employee.tabs.skills') }}
+          Certificaciones
+          <VChip
+            v-if="employee.certifications && employee.certifications.length > 0"
+            size="x-small"
+            color="success"
+            class="ml-2"
+          >
+            {{ employee.certifications.length }}
+          </VChip>
+        </VTab>
+        <VTab value="history">
+          <VIcon start>
+            tabler-history
+          </VIcon>
+          Historial
         </VTab>
       </VTabs>
 
@@ -236,7 +382,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.first_name') }}
+                    {{ t('EmployeeModule.employee.fields.first_name') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.first_name }}
@@ -245,7 +391,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.last_name') }}
+                    {{ t('EmployeeModule.employee.fields.last_name') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.last_name }}
@@ -254,7 +400,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.date_of_birth') }}
+                    {{ t('EmployeeModule.employee.fields.date_of_birth') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.date_of_birth) }}
@@ -268,16 +414,16 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.gender') }}
+                    {{ t('EmployeeModule.employee.fields.gender') }}
                   </div>
                   <div class="text-body-1">
-                    {{ employee.gender ? t(`employee.gender.${employee.gender}`) : '-' }}
+                    {{ employee.gender ? t(`EmployeeModule.employee.gender.${employee.gender}`) : '-' }}
                   </div>
                 </div>
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.tax_id') }}
+                    {{ t('EmployeeModule.employee.fields.tax_id') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.tax_id || '-' }}
@@ -296,7 +442,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.email') }}
+                    {{ t('EmployeeModule.employee.fields.email') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.email || '-' }}
@@ -305,7 +451,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.primary_phone') }}
+                    {{ t('EmployeeModule.employee.fields.primary_phone') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.primary_phone || '-' }}
@@ -314,7 +460,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.secondary_phone') }}
+                    {{ t('EmployeeModule.employee.fields.secondary_phone') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.secondary_phone || '-' }}
@@ -328,7 +474,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.address') }}
+                    {{ t('EmployeeModule.employee.fields.address') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.address_line_1 || '-' }}
@@ -343,7 +489,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.emergency_contact') }}
+                    {{ t('EmployeeModule.employee.fields.emergency_contact') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.emergency_contact_name || '-' }}
@@ -368,7 +514,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.hire_date') }}
+                    {{ t('EmployeeModule.employee.fields.hire_date') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.hire_date) }}
@@ -377,16 +523,16 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.position') }}
+                    {{ t('EmployeeModule.employee.fields.position') }}
                   </div>
                   <div class="text-body-1">
-                    {{ t(`employee.positions.${employee.position}`) }}
+                    {{ t(`EmployeeModule.employee.positions.${employee.position}`) }}
                   </div>
                 </div>
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.department') }}
+                    {{ t('EmployeeModule.employee.fields.department') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.department || '-' }}
@@ -400,10 +546,10 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.employment_type') }}
+                    {{ t('EmployeeModule.employee.fields.employment_type') }}
                   </div>
                   <div class="text-body-1">
-                    {{ t(`employee.employment_types.${employee.employment_type}`) }}
+                    {{ t(`EmployeeModule.employee.employment_types.${employee.employment_type}`) }}
                   </div>
                 </div>
 
@@ -412,7 +558,7 @@ onMounted(() => {
                   class="mb-4"
                 >
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('employee.fields.termination_date') }}
+                    {{ t('EmployeeModule.employee.fields.termination_date') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.termination_date) }}
@@ -424,51 +570,34 @@ onMounted(() => {
 
           <!-- Skills Tab -->
           <VWindowItem value="skills">
-            <VRow v-if="employee.skills && employee.skills.length > 0">
-              <VCol
-                v-for="skill in employee.skills"
-                :key="skill.id"
-                cols="12"
-                md="6"
-              >
-                <VCard variant="tonal">
-                  <VCardText>
-                    <div class="d-flex align-center justify-space-between mb-2">
-                      <h6 class="text-h6">
-                        {{ skill.skill_name }}
-                      </h6>
-                      <VChip
-                        size="small"
-                        variant="tonal"
-                      >
-                        {{ t(`employee.proficiency.${skill.proficiency_level}`) }}
-                      </VChip>
-                    </div>
-                    <div
-                      v-if="skill.years_of_experience"
-                      class="text-body-2"
-                    >
-                      {{ skill.years_of_experience }} {{ t('employee.years_experience') }}
-                    </div>
-                  </VCardText>
-                </VCard>
-              </VCol>
-            </VRow>
-            <div
-              v-else
-              class="text-center pa-8"
-            >
-              <VIcon
-                size="64"
-                color="grey-lighten-1"
-                class="mb-4"
-              >
-                tabler-certificate-off
-              </VIcon>
-              <p class="text-body-1">
-                {{ t('employee.no_skills') }}
-              </p>
-            </div>
+            <SkillsListOrganism
+              :skills="employee.skills || []"
+              :employee-id="employee.id"
+              :editable="true"
+              @add="handleAddSkill"
+              @update="handleUpdateSkill"
+              @delete="handleDeleteSkill"
+            />
+          </VWindowItem>
+
+          <!-- Certifications Tab -->
+          <VWindowItem value="certifications">
+            <CertificationsListOrganism
+              :certifications="employee.certifications || []"
+              :employee-id="employee.id"
+              :editable="true"
+              @add="handleAddCertification"
+              @update="handleUpdateCertification"
+              @delete="handleDeleteCertification"
+            />
+          </VWindowItem>
+
+          <!-- History Tab -->
+          <VWindowItem value="history">
+            <EmploymentHistoryOrganism
+              :history="employee.employment_history || []"
+              :loading="loading"
+            />
           </VWindowItem>
         </VWindow>
       </VCardText>
@@ -480,7 +609,44 @@ onMounted(() => {
       type="error"
       variant="tonal"
     >
-      {{ t('employee.not_found') }}
+      {{ t('EmployeeModule.employee.not_found') }}
     </VAlert>
   </div>
+
+  <!-- Action Confirmation Dialogs -->
+  <ActionConfirmationDialog
+    v-if="employee"
+    :visible="showSuspendDialog"
+    title="Suspender Empleado"
+    action-type="suspend"
+    entity-name="Empleado"
+    :entity-info="employee.full_name"
+    :loading="actionLoading"
+    @close="showSuspendDialog = false"
+    @confirm="handleSuspendConfirm"
+  />
+
+  <ActionConfirmationDialog
+    v-if="employee"
+    :visible="showReactivateDialog"
+    title="Reactivar Empleado"
+    action-type="reactivate"
+    entity-name="Empleado"
+    :entity-info="employee.full_name"
+    :loading="actionLoading"
+    @close="showReactivateDialog = false"
+    @confirm="handleReactivateConfirm"
+  />
+
+  <ActionConfirmationDialog
+    v-if="employee"
+    :visible="showTerminateDialog"
+    title="Terminar Contrato"
+    action-type="terminate"
+    entity-name="Empleado"
+    :entity-info="employee.full_name"
+    :loading="actionLoading"
+    @close="showTerminateDialog = false"
+    @confirm="handleTerminateConfirm"
+  />
 </template>

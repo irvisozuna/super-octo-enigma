@@ -37,7 +37,7 @@ export const EmployeeModuleConfig = {
       pattern: /^\d{10}$/,
     },
     email: {
-      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      pattern: /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/,
     },
     minAge: 18,
     maxAge: 100,

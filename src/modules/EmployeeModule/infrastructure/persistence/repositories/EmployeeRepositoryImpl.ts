@@ -149,24 +149,24 @@ export class EmployeeRepositoryImpl implements EmployeeRepository {
 
   // Status Management
 
-  async suspend(id: string): Promise<ApiResponse<EmployeeEntity>> {
-    const response = await this.apiService.suspend(id)
+  async suspend(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>> {
+    const response = await this.apiService.suspend(id, reason, notes, effective_date)
 
     return {
       data: EmployeeMapper.apiDetailToDomain(response.data),
     }
   }
 
-  async reactivate(id: string): Promise<ApiResponse<EmployeeEntity>> {
-    const response = await this.apiService.reactivate(id)
+  async reactivate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>> {
+    const response = await this.apiService.reactivate(id, reason, notes, effective_date)
 
     return {
       data: EmployeeMapper.apiDetailToDomain(response.data),
     }
   }
 
-  async terminate(id: string): Promise<ApiResponse<EmployeeEntity>> {
-    const response = await this.apiService.terminate(id)
+  async terminate(id: string, reason?: string, notes?: string, effective_date?: string): Promise<ApiResponse<EmployeeEntity>> {
+    const response = await this.apiService.terminate(id, reason, notes, effective_date)
 
     return {
       data: EmployeeMapper.apiDetailToDomain(response.data),
@@ -174,6 +174,14 @@ export class EmployeeRepositoryImpl implements EmployeeRepository {
   }
 
   // Skills Management
+
+  async getSkills(employeeId: string): Promise<ApiResponse<EmployeeSkillEntity[]>> {
+    const response = await this.apiService.getSkills(employeeId)
+
+    return {
+      data: response.data.map(skill => EmployeeMapper.apiSkillToDomain(skill)),
+    }
+  }
 
   async addSkill(employeeId: string, skill: Omit<EmployeeSkillEntity, 'id' | 'employee_id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<EmployeeSkillEntity>> {
     const response = await this.apiService.addSkill(employeeId, skill as any)
@@ -196,6 +204,14 @@ export class EmployeeRepositoryImpl implements EmployeeRepository {
   }
 
   // Certifications Management
+
+  async getCertifications(employeeId: string): Promise<ApiResponse<EmployeeCertificationEntity[]>> {
+    const response = await this.apiService.getCertifications(employeeId)
+
+    return {
+      data: response.data.map(cert => EmployeeMapper.apiCertificationToDomain(cert)),
+    }
+  }
 
   async addCertification(employeeId: string, certification: Omit<EmployeeCertificationEntity, 'id' | 'employee_id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<EmployeeCertificationEntity>> {
     const response = await this.apiService.addCertification(employeeId, certification as any)

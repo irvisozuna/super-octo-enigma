@@ -159,7 +159,7 @@ watch(
     class="map-error-container"
   >
     <div class="map-error-content">
-      <v-icon
+      <VIcon
         icon="mdi-map-marker-off"
         size="48"
         color="warning"

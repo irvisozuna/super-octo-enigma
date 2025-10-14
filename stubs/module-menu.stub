@@ -1,0 +1,40 @@
+/**
+ * {{ModuleName}} Menu Configuration
+ * 
+ * IMPORTANTE: 
+ * - Los iconos DEBEN ser objetos: { icon: 'tabler-name' }
+ * - Todos los items deben tener action y subject para CASL
+ * - Usar nombres de ruta, no paths absolutos
+ */
+
+import type { VerticalNavItems } from '@layouts/types'
+import { createValidatedMenu } from '@/utils/menuValidator'
+
+const {{moduleName}}Menu: VerticalNavItems = [
+  {
+    title: '{{ModuleTitle}}',
+    icon: { icon: 'tabler-package' },  // ✅ Objeto, no string
+    action: 'read',                     // ✅ Requerido para CASL
+    subject: '{{subject}}',             // ✅ Requerido para CASL
+    children: [
+      {
+        title: 'Lista',
+        icon: { icon: 'tabler-list' },
+        to: '{{moduleName}}-list',      // ✅ Nombre de ruta, no '/path'
+        action: 'read',
+        subject: '{{subject}}',
+      },
+      {
+        title: 'Crear',
+        icon: { icon: 'tabler-plus' },
+        to: '{{moduleName}}-create',
+        action: 'create',                // ✅ Acción específica
+        subject: '{{subject}}',
+      },
+    ],
+  },
+]
+
+// ✅ Validar menú en desarrollo
+export default createValidatedMenu({{moduleName}}Menu, '{{ModuleName}}Module')
+

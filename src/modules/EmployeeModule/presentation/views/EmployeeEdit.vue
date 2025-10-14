@@ -15,6 +15,7 @@ const form = ref<Partial<UpdateEmployeeRequest>>({})
 
 async function loadEmployee() {
   const id = route.params.id as string
+
   loading.value = true
 
   try {
@@ -91,7 +92,7 @@ onMounted(() => {
     <VCardTitle>
       <div class="d-flex align-center justify-space-between">
         <h4 class="text-h4">
-          {{ t('employee.actions.edit') }}
+          {{ t('EmployeeModule.employee.actions.edit') }}
         </h4>
       </div>
     </VCardTitle>
@@ -102,7 +103,7 @@ onMounted(() => {
           <!-- Basic Information -->
           <VCol cols="12">
             <h6 class="text-h6 mb-4">
-              {{ t('employee.sections.basic_info') }}
+              {{ t('EmployeeModule.employee.sections.basic_info') }}
             </h6>
           </VCol>
 
@@ -112,7 +113,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.employee_code"
-              :label="t('employee.fields.employee_code') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.employee_code')} *`"
               variant="outlined"
               required
             />
@@ -124,7 +125,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.first_name"
-              :label="t('employee.fields.first_name') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.first_name')} *`"
               variant="outlined"
               required
             />
@@ -136,7 +137,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.last_name"
-              :label="t('employee.fields.last_name') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.last_name')} *`"
               variant="outlined"
               required
             />
@@ -148,7 +149,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.date_of_birth"
-              :label="t('employee.fields.date_of_birth')"
+              :label="t('EmployeeModule.employee.fields.date_of_birth')"
               type="date"
               variant="outlined"
             />
@@ -160,11 +161,11 @@ onMounted(() => {
           >
             <VSelect
               v-model="form.gender"
-              :label="t('employee.fields.gender')"
+              :label="t('EmployeeModule.employee.fields.gender')"
               :items="[
-                { value: 'male', title: t('employee.gender.male') },
-                { value: 'female', title: t('employee.gender.female') },
-                { value: 'other', title: t('employee.gender.other') },
+                { value: 'male', title: t('EmployeeModule.employee.gender.male') },
+                { value: 'female', title: t('EmployeeModule.employee.gender.female') },
+                { value: 'other', title: t('EmployeeModule.employee.gender.other') },
               ]"
               variant="outlined"
             />
@@ -176,7 +177,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.tax_id"
-              :label="t('employee.fields.tax_id')"
+              :label="t('EmployeeModule.employee.fields.tax_id')"
               variant="outlined"
             />
           </VCol>
@@ -185,7 +186,7 @@ onMounted(() => {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('employee.sections.contact_info') }}
+              {{ t('EmployeeModule.employee.sections.contact_info') }}
             </h6>
           </VCol>
 
@@ -195,7 +196,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.email"
-              :label="t('employee.fields.email')"
+              :label="t('EmployeeModule.employee.fields.email')"
               type="email"
               variant="outlined"
             />
@@ -207,7 +208,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.primary_phone"
-              :label="t('employee.fields.primary_phone')"
+              :label="t('EmployeeModule.employee.fields.primary_phone')"
               variant="outlined"
             />
           </VCol>
@@ -218,7 +219,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.secondary_phone"
-              :label="t('employee.fields.secondary_phone')"
+              :label="t('EmployeeModule.employee.fields.secondary_phone')"
               variant="outlined"
             />
           </VCol>
@@ -230,7 +231,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.address_line_1"
-              :label="t('employee.fields.address_line_1')"
+              :label="t('EmployeeModule.employee.fields.address_line_1')"
               variant="outlined"
             />
           </VCol>
@@ -241,7 +242,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.address_line_2"
-              :label="t('employee.fields.address_line_2')"
+              :label="t('EmployeeModule.employee.fields.address_line_2')"
               variant="outlined"
             />
           </VCol>
@@ -252,7 +253,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.city"
-              :label="t('employee.fields.city')"
+              :label="t('EmployeeModule.employee.fields.city')"
               variant="outlined"
             />
           </VCol>
@@ -263,7 +264,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.state"
-              :label="t('employee.fields.state')"
+              :label="t('EmployeeModule.employee.fields.state')"
               variant="outlined"
             />
           </VCol>
@@ -274,7 +275,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.postal_code"
-              :label="t('employee.fields.postal_code')"
+              :label="t('EmployeeModule.employee.fields.postal_code')"
               variant="outlined"
             />
           </VCol>
@@ -283,7 +284,7 @@ onMounted(() => {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('employee.sections.emergency_contact') }}
+              {{ t('EmployeeModule.employee.sections.emergency_contact') }}
             </h6>
           </VCol>
 
@@ -293,7 +294,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.emergency_contact_name"
-              :label="t('employee.fields.emergency_contact_name')"
+              :label="t('EmployeeModule.employee.fields.emergency_contact_name')"
               variant="outlined"
             />
           </VCol>
@@ -304,7 +305,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.emergency_contact_phone"
-              :label="t('employee.fields.emergency_contact_phone')"
+              :label="t('EmployeeModule.employee.fields.emergency_contact_phone')"
               variant="outlined"
             />
           </VCol>
@@ -313,7 +314,7 @@ onMounted(() => {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('employee.sections.employment_info') }}
+              {{ t('EmployeeModule.employee.sections.employment_info') }}
             </h6>
           </VCol>
 
@@ -323,7 +324,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.hire_date"
-              :label="t('employee.fields.hire_date') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.hire_date')} *`"
               type="date"
               variant="outlined"
               required
@@ -336,13 +337,13 @@ onMounted(() => {
           >
             <VSelect
               v-model="form.position"
-              :label="t('employee.fields.position') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.position')} *`"
               :items="[
-                { value: 'operator', title: t('employee.positions.operator') },
-                { value: 'helper', title: t('employee.positions.helper') },
-                { value: 'manager', title: t('employee.positions.manager') },
-                { value: 'supervisor', title: t('employee.positions.supervisor') },
-                { value: 'admin', title: t('employee.positions.admin') },
+                { value: 'operator', title: t('EmployeeModule.employee.positions.operator') },
+                { value: 'helper', title: t('EmployeeModule.employee.positions.helper') },
+                { value: 'manager', title: t('EmployeeModule.employee.positions.manager') },
+                { value: 'supervisor', title: t('EmployeeModule.employee.positions.supervisor') },
+                { value: 'admin', title: t('EmployeeModule.employee.positions.admin') },
               ]"
               variant="outlined"
               required
@@ -355,12 +356,12 @@ onMounted(() => {
           >
             <VSelect
               v-model="form.employment_type"
-              :label="t('employee.fields.employment_type') + ' *'"
+              :label="`${t('EmployeeModule.employee.fields.employment_type')} *`"
               :items="[
-                { value: 'full_time', title: t('employee.employment_types.full_time') },
-                { value: 'part_time', title: t('employee.employment_types.part_time') },
-                { value: 'contractor', title: t('employee.employment_types.contractor') },
-                { value: 'temporary', title: t('employee.employment_types.temporary') },
+                { value: 'full_time', title: t('EmployeeModule.employee.employment_types.full_time') },
+                { value: 'part_time', title: t('EmployeeModule.employee.employment_types.part_time') },
+                { value: 'contractor', title: t('EmployeeModule.employee.employment_types.contractor') },
+                { value: 'temporary', title: t('EmployeeModule.employee.employment_types.temporary') },
               ]"
               variant="outlined"
               required
@@ -373,7 +374,7 @@ onMounted(() => {
           >
             <VTextField
               v-model="form.department"
-              :label="t('employee.fields.department')"
+              :label="t('EmployeeModule.employee.fields.department')"
               variant="outlined"
             />
           </VCol>
@@ -384,11 +385,11 @@ onMounted(() => {
           >
             <VSelect
               v-model="form.status"
-              :label="t('common.status') + ' *'"
+              :label="`${t('common.status')} *`"
               :items="[
-                { value: 'active', title: t('employee.status.active') },
-                { value: 'inactive', title: t('employee.status.inactive') },
-                { value: 'vacation', title: t('employee.status.vacation') },
+                { value: 'active', title: t('EmployeeModule.employee.status.active') },
+                { value: 'inactive', title: t('EmployeeModule.employee.status.inactive') },
+                { value: 'vacation', title: t('EmployeeModule.employee.status.vacation') },
               ]"
               variant="outlined"
               required
@@ -401,7 +402,7 @@ onMounted(() => {
           >
             <VTextField
               v-model.number="form.salary_amount"
-              :label="t('employee.fields.salary_amount')"
+              :label="t('EmployeeModule.employee.fields.salary_amount')"
               type="number"
               variant="outlined"
             />

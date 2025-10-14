@@ -5,6 +5,7 @@
  */
 
 export interface EmployeePermissions {
+
   // View permissions
   viewEmployees: string
   viewEmployeeDetail: string
@@ -165,19 +166,19 @@ export const vCan = {
 
     let hasPermission = false
 
-    if (arg === 'any') {
+    if (arg === 'any')
       hasPermission = canAny(...(Array.isArray(value) ? value : [value]))
-    }
-    else if (arg === 'all') {
+
+    else if (arg === 'all')
       hasPermission = canAll(...(Array.isArray(value) ? value : [value]))
-    }
-    else {
+
+    else
       hasPermission = can(value)
-    }
 
     if (!hasPermission) {
       // Remove element if no permission
       el.style.display = 'none'
+
       // Or completely remove from DOM
       // el.parentNode?.removeChild(el)
     }

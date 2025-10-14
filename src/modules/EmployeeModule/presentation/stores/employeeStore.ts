@@ -91,7 +91,21 @@ export const useEmployeeStore = defineStore('employee', () => {
     error.value = null
 
     try {
-      currentItem.value = await applicationService.getEmployeeById(id)
+      const employee = await applicationService.getEmployeeById(id)
+
+      // Load related data in parallel
+      const [skillsResult, certificationsResult, historyResult] = await Promise.allSettled([
+        repository.getSkills(id).then(res => res.data).catch(() => []),
+        repository.getCertifications(id).then(res => res.data).catch(() => []),
+        applicationService.getEmployeeHistory(id).catch(() => []),
+      ])
+
+      // Assign loaded data
+      employee.skills = skillsResult.status === 'fulfilled' ? skillsResult.value : []
+      employee.certifications = certificationsResult.status === 'fulfilled' ? certificationsResult.value : []
+      employee.employment_history = historyResult.status === 'fulfilled' ? historyResult.value : []
+
+      currentItem.value = employee
     }
     catch (err: any) {
       error.value = err.message || 'Error al cargar empleado'
@@ -111,6 +125,7 @@ export const useEmployeeStore = defineStore('employee', () => {
 
     try {
       const newItem = await applicationService.createEmployee(data)
+
       items.value.unshift(newItem)
 
       return newItem
@@ -184,6 +199,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
     catch (err: any) {
       error.value = err.message || 'Error al buscar empleado'
+
       return null
     }
   }
@@ -191,11 +207,11 @@ export const useEmployeeStore = defineStore('employee', () => {
   /**
    * Suspend employee
    */
-  const suspendEmployee = async (id: string) => {
+  const suspendEmployee = async (id: string, reason?: string, notes?: string, effective_date?: string) => {
     loading.value = true
 
     try {
-      const updated = await applicationService.suspendEmployee(id)
+      const updated = await applicationService.suspendEmployee(id, reason, notes, effective_date)
       const index = items.value.findIndex(item => item.id === id)
 
       if (index !== -1)
@@ -218,11 +234,11 @@ export const useEmployeeStore = defineStore('employee', () => {
   /**
    * Reactivate employee
    */
-  const reactivateEmployee = async (id: string) => {
+  const reactivateEmployee = async (id: string, reason?: string, notes?: string, effective_date?: string) => {
     loading.value = true
 
     try {
-      const updated = await applicationService.reactivateEmployee(id)
+      const updated = await applicationService.reactivateEmployee(id, reason, notes, effective_date)
       const index = items.value.findIndex(item => item.id === id)
 
       if (index !== -1)
@@ -245,11 +261,11 @@ export const useEmployeeStore = defineStore('employee', () => {
   /**
    * Terminate employee
    */
-  const terminateEmployee = async (id: string) => {
+  const terminateEmployee = async (id: string, reason?: string, notes?: string, effective_date?: string) => {
     loading.value = true
 
     try {
-      const updated = await applicationService.terminateEmployee(id)
+      const updated = await applicationService.terminateEmployee(id, reason, notes, effective_date)
       const index = items.value.findIndex(item => item.id === id)
 
       if (index !== -1)
@@ -278,6 +294,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
     catch (err: any) {
       error.value = err.message || 'Error al cargar operadores'
+
       return []
     }
   }
@@ -291,6 +308,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
     catch (err: any) {
       error.value = err.message || 'Error al cargar ayudantes'
+
       return []
     }
   }
@@ -318,6 +336,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       // Download file
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
+
       link.href = url
       link.download = `employees_${new Date().toISOString()}.${format === 'excel' ? 'xlsx' : format}`
       document.body.appendChild(link)
@@ -336,6 +355,108 @@ export const useEmployeeStore = defineStore('employee', () => {
    */
   const clearError = () => {
     error.value = null
+  }
+
+  /**
+   * Add skill to employee
+   */
+  const addSkill = async (employeeId: string, skillData: any) => {
+    loading.value = true
+    try {
+      await applicationService.addSkill(employeeId, skillData)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al agregar habilidad'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update employee skill
+   */
+  const updateSkill = async (employeeId: string, skillId: string, skillData: any) => {
+    loading.value = true
+    try {
+      await applicationService.updateSkill(employeeId, skillId, skillData)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al actualizar habilidad'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Delete employee skill
+   */
+  const deleteSkill = async (employeeId: string, skillId: string) => {
+    loading.value = true
+    try {
+      await applicationService.deleteSkill(employeeId, skillId)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al eliminar habilidad'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Add certification to employee
+   */
+  const addCertification = async (employeeId: string, certData: any) => {
+    loading.value = true
+    try {
+      await applicationService.addCertification(employeeId, certData)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al agregar certificación'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update employee certification
+   */
+  const updateCertification = async (employeeId: string, certId: string, certData: any) => {
+    loading.value = true
+    try {
+      await applicationService.updateCertification(employeeId, certId, certData)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al actualizar certificación'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Delete employee certification
+   */
+  const deleteCertification = async (employeeId: string, certId: string) => {
+    loading.value = true
+    try {
+      await applicationService.deleteCertification(employeeId, certId)
+    }
+    catch (err: any) {
+      error.value = err.message || 'Error al eliminar certificación'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
   }
 
   /**
@@ -380,6 +501,12 @@ export const useEmployeeStore = defineStore('employee', () => {
 
     // Actions
     fetchList,
+    addSkill,
+    updateSkill,
+    deleteSkill,
+    addCertification,
+    updateCertification,
+    deleteCertification,
     fetchById,
     createItem,
     updateItem,

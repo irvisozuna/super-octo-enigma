@@ -22,6 +22,7 @@ export function useTenantTheme() {
       const trimmed = value.trim()
       if (trimmed.startsWith('#'))
         return trimmed
+
       return `#${trimmed}`
     }
 
@@ -79,6 +80,7 @@ export function useTenantTheme() {
       const trimmed = value.trim()
       if (trimmed.startsWith('#'))
         return trimmed
+
       return `#${trimmed}`
     }
 
@@ -170,6 +172,7 @@ export function useTenantTheme() {
       const trimmed = value.trim()
       if (trimmed.startsWith('#'))
         return trimmed
+
       return `#${trimmed}`
     }
 

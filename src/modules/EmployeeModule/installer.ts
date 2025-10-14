@@ -4,51 +4,26 @@
  * Handles the registration and installation of the Employee module
  */
 
-import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import type { I18n } from 'vue-i18n'
 
-// Import module routes and menu
-import employeeRoutes from './config/routes'
-import employeeMenu from './config/menu'
+// Import module config
 import { EMPLOYEE_PERMISSIONS, EMPLOYEE_PERMISSION_GROUPS } from './config/permissions'
 
 export class EmployeeModuleInstaller {
-  private router: any
-  private i18n: any
+  private i18n: I18n | null
 
-  constructor() {
-    this.setupDependencies()
-  }
-
-  private setupDependencies() {
-    // Get router from the current app context
-    try {
-      this.router = useRouter()
-    }
-    catch (error) {
-      console.warn('Router not available in current context, will register routes later')
-      this.router = null
-    }
-
-    // Get i18n from the current app context
-    try {
-      this.i18n = useI18n()
-    }
-    catch (error) {
-      console.warn('i18n not available in current context')
-      this.i18n = null
-    }
+  constructor(i18n?: I18n) {
+    this.i18n = i18n || null
   }
 
   async install() {
     console.log('🚀 Installing EmployeeModule...')
 
     try {
-      // Register routes
-      this.registerRoutes()
+      // Routes are auto-loaded by router plugin via routes.ts in module root
+      // No need to register them manually with router.addRoute()
 
-      // Add menu items
-      this.addMenuItems()
+      // Note: Menu items are loaded automatically by initializeMenus() from navigation/index.ts
 
       // Add translations
       await this.addTranslations()
@@ -67,28 +42,6 @@ export class EmployeeModuleInstaller {
     }
   }
 
-  private registerRoutes() {
-    console.log('📁 Registering employee routes...')
-
-    if (!this.router) {
-      console.warn('Router not available, routes will be registered when router is available')
-
-      return
-    }
-
-    employeeRoutes.forEach(route => {
-      this.router.addRoute(route)
-    })
-  }
-
-  private addMenuItems() {
-    console.log('📋 Adding employee menu items...')
-
-    // Add menu items to the main navigation
-    if (window.mainMenu)
-      window.mainMenu.push(...employeeMenu)
-  }
-
   private async addTranslations() {
     console.log('🌐 Adding employee translations...')
 
@@ -99,9 +52,12 @@ export class EmployeeModuleInstaller {
         import('./locales/es.json'),
       ])
 
-      if (this.i18n && this.i18n.global) {
-        this.i18n.global.mergeLocaleMessage('en', enTranslations.default)
-        this.i18n.global.mergeLocaleMessage('es', esTranslations.default)
+      if (this.i18n) {
+        const i18nGlobal = (this.i18n as any).global || this.i18n
+        if (i18nGlobal.mergeLocaleMessage) {
+          i18nGlobal.mergeLocaleMessage('en', enTranslations.default)
+          i18nGlobal.mergeLocaleMessage('es', esTranslations.default)
+        }
       }
     }
     catch (error) {
@@ -117,9 +73,12 @@ export class EmployeeModuleInstaller {
         },
       }
 
-      if (this.i18n && this.i18n.global) {
-        this.i18n.global.mergeLocaleMessage('en', fallbackTranslations.en)
-        this.i18n.global.mergeLocaleMessage('es', fallbackTranslations.es)
+      if (this.i18n) {
+        const i18nGlobal = (this.i18n as any).global || this.i18n
+        if (i18nGlobal.mergeLocaleMessage) {
+          i18nGlobal.mergeLocaleMessage('en', fallbackTranslations.en)
+          i18nGlobal.mergeLocaleMessage('es', fallbackTranslations.es)
+        }
       }
     }
   }
@@ -181,8 +140,9 @@ export class EmployeeModuleInstaller {
 /**
  * Install function for plugin-style registration
  */
-export async function installEmployeeModule() {
-  const installer = new EmployeeModuleInstaller()
+export async function installEmployeeModule(router?: Router, i18n?: I18n) {
+  const installer = new EmployeeModuleInstaller(router, i18n)
+
   return await installer.install()
 }
 
@@ -191,7 +151,11 @@ export async function installEmployeeModule() {
  */
 export default {
   install: async (app: any) => {
-    const installer = new EmployeeModuleInstaller()
+    const router = app.config.globalProperties.$router
+    const i18n = app.config.globalProperties.$i18n
+
+    const installer = new EmployeeModuleInstaller(router, i18n)
+
     await installer.install()
 
     // Store installer instance on app for later use
@@ -202,7 +166,6 @@ export default {
 // Extend Window interface for TypeScript
 declare global {
   interface Window {
-    mainMenu?: any[]
     caslAbilities?: any[]
   }
 }

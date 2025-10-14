@@ -2,43 +2,33 @@
  * Employee Module Menu Configuration
  */
 
-export interface MenuItem {
-  title: string
-  icon: string
-  to?: string
-  action?: string
-  children?: MenuItem[]
-  badge?: string
-  badgeClass?: string
-}
+import type { VerticalNavItems } from '@layouts/types'
+import { createValidatedMenu } from '@/utils/menuValidator'
 
-const employeeMenu: MenuItem[] = [
+const employeeMenu: VerticalNavItems = [
   {
     title: 'Empleados',
-    icon: 'tabler-users',
+    icon: { icon: 'tabler-users' },
+    action: 'read',
+    subject: 'employees',
     children: [
       {
         title: 'Lista de Empleados',
-        icon: 'tabler-list',
-        to: '/employees',
+        icon: { icon: 'tabler-list' },
+        to: 'employees-list',
+        action: 'read',
+        subject: 'employees',
       },
       {
         title: 'Nuevo Empleado',
-        icon: 'tabler-user-plus',
-        to: '/employees/create',
-      },
-      {
-        title: 'Operadores',
-        icon: 'tabler-steering-wheel',
-        to: '/employees?position=operator',
-      },
-      {
-        title: 'Ayudantes',
-        icon: 'tabler-user-check',
-        to: '/employees?position=helper',
+        icon: { icon: 'tabler-user-plus' },
+        to: 'employees-create',
+        action: 'create',
+        subject: 'employees',
       },
     ],
   },
 ]
 
-export default employeeMenu
+// Validar menú en desarrollo
+export default createValidatedMenu(employeeMenu, 'EmployeeModule')

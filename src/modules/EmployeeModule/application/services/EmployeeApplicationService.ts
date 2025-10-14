@@ -37,6 +37,7 @@ export class EmployeeApplicationService {
   async getEmployeeById(id: string): Promise<EmployeeEntity> {
     try {
       const response = await this.employeeRepository.findById(id)
+
       return response.data
     }
     catch (error) {
@@ -88,6 +89,7 @@ export class EmployeeApplicationService {
       // Check if there are actual changes
       if (!EmployeeDomain.hasChanges(currentEmployee, data)) {
         this.showInfo('No hay cambios para guardar')
+
         return currentEmployee
       }
 
@@ -144,6 +146,7 @@ export class EmployeeApplicationService {
   async searchByEmployeeCode(employeeCode: string): Promise<EmployeeEntity | null> {
     try {
       const response = await this.employeeRepository.findByEmployeeCode(employeeCode)
+
       return response.data
     }
     catch (error) {
@@ -158,9 +161,9 @@ export class EmployeeApplicationService {
   /**
    * Suspend employee
    */
-  async suspendEmployee(id: string): Promise<EmployeeEntity> {
+  async suspendEmployee(id: string, reason?: string, notes?: string, effective_date?: string): Promise<EmployeeEntity> {
     try {
-      const response = await this.employeeRepository.suspend(id)
+      const response = await this.employeeRepository.suspend(id, reason, notes, effective_date)
 
       this.showSuccess('Empleado suspendido correctamente')
 
@@ -175,9 +178,9 @@ export class EmployeeApplicationService {
   /**
    * Reactivate employee
    */
-  async reactivateEmployee(id: string): Promise<EmployeeEntity> {
+  async reactivateEmployee(id: string, reason?: string, notes?: string, effective_date?: string): Promise<EmployeeEntity> {
     try {
-      const response = await this.employeeRepository.reactivate(id)
+      const response = await this.employeeRepository.reactivate(id, reason, notes, effective_date)
 
       this.showSuccess('Empleado reactivado correctamente')
 
@@ -192,9 +195,9 @@ export class EmployeeApplicationService {
   /**
    * Terminate employee
    */
-  async terminateEmployee(id: string): Promise<EmployeeEntity> {
+  async terminateEmployee(id: string, reason?: string, notes?: string, effective_date?: string): Promise<EmployeeEntity> {
     try {
-      const response = await this.employeeRepository.terminate(id)
+      const response = await this.employeeRepository.terminate(id, reason, notes, effective_date)
 
       this.showSuccess('Empleado terminado correctamente')
 
@@ -212,6 +215,7 @@ export class EmployeeApplicationService {
   async getOperators(): Promise<EmployeeEntity[]> {
     try {
       const response = await this.employeeRepository.getOperators()
+
       return response.data
     }
     catch (error) {
@@ -226,6 +230,7 @@ export class EmployeeApplicationService {
   async getHelpers(): Promise<EmployeeEntity[]> {
     try {
       const response = await this.employeeRepository.getHelpers()
+
       return response.data
     }
     catch (error) {
@@ -240,6 +245,7 @@ export class EmployeeApplicationService {
   async getStatistics() {
     try {
       const response = await this.employeeRepository.getStatistics()
+
       return response.data
     }
     catch (error) {
@@ -291,6 +297,117 @@ export class EmployeeApplicationService {
    */
   calculateYearsOfService(employee: EmployeeEntity): number {
     return EmployeeDomain.calculateYearsOfService(employee.hire_date, employee.termination_date)
+  }
+
+  /**
+   * Add skill to employee
+   */
+  async addSkill(employeeId: string, skillData: any) {
+    try {
+      const response = await this.employeeRepository.addSkill(employeeId, skillData)
+
+      this.showSuccess('Habilidad agregada correctamente')
+
+      return response.data
+    }
+    catch (error) {
+      this.handleError('Error al agregar habilidad', error)
+      throw error
+    }
+  }
+
+  /**
+   * Update employee skill
+   */
+  async updateSkill(employeeId: string, skillId: string, skillData: any) {
+    try {
+      const response = await this.employeeRepository.updateSkill(employeeId, skillId, skillData)
+
+      this.showSuccess('Habilidad actualizada correctamente')
+
+      return response.data
+    }
+    catch (error) {
+      this.handleError('Error al actualizar habilidad', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete employee skill
+   */
+  async deleteSkill(employeeId: string, skillId: string) {
+    try {
+      await this.employeeRepository.deleteSkill(employeeId, skillId)
+      this.showSuccess('Habilidad eliminada correctamente')
+    }
+    catch (error) {
+      this.handleError('Error al eliminar habilidad', error)
+      throw error
+    }
+  }
+
+  /**
+   * Add certification to employee
+   */
+  async addCertification(employeeId: string, certData: any) {
+    try {
+      const response = await this.employeeRepository.addCertification(employeeId, certData)
+
+      this.showSuccess('Certificación agregada correctamente')
+
+      return response.data
+    }
+    catch (error) {
+      this.handleError('Error al agregar certificación', error)
+      throw error
+    }
+  }
+
+  /**
+   * Update employee certification
+   */
+  async updateCertification(employeeId: string, certId: string, certData: any) {
+    try {
+      const response = await this.employeeRepository.updateCertification(employeeId, certId, certData)
+
+      this.showSuccess('Certificación actualizada correctamente')
+
+      return response.data
+    }
+    catch (error) {
+      this.handleError('Error al actualizar certificación', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete employee certification
+   */
+  async deleteCertification(employeeId: string, certId: string) {
+    try {
+      await this.employeeRepository.deleteCertification(employeeId, certId)
+      this.showSuccess('Certificación eliminada correctamente')
+    }
+    catch (error) {
+      this.handleError('Error al eliminar certificación', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get employee history
+   */
+  async getEmployeeHistory(employeeId: string) {
+    try {
+      const response = await this.employeeRepository.getHistory(employeeId)
+
+      return response.data
+    }
+    catch (error) {
+      this.handleError('Error al obtener historial', error)
+      throw error
+    }
   }
 
   // Private helper methods

@@ -5,10 +5,10 @@
  */
 
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useEmployeeStore } from '../stores/employeeStore'
 import { EmployeeDomain } from '../../domain/entities/EmployeeEntity'
 import type { EmployeeEntity } from '../../domain/entities/EmployeeEntity'
-import { useI18n } from 'vue-i18n'
 
 export function useEmployee() {
   const { t } = useI18n()
@@ -23,10 +23,12 @@ export function useEmployee() {
 
     try {
       await employeeStore.fetchById(id)
+
       return employeeStore.currentItem
     }
     catch (error) {
       console.error('Error loading employee:', error)
+
       return null
     }
     finally {

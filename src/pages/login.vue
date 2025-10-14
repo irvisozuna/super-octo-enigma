@@ -85,14 +85,15 @@ const login = async () => {
     }
     ability.update(userAbilityRules)
 
-    
     // Remover userAbilityRules y permissions de roles antes de guardar en cookies
     const rolesSlim = Array.isArray(userData.roles)
       ? userData.roles.map((r: any) => {
-          const { permissions, ...rest } = r
-          return rest
-        })
+        const { permissions, ...rest } = r
+
+        return rest
+      })
       : []
+
     const slimUserData = { ...userData, roles: rolesSlim }
 
     // Persist auth/session cookies via the same refs (avoid race with watch)

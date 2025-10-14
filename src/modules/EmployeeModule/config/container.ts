@@ -91,6 +91,7 @@ export class EmployeeModuleContainer {
    */
   uninstall() {
     console.log('🗑️ Uninstalling EmployeeModule...')
+
     // Cleanup when module is uninstalled
   }
 }

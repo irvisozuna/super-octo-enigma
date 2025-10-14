@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, onMounted } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import debounce from 'lodash/debounce'
 import { useI18n } from 'vue-i18n'
 import { useEmployeeStore } from '../stores/employeeStore'
@@ -12,46 +13,138 @@ const router = useRouter()
 // Store
 const employeeStore = useEmployeeStore()
 
+// Estado local para filtros múltiples
+const selectedStatuses = ref<string[]>([])
+const selectedPositions = ref<string[]>([])
+const selectedEmploymentTypes = ref<string[]>([])
+
 // Headers para la tabla
 const headers = [
-  { title: t('employee.fields.employee_code'), key: 'employee_code' },
-  { title: t('employee.fields.full_name'), key: 'full_name' },
-  { title: t('employee.fields.position'), key: 'position' },
-  { title: t('employee.fields.department'), key: 'department' },
-  { title: t('employee.fields.employment_type'), key: 'employment_type' },
-  { title: t('common.status'), key: 'status' },
-  { title: t('common.actions'), key: 'actions', sortable: false },
+  { title: t('EmployeeModule.employee.fields.employee_code'), key: 'employee_code' },
+  { title: t('EmployeeModule.employee.fields.full_name'), key: 'full_name' },
+  { title: t('EmployeeModule.employee.fields.position'), key: 'position' },
+  { title: t('EmployeeModule.employee.fields.department'), key: 'department' },
+  { title: t('EmployeeModule.employee.fields.employment_type'), key: 'employment_type' },
+  { title: t('EmployeeModule.common.status'), key: 'status' },
+  { title: t('EmployeeModule.common.actions'), key: 'actions', sortable: false },
 ]
 
 // Opciones del menú de exportación
 const menuOptions = [
   {
-    text: t('common.export_excel'),
+    text: t('EmployeeModule.common.export_excel'),
     icon: 'tabler-file-spreadsheet',
     action: () => exportItems('excel'),
   },
   {
-    text: t('common.export_pdf'),
+    text: t('EmployeeModule.common.export_pdf'),
     icon: 'tabler-file-type-pdf',
     action: () => exportItems('pdf'),
   },
   {
-    text: t('common.export_csv'),
+    text: t('EmployeeModule.common.export_csv'),
     icon: 'tabler-file-text',
     action: () => exportItems('csv'),
   },
 ]
 
+// Opciones para los selects
+const statusOptions = [
+  { value: 'active', title: t('EmployeeModule.employee.status.active'), color: 'success' },
+  { value: 'inactive', title: t('EmployeeModule.employee.status.inactive'), color: 'warning' },
+  { value: 'suspended', title: t('EmployeeModule.employee.status.suspended'), color: 'error' },
+  { value: 'terminated', title: t('EmployeeModule.employee.status.terminated'), color: 'error' },
+  { value: 'vacation', title: t('EmployeeModule.employee.status.vacation'), color: 'info' },
+]
+
+const positionOptions = [
+  { value: 'operator', title: t('EmployeeModule.employee.positions.operator') },
+  { value: 'helper', title: t('EmployeeModule.employee.positions.helper') },
+  { value: 'manager', title: t('EmployeeModule.employee.positions.manager') },
+  { value: 'supervisor', title: t('EmployeeModule.employee.positions.supervisor') },
+  { value: 'admin', title: t('EmployeeModule.employee.positions.admin') },
+]
+
+const employmentTypeOptions = [
+  { value: 'full_time', title: t('EmployeeModule.employee.employment_types.full_time') },
+  { value: 'part_time', title: t('EmployeeModule.employee.employment_types.part_time') },
+  { value: 'contractor', title: t('EmployeeModule.employee.employment_types.contractor') },
+  { value: 'temporary', title: t('EmployeeModule.employee.employment_types.temporary') },
+]
+
+// Computed para chips de filtros activos
+const activeFilters = computed(() => {
+  const filters: Array<{ label: string; value: string; type: string }> = []
+
+  if (employeeStore.filters.search) {
+    filters.push({
+      label: `Búsqueda: ${employeeStore.filters.search}`,
+      value: 'search',
+      type: 'search',
+    })
+  }
+
+  selectedStatuses.value.forEach(status => {
+    const option = statusOptions.find(o => o.value === status)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: status,
+        type: 'status',
+      })
+    }
+  })
+
+  selectedPositions.value.forEach(position => {
+    const option = positionOptions.find(o => o.value === position)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: position,
+        type: 'position',
+      })
+    }
+  })
+
+  selectedEmploymentTypes.value.forEach(type => {
+    const option = employmentTypeOptions.find(o => o.value === type)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: type,
+        type: 'employment_type',
+      })
+    }
+  })
+
+  return filters
+})
+
+const hasActiveFilters = computed(() => activeFilters.value.length > 0)
+
 // Métodos
 const debouncedFetchList = debounce(() => {
-  employeeStore.fetchList()
+  applyFiltersToStore()
 }, 500)
+
+function applyFiltersToStore() {
+  employeeStore.updateFilters({
+    status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') : undefined,
+    position: selectedPositions.value.length > 0 ? selectedPositions.value.join(',') : undefined,
+    employment_type: selectedEmploymentTypes.value.length > 0 ? selectedEmploymentTypes.value.join(',') : undefined,
+  })
+  employeeStore.fetchList()
+}
 
 function applyFilters() {
   debouncedFetchList()
 }
 
 function clearFilters() {
+  selectedStatuses.value = []
+  selectedPositions.value = []
+  selectedEmploymentTypes.value = []
+
   employeeStore.updateFilters({
     search: '',
     status: undefined,
@@ -65,6 +158,22 @@ function clearFilters() {
   })
 }
 
+function removeFilter(filter: { type: string; value: string }) {
+  if (filter.type === 'search')
+    employeeStore.filters.search = ''
+
+  else if (filter.type === 'status')
+    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
+
+  else if (filter.type === 'position')
+    selectedPositions.value = selectedPositions.value.filter(p => p !== filter.value)
+
+  else if (filter.type === 'employment_type')
+    selectedEmploymentTypes.value = selectedEmploymentTypes.value.filter(t => t !== filter.value)
+
+  applyFiltersToStore()
+}
+
 function navigateToView(item: EmployeeEntity) {
   router.push({ name: 'employees-detail', params: { id: item.id } })
 }
@@ -74,7 +183,7 @@ function navigateToEdit(item: EmployeeEntity) {
 }
 
 async function deleteEmployee(item: EmployeeEntity) {
-  if (confirm(t('employee.confirm_delete', { name: item.full_name }))) {
+  if (confirm(t('EmployeeModule.employee.confirm_delete', { name: item.full_name }))) {
     try {
       await employeeStore.deleteItem(item.id)
     }
@@ -107,160 +216,259 @@ function getStatusColor(status: string) {
 }
 
 function getPositionLabel(position: string) {
-  return t(`employee.positions.${position}`)
+  return t(`EmployeeModule.employee.positions.${position}`)
 }
 
 function getEmploymentTypeLabel(type: string) {
-  return t(`employee.employment_types.${type}`)
+  return t(`EmployeeModule.employee.employment_types.${type}`)
 }
 
-// onMounted
-onMounted(() => {
-  employeeStore.fetchList()
-})
+// Handle VDataTableServer options update (pagination, sorting)
+function handleOptionsUpdate(options: any) {
+  const { page, itemsPerPage, sortBy } = options
+
+  const filters: any = {
+    page,
+    per_page: itemsPerPage,
+  }
+
+  // Handle sorting
+  if (sortBy && sortBy.length > 0) {
+    filters.sort_by = sortBy[0].key
+    filters.sort_order = sortBy[0].order || 'asc'
+  }
+
+  employeeStore.fetchList(filters)
+}
+
+// No need for onMounted fetchList - VDataTableServer handles initial load via @update:options
 </script>
 
 <template>
   <VCard>
-    <VCardTitle>
-      <div class="d-flex align-center justify-space-between">
-        <div>
-          <h4 class="text-h4 mb-1">
-            {{ t('employee.title') }}
-          </h4>
-          <p class="text-body-1 mb-0">
-            {{ t('employee.list_description') }}
-          </p>
-        </div>
+    <!-- Header mejorado con contador -->
+    <VCardTitle class="d-flex align-center justify-space-between flex-wrap gap-4 pa-5">
+      <div>
+        <h4 class="text-h4 mb-1">
+          {{ t('EmployeeModule.employee.title') }}
+          <VChip
+            v-if="employeeStore.totalItems > 0"
+            size="small"
+            color="primary"
+            variant="tonal"
+            class="ml-2"
+          >
+            {{ employeeStore.totalItems }}
+          </VChip>
+        </h4>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          {{ t('EmployeeModule.employee.list_description') }}
+        </p>
+      </div>
+
+      <!-- Botones de acción principales -->
+      <div class="d-flex gap-3">
+        <VMenu>
+          <template #activator="{ props }">
+            <VBtn
+              v-bind="props"
+              variant="outlined"
+              color="secondary"
+              :loading="employeeStore.loading"
+              :disabled="!employeeStore.hasItems"
+            >
+              <VIcon start>
+                tabler-download
+              </VIcon>
+              {{ t('EmployeeModule.common.export') }}
+            </VBtn>
+          </template>
+
+          <VList>
+            <VListItem
+              v-for="option in menuOptions"
+              :key="option.text"
+              @click="option.action"
+            >
+              <template #prepend>
+                <VIcon :icon="option.icon" />
+              </template>
+              <VListItemTitle>{{ option.text }}</VListItemTitle>
+            </VListItem>
+          </VList>
+        </VMenu>
+
+        <VBtn
+          color="primary"
+          :to="{ name: 'employees-create' }"
+        >
+          <VIcon start>
+            tabler-plus
+          </VIcon>
+          {{ t('EmployeeModule.employee.actions.add') }}
+        </VBtn>
       </div>
     </VCardTitle>
 
+    <VDivider />
+
     <VCardText>
-      <!-- Filtros -->
-      <VRow class="mb-4">
+      <!-- Sección de Filtros Mejorada -->
+      <VRow class="mb-3">
+        <!-- Búsqueda -->
         <VCol
           cols="12"
-          md="3"
+          md="4"
         >
           <VTextField
             v-model="employeeStore.filters.search"
-            :label="t('employee.search_placeholder')"
+            :label="t('EmployeeModule.employee.search_placeholder')"
             prepend-inner-icon="tabler-search"
             variant="outlined"
             density="compact"
             clearable
+            hide-details
             @input="applyFilters"
-            @click:clear="clearFilters"
           />
         </VCol>
 
+        <!-- Estado - Múltiple -->
         <VCol
           cols="12"
-          md="2"
-        >
-          <VSelect
-            v-model="employeeStore.filters.status"
-            :label="t('common.status')"
-            :items="[
-              { value: 'active', title: t('employee.status.active') },
-              { value: 'inactive', title: t('employee.status.inactive') },
-              { value: 'suspended', title: t('employee.status.suspended') },
-              { value: 'terminated', title: t('employee.status.terminated') },
-              { value: 'vacation', title: t('employee.status.vacation') },
-            ]"
-            variant="outlined"
-            density="compact"
-            clearable
-            @update:model-value="applyFilters"
-          />
-        </VCol>
-
-        <VCol
-          cols="12"
-          md="2"
-        >
-          <VSelect
-            v-model="employeeStore.filters.position"
-            :label="t('employee.fields.position')"
-            :items="[
-              { value: 'operator', title: t('employee.positions.operator') },
-              { value: 'helper', title: t('employee.positions.helper') },
-              { value: 'manager', title: t('employee.positions.manager') },
-              { value: 'supervisor', title: t('employee.positions.supervisor') },
-              { value: 'admin', title: t('employee.positions.admin') },
-            ]"
-            variant="outlined"
-            density="compact"
-            clearable
-            @update:model-value="applyFilters"
-          />
-        </VCol>
-
-        <VCol
-          cols="12"
-          md="2"
-        >
-          <VSelect
-            v-model="employeeStore.filters.employment_type"
-            :label="t('employee.fields.employment_type')"
-            :items="[
-              { value: 'full_time', title: t('employee.employment_types.full_time') },
-              { value: 'part_time', title: t('employee.employment_types.part_time') },
-              { value: 'contractor', title: t('employee.employment_types.contractor') },
-              { value: 'temporary', title: t('employee.employment_types.temporary') },
-            ]"
-            variant="outlined"
-            density="compact"
-            clearable
-            @update:model-value="applyFilters"
-          />
-        </VCol>
-
-        <VCol
-          cols="12"
+          sm="6"
           md="3"
-          class="d-flex gap-2 align-center justify-end"
         >
-          <!-- Botón para exportar -->
-          <VMenu>
-            <template #activator="{ props }">
-              <VBtn
-                v-bind="props"
-                variant="outlined"
-                :loading="employeeStore.loading"
-                :disabled="!employeeStore.hasItems"
-              >
-                <VIcon start>
-                  tabler-download
-                </VIcon>
-                {{ t('common.export') }}
-              </VBtn>
-            </template>
-
-            <VList>
-              <VListItem
-                v-for="option in menuOptions"
-                :key="option.text"
-                @click="option.action"
-              >
-                <template #prepend>
-                  <VIcon :icon="option.icon" />
-                </template>
-                <VListItemTitle>{{ option.text }}</VListItemTitle>
-              </VListItem>
-            </VList>
-          </VMenu>
-
-          <!-- Botón para agregar -->
-          <VBtn
-            color="primary"
-            :to="{ name: 'employees-create' }"
+          <VSelect
+            v-model="selectedStatuses"
+            :label="t('EmployeeModule.common.status')"
+            :items="statusOptions"
+            variant="outlined"
+            density="compact"
+            multiple
+            chips
+            closable-chips
+            hide-details
+            @update:model-value="applyFilters"
           >
-            <VIcon start>
-              tabler-plus
-            </VIcon>
-            {{ t('employee.actions.add') }}
-          </VBtn>
+            <template #chip="{ item, index }">
+              <VChip
+                size="small"
+                closable
+                @click:close="selectedStatuses.splice(index, 1); applyFilters()"
+              >
+                {{ item.title }}
+              </VChip>
+            </template>
+          </VSelect>
+        </VCol>
+
+        <!-- Puesto - Múltiple -->
+        <VCol
+          cols="12"
+          sm="6"
+          md="3"
+        >
+          <VSelect
+            v-model="selectedPositions"
+            :label="t('EmployeeModule.employee.fields.position')"
+            :items="positionOptions"
+            variant="outlined"
+            density="compact"
+            multiple
+            chips
+            closable-chips
+            hide-details
+            @update:model-value="applyFilters"
+          >
+            <template #chip="{ item, index }">
+              <VChip
+                size="small"
+                closable
+                @click:close="selectedPositions.splice(index, 1); applyFilters()"
+              >
+                {{ item.title }}
+              </VChip>
+            </template>
+          </VSelect>
+        </VCol>
+
+        <!-- Tipo de Empleo - Múltiple -->
+        <VCol
+          cols="12"
+          sm="6"
+          md="2"
+        >
+          <VSelect
+            v-model="selectedEmploymentTypes"
+            :label="t('EmployeeModule.employee.fields.employment_type')"
+            :items="employmentTypeOptions"
+            variant="outlined"
+            density="compact"
+            multiple
+            chips
+            closable-chips
+            hide-details
+            @update:model-value="applyFilters"
+          >
+            <template #chip="{ item, index }">
+              <VChip
+                size="small"
+                closable
+                @click:close="selectedEmploymentTypes.splice(index, 1); applyFilters()"
+              >
+                {{ item.title }}
+              </VChip>
+            </template>
+          </VSelect>
+        </VCol>
+      </VRow>
+
+      <!-- Chips de filtros activos -->
+      <VRow v-if="hasActiveFilters">
+        <VCol cols="12">
+          <VAlert
+            color="primary"
+            variant="tonal"
+            density="compact"
+            border="start"
+            border-color="primary"
+            class="mb-0"
+          >
+            <div class="d-flex align-center flex-wrap gap-2">
+              <span class="text-body-2 font-weight-medium">
+                <VIcon
+                  size="18"
+                  class="me-1"
+                >
+                  tabler-filter
+                </VIcon>
+                Filtros activos:
+              </span>
+
+              <VChip
+                v-for="filter in activeFilters"
+                :key="`${filter.type}-${filter.value}`"
+                size="small"
+                closable
+                color="primary"
+                @click:close="removeFilter(filter)"
+              >
+                {{ filter.label }}
+              </VChip>
+
+              <VSpacer />
+
+              <VBtn
+                size="small"
+                variant="text"
+                color="error"
+                prepend-icon="tabler-x"
+                @click="clearFilters"
+              >
+                Limpiar todo
+              </VBtn>
+            </div>
+          </VAlert>
         </VCol>
       </VRow>
 
@@ -274,7 +482,7 @@ onMounted(() => {
         :loading="employeeStore.loading"
         class="elevation-1"
         item-value="id"
-        @update:options="employeeStore.fetchList"
+        @update:options="handleOptionsUpdate"
       >
         <!-- Slot para código de empleado -->
         <template #item.employee_code="{ item }">
@@ -339,7 +547,7 @@ onMounted(() => {
             size="small"
             variant="tonal"
           >
-            {{ t(`employee.status.${item.status}`) }}
+            {{ t(`EmployeeModule.employee.status.${item.status}`) }}
           </VChip>
         </template>
 
@@ -395,10 +603,10 @@ onMounted(() => {
               tabler-users-off
             </VIcon>
             <h6 class="text-h6 mb-2">
-              {{ t('employee.no_data') }}
+              {{ t('EmployeeModule.employee.no_data') }}
             </h6>
             <p class="text-body-2 mb-4">
-              {{ t('employee.no_data_description') }}
+              {{ t('EmployeeModule.employee.no_data_description') }}
             </p>
             <VBtn
               color="primary"
@@ -407,7 +615,7 @@ onMounted(() => {
               <VIcon start>
                 tabler-plus
               </VIcon>
-              {{ t('employee.actions.add') }}
+              {{ t('EmployeeModule.employee.actions.add') }}
             </VBtn>
           </div>
         </template>

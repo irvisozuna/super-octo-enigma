@@ -385,7 +385,7 @@ export interface IVehicleService {
 constructor(private vehicleService?: IVehicleService) {}
 
 // O usa Domain Events
-domainEvents.publish('employee.created', { employeeId })
+domainEvents.publish('EmployeeModule.employee.created', { employeeId })
 ```
 
 ## 🚀 Uso del Módulo

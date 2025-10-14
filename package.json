@@ -15,6 +15,7 @@
     "generate:module": "node scripts/generateModule.mjs",
     "generate:module:test": "node scripts/test-ddd-generator.mjs",
     "generate:module:list": "node scripts/generateModule.mjs --list",
+    "validate:menus": "node scripts/validate-menus.mjs",
     "test": "vitest",
     "test:unit": "vitest run",
     "test:e2e": "cypress run",

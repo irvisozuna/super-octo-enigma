@@ -3,7 +3,8 @@
     "allow": [
       "Read(//Users/irvis/projects/nautiluz/sitcom/backend/postman/**)",
       "Bash(mkdir:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

@@ -29,7 +29,7 @@ export class Email {
     if (!email || email.trim() === '')
       return false
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 
     return emailRegex.test(email)
   }
