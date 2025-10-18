@@ -29,6 +29,11 @@ declare module 'vue' {
     AppTextField: typeof import('./src/@core/components/app-form-elements/AppTextField.vue')['default']
     BackgroundTaskPanel: typeof import('./src/components/BackgroundTaskPanel.vue')['default']
     BackgroundTaskSnackbar: typeof import('./src/components/BackgroundTaskSnackbar.vue')['default']
+    BaseDataTable: typeof import('./src/components/BaseDataTable.vue')['default']
+    BaseExportMenu: typeof import('./src/components/actions/BaseExportMenu.vue')['default']
+    BaseFilterChips: typeof import('./src/components/filters/BaseFilterChips.vue')['default']
+    BaseFilters: typeof import('./src/components/filters/BaseFilters.vue')['default']
+    BaseListHeader: typeof import('./src/components/layout/BaseListHeader.vue')['default']
     BaseTable: typeof import('./src/components/BaseTable.vue')['default']
     BuyNow: typeof import('./src/@core/components/BuyNow.vue')['default']
     CardAddEditDialog: typeof import('./src/components/dialogs/CardAddEditDialog.vue')['default']
@@ -79,7 +84,6 @@ declare module 'vue' {
     TwoFactorAuthDialog: typeof import('./src/components/dialogs/TwoFactorAuthDialog.vue')['default']
     UserInfoEditDialog: typeof import('./src/components/dialogs/UserInfoEditDialog.vue')['default']
     UserUpgradePlanDialog: typeof import('./src/components/dialogs/UserUpgradePlanDialog.vue')['default']
-    VueApexCharts: typeof import('vue3-apexcharts')['default']
     WidgetCard: typeof import('./src/components/WidgetCard.vue')['default']
   }
 }

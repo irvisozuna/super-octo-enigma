@@ -179,23 +179,50 @@ const resetForms = () => {
           Iniciar Proyecto
         </VCardTitle>
         <VCardText>
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            <template #prepend>
+              <VIcon
+                icon="tabler-info-circle"
+                size="24"
+              />
+            </template>
+            <VAlertTitle class="text-h6 mb-2">
+              ¿Está seguro de iniciar este proyecto?
+            </VAlertTitle>
+            <p class="mb-0">
+              Al iniciar el proyecto, se activará el seguimiento de tiempo y recursos. 
+              Esto permitirá registrar actividades, asignar personal y generar reportes de progreso.
+            </p>
+          </VAlert>
+
           <VForm
             ref="startForm"
             @submit.prevent="handleStart"
           >
-            <VTextField
-              v-model="startData.start_date"
-              label="Fecha de Inicio"
-              type="date"
-              :rules="[v => !!v || 'La fecha es requerida']"
-              required
-            />
-            <VTextarea
-              v-model="startData.notes"
-              label="Notas"
-              rows="3"
-              placeholder="Notas sobre el inicio del proyecto..."
-            />
+            <VAlert
+              type="warning"
+              variant="outlined"
+              class="mb-4"
+            >
+              <template #prepend>
+                <VIcon
+                  icon="tabler-alert-triangle"
+                  size="24"
+                />
+              </template>
+              <div>
+                <strong>Consecuencias de iniciar el proyecto:</strong>
+                <ul class="mt-2 ml-4">
+                  <li>El proyecto cambiará de estado "Planificado" a "Activo"</li>
+                  <li>Se habilitará el registro de actividades y reportes diarios</li>
+                  <li>Se comenzará el seguimiento de presupuesto y tiempo</li>
+                </ul>
+              </div>
+            </VAlert>
           </VForm>
         </VCardText>
         <VCardActions>

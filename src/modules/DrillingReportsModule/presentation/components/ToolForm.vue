@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToolsStore } from '../stores/toolsStore'
+import { TOOL_MATERIALS } from '../../shared/constants/ToolConstants'
 import { useAppManager } from '@/composables/useAppManager'
 
 // Props
@@ -34,46 +35,56 @@ const formRef = ref()
 // Loading state
 const loading = ref(false)
 
-// Form data
+// Form data - Estructura según API backend
 const formData = reactive({
-  name: '',
-  code: '',
-  category: '',
-  status: 'active',
+  type: '',
   serial_number: '',
-  model: '',
-  manufacturer: '',
-  capacity: null,
-  purchase_date: '',
-  last_maintenance: '',
-  description: '',
+  capacity_meters: null as number | null,
+  acquired_at: '',
 })
 
-// Category options
-const categoryOptions = computed(() => [
-  { title: t('DrillingReportsModule.tools.categories.drilling'), value: 'drilling' },
-  { title: t('DrillingReportsModule.tools.categories.measurement'), value: 'measurement' },
-  { title: t('DrillingReportsModule.tools.categories.safety'), value: 'safety' },
-  { title: t('DrillingReportsModule.tools.categories.maintenance'), value: 'maintenance' },
-])
-
-// Status options
-const statusOptions = computed(() => [
-  { title: t('DrillingReportsModule.common.active'), value: 'active' },
-  { title: t('DrillingReportsModule.common.inactive'), value: 'inactive' },
-  { title: t('DrillingReportsModule.common.maintenance'), value: 'maintenance' },
-  { title: t('DrillingReportsModule.common.retired'), value: 'retired' },
-])
+// Tool type options - usando constantes y traducciones
+const toolTypeOptions = computed(() =>
+  TOOL_MATERIALS.map(tool => ({
+    title: t(tool.translationKey),
+    value: tool.value,
+  })),
+)
 
 // Validation rules
 const rules = {
   required: (value: any) => !!value || 'Campo requerido',
+  number: (value: any) => !value || !isNaN(Number(value)) || 'Debe ser un número válido',
+  positive: (value: any) => !value || Number(value) > 0 || 'Debe ser mayor a 0',
 }
 
-// Watch for tool changes
+// Watch for tool changes - Mapear estructura del backend a formulario
 watch(() => props.tool, newTool => {
-  if (newTool)
-    Object.assign(formData, newTool)
+  if (newTool) {
+    formData.type = newTool.type || ''
+    formData.serial_number = newTool.serial_number || ''
+
+    // Manejar capacity anidado
+    if (newTool.capacity?.total_meters !== undefined)
+      formData.capacity_meters = newTool.capacity.total_meters
+
+    else if (newTool.capacity_meters !== undefined)
+      formData.capacity_meters = newTool.capacity_meters
+
+    // Manejar dates anidado
+    if (newTool.dates?.acquired_at)
+      formData.acquired_at = newTool.dates.acquired_at.split('T')[0] // Solo la fecha
+
+    else if (newTool.acquired_at)
+      formData.acquired_at = newTool.acquired_at.split('T')[0]
+  }
+  else {
+    // Reset form for create mode
+    formData.type = ''
+    formData.serial_number = ''
+    formData.capacity_meters = null
+    formData.acquired_at = new Date().toISOString().split('T')[0] // Fecha actual por defecto
+  }
 }, { immediate: true })
 
 // Methods
@@ -84,12 +95,20 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    if (props.isEditing)
-      await toolsStore.updateTool(props.tool.id, formData)
-    else
-      await toolsStore.createTool(formData)
+    const payload = {
+      type: formData.type,
+      serial_number: formData.serial_number,
+      capacity_meters: Number(formData.capacity_meters),
+      acquired_at: formData.acquired_at,
+    }
 
-    emit('submit', formData)
+    if (props.isEditing && props.tool?.id)
+      await toolsStore.updateTool(props.tool.id, payload)
+
+    else
+      await toolsStore.createTool(payload)
+
+    emit('submit', payload)
     if (props.showCloseButton)
       closeDialog('submit')
   }
@@ -129,54 +148,25 @@ const handleCancel = () => {
             md="6"
           >
             <VTextField
-              v-model="formData.name"
-              :label="$t('DrillingReportsModule.tools.name')"
-              :rules="[rules.required]"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="formData.code"
-              :label="$t('DrillingReportsModule.tools.code')"
-              :rules="[rules.required]"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VSelect
-              v-model="formData.category"
-              :items="categoryOptions"
-              :label="$t('DrillingReportsModule.tools.category')"
-              :rules="[rules.required]"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VSelect
-              v-model="formData.status"
-              :items="statusOptions"
-              :label="$t('DrillingReportsModule.common.status')"
-              :rules="[rules.required]"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
               v-model="formData.serial_number"
               :label="$t('DrillingReportsModule.tools.serialNumber')"
+              :rules="[rules.required]"
+              required
+              prepend-inner-icon="tabler-barcode"
+              placeholder="Ej: PDC-2024-001"
+            />
+          </VCol>
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <VSelect
+              v-model="formData.type"
+              :items="toolTypeOptions"
+              :label="$t('DrillingReportsModule.tools.type')"
+              :rules="[rules.required]"
+              required
+              prepend-inner-icon="tabler-tool"
             />
           </VCol>
           <VCol
@@ -184,29 +174,16 @@ const handleCancel = () => {
             md="6"
           >
             <VTextField
-              v-model="formData.model"
-              :label="$t('DrillingReportsModule.tools.model')"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="formData.manufacturer"
-              :label="$t('DrillingReportsModule.tools.manufacturer')"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="formData.capacity"
+              v-model="formData.capacity_meters"
               :label="$t('DrillingReportsModule.tools.capacity')"
+              :rules="[rules.required, rules.number, rules.positive]"
               type="number"
-              step="0.1"
+              step="0.01"
               min="0"
+              required
+              prepend-inner-icon="tabler-ruler"
+              suffix="metros"
+              placeholder="Ej: 1500"
             />
           </VCol>
           <VCol
@@ -214,28 +191,65 @@ const handleCancel = () => {
             md="6"
           >
             <VTextField
-              v-model="formData.purchase_date"
-              :label="$t('DrillingReportsModule.tools.purchaseDate')"
+              v-model="formData.acquired_at"
+              :label="$t('DrillingReportsModule.tools.acquired_at')"
+              :rules="[rules.required]"
               type="date"
+              required
+              prepend-inner-icon="tabler-calendar"
             />
           </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="formData.last_maintenance"
-              :label="$t('DrillingReportsModule.tools.lastMaintenance')"
-              type="date"
-            />
-          </VCol>
-          <VCol cols="12">
-            <VTextarea
-              v-model="formData.description"
-              :label="$t('DrillingReportsModule.tools.description')"
-              rows="3"
-            />
-          </VCol>
+
+          <!-- Info adicional solo en modo edición -->
+          <template v-if="isEditing && tool">
+            <VCol cols="12">
+              <VDivider class="my-2" />
+              <h6 class="text-h6 mb-4">
+                Información de Uso
+              </h6>
+            </VCol>
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VTextField
+                :model-value="tool.capacity?.used_meters?.toFixed(2) || 0"
+                label="Metros Usados"
+                readonly
+                variant="outlined"
+                density="compact"
+                suffix="m"
+                prepend-inner-icon="tabler-progress"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VTextField
+                :model-value="tool.capacity?.remaining_meters?.toFixed(2) || 0"
+                label="Metros Restantes"
+                readonly
+                variant="outlined"
+                density="compact"
+                suffix="m"
+                prepend-inner-icon="tabler-clock"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VTextField
+                :model-value="`${tool.capacity?.usage_percentage?.toFixed(1) || 0}%`"
+                label="Uso"
+                readonly
+                variant="outlined"
+                density="compact"
+                prepend-inner-icon="tabler-percentage"
+              />
+            </VCol>
+          </template>
         </VRow>
       </VForm>
     </VCardText>

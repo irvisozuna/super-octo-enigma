@@ -4,174 +4,128 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProjectsStore } from '../stores/projectsStore'
 import { useProjectsPermissions } from '../composables/useProjectsPermissions'
+import { useProjectDisplay } from '../composables/useProjectDisplay'
+import { useProjectFilters } from '../composables/useProjectFilters'
 import ProjectForm from '../components/ProjectForm.vue'
 import { DrillingReportApiService } from '../../infrastructure/api/services/DrillingReportApiService'
-import { formatDate } from '@/modules/DrillingReportsModule/shared/utils/dateUtils'
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
+import BaseDataTable from '@/components/BaseDataTable.vue'
+import BaseFilters from '@/components/filters/BaseFilters.vue'
+import BaseFilterChips from '@/components/filters/BaseFilterChips.vue'
+import BaseListHeader from '@/components/layout/BaseListHeader.vue'
+import BaseExportMenu from '@/components/actions/BaseExportMenu.vue'
+import { formatDate } from '@/modules/DrillingReportsModule/shared/utils/dateUtils'
 
 const router = useRouter()
 const { t } = useI18n()
 const projectsStore = useProjectsStore()
 const { canCreate, canView, canEdit, canDelete } = useProjectsPermissions()
 
-const loading = ref(false)
-const showProjectDialog = ref(false)
-const isEditing = ref(false)
-const selectedProject = ref(null)
-
-// Delete confirmation dialog
-const showDeleteDialog = ref(false)
-const projectToDelete = ref(null)
-const deleting = ref(false)
-
-const filters = ref({
-  search: '',
-  status: '',
-  client: '',
-})
-
-// Filtros múltiples
-const selectedStatuses = ref<string[]>([])
-const selectedClients = ref<string[]>([])
-
-// Computed para chips de filtros activos
-const activeFilters = computed(() => {
-  const activeFiltersList: Array<{ label: string; value: string; type: string }> = []
-
-  if (filters.value.search) {
-    activeFiltersList.push({
-      label: `Búsqueda: ${filters.value.search}`,
-      value: 'search',
-      type: 'search',
-    })
-  }
-
-  selectedStatuses.value.forEach(status => {
-    const option = statusOptions.value.find(o => o.value === status)
-    if (option) {
-      activeFiltersList.push({
-        label: option.title,
-        value: status,
-        type: 'status',
-      })
-    }
-  })
-
-  selectedClients.value.forEach(clientId => {
-    const option = clientOptions.value.find(o => o.value === clientId)
-    if (option) {
-      activeFiltersList.push({
-        label: option.title,
-        value: clientId,
-        type: 'client',
-      })
-    }
-  })
-
-  return activeFiltersList
-})
-
-const hasActiveFilters = computed(() => activeFilters.value.length > 0)
-
-const headers = computed(() => [
-  { title: t('DrillingReportsModule.projects.projectName'), key: 'project_name', sortable: true },
-  { title: t('DrillingReportsModule.projects.code'), key: 'project_code', sortable: true },
-  { title: t('DrillingReportsModule.projects.client'), key: 'client.business_name', sortable: true },
-  { title: t('DrillingReportsModule.common.status'), key: 'status', sortable: true },
-  { title: t('DrillingReportsModule.projects.startDate'), key: 'start_date', sortable: true },
-  { title: t('DrillingReportsModule.projects.estimatedEndDate'), key: 'estimated_end_date', sortable: true },
-  { title: t('actions'), key: 'actions', sortable: false },
-])
-
-const projects = computed(() => {
-  console.log('📋 projects computed - projectsStore.projects:', projectsStore.projects)
-
-  return projectsStore.projects
-})
-
-const pagination = computed(() => {
-  console.log('📋 pagination computed - projectsStore.pagination:', projectsStore.pagination)
-
-  return projectsStore.pagination
-})
-
-const statusOptions = computed(() => [
-  { title: t('DrillingReportsModule.common.planned'), value: 'planned' },
-  { title: t('DrillingReportsModule.common.active'), value: 'active' },
-  { title: t('DrillingReportsModule.common.completed'), value: 'completed' },
-  { title: t('DrillingReportsModule.common.suspended'), value: 'suspended' },
-  { title: t('DrillingReportsModule.common.cancelled'), value: 'cancelled' },
-])
+// Display helpers from composable
+const {
+  getStatusLabel,
+  getStatusColor,
+} = useProjectDisplay()
 
 // Client options - will be loaded from API
 const clientOptions = ref([])
 const loadingClients = ref(false)
 
-const getStatusColor = (status: string) => {
-  const colors = {
-    planned: 'info',
-    active: 'success',
-    completed: 'success',
-    suspended: 'warning',
-    cancelled: 'error',
+// Filters from composable
+const {
+  filters,
+  filterFields,
+  activeFilters,
+  buildFilterParams,
+  clearFilters,
+  removeFilter,
+} = useProjectFilters(clientOptions)
+
+// UI state
+const showProjectDialog = ref(false)
+const showDeleteDialog = ref(false)
+const isEditing = ref(false)
+const selectedProject = ref(null)
+const deleting = ref(false)
+const exporting = ref(false)
+
+// Table configuration
+const headers = computed(() => [
+  { title: t('DrillingReportsModule.projects.projectName'), key: 'project_name', sortable: true },
+  { title: t('DrillingReportsModule.projects.code'), key: 'project_code', sortable: true },
+  { title: t('DrillingReportsModule.projects.client'), key: 'client.business_name', sortable: true },
+  { title: t('DrillingReportsModule.common.status'), key: 'status', sortable: true },
+  { title: t('DrillingReportsModule.projects.startDate'), key: 'dates.start_date', sortable: true },
+  { title: t('DrillingReportsModule.projects.estimatedEndDate'), key: 'dates.estimated_end_date', sortable: true },
+  { title: t('DrillingReportsModule.common.actions'), key: 'actions', sortable: false, align: 'end' },
+])
+
+const projects = computed(() => projectsStore.projects)
+const pagination = computed(() => projectsStore.pagination)
+
+// Additional params for BaseDataTable
+const additionalParams = computed(() => buildFilterParams())
+
+// Load projects with current filters
+const loadProjectsWithFilters = () => {
+  const params = {
+    page: projectsStore.pagination.current_page,
+    per_page: projectsStore.pagination.per_page,
+    ...buildFilterParams(),
   }
 
-  return colors[status] || 'grey'
+  projectsStore.fetchProjects(params)
 }
 
-const getStatusLabel = (status: string) => {
-  const option = statusOptions.value.find(opt => opt.value === status)
-
-  return option ? option.title : status
-}
-
-// Debounce para búsqueda
+// Search with debounce
 let searchTimeout: NodeJS.Timeout
 
 const handleSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    loadProjects()
+    projectsStore.setPage(1)
+    loadProjectsWithFilters()
   }, 300)
 }
 
+// Filter change handler
 const handleFilterChange = () => {
-  loadProjects()
+  projectsStore.setPage(1)
+  loadProjectsWithFilters()
 }
 
-// Funciones para manejar filtros múltiples
-const applyFilters = () => {
-  loadProjects()
+// Table options update handler
+const handleOptionsUpdate = (params: any) => {
+  projectsStore.fetchProjects(params)
 }
 
-const clearFilters = () => {
-  filters.value.search = ''
-  selectedStatuses.value = []
-  selectedClients.value = []
-  loadProjects()
+// Clear all filters handler
+const handleClearFilters = () => {
+  clearFilters()
+  handleFilterChange()
 }
 
-const removeFilter = (filter: { type: string; value: string }) => {
-  if (filter.type === 'search')
-    filters.value.search = ''
-  else if (filter.type === 'status')
-    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
-  else if (filter.type === 'client')
-    selectedClients.value = selectedClients.value.filter(c => c !== filter.value)
-
-  loadProjects()
+// Remove filter handler
+const handleRemoveFilter = (filter: any) => {
+  removeFilter(filter)
+  handleFilterChange()
 }
 
-const handlePageChange = (page: number) => {
-  projectsStore.setPage(page)
-  loadProjects()
+// Export handler
+const handleExport = async (format: 'excel' | 'pdf' | 'csv' | 'json') => {
+  exporting.value = true
+  try {
+    // TODO: Implement export logic
+    console.log(`Exporting to ${format}`, additionalParams.value)
+
+    // await projectsStore.exportProjects(format, additionalParams.value)
+  }
+  finally {
+    exporting.value = false
+  }
 }
 
-const handleItemsPerPageChange = (itemsPerPage: number) => {
-  projectsStore.setItemsPerPage(itemsPerPage)
-  loadProjects()
-}
-
+// CRUD handlers
 const handleCreateProject = () => {
   isEditing.value = false
   selectedProject.value = null
@@ -179,7 +133,6 @@ const handleCreateProject = () => {
 }
 
 const handleViewProject = (project: any) => {
-  console.log('View project:', project)
   router.push({ name: 'drilling-projects-detail', params: { id: project.id } })
 }
 
@@ -190,20 +143,20 @@ const handleEditProject = (project: any) => {
 }
 
 const handleDeleteProject = (project: any) => {
-  projectToDelete.value = project
+  selectedProject.value = project
   showDeleteDialog.value = true
 }
 
 const confirmDeleteProject = async () => {
-  if (!projectToDelete.value)
+  if (!selectedProject.value)
     return
 
   deleting.value = true
   try {
-    await projectsStore.deleteProject(projectToDelete.value.id)
-    loadProjects()
+    await projectsStore.deleteProject(selectedProject.value.id)
     showDeleteDialog.value = false
-    projectToDelete.value = null
+    selectedProject.value = null
+    loadProjectsWithFilters()
   }
   catch (error) {
     console.error('Error deleting project:', error)
@@ -213,27 +166,16 @@ const confirmDeleteProject = async () => {
   }
 }
 
-const cancelDeleteProject = () => {
-  showDeleteDialog.value = false
-  projectToDelete.value = null
-}
-
 const handleProjectSubmit = async () => {
   showProjectDialog.value = false
-  loadProjects()
+  loadProjectsWithFilters()
 }
 
-// Cargar clientes desde la API
+// Load clients from API
 const loadClients = async () => {
   loadingClients.value = true
   try {
-    console.log('🔄 Cargando clientes...')
-
-    // Usar el servicio de clientes del DrillingReportsModule
     const response = await DrillingReportApiService.getClients()
-
-    console.log('🔄 Clientes cargados:', response)
-
     if (response && response.data) {
       clientOptions.value = response.data.map((client: any) => ({
         title: client.business_name || client.company_name || `${client.first_name} ${client.last_name}`,
@@ -250,207 +192,69 @@ const loadClients = async () => {
   }
 }
 
-const loadProjects = async () => {
-  console.log('🔄 loadProjects iniciado')
-  loading.value = true
-  try {
-    const filterParams = {
-      search: filters.value.search,
-      status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') : undefined,
-      client: selectedClients.value.length > 0 ? selectedClients.value.join(',') : undefined,
-    }
-
-    console.log('🔄 Llamando a projectsStore.fetchProjects con filtros:', filterParams)
-
-    await projectsStore.fetchProjects(filterParams)
-
-    console.log('🔄 fetchProjects completado, projects.value:', projects.value)
-  }
-  catch (error) {
-    console.error('Error loading projects:', error)
-  }
-  finally {
-    loading.value = false
-    console.log('🔄 loadProjects terminado')
-  }
-}
-
 onMounted(() => {
   loadClients()
-  loadProjects()
 })
 </script>
 
 <template>
   <div class="projects-list">
     <VCard>
-      <VCardTitle>
-        <VIcon
-          icon="tabler-folder"
-          class="me-2"
-        />
-        {{ $t('DrillingReportsModule.projects.title') }}
-      </VCardTitle>
-
       <VCardText>
-        <!-- Filters -->
-        <VRow class="mb-3">
-          <!-- Búsqueda -->
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VTextField
-              v-model="filters.search"
-              :label="$t('DrillingReportsModule.common.search')"
-              prepend-inner-icon="tabler-search"
-              variant="outlined"
-              density="compact"
-              clearable
-              hide-details
-              @input="handleSearch"
+        <!-- Header -->
+        <BaseListHeader
+          :title="$t('DrillingReportsModule.projects.title')"
+          icon="tabler-folder"
+          :total="pagination.total"
+          item-label="proyecto"
+          item-label-plural="proyectos"
+          :description="$t('DrillingReportsModule.projects.description')"
+          :create-button-text="$t('DrillingReportsModule.projects.newProject')"
+          :can-create="canCreate"
+          @create="handleCreateProject"
+        >
+          <template #actions>
+            <BaseExportMenu
+              :loading="exporting"
+              :disabled="!projects.length"
+              @export="handleExport"
             />
-          </VCol>
+          </template>
+        </BaseListHeader>
 
-          <!-- Estado - Múltiple -->
-          <VCol
-            cols="12"
-            sm="6"
-            md="3"
-          >
-            <VSelect
-              v-model="selectedStatuses"
-              :label="$t('DrillingReportsModule.common.status')"
-              :items="statusOptions"
-              variant="outlined"
-              density="compact"
-              multiple
-              chips
-              closable-chips
-              hide-details
-              @update:model-value="applyFilters"
-            >
-              <template #chip="{ item, index }">
-                <VChip
-                  size="small"
-                  closable
-                  @click:close="selectedStatuses.splice(index, 1); applyFilters()"
-                >
-                  {{ item.title }}
-                </VChip>
-              </template>
-            </VSelect>
-          </VCol>
+        <!-- Filters -->
+        <BaseFilters
+          v-model="filters"
+          :fields="filterFields"
+          :loading="projectsStore.loading || loadingClients"
+          @search="handleSearch"
+          @change="handleFilterChange"
+        />
 
-          <!-- Cliente - Múltiple -->
-          <VCol
-            cols="12"
-            sm="6"
-            md="3"
-          >
-            <VSelect
-              v-model="selectedClients"
-              :label="$t('DrillingReportsModule.projects.client')"
-              :items="clientOptions"
-              :loading="loadingClients"
-              variant="outlined"
-              density="compact"
-              multiple
-              chips
-              closable-chips
-              hide-details
-              @update:model-value="applyFilters"
-            >
-              <template #chip="{ item, index }">
-                <VChip
-                  size="small"
-                  closable
-                  @click:close="selectedClients.splice(index, 1); applyFilters()"
-                >
-                  {{ item.title }}
-                </VChip>
-              </template>
-            </VSelect>
-          </VCol>
+        <!-- Active Filters Chips -->
+        <BaseFilterChips
+          :filters="activeFilters"
+          @remove="handleRemoveFilter"
+          @clear="handleClearFilters"
+        />
 
-          <!-- Botón Crear -->
-          <VCol
-            cols="12"
-            md="2"
-          >
-            <VBtn
-              color="primary"
-              :disabled="!canCreate"
-              block
-              @click="handleCreateProject"
-            >
-              <VIcon
-                icon="tabler-plus"
-                class="me-2"
-              />
-              {{ $t('DrillingReportsModule.projects.newProject') }}
-            </VBtn>
-          </VCol>
-        </VRow>
-
-        <!-- Chips de filtros activos -->
-        <VRow v-if="hasActiveFilters">
-          <VCol cols="12">
-            <VAlert
-              color="primary"
-              variant="tonal"
-              density="compact"
-              border="start"
-              border-color="primary"
-              class="mb-0"
-            >
-              <div class="d-flex align-center flex-wrap gap-2">
-                <span class="text-body-2 font-weight-medium">
-                  <VIcon
-                    size="18"
-                    class="me-1"
-                  >tabler-filter</VIcon>
-                  Filtros activos:
-                </span>
-
-                <VChip
-                  v-for="filter in activeFilters"
-                  :key="`${filter.type}-${filter.value}`"
-                  size="small"
-                  closable
-                  color="primary"
-                  @click:close="removeFilter(filter)"
-                >
-                  {{ filter.label }}
-                </VChip>
-
-                <VSpacer />
-
-                <VBtn
-                  size="small"
-                  variant="text"
-                  color="error"
-                  prepend-icon="tabler-x"
-                  @click="clearFilters"
-                >
-                  Limpiar todo
-                </VBtn>
-              </div>
-            </VAlert>
-          </VCol>
-        </VRow>
-
-        <!-- Projects Table -->
-        <VDataTable
+        <!-- Projects Data Table -->
+        <BaseDataTable
           :headers="headers"
           :items="projects"
-          :loading="loading"
-          :items-per-page="pagination.per_page"
-          :page="pagination.current_page"
-          :server-items-length="pagination.total"
-          @update:page="handlePageChange"
-          @update:items-per-page="handleItemsPerPageChange"
+          :meta="pagination"
+          :loading="projectsStore.loading"
+          :additional-params="additionalParams"
+          :items-per-page-options="[10, 15, 25, 50, 100]"
+          empty-state-title="No hay proyectos"
+          empty-state-description="Aún no se han registrado proyectos en el sistema"
+          empty-state-icon="tabler-folder-off"
+          :show-create-button="canCreate"
+          create-button-text="Crear Primer Proyecto"
+          @update:options="handleOptionsUpdate"
+          @create="handleCreateProject"
         >
+          <!-- Project Name -->
           <template #item.project_name="{ item }">
             <VBtn
               variant="text"
@@ -461,48 +265,80 @@ onMounted(() => {
             </VBtn>
           </template>
 
+          <!-- Project Code -->
+          <template #item.project_code="{ item }">
+            <span class="font-weight-medium">{{ item.project_code }}</span>
+          </template>
+
+          <!-- Client -->
+          <template #item.client.business_name="{ item }">
+            {{ item.client?.business_name || '-' }}
+          </template>
+
+          <!-- Status -->
           <template #item.status="{ item }">
             <VChip
               :color="getStatusColor(item.status)"
               size="small"
+              variant="tonal"
             >
               {{ getStatusLabel(item.status) }}
             </VChip>
           </template>
 
-          <template #item.start_date="{ item }">
+          <!-- Start Date -->
+          <template #item.dates.start_date="{ item }">
             {{ formatDate(item.dates?.start_date) }}
           </template>
 
-          <template #item.estimated_end_date="{ item }">
+          <!-- Estimated End Date -->
+          <template #item.dates.estimated_end_date="{ item }">
             {{ formatDate(item.dates?.estimated_end_date) }}
           </template>
 
-          <template #item.actions="{ item }">
-            <VBtn
-              icon="tabler-eye"
-              size="small"
-              variant="text"
-              :disabled="!canView"
-              @click="handleViewProject(item)"
-            />
-            <VBtn
-              icon="tabler-edit"
-              size="small"
-              variant="text"
-              :disabled="!canEdit || !canEdit(item)"
-              @click="handleEditProject(item)"
-            />
-            <VBtn
-              icon="tabler-trash"
-              size="small"
-              variant="text"
-              color="error"
-              :disabled="!canDelete || !canDelete(item)"
-              @click="handleDeleteProject(item)"
-            />
+          <!-- Actions -->
+          <template #actions="{ item }">
+            <div class="d-flex gap-1">
+              <VTooltip text="Ver Detalles">
+                <template #activator="{ props: tooltipProps }">
+                  <VBtn
+                    v-bind="tooltipProps"
+                    icon="tabler-eye"
+                    variant="text"
+                    size="small"
+                    :disabled="!canView"
+                    @click="handleViewProject(item)"
+                  />
+                </template>
+              </VTooltip>
+              <VTooltip text="Editar">
+                <template #activator="{ props: tooltipProps }">
+                  <VBtn
+                    v-bind="tooltipProps"
+                    icon="tabler-edit"
+                    variant="text"
+                    size="small"
+                    :disabled="!canEdit || (typeof canEdit === 'function' && !canEdit(item))"
+                    @click="handleEditProject(item)"
+                  />
+                </template>
+              </VTooltip>
+              <VTooltip text="Eliminar">
+                <template #activator="{ props: tooltipProps }">
+                  <VBtn
+                    v-bind="tooltipProps"
+                    icon="tabler-trash"
+                    variant="text"
+                    size="small"
+                    color="error"
+                    :disabled="!canDelete || (typeof canDelete === 'function' && !canDelete(item))"
+                    @click="handleDeleteProject(item)"
+                  />
+                </template>
+              </VTooltip>
+            </div>
           </template>
-        </VDataTable>
+        </BaseDataTable>
       </VCardText>
     </VCard>
 
@@ -523,26 +359,58 @@ onMounted(() => {
     <!-- Delete Confirmation Dialog -->
     <DeleteConfirmationDialog
       :visible="showDeleteDialog"
+      :entity-name="selectedProject?.project_name || ''"
+      :deleting="deleting"
       title="Eliminar Proyecto"
-      entity-name="Proyecto"
-      :entity-id="projectToDelete?.id"
-      warning-message="Esta acción eliminará permanentemente el proyecto y todos sus datos asociados (pozos, reportes, personal asignado, etc.). Esta acción no se puede deshacer."
       confirmation-word="ELIMINAR"
-      :loading="deleting"
-      @close="cancelDeleteProject"
       @confirm="confirmDeleteProject"
+      @cancel="showDeleteDialog = false"
     >
-      <template #entity-info>
-        {{ projectToDelete?.project_name }} ({{ projectToDelete?.project_code }})
-      </template>
-      <template #confirmation-text>
-        el proyecto <strong>{{ projectToDelete?.project_name }}</strong> y todos sus datos asociados
+      <template #default>
+        <div v-if="selectedProject">
+          <p class="text-body-1 mb-4">
+            ¿Estás seguro que deseas eliminar este proyecto?
+          </p>
+          <VCard
+            variant="outlined"
+            class="mb-4"
+          >
+            <VCardText>
+              <div class="d-flex flex-column gap-2">
+                <div class="d-flex align-center gap-2">
+                  <VIcon
+                    icon="tabler-folder"
+                    size="20"
+                  />
+                  <span class="font-weight-medium">{{ selectedProject.project_name }}</span>
+                </div>
+                <div class="text-body-2 text-medium-emphasis">
+                  Código: {{ selectedProject.project_code }}
+                </div>
+                <div class="text-body-2 text-medium-emphasis">
+                  Estado: {{ getStatusLabel(selectedProject.status) }}
+                </div>
+              </div>
+            </VCardText>
+          </VCard>
+          <VAlert
+            color="warning"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
+          >
+            Esta acción eliminará permanentemente el proyecto y todos sus datos asociados (pozos, reportes, personal asignado, etc.).
+          </VAlert>
+          <p class="text-body-2 text-error">
+            Esta acción no se puede deshacer.
+          </p>
+        </div>
       </template>
     </DeleteConfirmationDialog>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .projects-list {
   inline-size: 100%;
 }

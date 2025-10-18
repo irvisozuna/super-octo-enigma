@@ -44,7 +44,7 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     module: 'DrillingReportsModule',
     order: 15,
     enabled: true,
-    section: 'operations',
+    section: 'drilling',
   },
   {
     module: 'DynamicReports',
@@ -110,13 +110,18 @@ export const menuSections: MenuSectionConfig[] = [
     order: 1,
   },
   {
+    id: 'drilling',
+    title: 'Perforación',
+    order: 2,
+  },
+  {
     id: 'operations',
     title: 'Operaciones',
-    order: 2,
+    order: 3,
   },
   {
     id: 'admin',
     title: 'Administración',
-    order: 3,
+    order: 4,
   },
 ]

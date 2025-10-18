@@ -29,9 +29,7 @@ const { t } = useI18n()
 const { closeDialog } = useAppManager()
 const projectsStore = useProjectsStore()
 
-// Debug: Verificar que el store esté disponible
-console.log('🔍 ProjectsStore disponible:', !!projectsStore)
-console.log('🔍 Métodos del store:', Object.keys(projectsStore))
+
 
 // Form ref
 const formRef = ref()
@@ -39,6 +37,11 @@ const formRef = ref()
 // Loading states
 const loading = ref(false)
 const loadingClients = ref(false)
+
+// Error handling
+const errorMessage = ref('')
+const errorTitle = ref('')
+const validationErrors = ref<string[]>([])
 
 // Form data
 const formData = reactive({
@@ -50,8 +53,8 @@ const formData = reactive({
   start_date: '',
   estimated_end_date: '',
   general_coordinates: {
-    latitude: '',
-    longitude: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
   },
   description: '',
 })
@@ -72,14 +75,56 @@ const rules = {
   required: (value: any) => !!value || 'Campo requerido',
   maxLength: (max: number) => (value: string) => !value || value.length <= max || `Máximo ${max} caracteres`,
   minValue: (min: number) => (value: number) => !value || value >= min || `Mínimo ${min}`,
-  latitude: (value: number) => !value || (value >= -90 && value <= 90) || 'Latitud debe estar entre -90 y 90',
-  longitude: (value: number) => !value || (value >= -180 && value <= 180) || 'Longitud debe estar entre -180 y 180',
+  latitude: (value: number | string) => {
+    if (!value) return true
+    const num = Number(value)
+    if (isNaN(num)) return 'Latitud debe ser un número válido'
+    return (num >= -90 && num <= 90) || 'Latitud debe estar entre -90 y 90'
+  },
+  longitude: (value: number | string) => {
+    if (!value) return true
+    const num = Number(value)
+    if (isNaN(num)) return 'Longitud debe ser un número válido'
+    return (num >= -180 && num <= 180) || 'Longitud debe estar entre -180 y 180'
+  },
 }
 
 // Watch for project changes
-watch(() => props.project, newProject => {
-  if (newProject)
-    Object.assign(formData, newProject)
+watch(() => props.project, (newProject) => {
+  if (newProject) {
+    // Map backend structure to form structure
+    formData.project_name = newProject.project_name || ''
+    formData.client_id = newProject.client_id || ''
+    formData.general_location = newProject.general_location || ''
+    formData.description = newProject.description || ''
+
+    // Map budget from nested structure
+    if (newProject.budget) {
+      formData.total_budget = newProject.budget.total || ''
+      formData.budget_currency = newProject.budget.currency || 'MXN'
+    }
+
+    // Map dates from nested structure
+    if (newProject.dates) {
+      formData.start_date = newProject.dates.start_date ? newProject.dates.start_date.split(' ')[0] : ''
+      formData.estimated_end_date = newProject.dates.estimated_end_date ? newProject.dates.estimated_end_date.split(' ')[0] : ''
+    }
+
+    // Map coordinates - handle null case
+    if (newProject.general_coordinates) {
+      formData.general_coordinates = {
+        latitude: newProject.general_coordinates.latitude || null,
+        longitude: newProject.general_coordinates.longitude || null,
+      }
+    }
+    else {
+      // Initialize with empty object if null
+      formData.general_coordinates = {
+        latitude: null,
+        longitude: null,
+      }
+    }
+  }
 }, { immediate: true })
 
 // Watch for name changes to generate code
@@ -150,6 +195,11 @@ const generateProjectCode = (projectName: string) => {
 const handleSubmit = async () => {
   console.log('🚀 handleSubmit llamado')
 
+  // Limpiar errores anteriores
+  errorMessage.value = ''
+  errorTitle.value = ''
+  validationErrors.value = []
+
   const { valid } = await formRef.value.validate()
 
   console.log('✅ Validación del formulario:', valid)
@@ -212,13 +262,39 @@ const handleSubmit = async () => {
   catch (error) {
     console.error('❌ Error saving project:', error)
 
-    // Mostrar error al usuario
-    const errorMessage = error?.response?.data?.message || error?.message || 'Error al guardar el proyecto'
+    // Limpiar errores anteriores
+    errorMessage.value = ''
+    errorTitle.value = ''
+    validationErrors.value = []
 
-    console.error('Error details:', errorMessage)
+    // Extraer errores del backend
+    const backendErrors = error?.response?.data?.errors
+    const backendMessage = error?.response?.data?.message
+    
+    errorTitle.value = 'Error al guardar el proyecto'
+    
+    // Si hay errores específicos del backend, mostrarlos
+    if (backendErrors) {
+      const errorList: string[] = []
+      
+      if (backendErrors['general_coordinates.latitude']) {
+        errorList.push('Latitud: ' + backendErrors['general_coordinates.latitude'][0])
+      }
+      if (backendErrors['general_coordinates.longitude']) {
+        errorList.push('Longitud: ' + backendErrors['general_coordinates.longitude'][0])
+      }
+      
+      if (errorList.length > 0) {
+        errorMessage.value = 'Se encontraron los siguientes errores de validación:'
+        validationErrors.value = errorList
+      }
+    } else if (backendMessage) {
+      errorMessage.value = backendMessage
+    } else {
+      errorMessage.value = error?.message || 'Error al guardar el proyecto'
+    }
 
-    // Aquí podrías agregar una notificación de error
-    // Por ejemplo: showNotification('error', errorMessage)
+    console.error('Error details:', errorMessage.value)
   }
   finally {
     loading.value = false
@@ -249,6 +325,47 @@ onMounted(() => {
     </VCardTitle>
 
     <VCardText>
+      <!-- Error Alert -->
+      <VAlert
+        v-if="errorMessage"
+        type="error"
+        variant="tonal"
+        closable
+        class="mb-4"
+        prominent
+        @click:close="errorMessage = ''"
+      >
+        <template #prepend>
+          <VIcon
+            icon="tabler-alert-circle"
+            size="32"
+          />
+        </template>
+        <VAlertTitle class="text-h6 mb-2">
+          {{ errorTitle }}
+        </VAlertTitle>
+        <div v-if="validationErrors.length > 0">
+          <p class="mb-2">
+            {{ errorMessage }}
+          </p>
+          <ul class="ml-4">
+            <li
+              v-for="(error, index) in validationErrors"
+              :key="index"
+              class="text-body-2"
+            >
+              {{ error }}
+            </li>
+          </ul>
+        </div>
+        <p
+          v-else
+          class="mb-0"
+        >
+          {{ errorMessage }}
+        </p>
+      </VAlert>
+
       <VForm
         ref="formRef"
         @submit.prevent="handleSubmit"
@@ -384,9 +501,8 @@ onMounted(() => {
               :label="$t('DrillingReportsModule.projects.latitude')"
               type="number"
               step="0.000001"
-              min="-90"
-              max="90"
               :rules="[rules.latitude]"
+              placeholder="Ej: -90.561654"
             />
           </VCol>
 
@@ -399,9 +515,8 @@ onMounted(() => {
               :label="$t('DrillingReportsModule.projects.longitude')"
               type="number"
               step="0.000001"
-              min="-180"
-              max="180"
               :rules="[rules.longitude]"
+              placeholder="Ej: -180.156564"
             />
           </VCol>
 

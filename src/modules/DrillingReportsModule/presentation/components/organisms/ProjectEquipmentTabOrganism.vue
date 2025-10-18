@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { formatDate } from '../../../shared/utils/dateUtils'
+import { EquipmentApiService } from '../../../infrastructure/api/services/EquipmentApiService'
 
 export interface ProjectEquipmentTabProps {
-  equipment: any[]
+  projectId: string
   loading?: boolean
 }
 
@@ -11,13 +12,83 @@ const props = withDefaults(defineProps<ProjectEquipmentTabProps>(), {
   loading: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'assign': []
   'view': [equipment: any]
   'remove': [equipment: any]
 }>()
 
-const totalEquipment = computed(() => props.equipment.length)
+// Local state
+const equipment = ref<any[]>([])
+const loadingEquipment = ref(false)
+const error = ref<string | null>(null)
+
+// Load equipment for the project
+const loadEquipment = async () => {
+  if (!props.projectId || loadingEquipment.value) return
+  
+  loadingEquipment.value = true
+  error.value = null
+  
+  try {
+    console.log('🔍 Loading equipment for project:', props.projectId, 'at', new Date().toISOString())
+    
+    const response = await EquipmentApiService.getEquipment({
+      project_id: props.projectId,
+      per_page: 100, // Load more equipment if needed
+    })
+    
+    console.log('📦 Equipment response:', response)
+    
+    // Handle different response structures
+    let equipmentData = []
+    
+    if (response.data) {
+      if (Array.isArray(response.data)) {
+        equipmentData = response.data
+      } else if (response.data.data) {
+        equipmentData = response.data.data
+      } else {
+        equipmentData = [response.data]
+      }
+    } else if (Array.isArray(response)) {
+      equipmentData = response
+    }
+    
+    // Filter only equipment assigned to this project
+    equipment.value = equipmentData.filter((item: any) => 
+      item.current_project_id === props.projectId
+    )
+    
+    console.log('✅ Equipment loaded:', {
+      total: equipmentData.length,
+      assigned: equipment.value.length,
+      projectId: props.projectId
+    })
+  }
+  catch (err: any) {
+    console.error('❌ Error loading equipment:', err)
+    error.value = err.message || 'Error al cargar equipos'
+    equipment.value = []
+  }
+  finally {
+    loadingEquipment.value = false
+  }
+}
+
+// Watch for project ID changes
+watch(() => props.projectId, (newProjectId) => {
+  if (newProjectId) {
+    loadEquipment()
+  }
+}, { immediate: true })
+
+// Expose load method for parent component
+defineExpose({
+  loadEquipment,
+})
+
+const totalEquipment = computed(() => equipment.value.length)
 
 const getEquipmentIcon = (type: string) => {
   const icons: Record<string, string> = {
@@ -105,8 +176,44 @@ const getStatusLabel = (status: string) => {
       </VBtn>
     </div>
 
+    <!-- Loading State -->
+    <div
+      v-if="loadingEquipment"
+      class="text-center pa-8"
+    >
+      <VIcon
+        icon="tabler-loader-2"
+        size="48"
+        class="animate-spin text-primary mb-4"
+      />
+      <p class="text-body-1 text-medium-emphasis">
+        Cargando equipos...
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <VAlert
+      v-else-if="error"
+      type="error"
+      variant="tonal"
+      class="mb-4"
+    >
+      <template #prepend>
+        <VIcon
+          icon="tabler-alert-circle"
+          size="24"
+        />
+      </template>
+      <VAlertTitle class="text-h6 mb-2">
+        Error al Cargar Equipos
+      </VAlertTitle>
+      <p class="mb-0">
+        {{ error }}
+      </p>
+    </VAlert>
+
     <!-- Equipment Grid -->
-    <VRow v-if="equipment.length > 0">
+    <VRow v-else-if="equipment.length > 0">
       <VCol
         v-for="item in equipment"
         :key="item.id"
@@ -130,7 +237,7 @@ const getStatusLabel = (status: string) => {
               </VAvatar>
               <div class="flex-grow-1">
                 <h6 class="text-h6 text-truncate">
-                  {{ item.name }}
+                  {{ item.equipment_name }}
                 </h6>
                 <p class="text-caption text-medium-emphasis mb-0">
                   {{ item.equipment_code || 'N/A' }}
@@ -145,11 +252,11 @@ const getStatusLabel = (status: string) => {
               <div class="d-flex align-center justify-space-between">
                 <span class="text-body-2 text-medium-emphasis">Tipo:</span>
                 <VChip
-                  :color="getEquipmentColor(item.type)"
+                  :color="getEquipmentColor(item.equipment_type)"
                   size="small"
                   variant="tonal"
                 >
-                  {{ getEquipmentTypeLabel(item.type) }}
+                  {{ getEquipmentTypeLabel(item.equipment_type) }}
                 </VChip>
               </div>
 
@@ -165,19 +272,27 @@ const getStatusLabel = (status: string) => {
               </div>
 
               <div
-                v-if="item.assigned_at"
+                v-if="item.manufacturer"
                 class="d-flex align-center justify-space-between"
               >
-                <span class="text-body-2 text-medium-emphasis">Asignado:</span>
-                <span class="text-body-2">{{ formatDate(item.assigned_at) }}</span>
+                <span class="text-body-2 text-medium-emphasis">Fabricante:</span>
+                <span class="text-body-2">{{ item.manufacturer }}</span>
               </div>
 
               <div
-                v-if="item.horometer"
+                v-if="item.model"
                 class="d-flex align-center justify-space-between"
               >
-                <span class="text-body-2 text-medium-emphasis">Horómetro:</span>
-                <span class="text-body-2 font-weight-medium">{{ item.horometer }} hrs</span>
+                <span class="text-body-2 text-medium-emphasis">Modelo:</span>
+                <span class="text-body-2">{{ item.model }}</span>
+              </div>
+
+              <div
+                v-if="item.operating_hours"
+                class="d-flex align-center justify-space-between"
+              >
+                <span class="text-body-2 text-medium-emphasis">Horas de Operación:</span>
+                <span class="text-body-2 font-weight-medium">{{ item.operating_hours }} hrs</span>
               </div>
             </div>
 

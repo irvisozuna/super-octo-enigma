@@ -29,12 +29,13 @@ export default [
     to: { name: 'drilling-projects' },
     permissions: ['drilling.projects.view'],
   },
-  {
-    title: 'Pozos',
-    icon: { icon: 'tabler-trowel' },
-    to: { name: 'drilling-wells' },
-    permissions: ['drilling.wells.view'],
-  },
+
+  // {
+  //   title: 'Pozos',
+  //   icon: { icon: 'tabler-trowel' },
+  //   to: { name: 'drilling-wells' },
+  //   permissions: ['drilling.wells.view'],
+  // },
   {
     title: 'Herramientas',
     icon: { icon: 'tabler-gavel' },
@@ -46,11 +47,5 @@ export default [
     icon: { icon: 'tabler-backhoe' },
     to: { name: 'drilling-equipment' },
     permissions: ['drilling.equipment.view'],
-  },
-  {
-    title: 'Documentos',
-    icon: { icon: 'tabler-file-text' },
-    to: { name: 'drilling-documents' },
-    permissions: ['drilling.documents.view'],
   },
 ]

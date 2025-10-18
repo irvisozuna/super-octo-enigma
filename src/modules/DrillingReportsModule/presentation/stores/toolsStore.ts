@@ -1,69 +1,40 @@
 /**
  * Tools Store for Drilling Reports Module
- * Manages tools data and operations
+ * Manages tools data and operations using standardized data table pattern
  */
 
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { DrillingReportApiService } from '../../infrastructure/api/services/DrillingReportApiService'
-
-export interface Tool {
-  id: string
-  name: string
-  type: string
-  model?: string
-  serial_number?: string
-  status: string
-  condition: string
-  last_maintenance?: string
-  next_maintenance?: string
-  created_at: string
-  updated_at: string
-}
-
-export interface ToolsPagination {
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
+import { ref } from 'vue'
+import { type Tool, ToolApiService } from '../../infrastructure/api/services/ToolApiService'
+import { useDataTable } from '@/composables/useDataTable'
 
 export const useToolsStore = defineStore('drillingTools', () => {
-  // State
-  const tools = ref<Tool[]>([])
+  // Use standardized data table composable
+  const {
+    items: tools,
+    pagination,
+    loading,
+    error,
+    hasItems,
+    isEmpty,
+    totalItems,
+    setPage,
+    setItemsPerPage,
+    resetPagination,
+    updateState,
+    buildParams,
+  } = useDataTable<Tool>(15)
+
   const currentTool = ref<Tool | null>(null)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-
-  const pagination = ref<ToolsPagination>({
-    current_page: 1,
-    last_page: 1,
-    per_page: 10,
-    total: 0,
-  })
-
-  // Getters
-  const toolsList = computed(() => tools.value)
-  const isLoading = computed(() => loading.value)
-  const hasError = computed(() => !!error.value)
-  const currentToolData = computed(() => currentTool.value)
 
   // Actions
   const fetchTools = async (params: any = {}) => {
     loading.value = true
     error.value = null
     try {
-      const response = await DrillingReportApiService.getTools(params)
+      const response = await ToolApiService.getTools(params)
 
-      tools.value = response.data || response
-      if (response.current_page) {
-        pagination.value = {
-          current_page: response.current_page,
-          last_page: response.last_page,
-          per_page: response.per_page,
-          total: response.total,
-        }
-      }
+      updateState(response)
     }
     catch (err: any) {
       error.value = err.response?.data?.message || 'Error fetching tools'
@@ -78,17 +49,9 @@ export const useToolsStore = defineStore('drillingTools', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await DrillingReportApiService.getAvailableTools(params)
+      const response = await ToolApiService.getAvailableTools(params)
 
-      tools.value = response.data || response
-      if (response.current_page) {
-        pagination.value = {
-          current_page: response.current_page,
-          last_page: response.last_page,
-          per_page: response.per_page,
-          total: response.total,
-        }
-      }
+      updateState(response)
     }
     catch (err: any) {
       error.value = err.response?.data?.message || 'Error fetching available tools'
@@ -103,11 +66,11 @@ export const useToolsStore = defineStore('drillingTools', () => {
     loading.value = true
     error.value = null
     try {
-      const tool = await DrillingReportApiService.getTool(id)
+      const response = await ToolApiService.getToolById(id)
 
-      currentTool.value = tool
+      currentTool.value = response.data
 
-      return tool
+      return response.data
     }
     catch (err: any) {
       error.value = err.response?.data?.message || 'Error fetching tool'
@@ -119,11 +82,12 @@ export const useToolsStore = defineStore('drillingTools', () => {
     }
   }
 
-  const createTool = async (toolData: Partial<Tool>) => {
+  const createTool = async (toolData: any) => {
     loading.value = true
     error.value = null
     try {
-      const newTool = await DrillingReportApiService.createTool(toolData)
+      const response = await ToolApiService.createTool(toolData)
+      const newTool = response.data
 
       tools.value.unshift(newTool)
 
@@ -139,11 +103,12 @@ export const useToolsStore = defineStore('drillingTools', () => {
     }
   }
 
-  const updateTool = async (id: string, toolData: Partial<Tool>) => {
+  const updateTool = async (id: string, toolData: any) => {
     loading.value = true
     error.value = null
     try {
-      const updatedTool = await DrillingReportApiService.updateTool(id, toolData)
+      const response = await ToolApiService.updateTool(id, toolData)
+      const updatedTool = response.data
       const index = tools.value.findIndex(t => t.id === id)
       if (index !== -1)
         tools.value[index] = updatedTool
@@ -167,7 +132,7 @@ export const useToolsStore = defineStore('drillingTools', () => {
     loading.value = true
     error.value = null
     try {
-      await DrillingReportApiService.deleteTool(id)
+      await ToolApiService.deleteTool(id)
       tools.value = tools.value.filter(t => t.id !== id)
       if (currentTool.value?.id === id)
         currentTool.value = null
@@ -194,7 +159,7 @@ export const useToolsStore = defineStore('drillingTools', () => {
     pagination.value = {
       current_page: 1,
       last_page: 1,
-      per_page: 10,
+      per_page: 15,
       total: 0,
     }
   }
@@ -207,11 +172,10 @@ export const useToolsStore = defineStore('drillingTools', () => {
     error,
     pagination,
 
-    // Getters
-    toolsList,
-    isLoading,
-    hasError,
-    currentToolData,
+    // Computed
+    hasItems,
+    isEmpty,
+    totalItems,
 
     // Actions
     fetchTools,
@@ -222,5 +186,9 @@ export const useToolsStore = defineStore('drillingTools', () => {
     deleteTool,
     clearError,
     reset,
+    setPage,
+    setItemsPerPage,
+    resetPagination,
+    buildParams,
   }
 })

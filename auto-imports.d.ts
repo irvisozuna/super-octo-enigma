@@ -8,7 +8,6 @@ export {}
 declare global {
   const $api: typeof import('./src/utils/api')['$api']
   const COOKIE_MAX_AGE_1_YEAR: typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']
-  const CreateUrl: typeof import('./src/@core/composable/CreateUrl')['CreateUrl']
   const EffectScope: typeof import('vue')['EffectScope']
   const TenantTestHelper: typeof import('./src/utils/tenantTestHelper')['TenantTestHelper']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
@@ -24,6 +23,7 @@ declare global {
   const buildGroupByClause: typeof import('./src/composables/useSqlExpressionPreview')['buildGroupByClause']
   const buildJoinClause: typeof import('./src/composables/useSqlExpressionPreview')['buildJoinClause']
   const buildOrderByClause: typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']
+  const buildQueryParams: typeof import('./src/composables/useDataTable')['buildQueryParams']
   const buildSelectClause: typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']
   const buildWhereClause: typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']
   const computed: typeof import('vue')['computed']
@@ -35,6 +35,7 @@ declare global {
   const controlledComputed: typeof import('@vueuse/core')['controlledComputed']
   const controlledRef: typeof import('@vueuse/core')['controlledRef']
   const createApp: typeof import('vue')['createApp']
+  const createDataTableState: typeof import('./src/composables/useDataTable')['createDataTableState']
   const createEventHook: typeof import('@vueuse/core')['createEventHook']
   const createGenericProjection: typeof import('@vueuse/math')['createGenericProjection']
   const createGlobalState: typeof import('@vueuse/core')['createGlobalState']
@@ -53,7 +54,6 @@ declare global {
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
-  const defineLoader: typeof import('vue-router/auto')['defineLoader']
   const definePage: typeof import('unplugin-vue-router/runtime')['definePage']
   const defineStore: typeof import('pinia')['defineStore']
   const detectComposableOutsideSetup: typeof import('./src/utils/vueDebugHelper')['detectComposableOutsideSetup']
@@ -76,7 +76,6 @@ declare global {
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
   const installVueDebugHelpers: typeof import('./src/utils/vueDebugHelper')['installVueDebugHelpers']
   const integerValidator: typeof import('./src/@core/utils/validators')['integerValidator']
-  const isDarkPreferred: typeof import('./src/@core/composable/useThemeConfig')['isDarkPreferred']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isEmpty: typeof import('./src/@core/utils/helpers')['isEmpty']
   const isEmptyArray: typeof import('./src/@core/utils/helpers')['isEmptyArray']
@@ -122,6 +121,7 @@ declare global {
   const onUpdated: typeof import('vue')['onUpdated']
   const onWatcherCleanup: typeof import('vue')['onWatcherCleanup']
   const paginationMeta: typeof import('./src/utils/paginationMeta')['paginationMeta']
+  const parseApiResponse: typeof import('./src/composables/useDataTable')['parseApiResponse']
   const passwordValidator: typeof import('./src/@core/utils/validators')['passwordValidator']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
   const prefixWithPlus: typeof import('./src/@core/utils/formatters')['prefixWithPlus']
@@ -142,7 +142,6 @@ declare global {
   const refWithControl: typeof import('@vueuse/core')['refWithControl']
   const regexValidator: typeof import('./src/@core/utils/validators')['regexValidator']
   const registerPlugins: typeof import('./src/@core/utils/plugins')['registerPlugins']
-  const registerPlugins_: typeof import('./src/@core/utils/plugins')['registerPlugins_']
   const requiredValidator: typeof import('./src/@core/utils/validators')['requiredValidator']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
@@ -175,6 +174,7 @@ declare global {
   const unref: typeof import('vue')['unref']
   const unrefElement: typeof import('@vueuse/core')['unrefElement']
   const until: typeof import('@vueuse/core')['until']
+  const updateDataTableState: typeof import('./src/composables/useDataTable')['updateDataTableState']
   const urlValidator: typeof import('./src/@core/utils/validators')['urlValidator']
   const useAbility: typeof import('./src/plugins/casl/composables/useAbility')['useAbility']
   const useAbs: typeof import('@vueuse/math')['useAbs']
@@ -221,9 +221,9 @@ declare global {
   const useCssVars: typeof import('vue')['useCssVars']
   const useCurrentElement: typeof import('@vueuse/core')['useCurrentElement']
   const useCurrentUser: typeof import('./src/composables/useCurrentUser')['useCurrentUser']
-  const useCustomFetch: typeof import('./src/composables/useFetch')['useCustomFetch']
   const useCycleList: typeof import('@vueuse/core')['useCycleList']
   const useDark: typeof import('@vueuse/core')['useDark']
+  const useDataTable: typeof import('./src/composables/useDataTable')['useDataTable']
   const useDateFormat: typeof import('@vueuse/core')['useDateFormat']
   const useDebounce: typeof import('@vueuse/core')['useDebounce']
   const useDebounceFn: typeof import('@vueuse/core')['useDebounceFn']
@@ -269,7 +269,6 @@ declare global {
   const useIntervalFn: typeof import('@vueuse/core')['useIntervalFn']
   const useKeyModifier: typeof import('@vueuse/core')['useKeyModifier']
   const useLastChanged: typeof import('@vueuse/core')['useLastChanged']
-  const useLink: typeof import('vue-router/auto')['useLink']
   const useLocalStorage: typeof import('@vueuse/core')['useLocalStorage']
   const useMagicKeys: typeof import('@vueuse/core')['useMagicKeys']
   const useManualRefHistory: typeof import('@vueuse/core')['useManualRefHistory']
@@ -332,7 +331,6 @@ declare global {
   const useSpeechSynthesis: typeof import('@vueuse/core')['useSpeechSynthesis']
   const useSqlExpressionPreview: typeof import('./src/composables/useSqlExpressionPreview')['useSqlExpressionPreview']
   const useStepper: typeof import('@vueuse/core')['useStepper']
-  const useStorage: typeof import('@vueuse/core')['useStorage']
   const useStorageAsync: typeof import('@vueuse/core')['useStorageAsync']
   const useStyleTag: typeof import('@vueuse/core')['useStyleTag']
   const useSum: typeof import('@vueuse/math')['useSum']
@@ -345,7 +343,6 @@ declare global {
   const useTextSelection: typeof import('@vueuse/core')['useTextSelection']
   const useTextareaAutosize: typeof import('@vueuse/core')['useTextareaAutosize']
   const useThemeColor: typeof import('./src/composables/useThemeColor')['useThemeColor']
-  const useThemeConfig: typeof import('./src/@core/composable/useThemeConfig')['useThemeConfig']
   const useThrottle: typeof import('@vueuse/core')['useThrottle']
   const useThrottleFn: typeof import('@vueuse/core')['useThrottleFn']
   const useThrottledRefHistory: typeof import('@vueuse/core')['useThrottledRefHistory']
@@ -374,7 +371,6 @@ declare global {
   const useWindowFocus: typeof import('@vueuse/core')['useWindowFocus']
   const useWindowScroll: typeof import('@vueuse/core')['useWindowScroll']
   const useWindowSize: typeof import('@vueuse/core')['useWindowSize']
-  const usecreateUrl: typeof import('./src/@core/composable/usecreateUrl')['usecreateUrl']
   const validateComponentProps: typeof import('./src/utils/vueDebugHelper')['validateComponentProps']
   const validateMenu: typeof import('./src/utils/menuValidator')['validateMenu']
   const validateMenuItem: typeof import('./src/utils/menuValidator')['validateMenuItem']
@@ -427,6 +423,7 @@ declare module 'vue' {
     readonly buildGroupByClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildGroupByClause']>
     readonly buildJoinClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildJoinClause']>
     readonly buildOrderByClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']>
+    readonly buildQueryParams: UnwrapRef<typeof import('./src/composables/useDataTable')['buildQueryParams']>
     readonly buildSelectClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']>
     readonly buildWhereClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
@@ -438,6 +435,7 @@ declare module 'vue' {
     readonly controlledComputed: UnwrapRef<typeof import('@vueuse/core')['controlledComputed']>
     readonly controlledRef: UnwrapRef<typeof import('@vueuse/core')['controlledRef']>
     readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
+    readonly createDataTableState: UnwrapRef<typeof import('./src/composables/useDataTable')['createDataTableState']>
     readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
     readonly createGenericProjection: UnwrapRef<typeof import('@vueuse/math')['createGenericProjection']>
     readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
@@ -523,6 +521,7 @@ declare module 'vue' {
     readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
     readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
     readonly paginationMeta: UnwrapRef<typeof import('./src/utils/paginationMeta')['paginationMeta']>
+    readonly parseApiResponse: UnwrapRef<typeof import('./src/composables/useDataTable')['parseApiResponse']>
     readonly passwordValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['passwordValidator']>
     readonly pausableWatch: UnwrapRef<typeof import('@vueuse/core')['pausableWatch']>
     readonly prefixWithPlus: UnwrapRef<typeof import('./src/@core/utils/formatters')['prefixWithPlus']>
@@ -575,6 +574,7 @@ declare module 'vue' {
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly unrefElement: UnwrapRef<typeof import('@vueuse/core')['unrefElement']>
     readonly until: UnwrapRef<typeof import('@vueuse/core')['until']>
+    readonly updateDataTableState: UnwrapRef<typeof import('./src/composables/useDataTable')['updateDataTableState']>
     readonly urlValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['urlValidator']>
     readonly useAbility: UnwrapRef<typeof import('./src/plugins/casl/composables/useAbility')['useAbility']>
     readonly useAbs: UnwrapRef<typeof import('@vueuse/math')['useAbs']>
@@ -623,6 +623,7 @@ declare module 'vue' {
     readonly useCurrentUser: UnwrapRef<typeof import('./src/composables/useCurrentUser')['useCurrentUser']>
     readonly useCycleList: UnwrapRef<typeof import('@vueuse/core')['useCycleList']>
     readonly useDark: UnwrapRef<typeof import('@vueuse/core')['useDark']>
+    readonly useDataTable: UnwrapRef<typeof import('./src/composables/useDataTable')['useDataTable']>
     readonly useDateFormat: UnwrapRef<typeof import('@vueuse/core')['useDateFormat']>
     readonly useDebounce: UnwrapRef<typeof import('@vueuse/core')['useDebounce']>
     readonly useDebounceFn: UnwrapRef<typeof import('@vueuse/core')['useDebounceFn']>

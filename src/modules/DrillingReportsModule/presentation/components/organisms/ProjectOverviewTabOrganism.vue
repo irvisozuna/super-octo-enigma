@@ -36,6 +36,7 @@ export interface RecentActivity {
 }
 
 export interface ProjectOverviewTabProps {
+  status?: string
   statistics?: ProjectStatistics
   dates?: ProjectDates
   budget?: ProjectBudget
@@ -45,6 +46,8 @@ export interface ProjectOverviewTabProps {
 }
 
 const props = defineProps<ProjectOverviewTabProps>()
+
+const isPlanned = computed(() => props.status === 'planned')
 
 defineEmits<{
   'view-map': []
@@ -238,10 +241,11 @@ const daysRemaining = computed(() => {
         <VCard
           variant="outlined"
           class="mb-6"
+          v-if="!isPlanned"
         >
           <VCardTitle class="d-flex align-center gap-2">
             <VIcon icon="tabler-calendar-event" />
-            Timeline del Proyecto
+            Timeline del Proyecto 
           </VCardTitle>
           <VCardText>
             <div class="timeline-info">
@@ -384,7 +388,7 @@ const daysRemaining = computed(() => {
       >
         <!-- Budget Overview -->
         <BudgetCardMolecule
-          v-if="budget"
+          v-if="budget && !isPlanned"
           :total="budget.total"
           :current="budget.current_cost"
           :currency="budget.currency"
@@ -396,7 +400,7 @@ const daysRemaining = computed(() => {
         />
 
         <!-- Recent Activity -->
-        <VCard variant="outlined">
+        <VCard variant="outlined" v-if="!isPlanned">
           <VCardTitle class="d-flex align-center gap-2">
             <VIcon icon="tabler-activity" />
             Actividad Reciente
@@ -449,8 +453,8 @@ const daysRemaining = computed(() => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 10%);
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -464,9 +468,9 @@ const daysRemaining = computed(() => {
 
 .timeline-info {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1.5rem;
-  flex-wrap: wrap;
 
   .timeline-item {
     display: flex;

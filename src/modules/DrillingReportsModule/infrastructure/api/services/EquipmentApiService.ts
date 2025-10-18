@@ -112,19 +112,23 @@ export class EquipmentApiService {
   /**
    * Assign equipment to project
    */
-  static async assignToProject(id: string, projectId: string): Promise<{ data: Equipment }> {
+  static async assignToProject(id: string, projectId: string, notes?: string): Promise<{ data: Equipment }> {
     return await rawApi(`${this.baseUrl}/${id}/assign`, {
       method: 'POST',
-      body: { project_id: projectId },
+      body: { 
+        project_id: projectId,
+        ...(notes && { notes })
+      },
     })
   }
 
   /**
    * Unassign equipment from project
    */
-  static async unassignFromProject(id: string): Promise<{ data: Equipment }> {
+  static async unassignFromProject(id: string, notes?: string): Promise<{ data: Equipment }> {
     return await rawApi(`${this.baseUrl}/${id}/unassign`, {
       method: 'POST',
+      body: notes ? { notes } : {},
     })
   }
 

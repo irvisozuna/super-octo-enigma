@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProjectsStore } from '../stores/projectsStore'
 import { useWellsStore } from '../stores/wellsStore'
 import { useDocumentsStore } from '../stores/documentsStore'
 import { DrillingReportApiService } from '../../infrastructure/api/services/DrillingReportApiService'
+import { EquipmentApiService } from '../../infrastructure/api/services/EquipmentApiService'
 import type { Well } from '../../domain/entities/WellEntity'
 import type { Document } from '../../domain/entities/DocumentEntity'
 
@@ -36,6 +37,8 @@ import WellDetailsDialogOrganism from '../components/organisms/WellDetailsDialog
 import CreateReportDialogOrganism from '../components/organisms/CreateReportWizardOrganism.vue'
 import AddCostDialogOrganism from '../components/organisms/AddCostDialogOrganism.vue'
 import AssignWellDialogOrganism from '../components/organisms/AssignWellDialogOrganism.vue'
+import AssignEquipmentDialogOrganism from '../components/organisms/AssignEquipmentDialogOrganism.vue'
+import UnassignEquipmentDialogOrganism from '../components/organisms/UnassignEquipmentDialogOrganism.vue'
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
 import { formatDate } from '@/modules/DrillingReportsModule/shared/utils/dateUtils'
 
@@ -90,6 +93,16 @@ const addingCost = ref(false)
 // Equipment data
 const projectEquipment = ref<any[]>([])
 const loadingEquipment = ref(false)
+const showAssignEquipmentDialog = ref(false)
+const assigningEquipment = ref(false)
+const assignEquipmentError = ref<string | null>(null)
+const assignEquipmentDialogRef = ref()
+const projectEquipmentTabRef = ref()
+
+// Unassign equipment dialog
+const showUnassignEquipmentDialog = ref(false)
+const selectedEquipmentForUnassign = ref<any>(null)
+const unassignEquipmentDialogRef = ref()
 
 // History data
 const statusHistory = ref<any[]>([])
@@ -121,6 +134,13 @@ const recentActivities = ref([
 // Computed
 const projectId = computed(() => route.params.id as string)
 
+// Project status computed
+const projectStatus = computed(() => project.value?.data?.status || project.value?.status)
+const isPlanned = computed(() => projectStatus.value === 'planned')
+const isActive = computed(() => projectStatus.value === 'active')
+const isCompleted = computed(() => projectStatus.value === 'completed')
+const isCancelled = computed(() => projectStatus.value === 'cancelled')
+
 // Transform personnel data from store for PersonnelCardMolecule
 const projectPersonnelForCard = computed(() => {
   return projectsStore.projectPersonnel.map((p: any) => ({
@@ -144,6 +164,59 @@ const reportsCount = computed(() => project.value?.data?.statistics?.reports_cou
 const equipmentCount = computed(() => project.value?.data?.statistics?.equipment_count || 0)
 const documentsCount = computed(() => projectDocuments.value.length)
 
+// Watch for project status changes to redirect to allowed tabs
+watch(projectStatus, (newStatus) => {
+  if (newStatus === 'planned') {
+    // If project is planned, only allow overview, equipment, and documents tabs
+    const allowedTabs = ['overview', 'equipment', 'documents']
+    if (!allowedTabs.includes(activeTab.value)) {
+      activeTab.value = 'overview'
+    }
+  }
+}, { immediate: true })
+
+// Watch for tab changes to load data lazily
+watch(activeTab, async (newTab) => {
+  console.log('🔄 Tab changed to:', newTab)
+  
+  switch (newTab) {
+    case 'reports':
+      if (projectReports.value.length === 0 && !loadingReports.value) {
+        console.log('📊 Loading reports...')
+        await loadReports()
+      }
+      break
+    case 'budget':
+      if (projectCosts.value.length === 0 && !loadingCosts.value) {
+        console.log('💰 Loading costs...')
+        await loadCosts()
+      }
+      break
+    case 'equipment':
+      // Equipment is loaded by ProjectEquipmentTabOrganism component
+      console.log('🔧 Equipment tab activated - data loaded by component')
+      break
+    case 'statistics':
+      // Statistics are computed from existing data, no additional loading needed
+      console.log('📈 Statistics tab activated - using existing data')
+      break
+    case 'history':
+      if (statusHistory.value.length === 0 && !loadingHistory.value) {
+        console.log('📜 Loading status history...')
+        await loadStatusHistory()
+      }
+      break
+    case 'documents':
+      // Documents are already loaded on initial page load
+      console.log('📄 Documents tab activated - data already loaded')
+      break
+    case 'overview':
+      // Overview uses existing data, no additional loading needed
+      console.log('🏠 Overview tab activated - using existing data')
+      break
+  }
+})
+
 // Métodos
 const loadProject = async () => {
   if (!projectId.value)
@@ -155,15 +228,12 @@ const loadProject = async () => {
     project.value = await projectsStore.fetchProject(projectId.value)
     console.log('Project loaded:', project.value)
 
-    // Load related data
+    // Load only essential data on initial load for better performance
+    // Other data (reports, costs, equipment, history) will be loaded lazily when user accesses each tab
     await Promise.all([
       loadWellData(),
       loadPersonnel(),
       loadDocuments(),
-      loadReports(),
-      loadCosts(),
-      loadEquipment(),
-      loadStatusHistory(),
     ])
   }
   catch (error) {
@@ -294,14 +364,15 @@ const loadDocuments = async () => {
 }
 
 const loadReports = async () => {
-  if (!projectId.value)
+  if (!projectId.value || loadingReports.value)
     return
 
   loadingReports.value = true
   try {
     const response = await DrillingReportApiService.getReports({ project_id: projectId.value })
 
-    projectReports.value = response?.data || []
+    // Handle both response.data.data (paginated) and response.data (direct array)
+    projectReports.value = Array.isArray(response?.data) ? response.data : (response?.data?.data || [])
   }
   catch (error) {
     console.error('Error loading reports:', error)
@@ -313,7 +384,7 @@ const loadReports = async () => {
 }
 
 const loadCosts = async () => {
-  if (!projectId.value)
+  if (!projectId.value || loadingCosts.value)
     return
 
   loadingCosts.value = true
@@ -351,7 +422,7 @@ const loadEquipment = async () => {
 }
 
 const loadStatusHistory = async () => {
-  if (!projectId.value)
+  if (!projectId.value || loadingHistory.value)
     return
 
   loadingHistory.value = true
@@ -435,9 +506,7 @@ const confirmAssignWell = async (wellId: string, notes?: string) => {
 const confirmCreateAndAssignWell = async (wellData: any) => {
   assigningWell.value = true
   try {
-    console.log('🔵 Creating and assigning well with single API call')
-    console.log('🔵 Endpoint: POST /api/drilling/wells')
-    console.log('🔵 Payload:', wellData)
+
 
     // Backend now handles creation + assignment in one call
     // wellData already includes project_id from AssignWellDialogOrganism
@@ -578,9 +647,8 @@ const handleViewMap = () => {
 
 // Equipment handlers
 const handleAssignEquipment = () => {
-  console.log('Assign equipment to project:', projectId.value)
-
-  // TODO: Open assign equipment dialog
+  assignEquipmentError.value = null
+  showAssignEquipmentDialog.value = true
 }
 
 const handleViewEquipment = (equipment: any) => {
@@ -589,16 +657,68 @@ const handleViewEquipment = (equipment: any) => {
   // TODO: Open equipment details dialog
 }
 
-const handleRemoveEquipment = async (equipment: any) => {
-  if (!confirm(`¿Estás seguro de desasignar el equipo "${equipment.name}"?`))
-    return
+const handleRemoveEquipment = (equipment: any) => {
+  selectedEquipmentForUnassign.value = equipment
+  showUnassignEquipmentDialog.value = true
+}
+
+const handleUnassignSuccess = async () => {
+  // Close the dialog
+  showUnassignEquipmentDialog.value = false
+  selectedEquipmentForUnassign.value = null
+  
+  // Reload equipment list in the tab component
+  if (projectEquipmentTabRef.value) {
+    await projectEquipmentTabRef.value.loadEquipment()
+  }
+  
+  console.log('✅ Equipment unassigned successfully')
+}
+
+const confirmAssignEquipment = async (data: any) => {
+  assigningEquipment.value = true
+  assignEquipmentError.value = null
 
   try {
-    await DrillingReportApiService.removeEquipmentFromProject?.(projectId.value, equipment.id)
-    await loadEquipment()
+    await EquipmentApiService.assignToProject(data.equipment_id, projectId.value, data.notes)
+    
+    // Reload equipment list in the tab component
+    if (projectEquipmentTabRef.value) {
+      await projectEquipmentTabRef.value.loadEquipment()
+    }
+    
+    // Close the dialog and reset form
+    showAssignEquipmentDialog.value = false
+    assignEquipmentDialogRef.value?.onSuccess()
+    
+    // Show success notification
+    console.log('✅ Equipment assigned successfully:', data.equipment_name)
+    
+    // You can add a toast notification here if you have a notification system
+    // For example: showToast('success', `Equipo ${data.equipment_name} asignado exitosamente`)
+    
   }
-  catch (error) {
-    console.error('Error removing equipment:', error)
+  catch (error: any) {
+    console.error('❌ Error assigning equipment:', error)
+    console.log('📦 Error response data:', error.response?.data)
+
+    // Extract error message from response
+    const errorData = error.response?.data
+    if (errorData) {
+      assignEquipmentError.value = JSON.stringify(errorData)
+      console.log('📤 Sending equipment error to dialog:', assignEquipmentError.value)
+    }
+    else {
+      assignEquipmentError.value = JSON.stringify({
+        error: {
+          code: 'UNKNOWN_ERROR',
+          message: error.message || 'Error desconocido al asignar equipo',
+        },
+      })
+    }
+  }
+  finally {
+    assigningEquipment.value = false
   }
 }
 
@@ -630,6 +750,11 @@ const createReportError = ref<string | null>(null)
 const createReportDialogRef = ref()
 
 const confirmCreateReport = async (data: any) => {
+  if (isPlanned.value) {
+    alert('No se pueden crear reportes en un proyecto en estado Planificado. Debe iniciar el proyecto primero.')
+    return
+  }
+
   creatingReport.value = true
   createReportError.value = null
 
@@ -727,6 +852,11 @@ const confirmAddCost = async (data: any) => {
 }
 
 const handleAddBudgetItem = () => {
+  if (isPlanned.value) {
+    // Show alert that budget items can't be added to planned projects
+    alert('No se pueden agregar gastos a un proyecto en estado Planificado. Debe iniciar el proyecto primero.')
+    return
+  }
   showAddCostDialog.value = true
 }
 
@@ -951,7 +1081,10 @@ onMounted(() => {
             />
             Overview
           </VTab>
-          <VTab value="reports">
+          <VTab
+            v-if="!isPlanned"
+            value="reports"
+          >
             <VIcon
               start
               icon="tabler-file-text"
@@ -966,7 +1099,10 @@ onMounted(() => {
               {{ reportsCount }}
             </VChip>
           </VTab>
-          <VTab value="budget">
+          <VTab
+            v-if="!isPlanned"
+            value="budget"
+          >
             <VIcon
               start
               icon="tabler-currency-dollar"
@@ -1003,14 +1139,20 @@ onMounted(() => {
               {{ documentsCount }}
             </VChip>
           </VTab>
-          <VTab value="statistics">
+          <VTab
+            v-if="!isPlanned"
+            value="statistics"
+          >
             <VIcon
               start
               icon="tabler-chart-bar"
             />
             Estadísticas
           </VTab>
-          <VTab value="history">
+          <VTab
+            v-if="!isPlanned"
+            value="history"
+          >
             <VIcon
               start
               icon="tabler-history"
@@ -1025,6 +1167,32 @@ onMounted(() => {
       <VTabsWindow v-model="activeTab">
         <!-- Tab: Overview (Dashboard) -->
         <VTabsWindowItem value="overview">
+          <!-- Planned Project Notice -->
+          <VAlert
+            v-if="isPlanned"
+            type="info"
+            variant="tonal"
+            class="ma-4"
+            prominent
+          >
+            <template #prepend>
+              <VIcon
+                icon="tabler-info-circle"
+                size="32"
+              />
+            </template>
+            <VAlertTitle class="text-h6 mb-2">
+              Proyecto en Estado Planificado
+            </VAlertTitle>
+            <p class="mb-2">
+              Este proyecto está en estado <strong>Planificado</strong>. Para comenzar a trabajar en él, debe iniciarlo primero.
+            </p>
+            <p class="mb-0">
+              <strong>Funcionalidades disponibles:</strong> Solo se pueden agregar equipos y documentos. 
+              Los reportes, gastos, estadísticas e historial estarán disponibles una vez que el proyecto sea iniciado.
+            </p>
+          </VAlert>
+
           <ProjectOverviewTabOrganism
             v-if="activeTab === 'overview'"
             :statistics="project?.data?.statistics || project?.statistics"
@@ -1033,6 +1201,7 @@ onMounted(() => {
             :general-location="project?.data?.general_location || project?.general_location"
             :coordinates="project?.data?.general_coordinates || project?.general_coordinates"
             :recent-activities="recentActivities"
+            :status="project?.data?.status || project?.status"
             @view-map="handleViewMap"
             @view-budget="activeTab = 'budget'"
             @add-expense="handleAddBudgetItem"
@@ -1040,9 +1209,23 @@ onMounted(() => {
         </VTabsWindowItem>
 
         <!-- Tab: Reportes -->
-        <VTabsWindowItem value="reports">
+        <VTabsWindowItem
+          v-if="!isPlanned"
+          value="reports"
+        >
+          <div
+            v-if="loadingReports"
+            class="d-flex align-center justify-center pa-8"
+          >
+            <VIcon
+              icon="tabler-loader-2"
+              size="32"
+              class="animate-spin text-primary me-3"
+            />
+            <span class="text-body-1">Cargando reportes...</span>
+          </div>
           <ProjectReportsTabOrganism
-            v-if="activeTab === 'reports'"
+            v-else-if="activeTab === 'reports'"
             :reports="projectReports"
             :loading="loadingReports"
             @create="showCreateReportDialog = true"
@@ -1053,9 +1236,23 @@ onMounted(() => {
         </VTabsWindowItem>
 
         <!-- Tab: Presupuesto -->
-        <VTabsWindowItem value="budget">
+        <VTabsWindowItem
+          v-if="!isPlanned"
+          value="budget"
+        >
+          <div
+            v-if="loadingCosts"
+            class="d-flex align-center justify-center pa-8"
+          >
+            <VIcon
+              icon="tabler-loader-2"
+              size="32"
+              class="animate-spin text-primary me-3"
+            />
+            <span class="text-body-1">Cargando presupuesto...</span>
+          </div>
           <ProjectCostsTabOrganism
-            v-if="activeTab === 'budget'"
+            v-else-if="activeTab === 'budget'"
             :costs="projectCosts"
             :budget="(project?.data?.budget || project?.budget)?.total || 0"
             :currency="(project?.data?.budget || project?.budget)?.currency || 'USD'"
@@ -1069,8 +1266,9 @@ onMounted(() => {
         <!-- Tab: Equipment -->
         <VTabsWindowItem value="equipment">
           <ProjectEquipmentTabOrganism
+            ref="projectEquipmentTabRef"
             v-if="activeTab === 'equipment'"
-            :equipment="projectEquipment"
+            :project-id="projectId"
             :loading="loadingEquipment"
             @assign="handleAssignEquipment"
             @view="handleViewEquipment"
@@ -1094,7 +1292,10 @@ onMounted(() => {
         </VTabsWindowItem>
 
         <!-- Tab: Estadísticas -->
-        <VTabsWindowItem value="statistics">
+        <VTabsWindowItem
+          v-if="!isPlanned"
+          value="statistics"
+        >
           <ProjectStatisticsTabOrganism
             v-if="activeTab === 'statistics'"
             :statistics="project?.data?.statistics || project?.statistics"
@@ -1107,9 +1308,23 @@ onMounted(() => {
         </VTabsWindowItem>
 
         <!-- Tab: Historial -->
-        <VTabsWindowItem value="history">
+        <VTabsWindowItem
+          v-if="!isPlanned"
+          value="history"
+        >
+          <div
+            v-if="loadingHistory"
+            class="d-flex align-center justify-center pa-8"
+          >
+            <VIcon
+              icon="tabler-loader-2"
+              size="32"
+              class="animate-spin text-primary me-3"
+            />
+            <span class="text-body-1">Cargando historial...</span>
+          </div>
           <ProjectHistoryTabOrganism
-            v-if="activeTab === 'history'"
+            v-else-if="activeTab === 'history'"
             :history="statusHistory"
             :summary="historySummary"
             :loading="loadingHistory"
@@ -1191,6 +1406,24 @@ onMounted(() => {
       @create="confirmCreateAndAssignWell"
     />
 
+    <!-- Assign Equipment Dialog -->
+    <AssignEquipmentDialogOrganism
+      ref="assignEquipmentDialogRef"
+      v-model="showAssignEquipmentDialog"
+      :project-id="projectId"
+      :loading="assigningEquipment"
+      :error="assignEquipmentError"
+      @submit="confirmAssignEquipment"
+    />
+
+    <!-- Unassign Equipment Dialog -->
+    <UnassignEquipmentDialogOrganism
+      ref="unassignEquipmentDialogRef"
+      v-model="showUnassignEquipmentDialog"
+      :equipment="selectedEquipmentForUnassign"
+      @success="handleUnassignSuccess"
+    />
+
     <!-- Personnel List Dialog -->
     <PersonnelListDialogOrganism
       v-model="showPersonnelListDialog"
@@ -1236,9 +1469,9 @@ onMounted(() => {
 
   :deep(.v-tabs-pill) {
     .v-tab {
-      text-transform: none;
-      letter-spacing: normal;
       font-weight: 500;
+      letter-spacing: normal;
+      text-transform: none;
 
       &.v-tab--selected {
         font-weight: 600;
@@ -1253,7 +1486,8 @@ onMounted(() => {
 
   // Detail block styling for well details dialog
   .detail-block {
-    padding: 0.5rem 0;
+    padding-block: 0.5rem;
+    padding-inline: 0;
   }
 
   // Responsive adjustments

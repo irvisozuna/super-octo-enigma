@@ -1,11 +1,12 @@
 /**
  * Projects Store for Drilling Reports Module
- * Manages projects data and operations
+ * Manages projects data and operations using standardized data table pattern
  */
 
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { DrillingReportApiService } from '../../infrastructure/api/services/DrillingReportApiService'
+import { useDataTable } from '@/composables/useDataTable'
 
 export interface Project {
   id: string
@@ -20,34 +21,26 @@ export interface Project {
   updated_at: string
 }
 
-export interface ProjectsPagination {
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
 export const useProjectsStore = defineStore('drillingProjects', () => {
-  // State
-  const projects = ref<Project[]>([])
+  // Use standardized data table composable
+  const {
+    items: projects,
+    pagination,
+    loading,
+    error,
+    hasItems,
+    isEmpty,
+    totalItems,
+    setPage,
+    setItemsPerPage,
+    resetPagination,
+    updateState,
+    buildParams,
+  } = useDataTable<Project>(10)
+
   const currentProject = ref<Project | null>(null)
   const projectPersonnel = ref<any[]>([])
-  const loading = ref(false)
   const loadingPersonnel = ref(false)
-  const error = ref<string | null>(null)
-
-  const pagination = ref<ProjectsPagination>({
-    current_page: 1,
-    last_page: 1,
-    per_page: 10,
-    total: 0,
-  })
-
-  // Getters
-  const projectsList = computed(() => projects.value)
-  const isLoading = computed(() => loading.value)
-  const hasError = computed(() => !!error.value)
-  const currentProjectData = computed(() => currentProject.value)
 
   // Actions
   const fetchProjects = async (params: any = {}) => {
@@ -56,17 +49,7 @@ export const useProjectsStore = defineStore('drillingProjects', () => {
     try {
       const response = await DrillingReportApiService.getProjects(params)
 
-      // La API devuelve { data: [...], meta: {...}, links: {...} }
-      projects.value = response.data || []
-
-      if (response.meta) {
-        pagination.value = {
-          current_page: response.meta.current_page,
-          last_page: response.meta.last_page,
-          per_page: response.meta.per_page,
-          total: response.meta.total,
-        }
-      }
+      updateState(response)
     }
     catch (err: any) {
       error.value = err.response?.data?.message || 'Error fetching projects'
@@ -209,12 +192,7 @@ export const useProjectsStore = defineStore('drillingProjects', () => {
     loading.value = false
     loadingPersonnel.value = false
     error.value = null
-    pagination.value = {
-      current_page: 1,
-      last_page: 1,
-      per_page: 10,
-      total: 0,
-    }
+    resetPagination()
   }
 
   return {
@@ -227,11 +205,10 @@ export const useProjectsStore = defineStore('drillingProjects', () => {
     error,
     pagination,
 
-    // Getters
-    projectsList,
-    isLoading,
-    hasError,
-    currentProjectData,
+    // Computed
+    hasItems,
+    isEmpty,
+    totalItems,
 
     // Actions
     fetchProjects,
@@ -243,5 +220,9 @@ export const useProjectsStore = defineStore('drillingProjects', () => {
     removePersonnelFromProject,
     clearError,
     reset,
+    setPage,
+    setItemsPerPage,
+    resetPagination,
+    buildParams,
   }
 })

@@ -1,17 +1,19 @@
 export const TOOL_TYPES = [
-  { value: 'drill_bit', label: 'Broca de Perforación', icon: '🔩', category: 'drilling' },
-  { value: 'casing', label: 'Revestimiento', icon: '🛡️', category: 'protection' },
-  { value: 'cement', label: 'Cemento', icon: '🧱', category: 'sealing' },
-  { value: 'mud', label: 'Lodo', icon: '🌊', category: 'fluid' },
-  { value: 'pump', label: 'Bomba', icon: '⚡', category: 'mechanical' },
-  { value: 'other', label: 'Otro', icon: '🔧', category: 'misc' },
+  { value: 'drill_bit', label: 'Broca de Perforación', icon: '🔩', category: 'drilling', translationKey: 'DrillingReportsModule.toolCategory.drill_bit' },
+  { value: 'casing', label: 'Revestimiento', icon: '🛡️', category: 'protection', translationKey: 'DrillingReportsModule.tools.casing' },
+  { value: 'cement', label: 'Cemento', icon: '🧱', category: 'sealing', translationKey: 'DrillingReportsModule.consumableType.cement' },
+  { value: 'mud', label: 'Lodo', icon: '🌊', category: 'fluid', translationKey: 'DrillingReportsModule.tools.mud' },
+  { value: 'pump', label: 'Bomba', icon: '⚡', category: 'mechanical', translationKey: 'DrillingReportsModule.tools.pump' },
+  { value: 'other', label: 'Otro', icon: '🔧', category: 'misc', translationKey: 'DrillingReportsModule.common.other' },
 ]
 
 export const TOOL_STATUS = [
-  { value: 'available', label: 'Disponible', color: '#10B981', bgColor: '#D1FAE5', icon: '✅' },
-  { value: 'in_use', label: 'En Uso', color: '#3B82F6', bgColor: '#DBEAFE', icon: '⚡' },
-  { value: 'maintenance', label: 'Mantenimiento', color: '#F59E0B', bgColor: '#FEF3C7', icon: '🔧' },
-  { value: 'retired', label: 'Retirado', color: '#6B7280', bgColor: '#F3F4F6', icon: '❌' },
+  { value: 'available', label: 'Disponible', color: '#10B981', bgColor: '#D1FAE5', icon: '✅', translationKey: 'DrillingReportsModule.common.available' },
+  { value: 'in_use', label: 'En Uso', color: '#3B82F6', bgColor: '#DBEAFE', icon: '⚡', translationKey: 'DrillingReportsModule.tools.inUse' },
+  { value: 'maintenance', label: 'Mantenimiento', color: '#F59E0B', bgColor: '#FEF3C7', icon: '🔧', translationKey: 'DrillingReportsModule.common.maintenance' },
+  { value: 'retired', label: 'Retirado', color: '#6B7280', bgColor: '#F3F4F6', icon: '❌', translationKey: 'DrillingReportsModule.common.retired' },
+  { value: 'lost', label: 'Perdido', color: '#EF4444', bgColor: '#FEE2E2', icon: '🚫', translationKey: 'DrillingReportsModule.tools.lost' },
+  { value: 'damaged', label: 'Dañado', color: '#7C2D12', bgColor: '#FEF2F2', icon: '⚠️', translationKey: 'DrillingReportsModule.tools.damaged' },
 ]
 
 export const TOOL_CATEGORIES = [
@@ -24,20 +26,24 @@ export const TOOL_CATEGORIES = [
 ]
 
 export const TOOL_MATERIALS = [
-  { value: 'steel', label: 'Acero', color: '#6B7280' },
-  { value: 'tungsten', label: 'Tungsteno', color: '#374151' },
-  { value: 'diamond', label: 'Diamante', color: '#8B5CF6' },
-  { value: 'ceramic', label: 'Cerámica', color: '#F59E0B' },
-  { value: 'composite', label: 'Compuesto', color: '#3B82F6' },
-  { value: 'other', label: 'Otro', color: '#9CA3AF' },
+  { value: 'drill_bit_pdc', label: 'PDC Bit', color: '#6B7280', translationKey: 'DrillingReportsModule.tools.drill_bit_pdc' },
+  { value: 'drill_bit_tricone', label: 'Tricone Bit', color: '#374151', translationKey: 'DrillingReportsModule.tools.drill_bit_tricone' },
+  { value: 'drill_bit_diamond', label: 'Diamond Bit', color: '#8B5CF6', translationKey: 'DrillingReportsModule.tools.drill_bit_diamond' },
+  { value: 'casing', label: 'Casing', color: '#F59E0B', translationKey: 'DrillingReportsModule.tools.casing' },
+  { value: 'drill_pipe', label: 'Drill Pipe', color: '#3B82F6', translationKey: 'DrillingReportsModule.tools.drill_pipe' },
+  { value: 'stabilizer', label: 'Stabilizer', color: '#9CA3AF', translationKey: 'DrillingReportsModule.tools.stabilizer' },
+  { value: 'reamer', label: 'Reamer', color: '#9CA3AF', translationKey: 'DrillingReportsModule.tools.reamer' },
+  { value: 'jar', label: 'Jar', color: '#9CA3AF', translationKey: 'DrillingReportsModule.tools.jar' },
+  { value: 'motor', label: 'Motor', color: '#9CA3AF', translationKey: 'DrillingReportsModule.tools.motor' },
+  { value: 'sub', label: 'Sub', color: '#9CA3AF', translationKey: 'DrillingReportsModule.tools.sub' },
 ]
 
 export const TOOL_CONDITIONS = [
-  { value: 'excellent', label: 'Excelente', color: '#10B981', icon: '🟢' },
-  { value: 'good', label: 'Bueno', color: '#3B82F6', icon: '🔵' },
-  { value: 'fair', label: 'Regular', color: '#F59E0B', icon: '🟡' },
-  { value: 'poor', label: 'Malo', color: '#EF4444', icon: '🔴' },
-  { value: 'critical', label: 'Crítico', color: '#7C2D12', icon: '🚨' },
+  { value: 'new', label: 'Nuevo', color: '#10B981', icon: '🟢', translationKey: 'DrillingReportsModule.tools.new' },
+  { value: 'light', label: 'Leve', color: '#3B82F6', icon: '🔵', translationKey: 'DrillingReportsModule.tools.light' },
+  { value: 'moderate', label: 'Moderado', color: '#F59E0B', icon: '🟡', translationKey: 'DrillingReportsModule.tools.moderate' },
+  { value: 'severe', label: 'Malo', color: '#EF4444', icon: '🔴', translationKey: 'DrillingReportsModule.tools.severe' },
+  { value: 'critical', label: 'Crítico', color: '#7C2D12', icon: '🚨', translationKey: 'DrillingReportsModule.tools.critical' },
 ]
 
 export const TOOL_WEAR_PATTERNS = [
