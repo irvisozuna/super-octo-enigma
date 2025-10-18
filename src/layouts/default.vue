@@ -44,7 +44,9 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
         @fallback="isFallbackStateActive = true"
         @resolve="isFallbackStateActive = false"
       >
-        <Component :is="Component" />
+        <div>
+          <Component :is="Component" />
+        </div>
       </Suspense>
     </RouterView>
   </Component>

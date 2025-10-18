@@ -22,7 +22,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "flatpickr": "4.6.13",
     "@casl/ability": "6.7.2",
     "@casl/vue": "2.2.2",
     "@floating-ui/dom": "1.6.8",
@@ -44,10 +43,12 @@
     "apexcharts": "^4.7.0",
     "chart.js": "4.4.7",
     "cookie-es": "1.2.2",
+    "date-fns": "^4.1.0",
     "destr": "2.0.3",
     "dexie": "^4.0.10",
     "eslint-plugin-regexp": "2.7.0",
     "flag-icons": "^7.5.0",
+    "flatpickr": "4.6.13",
     "highlight": "^0.2.4",
     "highlight.js": "^11.11.1",
     "inquirer": "^12.3.2",

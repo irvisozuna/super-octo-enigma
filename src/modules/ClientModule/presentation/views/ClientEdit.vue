@@ -5,8 +5,8 @@ import * as yup from 'yup'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useClientStore } from '../stores/clientStore'
-import { useNotification } from '@/helpers/notificationHelper'
 import type { UpdateClientRequest } from '../../domain/entities/ClientEntity'
+import { useNotification } from '@/helpers/notificationHelper'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -115,6 +115,7 @@ const schema = yup.object({
     .test('is-valid-rfc', 'RFC inválido', val => {
       if (!val || val.trim() === '')
         return true
+
       return /^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{3})$/.test(val.toUpperCase())
     }),
   tax_regime: yup.string().notRequired(),
@@ -283,6 +284,7 @@ const onSubmit = handleSubmit(async values => {
 function handleSubmitAttempt() {
   if (!meta.value.valid) {
     showError('Por favor, corrija los errores en el formulario')
+
     return
   }
   onSubmit()

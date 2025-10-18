@@ -94,7 +94,7 @@ const navigationItems = computed(() => [
 ])
 
 const toggleTheme = (): void => {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  theme.change(theme.global.current.value.dark ? 'light' : 'dark')
 }
 </script>
 

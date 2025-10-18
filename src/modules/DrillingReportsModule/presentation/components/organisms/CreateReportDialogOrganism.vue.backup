@@ -1,0 +1,874 @@
+<template>
+  <VDialog v-model="localDialog" max-width="1200" persistent scrollable>
+    <VCard>
+      <VCardTitle class="d-flex align-center justify-space-between sticky-header">
+        <div class="d-flex align-center gap-2">
+          <VIcon icon="tabler-file-plus" color="primary" />
+          <span>Nuevo Reporte de Perforación</span>
+        </div>
+        <VBtn icon="tabler-x" variant="text" size="small" @click="handleCancel" />
+      </VCardTitle>
+
+      <VDivider />
+
+      <VCardText class="pa-6" style="max-height: 75vh; overflow-y: auto;">
+        <VForm ref="formRef" @submit.prevent="handleSubmit">
+          <!-- Basic Information -->
+          <VRow>
+            <VCol cols="12" md="6">
+              <VTextField
+                :model-value="projectName"
+                label="Proyecto"
+                prepend-inner-icon="tabler-folder"
+                readonly
+                variant="filled"
+              />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField
+                :model-value="wellName"
+                label="Pozo"
+                prepend-inner-icon="tabler-droplet"
+                readonly
+                variant="filled"
+              />
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VTextField
+                v-model="formData.report_date"
+                label="Fecha del Reporte *"
+                type="date"
+                prepend-inner-icon="tabler-calendar"
+                :rules="[rules.required, rules.dateNotFuture]"
+                required
+              />
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VSelect
+                v-model="formData.shift"
+                label="Turno *"
+                :items="shiftOptions"
+                prepend-inner-icon="tabler-clock"
+                :rules="[rules.required]"
+                required
+              />
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VSelect
+                v-model="formData.equipment_id"
+                label="Equipo"
+                :items="equipmentOptions"
+                :loading="loadingEquipment"
+                prepend-inner-icon="tabler-tool"
+                clearable
+              />
+            </VCol>
+          </VRow>
+
+          <!-- Expansion Panels for Sections -->
+          <VExpansionPanels v-model="openedPanels" multiple class="mt-6">
+            <!-- Personnel Section -->
+            <VExpansionPanel value="personnel">
+              <VExpansionPanelTitle>
+                <div class="d-flex align-center gap-2">
+                  <VIcon icon="tabler-users" color="primary" />
+                  <span class="font-weight-medium">Personal Asignado</span>
+                  <VChip size="small" color="primary" class="ml-2">Requerido</VChip>
+                </div>
+              </VExpansionPanelTitle>
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol v-if="formData.shift === 'day' || formData.shift === 'mixed'" cols="12" md="6">
+                    <VCard variant="outlined">
+                      <VCardTitle class="text-body-1 bg-warning-lighten-5">
+                        <VIcon icon="tabler-sun" class="mr-2" />
+                        Turno Día
+                      </VCardTitle>
+                      <VCardText>
+                        <VSelect
+                          v-model="formData.operator_day_id"
+                          label="Operador *"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          :rules="[rules.required]"
+                          class="mb-3"
+                          required
+                        />
+                        <VSelect
+                          v-model="formData.helper1_day_id"
+                          label="Ayudante 1"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          class="mb-3"
+                          clearable
+                        />
+                        <VSelect
+                          v-model="formData.helper2_day_id"
+                          label="Ayudante 2"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          clearable
+                        />
+                        <VTextField
+                          v-model.number="formData.horometer_start_day"
+                          label="Horómetro Inicio"
+                          type="number"
+                          step="0.1"
+                          prepend-inner-icon="tabler-clock-hour-4"
+                          suffix="hrs"
+                          class="mt-3"
+                        />
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+
+                  <VCol v-if="formData.shift === 'night' || formData.shift === 'mixed'" cols="12" md="6">
+                    <VCard variant="outlined">
+                      <VCardTitle class="text-body-1 bg-info-lighten-5">
+                        <VIcon icon="tabler-moon" class="mr-2" />
+                        Turno Noche
+                      </VCardTitle>
+                      <VCardText>
+                        <VSelect
+                          v-model="formData.operator_night_id"
+                          label="Operador *"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          :rules="[rules.required]"
+                          class="mb-3"
+                          required
+                        />
+                        <VSelect
+                          v-model="formData.helper1_night_id"
+                          label="Ayudante 1"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          class="mb-3"
+                          clearable
+                        />
+                        <VSelect
+                          v-model="formData.helper2_night_id"
+                          label="Ayudante 2"
+                          :items="employeeOptions"
+                          :loading="loadingEmployees"
+                          clearable
+                        />
+                        <VTextField
+                          v-model.number="formData.horometer_start_night"
+                          label="Horómetro Inicio"
+                          type="number"
+                          step="0.1"
+                          prepend-inner-icon="tabler-clock-hour-4"
+                          suffix="hrs"
+                          class="mt-3"
+                        />
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model.number="formData.rpm_pull_down"
+                      label="RPM Pull Down"
+                      type="number"
+                      step="0.1"
+                      prepend-inner-icon="tabler-arrow-down"
+                      suffix="RPM"
+                    />
+                  </VCol>
+
+                  <VCol cols="12" md="6">
+                    <VTextField
+                      v-model.number="formData.rpm_rotation"
+                      label="RPM Rotación"
+                      type="number"
+                      step="0.1"
+                      prepend-inner-icon="tabler-rotate"
+                      suffix="RPM"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <!-- Activities Section -->
+            <VExpansionPanel value="activities">
+              <VExpansionPanelTitle>
+                <div class="d-flex align-center gap-2">
+                  <VIcon icon="tabler-list-check" color="success" />
+                  <span class="font-weight-medium">Actividades</span>
+                  <VChip v-if="formData.activities.length > 0" size="small" color="success" class="ml-2">
+                    {{ formData.activities.length }}
+                  </VChip>
+                </div>
+              </VExpansionPanelTitle>
+              <VExpansionPanelText>
+                <div class="d-flex justify-end mb-4">
+                  <VBtn
+                    color="success"
+                    variant="tonal"
+                    size="small"
+                    prepend-icon="tabler-plus"
+                    @click="addActivity"
+                  >
+                    Agregar Actividad
+                  </VBtn>
+                </div>
+
+                <VDataTable
+                  :headers="activityHeaders"
+                  :items="formData.activities"
+                  density="compact"
+                  class="elevation-1"
+                >
+                  <template #item.activity_type="{ item }">
+                    <VSelect
+                      v-model="item.activity_type"
+                      :items="activityTypeOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.shift="{ item }">
+                    <VSelect
+                      v-model="item.shift"
+                      :items="activityShiftOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.hours="{ item }">
+                    <VTextField
+                      v-model.number="item.hours"
+                      type="number"
+                      step="0.5"
+                      min="0.1"
+                      max="24"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      suffix="hrs"
+                    />
+                  </template>
+
+                  <template #item.start_time="{ item }">
+                    <VTextField
+                      v-model="item.start_time"
+                      type="time"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.end_time="{ item }">
+                    <VTextField
+                      v-model="item.end_time"
+                      type="time"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.description="{ item }">
+                    <VTextField
+                      v-model="item.description"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      placeholder="Descripción..."
+                    />
+                  </template>
+
+                  <template #item.actions="{ index }">
+                    <VBtn
+                      icon="tabler-trash"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="removeActivity(index)"
+                    />
+                  </template>
+
+                  <template #no-data>
+                    <div class="text-center pa-4">
+                      <VIcon icon="tabler-list-check" size="48" class="text-medium-emphasis mb-2" />
+                      <p class="text-body-2 text-medium-emphasis">No hay actividades registradas</p>
+                    </div>
+                  </template>
+                </VDataTable>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <!-- Consumptions Section -->
+            <VExpansionPanel value="consumptions">
+              <VExpansionPanelTitle>
+                <div class="d-flex align-center gap-2">
+                  <VIcon icon="tabler-droplet-filled" color="info" />
+                  <span class="font-weight-medium">Consumos de Materiales</span>
+                  <VChip v-if="formData.consumptions.length > 0" size="small" color="info" class="ml-2">
+                    {{ formData.consumptions.length }}
+                  </VChip>
+                </div>
+              </VExpansionPanelTitle>
+              <VExpansionPanelText>
+                <div class="d-flex justify-end mb-4">
+                  <VBtn
+                    color="info"
+                    variant="tonal"
+                    size="small"
+                    prepend-icon="tabler-plus"
+                    @click="addConsumption"
+                  >
+                    Agregar Consumo
+                  </VBtn>
+                </div>
+
+                <VDataTable
+                  :headers="consumptionHeaders"
+                  :items="formData.consumptions"
+                  density="compact"
+                  class="elevation-1"
+                >
+                  <template #item.consumable_type="{ item }">
+                    <VSelect
+                      v-model="item.consumable_type"
+                      :items="consumableTypeOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.shift="{ item }">
+                    <VSelect
+                      v-model="item.shift"
+                      :items="activityShiftOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.quantity="{ item }">
+                    <VTextField
+                      v-model.number="item.quantity"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.unit="{ item }">
+                    <VSelect
+                      v-model="item.unit"
+                      :items="unitOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.actions="{ index }">
+                    <VBtn
+                      icon="tabler-trash"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="removeConsumption(index)"
+                    />
+                  </template>
+
+                  <template #no-data>
+                    <div class="text-center pa-4">
+                      <VIcon icon="tabler-droplet-off" size="48" class="text-medium-emphasis mb-2" />
+                      <p class="text-body-2 text-medium-emphasis">No hay consumos registrados</p>
+                    </div>
+                  </template>
+                </VDataTable>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <!-- Tool Assignments Section -->
+            <VExpansionPanel value="tools">
+              <VExpansionPanelTitle>
+                <div class="d-flex align-center gap-2">
+                  <VIcon icon="tabler-tool" color="warning" />
+                  <span class="font-weight-medium">Herramientas Utilizadas</span>
+                  <VChip v-if="formData.tool_assignments.length > 0" size="small" color="warning" class="ml-2">
+                    {{ formData.tool_assignments.length }}
+                  </VChip>
+                </div>
+              </VExpansionPanelTitle>
+              <VExpansionPanelText>
+                <div class="d-flex justify-end mb-4">
+                  <VBtn
+                    color="warning"
+                    variant="tonal"
+                    size="small"
+                    prepend-icon="tabler-plus"
+                    @click="addToolAssignment"
+                  >
+                    Agregar Herramienta
+                  </VBtn>
+                </div>
+
+                <VDataTable
+                  :headers="toolHeaders"
+                  :items="formData.tool_assignments"
+                  density="compact"
+                  class="elevation-1"
+                >
+                  <template #item.tool_id="{ item }">
+                    <VSelect
+                      v-model="item.tool_id"
+                      :items="toolOptions"
+                      :loading="loadingTools"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      placeholder="Seleccionar..."
+                    />
+                  </template>
+
+                  <template #item.shift="{ item }">
+                    <VSelect
+                      v-model="item.shift"
+                      :items="activityShiftOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.tool_category="{ item }">
+                    <VSelect
+                      v-model="item.tool_category"
+                      :items="toolCategoryOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                    />
+                  </template>
+
+                  <template #item.start_depth_meters="{ item }">
+                    <VTextField
+                      v-model.number="item.start_depth_meters"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      suffix="m"
+                    />
+                  </template>
+
+                  <template #item.end_depth_meters="{ item }">
+                    <VTextField
+                      v-model.number="item.end_depth_meters"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      suffix="m"
+                    />
+                  </template>
+
+                  <template #item.wear_pattern="{ item }">
+                    <VTextField
+                      v-model="item.wear_pattern"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      placeholder="Patrón de desgaste..."
+                    />
+                  </template>
+
+                  <template #item.matrix="{ item }">
+                    <VTextField
+                      v-model="item.matrix"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      placeholder="Matriz..."
+                    />
+                  </template>
+
+                  <template #item.actions="{ index }">
+                    <VBtn
+                      icon="tabler-trash"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      @click="removeToolAssignment(index)"
+                    />
+                  </template>
+
+                  <template #no-data>
+                    <div class="text-center pa-4">
+                      <VIcon icon="tabler-tools-off" size="48" class="text-medium-emphasis mb-2" />
+                      <p class="text-body-2 text-medium-emphasis">No hay herramientas registradas</p>
+                    </div>
+                  </template>
+                </VDataTable>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <!-- Observations Section -->
+            <VExpansionPanel value="observations">
+              <VExpansionPanelTitle>
+                <div class="d-flex align-center gap-2">
+                  <VIcon icon="tabler-notes" color="secondary" />
+                  <span class="font-weight-medium">Observaciones</span>
+                </div>
+              </VExpansionPanelTitle>
+              <VExpansionPanelText>
+                <VTextarea
+                  v-model="formData.observations"
+                  label="Observaciones Generales"
+                  rows="4"
+                  counter="1000"
+                  :rules="[rules.maxLength(1000)]"
+                  prepend-inner-icon="tabler-notes"
+                />
+              </VExpansionPanelText>
+            </VExpansionPanel>
+          </VExpansionPanels>
+        </VForm>
+      </VCardText>
+
+      <VDivider />
+
+      <VCardActions class="pa-4">
+        <VChip v-if="formData.activities.length + formData.consumptions.length + formData.tool_assignments.length > 0" size="small" color="info">
+          {{ formData.activities.length }} actividades • {{ formData.consumptions.length }} consumos • {{ formData.tool_assignments.length }} herramientas
+        </VChip>
+        <VSpacer />
+        <VBtn variant="text" @click="handleCancel">
+          Cancelar
+        </VBtn>
+        <VBtn
+          color="primary"
+          :loading="loading"
+          @click="handleSubmit"
+        >
+          <VIcon start icon="tabler-device-floppy" />
+          Guardar Borrador
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { DrillingReportApiService } from '../../../infrastructure/api/services/DrillingReportApiService'
+
+export interface CreateReportDialogProps {
+  modelValue: boolean
+  projectId: string
+  projectName: string
+  wellId: string
+  wellName: string
+  loading?: boolean
+}
+
+const props = defineProps<CreateReportDialogProps>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'submit': [data: any]
+}>()
+
+const formRef = ref()
+const loadingEquipment = ref(false)
+const loadingEmployees = ref(false)
+const loadingTools = ref(false)
+const equipmentOptions = ref<any[]>([])
+const employeeOptions = ref<any[]>([])
+const toolOptions = ref<any[]>([])
+const openedPanels = ref(['personnel'])
+
+const localDialog = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
+
+const formData = ref({
+  report_date: new Date().toISOString().split('T')[0],
+  shift: 'day',
+  equipment_id: null as string | null,
+  operator_day_id: null as string | null,
+  helper1_day_id: null as string | null,
+  helper2_day_id: null as string | null,
+  operator_night_id: null as string | null,
+  helper1_night_id: null as string | null,
+  helper2_night_id: null as string | null,
+  horometer_start_day: null as number | null,
+  horometer_start_night: null as number | null,
+  rpm_pull_down: null as number | null,
+  rpm_rotation: null as number | null,
+  observations: '',
+  activities: [] as any[],
+  consumptions: [] as any[],
+  tool_assignments: [] as any[]
+})
+
+const shiftOptions = [
+  { title: 'Día', value: 'day' },
+  { title: 'Noche', value: 'night' },
+  { title: 'Mixto', value: 'mixed' }
+]
+
+const activityShiftOptions = [
+  { title: 'Día', value: 'day' },
+  { title: 'Noche', value: 'night' }
+]
+
+const activityTypeOptions = [
+  { title: 'Perforación de núcleo', value: 'drilling_core' },
+  { title: 'Estabilización de pozo', value: 'stabilizing_hole' },
+  { title: 'Extracción de tubería', value: 'pulling_pipe' },
+  { title: 'Inserción de tubería', value: 'inserting_pipe' },
+  { title: 'Cementación', value: 'casting' },
+  { title: 'Acondicionamiento de pozo', value: 'conditioning_well' },
+  { title: 'Mantenimiento', value: 'maintenance' },
+  { title: 'Manejo de materiales', value: 'material_handling' },
+  { title: 'Tiempo de espera', value: 'waiting' },
+  { title: 'Otras', value: 'other' }
+]
+
+const consumableTypeOptions = [
+  { title: 'Bentonita', value: 'bentonite' },
+  { title: 'Ezze Pac R', value: 'ezze_pac_r' },
+  { title: 'Agua', value: 'water' },
+  { title: 'Cemento', value: 'cement' },
+  { title: 'Lubricante', value: 'lubricant' },
+  { title: 'Espuma', value: 'foam' },
+  { title: 'Otros', value: 'other' }
+]
+
+const unitOptions = [
+  { title: 'Kilogramos', value: 'kg' },
+  { title: 'Sacos/Bolsas', value: 'bags' },
+  { title: 'Litros', value: 'liters' },
+  { title: 'Galones', value: 'gallons' },
+  { title: 'Unidades', value: 'units' }
+]
+
+const toolCategoryOptions = [
+  { title: 'Broca de diamante', value: 'diamond_bit' },
+  { title: 'Tricono', value: 'tricone' },
+  { title: 'Escariador', value: 'reamer' },
+  { title: 'Tubería de perforación', value: 'drill_pipe' }
+]
+
+const activityHeaders = [
+  { title: 'Tipo de Actividad', key: 'activity_type', sortable: false, width: '200px' },
+  { title: 'Turno', key: 'shift', sortable: false, width: '100px' },
+  { title: 'Horas', key: 'hours', sortable: false, width: '100px' },
+  { title: 'Inicio', key: 'start_time', sortable: false, width: '120px' },
+  { title: 'Fin', key: 'end_time', sortable: false, width: '120px' },
+  { title: 'Descripción', key: 'description', sortable: false },
+  { title: '', key: 'actions', sortable: false, width: '60px', align: 'end' }
+]
+
+const consumptionHeaders = [
+  { title: 'Material', key: 'consumable_type', sortable: false, width: '180px' },
+  { title: 'Turno', key: 'shift', sortable: false, width: '100px' },
+  { title: 'Cantidad', key: 'quantity', sortable: false, width: '120px' },
+  { title: 'Unidad', key: 'unit', sortable: false, width: '150px' },
+  { title: '', key: 'actions', sortable: false, width: '60px', align: 'end' }
+]
+
+const toolHeaders = [
+  { title: 'Herramienta', key: 'tool_id', sortable: false, width: '180px' },
+  { title: 'Turno', key: 'shift', sortable: false, width: '100px' },
+  { title: 'Categoría', key: 'tool_category', sortable: false, width: '150px' },
+  { title: 'Prof. Inicio', key: 'start_depth_meters', sortable: false, width: '120px' },
+  { title: 'Prof. Fin', key: 'end_depth_meters', sortable: false, width: '120px' },
+  { title: 'Desgaste', key: 'wear_pattern', sortable: false, width: '150px' },
+  { title: 'Matriz', key: 'matrix', sortable: false, width: '100px' },
+  { title: '', key: 'actions', sortable: false, width: '60px', align: 'end' }
+]
+
+const rules = {
+  required: (value: any) => !!value || 'Campo requerido',
+  dateNotFuture: (value: string) => {
+    if (!value) return true
+    const date = new Date(value)
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    return date <= today || 'La fecha no puede ser futura'
+  },
+  maxLength: (max: number) => (value: string) =>
+    !value || value.length <= max || `Máximo ${max} caracteres`
+}
+
+// Activities Management
+const addActivity = () => {
+  formData.value.activities.push({
+    activity_type: 'drilling_core',
+    shift: 'day',
+    hours: 1,
+    start_time: '',
+    end_time: '',
+    description: ''
+  })
+}
+
+const removeActivity = (index: number) => {
+  formData.value.activities.splice(index, 1)
+}
+
+// Consumptions Management
+const addConsumption = () => {
+  formData.value.consumptions.push({
+    consumable_type: 'bentonite',
+    shift: 'day',
+    quantity: 1,
+    unit: 'bags'
+  })
+}
+
+const removeConsumption = (index: number) => {
+  formData.value.consumptions.splice(index, 1)
+}
+
+// Tool Assignments Management
+const addToolAssignment = () => {
+  formData.value.tool_assignments.push({
+    tool_id: null,
+    shift: 'day',
+    tool_category: 'diamond_bit',
+    start_depth_meters: 0,
+    end_depth_meters: 0,
+    wear_pattern: '',
+    matrix: ''
+  })
+}
+
+const removeToolAssignment = (index: number) => {
+  formData.value.tool_assignments.splice(index, 1)
+}
+
+const loadEquipment = async () => {
+  loadingEquipment.value = true
+  try {
+    const response = await DrillingReportApiService.getEquipment?.() || { data: [] }
+    equipmentOptions.value = (response.data || response || []).map((eq: any) => ({
+      title: eq.name || eq.equipment_name,
+      value: eq.id
+    }))
+  } catch (error) {
+    console.error('Error loading equipment:', error)
+    equipmentOptions.value = []
+  } finally {
+    loadingEquipment.value = false
+  }
+}
+
+const loadEmployees = async () => {
+  loadingEmployees.value = true
+  try {
+    const response = await DrillingReportApiService.getEmployees?.() || { data: [] }
+    employeeOptions.value = (response.data || response || []).map((emp: any) => ({
+      title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
+      value: emp.id
+    }))
+  } catch (error) {
+    console.error('Error loading employees:', error)
+    employeeOptions.value = []
+  } finally {
+    loadingEmployees.value = false
+  }
+}
+
+const loadTools = async () => {
+  loadingTools.value = true
+  try {
+    const response = await DrillingReportApiService.getTools?.() || { data: [] }
+    toolOptions.value = (response.data || response || []).map((tool: any) => ({
+      title: tool.name || tool.tool_name,
+      value: tool.id
+    }))
+  } catch (error) {
+    console.error('Error loading tools:', error)
+    toolOptions.value = []
+  } finally {
+    loadingTools.value = false
+  }
+}
+
+const handleSubmit = async () => {
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  const data = {
+    project_id: props.projectId,
+    well_id: props.wellId,
+    ...formData.value
+  }
+
+  emit('submit', data)
+}
+
+const handleCancel = () => {
+  formRef.value?.reset()
+  formData.value.activities = []
+  formData.value.consumptions = []
+  formData.value.tool_assignments = []
+  localDialog.value = false
+}
+
+watch(() => props.modelValue, (newValue) => {
+  if (newValue) {
+    loadEquipment()
+    loadEmployees()
+    loadTools()
+    openedPanels.value = ['personnel']
+  }
+})
+
+onMounted(() => {
+  if (props.modelValue) {
+    loadEquipment()
+    loadEmployees()
+    loadTools()
+  }
+})
+</script>
+
+<style scoped lang="scss">
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(var(--v-theme-surface));
+}
+
+:deep(.v-expansion-panel-title) {
+  font-size: 0.95rem;
+}
+
+:deep(.v-data-table) {
+  .v-field {
+    font-size: 0.875rem;
+  }
+}
+</style>

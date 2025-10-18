@@ -527,7 +527,7 @@ function handleOptionsUpdate(options: any) {
           <div class="d-flex align-center">
             <VAvatar
               size="32"
-              :color="'primary'"
+              color="primary"
               class="me-2"
             >
               <span>{{ getClientDisplayName(item).charAt(0) }}</span>

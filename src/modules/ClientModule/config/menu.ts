@@ -26,6 +26,7 @@ const clientMenu: VerticalNavItems = [
         action: 'create',
         subject: 'clients',
       },
+
       // TODO: Agregar vista de estadísticas
       // {
       //   title: 'Estadísticas',

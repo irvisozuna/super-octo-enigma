@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { useForm, useField } from 'vee-validate'
+import { useField, useForm } from 'vee-validate'
 import * as yup from 'yup'
 import { useClientStore } from '../stores/clientStore'
 import { ClientDomain } from '../../domain/entities/ClientEntity'
@@ -238,6 +238,7 @@ function formatDate(date?: string) {
 function getClientDisplayName(clientData: typeof client.value) {
   if (!clientData)
     return ''
+
   return ClientDomain.getDisplayName(clientData)
 }
 
@@ -280,11 +281,13 @@ const cfdiUseOptions = [
 
 function getTaxRegimeLabel(code: string) {
   const option = taxRegimeOptions.find(opt => opt.value === code)
+
   return option?.title || code
 }
 
 function getCfdiUseLabel(code: string) {
   const option = cfdiUseOptions.find(opt => opt.value === code)
+
   return option?.title || code
 }
 
@@ -340,19 +343,19 @@ function openEditContactDialog(contact: any) {
 }
 
 const saveContact = handleContactSubmit(
-  async (values) => {
+  async values => {
     if (!client.value)
       return
 
     actionLoading.value = true
 
     try {
-      if (editingContact.value) {
+      if (editingContact.value)
         await clientStore.updateContact(client.value.id, editingContact.value.id, values)
-      }
-      else {
+
+      else
         await clientStore.addContact(client.value.id, values)
-      }
+
       showContactDialog.value = false
     }
     catch (error) {

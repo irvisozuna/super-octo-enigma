@@ -45,6 +45,7 @@ export class ClientMapper {
       payment_terms: dto.payment_terms,
       created_at: dto.created_at,
       updated_at: dto.updated_at,
+
       // Required fields that are not in list DTO - set defaults
       address_line_1: '',
       postal_code: '',

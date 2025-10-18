@@ -387,6 +387,7 @@ export const useClientStore = defineStore('client', () => {
       // Update currentItem with new contact (create new array to trigger reactivity)
       if (currentItem.value?.id === clientId) {
         const contacts = currentItem.value.contacts || []
+
         currentItem.value = {
           ...currentItem.value,
           contacts: [...contacts, newContact],
@@ -417,6 +418,7 @@ export const useClientStore = defineStore('client', () => {
         const contacts = currentItem.value.contacts.map(c =>
           c.id === contactId ? updatedContact : c,
         )
+
         currentItem.value = {
           ...currentItem.value,
           contacts,
@@ -445,6 +447,7 @@ export const useClientStore = defineStore('client', () => {
       // Remove contact from currentItem (create new array to trigger reactivity)
       if (currentItem.value?.id === clientId && currentItem.value.contacts) {
         const contacts = currentItem.value.contacts.filter(c => c.id !== contactId)
+
         currentItem.value = {
           ...currentItem.value,
           contacts,

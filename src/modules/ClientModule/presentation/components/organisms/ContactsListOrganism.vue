@@ -36,6 +36,7 @@ const { t } = useI18n()
 const isDialogOpen = ref(false)
 const isEditing = ref(false)
 const editingContactId = ref<string | null>(null)
+
 const formData = ref<ContactFormData>({
   name: '',
   position: '',
@@ -90,12 +91,12 @@ function openEditDialog(contact: ClientContactDto) {
  * Save contact (add or update)
  */
 function saveContact() {
-  if (isEditing.value && editingContactId.value) {
+  if (isEditing.value && editingContactId.value)
     emit('update', editingContactId.value, formData.value)
-  }
-  else {
+
+  else
     emit('add', formData.value)
-  }
+
   isDialogOpen.value = false
 }
 
@@ -111,9 +112,9 @@ function openDeleteDialog(contact: ClientContactDto) {
  * Confirm delete contact
  */
 function confirmDelete() {
-  if (contactToDelete.value) {
+  if (contactToDelete.value)
     emit('delete', contactToDelete.value.id)
-  }
+
   isDeleteDialogOpen.value = false
   contactToDelete.value = null
 }

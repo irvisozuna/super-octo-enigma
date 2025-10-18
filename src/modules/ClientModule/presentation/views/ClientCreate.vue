@@ -5,8 +5,8 @@ import * as yup from 'yup'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useClientStore } from '../stores/clientStore'
-import { useNotification } from '@/helpers/notificationHelper'
 import type { CreateClientRequest } from '../../domain/entities/ClientEntity'
+import { useNotification } from '@/helpers/notificationHelper'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -114,6 +114,7 @@ const schema = yup.object({
     .test('is-valid-rfc', 'RFC inválido', val => {
       if (!val || val.trim() === '')
         return true
+
       return /^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{3})$/.test(val.toUpperCase())
     }),
   tax_regime: yup
@@ -222,6 +223,7 @@ const onSubmit = handleSubmit(
   async values => {
     try {
       const newClient = await clientStore.createItem(values)
+
       showSuccess('Cliente creado exitosamente')
       router.push({ name: 'clients-detail', params: { id: newClient.id } })
     }
