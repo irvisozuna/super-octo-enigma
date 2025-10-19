@@ -9,9 +9,6 @@
 import type { ApiOptions } from '@/types/types'
 import { useCookie } from '@/@core/composable/useCookie'
 
-// Debug: Verificar que useCookie esté disponible
-console.log('🔍 useCookie disponible:', !!useCookie)
-
 /**
  * Función principal para realizar peticiones HTTP.
  *

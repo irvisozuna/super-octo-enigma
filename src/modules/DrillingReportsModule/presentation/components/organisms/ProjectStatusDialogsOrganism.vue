@@ -2,27 +2,24 @@
 import { computed, ref, watch } from 'vue'
 
 export interface ProjectStatusDialogsProps {
-  startDialog?: boolean
-  suspendDialog?: boolean
-  resumeDialog?: boolean
-  completeDialog?: boolean
-  cancelDialog?: boolean
+  project?: any
+  showStartDialog?: boolean
+  showSuspendDialog?: boolean
+  showResumeDialog?: boolean
+  showCompleteDialog?: boolean
+  showCancelDialog?: boolean
   loading?: boolean
 }
 
 const props = defineProps<ProjectStatusDialogsProps>()
 
 const emit = defineEmits<{
-  'update:startDialog': [value: boolean]
-  'update:suspendDialog': [value: boolean]
-  'update:resumeDialog': [value: boolean]
-  'update:completeDialog': [value: boolean]
-  'update:cancelDialog': [value: boolean]
-  'start': [data: any]
-  'suspend': [data: any]
-  'resume': [data: any]
-  'complete': [data: any]
-  'cancel': [data: any]
+  'update:showStartDialog': [value: boolean]
+  'update:showSuspendDialog': [value: boolean]
+  'update:showResumeDialog': [value: boolean]
+  'update:showCompleteDialog': [value: boolean]
+  'update:showCancelDialog': [value: boolean]
+  'statusChanged': [data: any]
 }>()
 
 // Forms refs
@@ -34,28 +31,28 @@ const cancelForm = ref()
 
 // Local dialog states
 const localStartDialog = computed({
-  get: () => props.startDialog,
-  set: value => emit('update:startDialog', value),
+  get: () => props.showStartDialog,
+  set: value => emit('update:showStartDialog', value),
 })
 
 const localSuspendDialog = computed({
-  get: () => props.suspendDialog,
-  set: value => emit('update:suspendDialog', value),
+  get: () => props.showSuspendDialog,
+  set: value => emit('update:showSuspendDialog', value),
 })
 
 const localResumeDialog = computed({
-  get: () => props.resumeDialog,
-  set: value => emit('update:resumeDialog', value),
+  get: () => props.showResumeDialog,
+  set: value => emit('update:showResumeDialog', value),
 })
 
 const localCompleteDialog = computed({
-  get: () => props.completeDialog,
-  set: value => emit('update:completeDialog', value),
+  get: () => props.showCompleteDialog,
+  set: value => emit('update:showCompleteDialog', value),
 })
 
 const localCancelDialog = computed({
-  get: () => props.cancelDialog,
-  set: value => emit('update:cancelDialog', value),
+  get: () => props.showCancelDialog,
+  set: value => emit('update:showCancelDialog', value),
 })
 
 // Form data
@@ -92,7 +89,7 @@ const handleStart = async () => {
   if (!valid)
     return
 
-  emit('start', { ...startData.value })
+  emit('statusChanged', { action: 'start', data: { ...startData.value } })
   localStartDialog.value = false
   resetForms()
 }
@@ -102,7 +99,7 @@ const handleSuspend = async () => {
   if (!valid)
     return
 
-  emit('suspend', { ...suspendData.value })
+  emit('statusChanged', { action: 'suspend', data: { ...suspendData.value } })
   localSuspendDialog.value = false
   resetForms()
 }
@@ -112,7 +109,7 @@ const handleResume = async () => {
   if (!valid)
     return
 
-  emit('resume', { ...resumeData.value })
+  emit('statusChanged', { action: 'resume', data: { ...resumeData.value } })
   localResumeDialog.value = false
   resetForms()
 }
@@ -122,7 +119,7 @@ const handleComplete = async () => {
   if (!valid)
     return
 
-  emit('complete', { ...completeData.value })
+  emit('statusChanged', { action: 'complete', data: { ...completeData.value } })
   localCompleteDialog.value = false
   resetForms()
 }
@@ -132,7 +129,7 @@ const handleCancel = async () => {
   if (!valid)
     return
 
-  emit('cancel', { ...cancelData.value })
+  emit('statusChanged', { action: 'cancel', data: { ...cancelData.value } })
   localCancelDialog.value = false
   resetForms()
 }
@@ -194,7 +191,7 @@ const resetForms = () => {
               ¿Está seguro de iniciar este proyecto?
             </VAlertTitle>
             <p class="mb-0">
-              Al iniciar el proyecto, se activará el seguimiento de tiempo y recursos. 
+              Al iniciar el proyecto, se activará el seguimiento de tiempo y recursos.
               Esto permitirá registrar actividades, asignar personal y generar reportes de progreso.
             </p>
           </VAlert>

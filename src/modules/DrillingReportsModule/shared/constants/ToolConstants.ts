@@ -25,6 +25,42 @@ export const TOOL_CATEGORIES = [
   { value: 'misc', label: 'Misceláneo', icon: '🔧', color: '#6B7280' },
 ]
 
+// Tool categories for report wizard
+export const TOOL_WIZARD_CATEGORIES = [
+  {
+    title: 'Broca de diamante',
+    value: 'diamond_bit',
+    icon: 'tabler-diamond',
+    color: '#8B5CF6',
+    category: 'drilling_bit',
+    translationKey: 'DrillingReportsModule.tools.drill_bit_diamond',
+  },
+  {
+    title: 'Tricono',
+    value: 'tricone',
+    icon: 'tabler-circle',
+    color: '#3B82F6',
+    category: 'drilling_bit',
+    translationKey: 'DrillingReportsModule.tools.drill_bit_tricone',
+  },
+  {
+    title: 'Escariador',
+    value: 'reamer',
+    icon: 'tabler-tool',
+    color: '#F59E0B',
+    category: 'drilling_tool',
+    translationKey: 'DrillingReportsModule.tools.reamer',
+  },
+  {
+    title: 'Tubería de perforación',
+    value: 'drill_pipe',
+    icon: 'tabler-pipe',
+    color: '#10B981',
+    category: 'pipe',
+    translationKey: 'DrillingReportsModule.tools.drill_pipe',
+  },
+]
+
 export const TOOL_MATERIALS = [
   { value: 'drill_bit_pdc', label: 'PDC Bit', color: '#6B7280', translationKey: 'DrillingReportsModule.tools.drill_bit_pdc' },
   { value: 'drill_bit_tricone', label: 'Tricone Bit', color: '#374151', translationKey: 'DrillingReportsModule.tools.drill_bit_tricone' },

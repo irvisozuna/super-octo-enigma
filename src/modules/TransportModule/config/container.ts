@@ -56,8 +56,6 @@ export class TransportModuleContainer {
 
   // Module lifecycle
   install(app: any) {
-    console.log('📦 Installing TransportModule...')
-
     // Register routes
     this.routes.forEach(route => {
       app.router.addRoute(route)
@@ -66,8 +64,6 @@ export class TransportModuleContainer {
     // Register stores
     // Register components
     // Register composables
-
-    console.log('✅ TransportModule installed successfully!')
   }
 
   uninstall(app: any) {

@@ -17,8 +17,6 @@ export class DrillingReportsModuleInstaller {
   }
 
   async install() {
-    console.log('🚀 Installing DrillingReportsModule...')
-
     try {
       // Routes are auto-loaded by router plugin via routes.ts in module root
       // No need to register them manually with router.addRoute()
@@ -31,8 +29,6 @@ export class DrillingReportsModuleInstaller {
       // Add CASL abilities
       this.addCaslAbilities()
 
-      console.log('✅ DrillingReportsModule installed successfully!')
-
       return true
     }
     catch (error) {
@@ -43,8 +39,6 @@ export class DrillingReportsModuleInstaller {
   }
 
   private async addTranslations() {
-    console.log('🌐 Adding drilling reports translations...')
-
     try {
       // Dynamic imports for translation files
       const [enTranslations, esTranslations] = await Promise.all([
@@ -84,8 +78,6 @@ export class DrillingReportsModuleInstaller {
   }
 
   private addCaslAbilities() {
-    console.log('🔐 Adding drilling reports CASL abilities...')
-
     // Add CASL abilities for module permissions
     const abilities = [
       // Drilling Reports general

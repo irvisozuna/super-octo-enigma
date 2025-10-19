@@ -36,8 +36,6 @@ export class DynamicReportsInstaller {
   }
 
   install() {
-    console.log('🚀 Installing DynamicReports module...')
-
     try {
       // Register routes
       this.registerRoutes()
@@ -51,8 +49,6 @@ export class DynamicReportsInstaller {
       // Add CASL abilities
       this.addCaslAbilities()
 
-      console.log('✅ DynamicReports module installed successfully!')
-
       return true
     }
     catch (error) {
@@ -63,8 +59,6 @@ export class DynamicReportsInstaller {
   }
 
   private registerRoutes() {
-    console.log('📁 Registering routes...')
-
     if (!this.router) {
       console.warn('Router not available, routes will be registered when router is available')
 
@@ -77,15 +71,13 @@ export class DynamicReportsInstaller {
   }
 
   private addMenuItems() {
-    console.log('📋 Adding menu items...')
-
     // Add menu items to the main navigation
     if (window.mainMenu)
       window.mainMenu.push(...DynamicReportsMenu)
   }
 
   private addTranslations() {
-    console.log('🌐 Adding translations...')
+    // console.log('🌐 Adding translations...')
 
     const translations = {
       en: {
@@ -187,8 +179,6 @@ export class DynamicReportsInstaller {
   }
 
   private addCaslAbilities() {
-    console.log('🔐 Adding CASL abilities...')
-
     // Add CASL abilities for module permissions
     const abilities = [
       { action: 'read', subject: 'connections' },
@@ -214,8 +204,6 @@ export class DynamicReportsInstaller {
   }
 
   uninstall() {
-    console.log('🗑️ Uninstalling DynamicReports module...')
-
     try {
       // Remove routes
       this.removeRoutes()
@@ -228,8 +216,6 @@ export class DynamicReportsInstaller {
 
       // Remove CASL abilities
       this.removeCaslAbilities()
-
-      console.log('✅ DynamicReports module uninstalled successfully!')
 
       return true
     }

@@ -77,20 +77,13 @@ export class ClientModuleContainer {
    * Install module (register routes, etc.)
    */
   install(app: any) {
-    console.log('📦 Installing ClientModule...')
 
-    // Register routes if needed
-    // Register stores if needed
-    // Register components if needed
-
-    console.log('✅ ClientModule installed successfully!')
   }
 
   /**
    * Uninstall module
    */
   uninstall() {
-    console.log('🗑️ Uninstalling ClientModule...')
 
     // Cleanup when module is uninstalled
   }

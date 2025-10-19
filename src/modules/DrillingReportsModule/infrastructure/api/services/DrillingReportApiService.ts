@@ -318,7 +318,7 @@ export class DrillingReportApiService {
   static async getEquipment(params: any = {}): Promise<any> {
     try {
       // Since equipment is managed through wells, we'll use tools as alternative
-      const response = await rawApi('/drilling/tools', {
+      const response = await rawApi('/equipment-management/equipment?search=&page=1&per_page=10', {
         method: 'GET',
         params,
       })
@@ -595,6 +595,7 @@ export class DrillingReportApiService {
     description: string
     amount: number
     date: string
+    currency: string
     vendor?: string
     reference_number?: string
     notes?: string
@@ -602,6 +603,35 @@ export class DrillingReportApiService {
     return await rawApi(`/drilling/projects/${projectId}/costs`, {
       method: 'POST',
       body: data,
+    })
+  }
+
+  /**
+   * Update a project cost
+   */
+  static async updateProjectCost(projectId: string, costId: string, data: {
+    cost_type?: string
+    category?: string
+    description?: string
+    amount?: number
+    date?: string
+    currency?: string
+    vendor?: string
+    reference_number?: string
+    notes?: string
+  }) {
+    return await rawApi(`/drilling/projects/${projectId}/costs/${costId}`, {
+      method: 'PUT',
+      body: data,
+    })
+  }
+
+  /**
+   * Delete a project cost
+   */
+  static async deleteProjectCost(projectId: string, costId: string) {
+    return await rawApi(`/drilling/projects/${projectId}/costs/${costId}`, {
+      method: 'DELETE',
     })
   }
 

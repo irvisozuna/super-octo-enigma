@@ -29,8 +29,6 @@ const { t } = useI18n()
 const { closeDialog } = useAppManager()
 const projectsStore = useProjectsStore()
 
-
-
 // Form ref
 const formRef = ref()
 
@@ -76,21 +74,27 @@ const rules = {
   maxLength: (max: number) => (value: string) => !value || value.length <= max || `Máximo ${max} caracteres`,
   minValue: (min: number) => (value: number) => !value || value >= min || `Mínimo ${min}`,
   latitude: (value: number | string) => {
-    if (!value) return true
+    if (!value)
+      return true
     const num = Number(value)
-    if (isNaN(num)) return 'Latitud debe ser un número válido'
+    if (isNaN(num))
+      return 'Latitud debe ser un número válido'
+
     return (num >= -90 && num <= 90) || 'Latitud debe estar entre -90 y 90'
   },
   longitude: (value: number | string) => {
-    if (!value) return true
+    if (!value)
+      return true
     const num = Number(value)
-    if (isNaN(num)) return 'Longitud debe ser un número válido'
+    if (isNaN(num))
+      return 'Longitud debe ser un número válido'
+
     return (num >= -180 && num <= 180) || 'Longitud debe estar entre -180 y 180'
   },
 }
 
 // Watch for project changes
-watch(() => props.project, (newProject) => {
+watch(() => props.project, newProject => {
   if (newProject) {
     // Map backend structure to form structure
     formData.project_name = newProject.project_name || ''
@@ -270,27 +274,28 @@ const handleSubmit = async () => {
     // Extraer errores del backend
     const backendErrors = error?.response?.data?.errors
     const backendMessage = error?.response?.data?.message
-    
+
     errorTitle.value = 'Error al guardar el proyecto'
-    
+
     // Si hay errores específicos del backend, mostrarlos
     if (backendErrors) {
       const errorList: string[] = []
-      
-      if (backendErrors['general_coordinates.latitude']) {
-        errorList.push('Latitud: ' + backendErrors['general_coordinates.latitude'][0])
-      }
-      if (backendErrors['general_coordinates.longitude']) {
-        errorList.push('Longitud: ' + backendErrors['general_coordinates.longitude'][0])
-      }
-      
+
+      if (backendErrors['general_coordinates.latitude'])
+        errorList.push(`Latitud: ${backendErrors['general_coordinates.latitude'][0]}`)
+
+      if (backendErrors['general_coordinates.longitude'])
+        errorList.push(`Longitud: ${backendErrors['general_coordinates.longitude'][0]}`)
+
       if (errorList.length > 0) {
         errorMessage.value = 'Se encontraron los siguientes errores de validación:'
         validationErrors.value = errorList
       }
-    } else if (backendMessage) {
+    }
+    else if (backendMessage) {
       errorMessage.value = backendMessage
-    } else {
+    }
+    else {
       errorMessage.value = error?.message || 'Error al guardar el proyecto'
     }
 

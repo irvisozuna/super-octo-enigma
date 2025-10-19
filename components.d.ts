@@ -74,6 +74,7 @@ declare module 'vue' {
     ShareProjectDialog: typeof import('./src/components/dialogs/ShareProjectDialog.vue')['default']
     Shortcuts: typeof import('./src/@core/components/Shortcuts.vue')['default']
     SimpleMapTest: typeof import('./src/components/SimpleMapTest.vue')['default']
+    SkeletonCard: typeof import('./src/components/shared/SkeletonCard.vue')['default']
     SqlPreviewDrawer: typeof import('./src/components/SqlPreviewDrawer.vue')['default']
     TablePagination: typeof import('./src/@core/components/TablePagination.vue')['default']
     TenantBootstrapLoader: typeof import('./src/components/TenantBootstrapLoader.vue')['default']

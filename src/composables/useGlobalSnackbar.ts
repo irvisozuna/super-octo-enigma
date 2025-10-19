@@ -10,8 +10,9 @@ export function useGlobalSnackbar() {
   /**
    * Muestra un snackbar global
    * @param {object} params
-   * @param {string} params.title - Título del snackbar
-   * @param {string} params.messageKey - Clave de i18n o mensaje
+   * @param {string} [params.title] - Título del snackbar
+   * @param {string} [params.message] - Mensaje directo (legacy)
+   * @param {string} [params.messageKey] - Clave de i18n o mensaje
    * @param {object} [params.variables] - Variables para i18n
    * @param {'success'|'error'|'info'|'warning'} [params.color] - Color del snackbar
    * @param {number} [params.timeout] - Tiempo de visibilidad
@@ -22,7 +23,8 @@ export function useGlobalSnackbar() {
    * @param {number} [params.elevation] - Elevación
    */
   function showSnackbar({
-    title,
+    title = '',
+    message,
     messageKey,
     variables = {},
     color = 'info',
@@ -32,10 +34,25 @@ export function useGlobalSnackbar() {
     variant = 'elevated',
     rounded = 'lg',
     elevation = 4,
+  }: {
+    title?: string
+    message?: string
+    messageKey?: string
+    variables?: Record<string, any>
+    color?: 'success' | 'error' | 'info' | 'warning'
+    timeout?: number
+    position?: 'top' | 'bottom' | 'top end' | 'top start' | 'bottom end' | 'bottom start'
+    closable?: boolean
+    variant?: 'text' | 'tonal' | 'flat' | 'elevated' | 'outlined' | 'plain'
+    rounded?: boolean | string
+    elevation?: number
   }) {
+    // Support both legacy (message) and new (messageKey) formats
+    const finalMessageKey = messageKey || message || ''
+
     snackbarStore.showSnackbar(
       title,
-      { messageKey, variables },
+      { messageKey: finalMessageKey, variables },
       color,
       { timeout, position, closable, variant, rounded, elevation },
     )

@@ -85,13 +85,11 @@ export class DocumentsModuleContainer {
    * Install module (register routes, etc.)
    */
   install(app: any) {
-    console.log('📦 Installing DocumentsModule...')
 
     // Register routes if needed
     // Register stores if needed
     // Register components if needed
 
-    console.log('✅ DocumentsModule installed successfully!')
   }
 
   /**

@@ -25,45 +25,46 @@ const error = ref<string | null>(null)
 
 // Load equipment for the project
 const loadEquipment = async () => {
-  if (!props.projectId || loadingEquipment.value) return
-  
+  if (!props.projectId || loadingEquipment.value)
+    return
+
   loadingEquipment.value = true
   error.value = null
-  
+
   try {
     console.log('🔍 Loading equipment for project:', props.projectId, 'at', new Date().toISOString())
-    
+
     const response = await EquipmentApiService.getEquipment({
       project_id: props.projectId,
       per_page: 100, // Load more equipment if needed
     })
-    
+
     console.log('📦 Equipment response:', response)
-    
+
     // Handle different response structures
     let equipmentData = []
-    
+
     if (response.data) {
-      if (Array.isArray(response.data)) {
+      if (Array.isArray(response.data))
         equipmentData = response.data
-      } else if (response.data.data) {
+      else if (response.data.data)
         equipmentData = response.data.data
-      } else {
+      else
         equipmentData = [response.data]
-      }
-    } else if (Array.isArray(response)) {
+    }
+    else if (Array.isArray(response)) {
       equipmentData = response
     }
-    
+
     // Filter only equipment assigned to this project
-    equipment.value = equipmentData.filter((item: any) => 
-      item.current_project_id === props.projectId
+    equipment.value = equipmentData.filter((item: any) =>
+      item.current_project_id === props.projectId,
     )
-    
+
     console.log('✅ Equipment loaded:', {
       total: equipmentData.length,
       assigned: equipment.value.length,
-      projectId: props.projectId
+      projectId: props.projectId,
     })
   }
   catch (err: any) {
@@ -77,10 +78,9 @@ const loadEquipment = async () => {
 }
 
 // Watch for project ID changes
-watch(() => props.projectId, (newProjectId) => {
-  if (newProjectId) {
+watch(() => props.projectId, newProjectId => {
+  if (newProjectId)
     loadEquipment()
-  }
 }, { immediate: true })
 
 // Expose load method for parent component

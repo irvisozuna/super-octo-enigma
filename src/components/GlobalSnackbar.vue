@@ -32,9 +32,26 @@ const currentSnackbar = computed(() => {
 const translatedMessage = computed(() => {
   if (!currentSnackbar.value)
     return ''
+
   const { messageKey, variables } = currentSnackbar.value.message
 
-  return t(messageKey, variables)
+  // If messageKey is empty or undefined, return empty string
+  if (!messageKey)
+    return ''
+
+  // If messageKey doesn't look like a translation key (no dots), return it as-is
+  if (typeof messageKey === 'string' && !messageKey.includes('.'))
+    return messageKey
+
+  // Try to translate, but return the key if translation fails
+  try {
+    return t(messageKey, variables || {})
+  }
+  catch (error) {
+    console.warn('Translation error for key:', messageKey, error)
+
+    return messageKey
+  }
 })
 
 // Control de visibilidad del Alert
@@ -70,10 +87,10 @@ const showAction = computed(() =>
     >
       <div class="alert-content">
         <h6 class="alert-title">
-          {{ $t(currentSnackbar.title) }}
+          {{ currentSnackbar.title }}
         </h6>
         <p class="alert-message">
-          {{ $t(translatedMessage) }}
+          {{ translatedMessage }}
         </p>
         <VProgressLinear
           v-if="hasProgress"

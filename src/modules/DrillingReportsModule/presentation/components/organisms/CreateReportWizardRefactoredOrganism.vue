@@ -1,0 +1,477 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useReportWizardStore } from '../../stores/reportWizardStore'
+import { DrillingReportApiService } from '../../../infrastructure/api/services/DrillingReportApiService'
+import { REPORT_WIZARD_STEPS } from '../../../shared/constants'
+
+// Import Molecules
+import WizardBasicInfoMolecule from '../molecules/WizardBasicInfoMolecule.vue'
+import WizardPersonnelMolecule from '../molecules/WizardPersonnelMolecule.vue'
+import WizardActivitiesMolecule from '../molecules/WizardActivitiesMolecule.vue'
+import WizardConsumptionsMolecule from '../molecules/WizardConsumptionsMolecule.vue'
+import WizardToolsMolecule from '../molecules/WizardToolsMolecule.vue'
+import WizardReviewMolecule from '../molecules/WizardReviewMolecule.vue'
+
+export interface CreateReportWizardProps {
+  modelValue: boolean
+  projectId: string
+  projectName: string
+  wellId: string
+  wellName: string
+  loading?: boolean
+  error?: string | null
+}
+
+const props = defineProps<CreateReportWizardProps>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'submit': [data: any]
+}>()
+
+const { t } = useI18n()
+
+// Store
+const wizardStore = useReportWizardStore()
+
+// Form refs
+const step1Form = ref()
+const step2Form = ref()
+
+// Loading states
+const loadingEquipment = ref(false)
+const loadingEmployees = ref(false)
+const loadingTools = ref(false)
+
+// Options
+const equipmentOptions = ref<any[]>([])
+const employeeOptions = ref<any[]>([])
+const toolOptions = ref<any[]>([])
+
+// Dialog state
+const localDialog = computed({
+  get: () => props.modelValue,
+  set: value => emit('update:modelValue', value),
+})
+
+// Wizard config
+const steps = REPORT_WIZARD_STEPS
+
+// Validation
+const validateStep1 = async () => {
+  if (!step1Form.value)
+    return false
+  const { valid } = await step1Form.value.validate()
+
+  return valid
+}
+
+const validateStep2 = async () => {
+  if (!step2Form.value)
+    return false
+  const { valid } = await step2Form.value.validate()
+
+  return valid
+}
+
+// Navigation
+const nextStep = async () => {
+  console.log('🔄 Next step called. Current step:', wizardStore.currentStep)
+
+  if (wizardStore.currentStep === '1') {
+    const valid = await validateStep1()
+    if (!valid) {
+      console.log('❌ Step 1 validation failed')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '2') {
+    const valid = await validateStep2()
+    if (!valid) {
+      console.log('❌ Step 2 validation failed')
+
+      return
+    }
+  }
+
+  wizardStore.nextStep()
+}
+
+const previousStep = () => {
+  wizardStore.previousStep()
+}
+
+// Data Loading
+const loadEquipment = async () => {
+  loadingEquipment.value = true
+  try {
+    const response = await DrillingReportApiService.getEquipment?.() || { data: [] }
+
+    equipmentOptions.value = (response.data || response || []).map((eq: any) => ({
+      title: eq.name || eq.equipment_name,
+      value: eq.id,
+    }))
+  }
+  catch (error) {
+    console.error('Error loading equipment:', error)
+    equipmentOptions.value = []
+  }
+  finally {
+    loadingEquipment.value = false
+  }
+}
+
+const loadEmployees = async () => {
+  console.log('👥 Loading employees...')
+  loadingEmployees.value = true
+  try {
+    const response = await DrillingReportApiService.getEmployees?.() || { data: [] }
+
+    employeeOptions.value = (response.data || response || []).map((emp: any) => ({
+      title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
+      value: emp.id,
+    }))
+    console.log('👥 Employee options:', employeeOptions.value.length, 'employees loaded')
+  }
+  catch (error) {
+    console.error('❌ Error loading employees:', error)
+    employeeOptions.value = []
+  }
+  finally {
+    loadingEmployees.value = false
+  }
+}
+
+const loadTools = async () => {
+  loadingTools.value = true
+  try {
+    const response = await DrillingReportApiService.getTools?.() || { data: [] }
+
+    toolOptions.value = (response.data || response || []).map((tool: any) => ({
+      title: tool.name || tool.tool_name,
+      value: tool.id,
+    }))
+  }
+  catch (error) {
+    console.error('Error loading tools:', error)
+    toolOptions.value = []
+  }
+  finally {
+    loadingTools.value = false
+  }
+}
+
+// Actions
+const handleSubmit = async () => {
+  const data = {
+    project_id: props.projectId,
+    well_id: props.wellId,
+    ...wizardStore.formData,
+  }
+
+  emit('submit', data)
+}
+
+const handleCancel = () => {
+  // Clear draft when user cancels
+  wizardStore.clearDraft(props.projectId, props.wellId)
+  wizardStore.resetForm()
+  localDialog.value = false
+}
+
+// Method to be called from parent on success
+const onSuccess = () => {
+  wizardStore.clearDraft(props.projectId, props.wellId)
+  wizardStore.resetForm()
+  handleCancel()
+}
+
+// Expose method for parent to call
+defineExpose({
+  onSuccess,
+})
+
+// Watch for dialog open/close
+watch(() => props.modelValue, newValue => {
+  console.log('👁️ Wizard dialog opened:', newValue)
+  if (newValue) {
+    wizardStore.setStep('1')
+    loadEquipment()
+    loadEmployees()
+    loadTools()
+
+    // Load draft if exists
+    wizardStore.loadDraft(props.projectId, props.wellId)
+  }
+})
+
+// Auto-save draft on changes
+watch(() => wizardStore.formData, () => {
+  if (props.modelValue && wizardStore.isDirty)
+    wizardStore.saveDraft(props.projectId, props.wellId)
+}, { deep: true })
+
+// Watch for errors from parent
+watch(() => props.error, newError => {
+  if (!newError)
+    return
+
+  console.log('🔴 Wizard: Received error from parent:', newError)
+
+  try {
+    const errorObj = typeof newError === 'string' ? JSON.parse(newError) : newError
+
+    // Handle Laravel validation errors
+    if (errorObj.errors) {
+      const validationErrors: Record<string, string[]> = {}
+
+      Object.entries(errorObj.errors).forEach(([field, messages]: [string, any]) => {
+        validationErrors[field] = messages as string[]
+      })
+
+      wizardStore.setError(
+        'Errores de validación',
+        errorObj.message || 'Por favor corrige los siguientes errores:',
+        validationErrors,
+      )
+    }
+    else if (errorObj.error) {
+      // Handle structured error
+      const errorCode = errorObj.error.code
+      const translatedMessage = t(`errors.${errorCode}`, '', { missingWarn: false, fallbackWarn: false })
+
+      if (translatedMessage && translatedMessage !== '' && translatedMessage !== `errors.${errorCode}`)
+        wizardStore.setError(t('common.error'), translatedMessage)
+      else
+        wizardStore.setError(errorCode || t('common.error'), errorObj.error.message || newError)
+    }
+    else {
+      wizardStore.setError(t('common.error'), errorObj.message || typeof errorObj === 'string' ? errorObj : JSON.stringify(errorObj))
+    }
+  }
+  catch (e) {
+    console.error('💥 Wizard: Error parsing error message:', e)
+    wizardStore.setError(t('common.error'), typeof newError === 'string' ? newError : 'Error desconocido')
+  }
+})
+
+onMounted(() => {
+  console.log('🚀 Wizard mounted, modelValue:', props.modelValue)
+  if (props.modelValue) {
+    loadEquipment()
+    loadEmployees()
+    loadTools()
+  }
+})
+</script>
+
+<template>
+  <VDialog
+    v-model="localDialog"
+    max-width="1000"
+    persistent
+    scrollable
+  >
+    <VCard>
+      <VCardTitle class="d-flex align-center justify-space-between sticky-header">
+        <div class="d-flex align-center gap-2">
+          <VIcon
+            icon="tabler-file-plus"
+            color="primary"
+          />
+          <span>Nuevo Reporte de Perforación</span>
+        </div>
+        <VBtn
+          icon="tabler-x"
+          variant="text"
+          size="small"
+          @click="handleCancel"
+        />
+      </VCardTitle>
+
+      <VDivider />
+
+      <!-- Draft Loaded Alert -->
+      <VAlert
+        v-if="wizardStore.draftLoadedMessage"
+        type="info"
+        variant="tonal"
+        closable
+        class="ma-4"
+        @click:close="wizardStore.draftLoadedMessage = ''"
+      >
+        <template #prepend>
+          <VIcon icon="tabler-restore" />
+        </template>
+        {{ wizardStore.draftLoadedMessage }}
+      </VAlert>
+
+      <!-- Error Alert -->
+      <VAlert
+        v-if="wizardStore.errorMessage"
+        type="error"
+        variant="tonal"
+        closable
+        class="ma-4"
+        prominent
+        @click:close="wizardStore.clearError()"
+      >
+        <template #prepend>
+          <VIcon
+            icon="tabler-alert-circle"
+            size="32"
+          />
+        </template>
+        <VAlertTitle class="text-h6 mb-2">
+          {{ wizardStore.errorTitle }}
+        </VAlertTitle>
+        <div v-if="Object.keys(wizardStore.validationErrors).length > 0">
+          <p class="mb-2">
+            {{ wizardStore.errorMessage }}
+          </p>
+          <ul class="ml-4">
+            <li
+              v-for="(messages, field) in wizardStore.validationErrors"
+              :key="field"
+              class="text-body-2"
+            >
+              {{ field.replace(/_/g, ' ').replace(/\.\d+\./g, ' > ') }}:
+              <span
+                v-for="(msg, idx) in messages"
+                :key="idx"
+              >
+                {{ msg }}<span v-if="idx < messages.length - 1">, </span>
+              </span>
+            </li>
+          </ul>
+        </div>
+        <p
+          v-else
+          class="mb-0"
+        >
+          {{ wizardStore.errorMessage }}
+        </p>
+      </VAlert>
+
+      <VCardText
+        class="pa-0"
+        style="max-block-size: 70vh; overflow-y: auto;"
+      >
+        <VStepper
+          v-model="wizardStore.currentStep"
+          :items="steps"
+          hide-actions
+          flat
+        >
+          <VStepperWindow>
+            <!-- Step 1: Información Básica -->
+            <VStepperWindowItem value="1">
+              <VForm ref="step1Form">
+                <WizardBasicInfoMolecule
+                  :project-name="projectName"
+                  :well-name="wellName"
+                  :equipment-options="equipmentOptions"
+                  :loading-equipment="loadingEquipment"
+                />
+              </VForm>
+            </VStepperWindowItem>
+
+            <!-- Step 2: Personal -->
+            <VStepperWindowItem value="2">
+              <VForm ref="step2Form">
+                <WizardPersonnelMolecule
+                  :employee-options="employeeOptions"
+                  :loading-employees="loadingEmployees"
+                />
+              </VForm>
+            </VStepperWindowItem>
+
+            <!-- Step 3: Actividades -->
+            <VStepperWindowItem value="3">
+              <WizardActivitiesMolecule />
+            </VStepperWindowItem>
+
+            <!-- Step 4: Consumos -->
+            <VStepperWindowItem value="4">
+              <WizardConsumptionsMolecule />
+            </VStepperWindowItem>
+
+            <!-- Step 5: Herramientas -->
+            <VStepperWindowItem value="5">
+              <WizardToolsMolecule
+                :tool-options="toolOptions"
+                :loading-tools="loadingTools"
+              />
+            </VStepperWindowItem>
+
+            <!-- Step 6: Revisión Final -->
+            <VStepperWindowItem value="6">
+              <WizardReviewMolecule />
+            </VStepperWindowItem>
+          </VStepperWindow>
+        </VStepper>
+      </VCardText>
+
+      <VDivider />
+
+      <!-- Navigation Footer -->
+      <VCardActions class="pa-4">
+        <VChip
+          size="small"
+          variant="tonal"
+        >
+          Paso {{ wizardStore.currentStep }} de {{ steps.length }}
+        </VChip>
+        <VSpacer />
+        <VBtn
+          v-if="wizardStore.currentStep > '1'"
+          variant="text"
+          prepend-icon="tabler-arrow-left"
+          @click="previousStep"
+        >
+          Anterior
+        </VBtn>
+        <VBtn
+          variant="text"
+          @click="handleCancel"
+        >
+          Cancelar
+        </VBtn>
+        <VBtn
+          v-if="wizardStore.currentStep < String(steps.length)"
+          color="primary"
+          append-icon="tabler-arrow-right"
+          @click="nextStep"
+        >
+          Siguiente
+        </VBtn>
+        <VBtn
+          v-else
+          color="primary"
+          prepend-icon="tabler-device-floppy"
+          :loading="loading"
+          :disabled="!wizardStore.isFormValid"
+          @click="handleSubmit"
+        >
+          Guardar Reporte
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
+
+<style scoped lang="scss">
+.sticky-header {
+  position: sticky;
+  z-index: 10;
+  background: rgb(var(--v-theme-surface));
+  inset-block-start: 0;
+}
+
+:deep(.v-stepper) {
+  box-shadow: none !important;
+}
+</style>

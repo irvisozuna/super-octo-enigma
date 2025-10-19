@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DrillingReportApiService } from '../../../infrastructure/api/services/DrillingReportApiService'
+import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
 
 const props = defineProps<AssignPersonnelDialogProps>()
 
@@ -111,10 +111,14 @@ const loadEmployees = async () => {
 }
 
 const handleSubmit = async () => {
+  console.log('🔵 AssignPersonnelDialog.handleSubmit called')
   const { valid } = await form.value.validate()
-  if (!valid)
+  if (!valid) {
+    console.log('❌ Form validation failed')
     return
+  }
 
+  console.log('✅ Form validation passed')
   errorMessage.value = '' // Clear previous errors
 
   const data = {
@@ -125,6 +129,7 @@ const handleSubmit = async () => {
     notes: formData.value.notes,
   }
 
+  console.log('🔵 Emitting assign event with data:', data)
   emit('assign', data)
 
   // Don't reset form here - let parent component handle success/error

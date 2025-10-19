@@ -47,13 +47,13 @@ export interface ProjectOverviewTabProps {
 
 const props = defineProps<ProjectOverviewTabProps>()
 
-const isPlanned = computed(() => props.status === 'planned')
-
 defineEmits<{
   'view-map': []
   'view-budget': []
   'add-expense': []
 }>()
+
+const isPlanned = computed(() => props.status === 'planned')
 
 const hasAnyStats = computed(() => {
   return (
@@ -239,19 +239,19 @@ const daysRemaining = computed(() => {
       >
         <!-- Project Timeline -->
         <VCard
+          v-if="!isPlanned"
           variant="outlined"
           class="mb-6"
-          v-if="!isPlanned"
         >
           <VCardTitle class="d-flex align-center gap-2">
             <VIcon icon="tabler-calendar-event" />
-            Timeline del Proyecto 
+            Timeline del Proyecto
           </VCardTitle>
           <VCardText>
             <div class="timeline-info">
               <div class="timeline-item">
                 <VIcon
-                  icon="tabler-calendar-start"
+                  icon="tabler-calendar"
                   class="text-success"
                 />
                 <div>
@@ -386,21 +386,11 @@ const daysRemaining = computed(() => {
         cols="12"
         lg="4"
       >
-        <!-- Budget Overview -->
-        <BudgetCardMolecule
-          v-if="budget && !isPlanned"
-          :total="budget.total"
-          :current="budget.current_cost"
-          :currency="budget.currency"
-          :show-projection="true"
-          :projected-total="budget.projected_total"
-          class="mb-6"
-          @view-details="$emit('view-budget')"
-          @add-expense="$emit('add-expense')"
-        />
-
         <!-- Recent Activity -->
-        <VCard variant="outlined" v-if="!isPlanned">
+        <VCard
+          v-if="!isPlanned"
+          variant="outlined"
+        >
           <VCardTitle class="d-flex align-center gap-2">
             <VIcon icon="tabler-activity" />
             Actividad Reciente

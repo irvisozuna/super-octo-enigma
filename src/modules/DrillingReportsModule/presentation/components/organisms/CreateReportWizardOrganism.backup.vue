@@ -3,6 +3,21 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { DrillingReportApiService } from '../../../infrastructure/api/services/DrillingReportApiService'
 
+// Import constants from centralized index
+import {
+  ACTIVITY_SHIFT_OPTIONS,
+  ACTIVITY_TEMPLATES,
+  ACTIVITY_TYPES,
+  CONSUMABLE_TYPES,
+  REPORT_VALIDATION_RULES,
+  REPORT_WIZARD_CONFIG,
+  REPORT_WIZARD_MESSAGES,
+  REPORT_WIZARD_STEPS,
+  SHIFT_OPTIONS,
+  TOOL_CATEGORY_OPTIONS,
+  UNIT_OPTIONS,
+} from '../../../shared/constants'
+
 const props = defineProps<CreateReportWizardProps>()
 
 const emit = defineEmits<{
@@ -57,6 +72,8 @@ const formData = ref({
   helper2_night_id: null as string | null,
   horometer_start_day: null as number | null,
   horometer_start_night: null as number | null,
+  horometer_end_day: null as number | null,
+  horometer_end_night: null as number | null,
   rpm_pull_down: null as number | null,
   rpm_rotation: null as number | null,
   observations: '',
@@ -65,86 +82,16 @@ const formData = ref({
   tool_assignments: [] as any[],
 })
 
-const steps = [
-  { title: 'Información Básica', value: '1' },
-  { title: 'Personal', value: '2' },
-  { title: 'Actividades', value: '3' },
-  { title: 'Consumos', value: '4' },
-  { title: 'Herramientas', value: '5' },
-  { title: 'Revisión', value: '6' },
-]
-
-const shiftOptions = [
-  { title: 'Día', value: 'day' },
-  { title: 'Noche', value: 'night' },
-  { title: 'Mixto', value: 'mixed' },
-]
-
-const activityShiftOptions = [
-  { title: 'Día', value: 'day' },
-  { title: 'Noche', value: 'night' },
-]
-
-const activityTypeOptions = [
-  { title: 'Perforación de núcleo', value: 'drilling_core' },
-  { title: 'Estabilización de pozo', value: 'stabilizing_hole' },
-  { title: 'Extracción de tubería', value: 'pulling_pipe' },
-  { title: 'Inserción de tubería', value: 'inserting_pipe' },
-  { title: 'Cementación', value: 'casting' },
-  { title: 'Acondicionamiento de pozo', value: 'conditioning_well' },
-  { title: 'Mantenimiento', value: 'maintenance' },
-  { title: 'Manejo de materiales', value: 'material_handling' },
-  { title: 'Tiempo de espera', value: 'waiting' },
-  { title: 'Otras', value: 'other' },
-]
-
-const activityTemplates = [
-  { type: 'drilling_core', label: 'Perforación', icon: 'tabler-tool', hours: 8 },
-  { type: 'maintenance', label: 'Mantenimiento', icon: 'tabler-settings', hours: 2 },
-  { type: 'waiting', label: 'Espera', icon: 'tabler-clock-pause', hours: 1 },
-]
-
-const consumableTypeOptions = [
-  { title: 'Bentonita', value: 'bentonite' },
-  { title: 'Ezze Pac R', value: 'ezze_pac_r' },
-  { title: 'Agua', value: 'water' },
-  { title: 'Cemento', value: 'cement' },
-  { title: 'Lubricante', value: 'lubricant' },
-  { title: 'Espuma', value: 'foam' },
-  { title: 'Otros', value: 'other' },
-]
-
-const unitOptions = [
-  { title: 'Kilogramos', value: 'kg' },
-  { title: 'Sacos/Bolsas', value: 'bags' },
-  { title: 'Litros', value: 'liters' },
-  { title: 'Galones', value: 'gallons' },
-  { title: 'Unidades', value: 'units' },
-]
-
-const toolCategoryOptions = [
-  { title: 'Broca de diamante', value: 'diamond_bit' },
-  { title: 'Tricono', value: 'tricone' },
-  { title: 'Escariador', value: 'reamer' },
-  { title: 'Tubería de perforación', value: 'drill_pipe' },
-]
-
-const rules = {
-  required: (value: any) => !!value || 'Campo requerido',
-  positiveNumber: (value: number) => !value || value > 0 || 'Debe ser mayor a 0',
-  dateNotFuture: (value: string) => {
-    if (!value)
-      return true
-    const date = new Date(value)
-    const today = new Date()
-
-    today.setHours(23, 59, 59, 999)
-
-    return date <= today || 'La fecha no puede ser futura'
-  },
-  maxLength: (max: number) => (value: string) =>
-    !value || value.length <= max || `Máximo ${max} caracteres`,
-}
+// Use constants from the imported file
+const steps = REPORT_WIZARD_STEPS
+const shiftOptions = SHIFT_OPTIONS
+const activityShiftOptions = ACTIVITY_SHIFT_OPTIONS
+const activityTypeOptions = ACTIVITY_TYPES
+const activityTemplates = ACTIVITY_TEMPLATES
+const consumableTypeOptions = CONSUMABLE_TYPES
+const unitOptions = UNIT_OPTIONS
+const toolCategoryOptions = TOOL_CATEGORY_OPTIONS
+const rules = REPORT_VALIDATION_RULES
 
 // Computed
 const showDayShift = computed(() => formData.value.shift === 'day' || formData.value.shift === 'mixed')
@@ -430,6 +377,8 @@ const handleCancel = () => {
     helper2_night_id: null,
     horometer_start_day: null,
     horometer_start_night: null,
+    horometer_end_day: null,
+    horometer_end_night: null,
     rpm_pull_down: null,
     rpm_rotation: null,
     observations: '',
@@ -713,7 +662,7 @@ onMounted(() => {
 
       <VCardText
         class="pa-0"
-        style="max-height: 70vh; overflow-y: auto;"
+        style="max-block-size: 70vh; overflow-y: auto;"
       >
         <VStepper
           v-model="currentStep"
@@ -897,6 +846,17 @@ onMounted(() => {
                             prepend-inner-icon="tabler-clock-hour-4"
                             suffix="hrs"
                             :rules="showDayShift ? [rules.required, rules.positiveNumber] : []"
+                            class="mb-3"
+                            @update:model-value="calculateHorometer"
+                          />
+                          <VTextField
+                            v-model.number="formData.horometer_end_day"
+                            label="Horómetro Fin *"
+                            type="number"
+                            step="0.1"
+                            prepend-inner-icon="tabler-clock-hour-4"
+                            suffix="hrs"
+                            :rules="showDayShift ? [rules.required, rules.positiveNumber] : []"
                             @update:model-value="calculateHorometer"
                           />
                         </VCardText>
@@ -945,6 +905,17 @@ onMounted(() => {
                           <VTextField
                             v-model.number="formData.horometer_start_night"
                             label="Horómetro Inicio *"
+                            type="number"
+                            step="0.1"
+                            prepend-inner-icon="tabler-clock-hour-4"
+                            suffix="hrs"
+                            :rules="showNightShift ? [rules.required, rules.positiveNumber] : []"
+                            class="mb-3"
+                            @update:model-value="calculateHorometer"
+                          />
+                          <VTextField
+                            v-model.number="formData.horometer_end_night"
+                            label="Horómetro Fin *"
                             type="number"
                             step="0.1"
                             prepend-inner-icon="tabler-clock-hour-4"
@@ -1737,9 +1708,9 @@ onMounted(() => {
 <style scoped lang="scss">
 .sticky-header {
   position: sticky;
-  top: 0;
   z-index: 10;
   background: rgb(var(--v-theme-surface));
+  inset-block-start: 0;
 }
 
 :deep(.v-stepper) {

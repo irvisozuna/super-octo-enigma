@@ -77,13 +77,11 @@ export class EmployeeModuleContainer {
    * Install module (register routes, etc.)
    */
   install(app: any) {
-    console.log('📦 Installing EmployeeModule...')
 
     // Register routes if needed
     // Register stores if needed
     // Register components if needed
 
-    console.log('✅ EmployeeModule installed successfully!')
   }
 
   /**

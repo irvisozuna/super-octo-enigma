@@ -115,9 +115,9 @@ export class EquipmentApiService {
   static async assignToProject(id: string, projectId: string, notes?: string): Promise<{ data: Equipment }> {
     return await rawApi(`${this.baseUrl}/${id}/assign`, {
       method: 'POST',
-      body: { 
+      body: {
         project_id: projectId,
-        ...(notes && { notes })
+        ...(notes && { notes }),
       },
     })
   }

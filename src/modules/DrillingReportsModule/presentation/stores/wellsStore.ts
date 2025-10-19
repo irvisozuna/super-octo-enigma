@@ -82,12 +82,12 @@ export const useWellsStore = defineStore('drillingWells', () => {
     try {
       const response = await DrillingReportApiService.getWellsByProject(projectId, params)
 
-      console.log('🏪 Store - Full response:', response)
-      console.log('🏪 Store - response.data:', response.data)
+      // console.log('🏪 Store - Full response:', response)
+      // console.log('🏪 Store - response.data:', response.data)
 
       wells.value = response.data || response
 
-      console.log('🏪 Store - wells.value assigned:', wells.value)
+      // console.log('🏪 Store - wells.value assigned:', wells.value)
 
       if (response.current_page) {
         pagination.value = {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { EquipmentApiService } from '../../../infrastructure/api/services/EquipmentApiService'
+import { EquipmentApiService } from '../../../../infrastructure/api/services/EquipmentApiService'
 
 interface Props {
   visible: boolean
@@ -42,10 +42,11 @@ const localLoading = ref(false)
 // Handle form submission
 const handleSubmit = async () => {
   const { valid } = await formRef.value.validate()
-  if (!valid) return
+  if (!valid)
+    return
 
   localLoading.value = true
-  
+
   try {
     await EquipmentApiService.unassignFromProject(props.equipment.id, formData.value.notes)
     emit('success')
@@ -53,6 +54,7 @@ const handleSubmit = async () => {
   }
   catch (error: any) {
     console.error('❌ Error unassigning equipment:', error)
+
     // Handle error - you can add error state here if needed
   }
   finally {
@@ -67,10 +69,9 @@ const handleClose = () => {
 }
 
 // Reset form when dialog opens
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
+watch(() => props.visible, newVisible => {
+  if (newVisible)
     formData.value.notes = ''
-  }
 })
 </script>
 
@@ -105,7 +106,7 @@ watch(() => props.visible, (newVisible) => {
             {{ $t('DrillingReportsModule.equipment.unassignConfirm') }}
           </VAlertTitle>
           <p class="mb-0">
-            ¿Está seguro de desasignar el equipo <strong>{{ equipment?.equipment_name }}</strong> 
+            ¿Está seguro de desasignar el equipo <strong>{{ equipment?.equipment_name }}</strong>
             ({{ equipment?.equipment_code }}) del proyecto?
           </p>
         </VAlert>

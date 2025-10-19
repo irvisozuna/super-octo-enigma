@@ -1,0 +1,144 @@
+export const CONSUMABLE_TYPES = [
+  {
+    title: 'Bentonita',
+    value: 'bentonite',
+    icon: 'tabler-droplet',
+    color: '#10B981',
+    category: 'drilling_fluid',
+    description: 'Fluido de perforación base',
+    translationKey: 'DrillingReportsModule.consumables.bentonite',
+  },
+  {
+    title: 'Ezze Pac R',
+    value: 'ezze_pac_r',
+    icon: 'tabler-chemical',
+    color: '#3B82F6',
+    category: 'additive',
+    description: 'Aditivo químico especializado',
+    translationKey: 'DrillingReportsModule.consumables.ezze_pac_r',
+  },
+  {
+    title: 'Agua',
+    value: 'water',
+    icon: 'tabler-droplet-filled',
+    color: '#3B82F6',
+    category: 'base_fluid',
+    description: 'Agua como fluido base',
+    translationKey: 'DrillingReportsModule.consumables.water',
+  },
+  {
+    title: 'Cemento',
+    value: 'cement',
+    icon: 'tabler-building',
+    color: '#6B7280',
+    category: 'sealing',
+    description: 'Cemento para sellado',
+    translationKey: 'DrillingReportsModule.consumables.cement',
+  },
+  {
+    title: 'Lubricante',
+    value: 'lubricant',
+    icon: 'tabler-oil',
+    color: '#F59E0B',
+    category: 'lubrication',
+    description: 'Lubricante para equipos',
+    translationKey: 'DrillingReportsModule.consumables.lubricant',
+  },
+  {
+    title: 'Espuma',
+    value: 'foam',
+    icon: 'tabler-bubble',
+    color: '#8B5CF6',
+    category: 'additive',
+    description: 'Agente espumante',
+    translationKey: 'DrillingReportsModule.consumables.foam',
+  },
+  {
+    title: 'Otros',
+    value: 'other',
+    icon: 'tabler-dots',
+    color: '#6B7280',
+    category: 'misc',
+    description: 'Otros consumibles',
+    translationKey: 'DrillingReportsModule.consumables.other',
+  },
+]
+
+export const CONSUMABLE_UNITS = [
+  {
+    title: 'Kilogramos',
+    value: 'kg',
+    icon: 'tabler-scale',
+    color: '#10B981',
+    category: 'weight',
+    symbol: 'kg',
+    translationKey: 'DrillingReportsModule.units.kg',
+  },
+  {
+    title: 'Sacos/Bolsas',
+    value: 'bags',
+    icon: 'tabler-package',
+    color: '#3B82F6',
+    category: 'count',
+    symbol: 'sacos',
+    translationKey: 'DrillingReportsModule.units.bags',
+  },
+  {
+    title: 'Litros',
+    value: 'liters',
+    icon: 'tabler-droplet',
+    color: '#3B82F6',
+    category: 'volume',
+    symbol: 'L',
+    translationKey: 'DrillingReportsModule.units.liters',
+  },
+  {
+    title: 'Galones',
+    value: 'gallons',
+    icon: 'tabler-droplet-filled',
+    color: '#8B5CF6',
+    category: 'volume',
+    symbol: 'gal',
+    translationKey: 'DrillingReportsModule.units.gallons',
+  },
+  {
+    title: 'Unidades',
+    value: 'units',
+    icon: 'tabler-hash',
+    color: '#6B7280',
+    category: 'count',
+    symbol: 'unid',
+    translationKey: 'DrillingReportsModule.units.units',
+  },
+]
+
+export const CONSUMABLE_CATEGORIES = [
+  { value: 'drilling_fluid', label: 'Fluido de Perforación', icon: 'tabler-droplet', color: '#3B82F6' },
+  { value: 'additive', label: 'Aditivo', icon: 'tabler-chemical', color: '#8B5CF6' },
+  { value: 'base_fluid', label: 'Fluido Base', icon: 'tabler-droplet-filled', color: '#3B82F6' },
+  { value: 'sealing', label: 'Sellado', icon: 'tabler-building', color: '#6B7280' },
+  { value: 'lubrication', label: 'Lubricación', icon: 'tabler-oil', color: '#F59E0B' },
+  { value: 'misc', label: 'Misceláneo', icon: 'tabler-dots', color: '#6B7280' },
+]
+
+export const CONSUMABLE_FILTERS = {
+  TYPE: CONSUMABLE_TYPES,
+  UNIT: CONSUMABLE_UNITS,
+  CATEGORY: CONSUMABLE_CATEGORIES,
+}
+
+export const CONSUMABLE_PERMISSIONS = {
+  CREATE: 'consumables.create',
+  VIEW: 'consumables.view',
+  UPDATE: 'consumables.update',
+  DELETE: 'consumables.delete',
+  EXPORT: 'consumables.export',
+}
+
+export const CONSUMABLE_NOTIFICATIONS = {
+  CREATED: 'consumable_created',
+  UPDATED: 'consumable_updated',
+  DELETED: 'consumable_deleted',
+  LOW_STOCK: 'consumable_low_stock',
+  OUT_OF_STOCK: 'consumable_out_of_stock',
+}

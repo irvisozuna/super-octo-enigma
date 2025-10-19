@@ -51,7 +51,7 @@ Object.entries(moduleMessages).forEach(([compoundKey, moduleTranslation]) => {
   // Puedes asignar las traducciones del módulo bajo su propio namespace
   messages[locale][moduleName] = moduleTranslation
 
-  console.log(messages)
+  // console.log(messages)
 })
 
 let _i18n: any = null

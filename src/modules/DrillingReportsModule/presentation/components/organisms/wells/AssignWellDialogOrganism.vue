@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { DrillingReportApiService } from '../../../infrastructure/api/services/DrillingReportApiService'
+import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
 
 export interface AssignWellDialogProps {
   modelValue: boolean

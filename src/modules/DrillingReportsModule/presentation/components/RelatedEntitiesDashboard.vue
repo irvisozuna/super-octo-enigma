@@ -20,7 +20,7 @@ const recentActivities = ref([
     title: 'Nuevo Proyecto Creado',
     description: 'Proyecto "Exploración Norte" ha sido creado',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    icon: 'mdi-folder-plus',
+    icon: 'tabler-folder-plus',
     color: 'success',
   },
   {
@@ -28,7 +28,7 @@ const recentActivities = ref([
     title: 'Pozo Completado',
     description: 'Pozo "Norte-001" ha sido completado exitosamente',
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    icon: 'mdi-well',
+    icon: 'tabler-hole',
     color: 'info',
   },
   {
@@ -36,7 +36,7 @@ const recentActivities = ref([
     title: 'Herramienta Asignada',
     description: 'Broca de perforación asignada al proyecto',
     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    icon: 'mdi-tools',
+    icon: 'tabler-tool',
     color: 'warning',
   },
   {
@@ -44,7 +44,7 @@ const recentActivities = ref([
     title: 'Empleado Agregado',
     description: 'Nuevo operador agregado al equipo',
     timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    icon: 'mdi-account-plus',
+    icon: 'tabler-user-plus',
     color: 'primary',
   },
   {
@@ -52,7 +52,7 @@ const recentActivities = ref([
     title: 'Documento Subido',
     description: 'Manual de seguridad actualizado',
     timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    icon: 'mdi-file-upload',
+    icon: 'tabler-file-upload',
     color: 'purple',
   },
 ])
@@ -142,7 +142,7 @@ onMounted(() => {
         <VCard>
           <VCardTitle>
             <VIcon
-              icon="mdi-chart-pie"
+              icon="tabler-chart-pie"
               class="me-2"
             />
             {{ $t('DrillingReportsModule.projects.statusDistribution') }}
@@ -174,7 +174,7 @@ onMounted(() => {
         <VCard>
           <VCardTitle>
             <VIcon
-              icon="mdi-chart-bar"
+              icon="tabler-chart-bar"
               class="me-2"
             />
             {{ $t('DrillingReportsModule.wells.depthDistribution') }}
@@ -206,7 +206,7 @@ onMounted(() => {
         <VCard>
           <VCardTitle>
             <VIcon
-              icon="mdi-chart-line"
+              icon="tabler-chart-line"
               class="me-2"
             />
             {{ $t('DrillingReportsModule.tools.conditionDistribution') }}
@@ -238,7 +238,7 @@ onMounted(() => {
         <VCard>
           <VCardTitle>
             <VIcon
-              icon="mdi-chart-donut"
+              icon="tabler-chart-donut"
               class="me-2"
             />
             {{ $t('DrillingReportsModule.employees.departmentDistribution') }}
@@ -269,7 +269,7 @@ onMounted(() => {
         <VCard>
           <VCardTitle>
             <VIcon
-              icon="mdi-clock-outline"
+              icon="tabler-clock-hour-4"
               class="me-2"
             />
             {{ $t('DrillingReportsModule.common.recentActivity') }}

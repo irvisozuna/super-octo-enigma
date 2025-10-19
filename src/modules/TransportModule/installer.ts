@@ -36,8 +36,6 @@ export class TransportModuleInstaller {
   }
 
   async install() {
-    console.log('🚀 Installing TransportModule...')
-
     try {
       // Register routes
       this.registerRoutes()
@@ -51,8 +49,6 @@ export class TransportModuleInstaller {
       // Add CASL abilities
       this.addCaslAbilities()
 
-      console.log('✅ TransportModule installed successfully!')
-
       return true
     }
     catch (error) {
@@ -63,8 +59,6 @@ export class TransportModuleInstaller {
   }
 
   private registerRoutes() {
-    console.log('📁 Registering transport routes...')
-
     if (!this.router) {
       console.warn('Router not available, routes will be registered when router is available')
 
@@ -77,16 +71,12 @@ export class TransportModuleInstaller {
   }
 
   private addMenuItems() {
-    console.log('📋 Adding transport menu items...')
-
     // Add menu items to the main navigation
     if (window.mainMenu)
       window.mainMenu.push(...TransportModuleMenu)
   }
 
   private async addTranslations() {
-    console.log('🌐 Adding transport translations...')
-
     try {
       // Dynamic imports for translation files
       const [enTranslations, esTranslations] = await Promise.all([
@@ -120,8 +110,6 @@ export class TransportModuleInstaller {
   }
 
   private addCaslAbilities() {
-    console.log('🔐 Adding transport CASL abilities...')
-
     // Add CASL abilities for module permissions
     const abilities = [
       // Transport general
@@ -178,8 +166,6 @@ export class TransportModuleInstaller {
   }
 
   uninstall() {
-    console.log('🗑️ Uninstalling TransportModule...')
-
     try {
       // Remove routes
       this.removeRoutes()
@@ -192,8 +178,6 @@ export class TransportModuleInstaller {
 
       // Remove CASL abilities
       this.removeCaslAbilities()
-
-      console.log('✅ TransportModule uninstalled successfully!')
 
       return true
     }

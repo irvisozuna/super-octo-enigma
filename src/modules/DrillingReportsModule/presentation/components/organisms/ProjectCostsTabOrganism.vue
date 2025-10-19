@@ -246,7 +246,7 @@ const getCategoryLabel = (category: string) => {
                 size="48"
               >
                 <VIcon
-                  icon="tabler-piggy-bank"
+                  icon="tabler-pig-money"
                   size="24"
                 />
               </VAvatar>

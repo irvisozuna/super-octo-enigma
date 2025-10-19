@@ -123,7 +123,7 @@ export function validateMenu(menuItems: VerticalNavItems, moduleName = 'Unknown'
     }
   }
   else {
-    console.log(`✅ Menu validation passed for ${moduleName}`)
+    // console.log(`✅ Menu validation passed for ${moduleName}`)
   }
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { EquipmentApiService } from '../../../infrastructure/api/services/EquipmentApiService'
+import { EquipmentApiService } from '../../../../infrastructure/api/services/EquipmentApiService'
 
 interface Props {
   visible: boolean
@@ -53,11 +53,11 @@ const loadEquipment = async (searchTerm = '', page = 1, append = false) => {
   loadingEquipment.value = true
   try {
     console.log('🔍 Loading equipment:', { searchTerm, page, append })
-    
+
     const response = await EquipmentApiService.getEquipment({
       search: searchTerm,
       status: 'active',
-      page: page,
+      page,
       per_page: 50,
     })
 
@@ -66,40 +66,42 @@ const loadEquipment = async (searchTerm = '', page = 1, append = false) => {
     // Handle different response structures
     let equipmentData = []
     let meta = {}
-    
+
     if (response.data) {
       if (Array.isArray(response.data)) {
         // Direct array response
         equipmentData = response.data
-      } else if (response.data.data) {
+      }
+      else if (response.data.data) {
         // Paginated response
         equipmentData = response.data.data
         meta = response.data.meta || {}
-      } else {
+      }
+      else {
         // Single object response
         equipmentData = [response.data]
       }
-    } else if (Array.isArray(response)) {
+    }
+    else if (Array.isArray(response)) {
       // Direct array response
       equipmentData = response
     }
-    
+
     // Filter out equipment already assigned to projects
     const availableEquipment = equipmentData.filter((equipment: any) => !equipment.current_project_id)
-    
+
     const mappedEquipment = availableEquipment.map((equipment: any) => ({
       id: equipment.id,
       title: `${equipment.equipment_name} (${equipment.equipment_code})`,
       subtitle: `${equipment.equipment_type} - ${equipment.manufacturer || 'Sin fabricante'}`,
       value: equipment.id,
-      equipment: equipment,
+      equipment,
     }))
 
-    if (append) {
+    if (append)
       equipmentOptions.value = [...equipmentOptions.value, ...mappedEquipment]
-    } else {
+    else
       equipmentOptions.value = mappedEquipment
-    }
 
     // Update pagination info
     currentPage.value = meta.current_page || page
@@ -110,14 +112,13 @@ const loadEquipment = async (searchTerm = '', page = 1, append = false) => {
       count: equipmentOptions.value.length,
       currentPage: currentPage.value,
       hasMorePages: hasMorePages.value,
-      total: totalEquipment.value
+      total: totalEquipment.value,
     })
   }
   catch (error) {
     console.error('❌ Error loading equipment:', error)
-    if (!append) {
+    if (!append)
       equipmentOptions.value = []
-    }
   }
   finally {
     loadingEquipment.value = false
@@ -129,12 +130,11 @@ const searchTimeout = ref<NodeJS.Timeout | null>(null)
 
 const handleEquipmentSearch = (searchTerm: string) => {
   equipmentSearch.value = searchTerm
-  
+
   // Clear previous timeout
-  if (searchTimeout.value) {
+  if (searchTimeout.value)
     clearTimeout(searchTimeout.value)
-  }
-  
+
   // Set new timeout for debounced search
   searchTimeout.value = setTimeout(() => {
     currentPage.value = 1
@@ -147,6 +147,7 @@ const handleEquipmentSearch = (searchTerm: string) => {
 const loadMoreEquipment = () => {
   if (!loadingEquipment.value && hasMorePages.value) {
     const nextPage = currentPage.value + 1
+
     loadEquipment(equipmentSearch.value, nextPage, true)
   }
 }
@@ -154,7 +155,8 @@ const loadMoreEquipment = () => {
 // Handle form submission
 const handleSubmit = async () => {
   const { valid } = await formRef.value.validate()
-  if (!valid) return
+  if (!valid)
+    return
 
   // Get selected equipment name for success message
   const selectedEquipment = equipmentOptions.value.find(option => option.value === formData.value.equipment_id)
@@ -173,7 +175,7 @@ const handleClose = () => {
 }
 
 // Reset form when dialog opens
-watch(() => props.visible, async (newVisible) => {
+watch(() => props.visible, async newVisible => {
   if (newVisible) {
     formData.value = {
       equipment_id: '',
@@ -184,7 +186,7 @@ watch(() => props.visible, async (newVisible) => {
     hasMorePages.value = true
     totalEquipment.value = 0
     equipmentOptions.value = []
-    
+
     // Force load equipment when dialog opens
     await loadEquipment('', 1, false)
   }
@@ -197,20 +199,20 @@ const onSuccess = () => {
     equipment_id: '',
     notes: '',
   }
-  
+
   // Reset search and pagination
   equipmentSearch.value = ''
   currentPage.value = 1
   hasMorePages.value = true
   totalEquipment.value = 0
   equipmentOptions.value = []
-  
+
   // Clear any search timeout
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value)
     searchTimeout.value = null
   }
-  
+
   // Close dialog
   emit('update:visible', false)
 }
@@ -221,16 +223,17 @@ defineExpose({
 
 // Load equipment on mount if dialog is already visible
 onMounted(() => {
-  if (props.visible) {
+  if (props.visible)
     loadEquipment('', 1, false)
-  }
 })
 
 // Computed for selected equipment details
 const selectedEquipment = computed(() => {
-  if (!formData.value.equipment_id) return null
-  
+  if (!formData.value.equipment_id)
+    return null
+
   const selected = equipmentOptions.value.find(option => option.value === formData.value.equipment_id)
+
   return selected?.equipment || null
 })
 </script>
@@ -354,7 +357,7 @@ const selectedEquipment = computed(() => {
                   </VListItem>
                 </template>
               </VAutocomplete>
-              
+
               <!-- Equipment count info -->
               <div
                 v-if="equipmentOptions.length > 0"
@@ -432,7 +435,7 @@ const selectedEquipment = computed(() => {
                         <strong>Horas de Operación:</strong> {{ selectedEquipment.operating_hours }}h
                       </div>
                       <div class="mb-3">
-                        <strong>Estado:</strong> 
+                        <strong>Estado:</strong>
                         <VChip
                           :color="selectedEquipment.status === 'active' ? 'success' : 'warning'"
                           size="small"
