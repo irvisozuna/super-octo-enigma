@@ -26,6 +26,20 @@
   "DRIVER_QUALIFICATIONS": "Calificaciones del Conductor",
   "VEHICLE_TYPE": "Tipo de Vehículo",
   "CAPACITY_LIMIT": "Límite de Capacidad",
+  "cache":{
+    "status": {
+      "online": "En Línea",
+      "offline": "Fuera de Línea",
+      "pending": "Pendiente",
+      "conflicts": "Conflicto"
+    },
+    "actions": {
+      "force_sync": "Sincronizar",
+      "clear_cache": "Limpiar Cache",
+      "disable": "Deshabilitar",
+      "enable": "Habilitar"
+    }
+  },
   "2": "2",
   "3": "3",
   "5": "5",

@@ -257,7 +257,8 @@ async function handleAssignPersonnel(data: any) {
       message: 'Personal asignado correctamente',
       color: 'success',
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Error in handleAssignPersonnel:', error)
     showSnackbar({
       title: 'Error',
@@ -271,36 +272,56 @@ async function handleAssignPersonnel(data: any) {
  * Asignar equipo
  */
 async function handleAssignEquipment(data: any) {
-  await withErrorHandling(
-    async () => {
-      // Aquí iría la lógica de asignación de equipo
-      await refreshTab('equipment')
-      dialogs.assignEquipment = false
-      showSnackbar({
-        message: 'Equipo asignado correctamente',
-        color: 'success',
-      })
-    },
-    { context: 'Error al asignar equipo' },
-  )
+  try {
+    console.log('🔵 Starting equipment assignment with data:', data)
+
+    // Llamar al API para asignar el equipo al proyecto
+    await detailStore.assignEquipmentToProject(projectId.value, data)
+
+    console.log('✅ Equipment assignment successful')
+    dialogs.assignEquipment = false
+    await refreshTab('equipment')
+    showSnackbar({
+      message: 'Equipo asignado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error) {
+    console.error('❌ Error in handleAssignEquipment:', error)
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al asignar equipo',
+      color: 'error',
+    })
+  }
 }
 
 /**
  * Desasignar equipo
  */
 async function handleUnassignEquipment(data: any) {
-  await withErrorHandling(
-    async () => {
-      // Aquí iría la lógica de desasignación
-      await refreshTab('equipment')
-      dialogs.unassignEquipment = false
-      showSnackbar({
-        message: 'Equipo desasignado correctamente',
-        color: 'success',
-      })
-    },
-    { context: 'Error al desasignar equipo' },
-  )
+  try {
+    console.log('🔵 Starting equipment unassignment with data:', data)
+
+    // Llamar al API para desasignar el equipo del proyecto
+    await detailStore.unassignEquipmentFromProject(projectId.value, data)
+
+    console.log('✅ Equipment unassignment successful')
+    dialogs.unassignEquipment = false
+    await refreshTab('equipment')
+    showSnackbar({
+      message: 'Equipo desasignado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error) {
+    console.error('❌ Error in handleUnassignEquipment:', error)
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al desasignar equipo',
+      color: 'error',
+    })
+  }
 }
 
 /**
@@ -338,9 +359,8 @@ async function handleCreateReportSubmit(reportData: any) {
         const response = await detailStore.createReport?.(projectId.value, reportData)
 
         // Llamar al método onSuccess del wizard para limpiar todo
-        if (reportWizardRef.value?.onSuccess) {
+        if (reportWizardRef.value?.onSuccess)
           reportWizardRef.value.onSuccess()
-        }
 
         dialogs.createReport = false
         await refreshTab('reports')
@@ -358,9 +378,9 @@ async function handleCreateReportSubmit(reportData: any) {
   }
   catch (error: any) {
     // Llamar al método onError del wizard si existe
-    if (reportWizardRef.value?.onError) {
+    if (reportWizardRef.value?.onError)
       reportWizardRef.value.onError(error)
-    }
+
     reportError.value = error.message || 'Error al crear el reporte'
   }
   finally {
@@ -407,7 +427,25 @@ async function handleAddCostSubmit(costData: any) {
     await detailStore.addProjectCost(projectId.value, formattedData)
 
     dialogs.addCost = false
-    await refreshTab('budget')
+
+    // Invalidar cache del proyecto para forzar recarga completa
+    detailStore.invalidateTabCache('project')
+
+    // Pequeño delay para asegurar que el backend haya procesado los cambios
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Refrescar tanto el tab de presupuesto como los datos del proyecto
+    await Promise.all([
+      refreshTab('budget'),
+      refreshProject(), // Recargar datos del proyecto para actualizar estadísticas
+    ])
+
+    // Log para verificar que los datos se actualizaron
+    console.log('💰 Presupuesto actualizado:', {
+      total: project.value?.budget?.total,
+      current: project.value?.budget?.current_cost,
+      statistics: statistics.value,
+    })
 
     showSnackbar({
       title: 'Éxito',
@@ -463,7 +501,24 @@ async function confirmDeleteCost() {
     deleteCostDialog.value = false
     costToDelete.value = null
 
-    await refreshTab('budget')
+    // Invalidar cache del proyecto para forzar recarga completa
+    detailStore.invalidateTabCache('project')
+
+    // Pequeño delay para asegurar que el backend haya procesado los cambios
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Refrescar tanto el tab de presupuesto como los datos del proyecto
+    await Promise.all([
+      refreshTab('budget'),
+      refreshProject(), // Recargar datos del proyecto para actualizar estadísticas
+    ])
+
+    // Log para verificar que los datos se actualizaron
+    console.log('💰 Presupuesto actualizado después de eliminar:', {
+      total: project.value?.budget?.total,
+      current: project.value?.budget?.current_cost,
+      statistics: statistics.value,
+    })
 
     showSnackbar({
       title: 'Éxito',
@@ -582,6 +637,131 @@ function handleViewAllPersonnel() {
  */
 function handleViewBudgetDetails() {
   activeTab.value = 'budget'
+}
+
+// ========== REPORT ACTIONS ==========
+
+/**
+ * Manejar ver detalles de reporte
+ */
+function handleViewReport(report: any) {
+  console.log('Ver reporte:', report)
+
+  // TODO: Implementar vista de detalles del reporte
+  showSnackbar({
+    title: 'Información',
+    message: 'La funcionalidad de vista de detalles estará disponible próximamente',
+    color: 'info',
+  })
+}
+
+/**
+ * Manejar edición de reporte
+ */
+function handleEditReport(report: any) {
+  console.log('Editar reporte:', report)
+
+  // TODO: Abrir wizard con datos precargados
+  showSnackbar({
+    title: 'Información',
+    message: 'La funcionalidad de edición estará disponible próximamente',
+    color: 'info',
+  })
+}
+
+/**
+ * Manejar eliminación de reporte
+ */
+function handleDeleteReport(report: any) {
+  console.log('Eliminar reporte:', report)
+
+  // TODO: Implementar eliminación con confirmación
+  showSnackbar({
+    title: 'Información',
+    message: 'La funcionalidad de eliminación estará disponible próximamente',
+    color: 'info',
+  })
+}
+
+/**
+ * Manejar completar reporte
+ */
+async function handleCompleteReport(report: any) {
+  try {
+    console.log('Completar reporte:', report)
+
+    // Llamar al API para completar el reporte
+    await detailStore.completeReport?.(projectId.value, report.id)
+
+    await refreshTab('reports')
+
+    showSnackbar({
+      title: 'Éxito',
+      message: 'Reporte completado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error: any) {
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al completar el reporte',
+      color: 'error',
+    })
+  }
+}
+
+/**
+ * Manejar aprobar reporte
+ */
+async function handleApproveReport(projectId: string, reportId: string, data?: { approved_by?: string }) {
+  try {
+    console.log('Aprobar reporte:', projectId, reportId, data)
+
+    // Llamar al API para aprobar el reporte
+    await detailStore.approveReport?.(projectId, reportId, data)
+
+    await refreshTab('reports')
+
+    showSnackbar({
+      title: 'Éxito',
+      message: 'Reporte aprobado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error: any) {
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al aprobar el reporte',
+      color: 'error',
+    })
+  }
+}
+
+/**
+ * Manejar rechazar reporte
+ */
+async function handleRejectReport(report: any) {
+  try {
+    console.log('Rechazar reporte:', report)
+
+    // Llamar al API para rechazar el reporte
+    await detailStore.rejectReport?.(projectId.value, report.id)
+
+    await refreshTab('reports')
+
+    showSnackbar({
+      title: 'Éxito',
+      message: 'Reporte rechazado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error: any) {
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al rechazar el reporte',
+      color: 'error',
+    })
+  }
 }
 
 // ========== HELPERS ==========
@@ -715,6 +895,12 @@ onMounted(() => {
             :loading="tabLoadingStates.reports"
             :can-create="canCreateReports"
             @create="handleCreateReport"
+            @view="handleViewReport"
+            @edit="handleEditReport"
+            @delete="handleDeleteReport"
+            @complete="handleCompleteReport"
+            @approve="handleApproveReport(projectId, $event.id)"
+            @reject="handleRejectReport"
             @refresh="() => refreshTab('reports')"
           />
         </template>
@@ -741,7 +927,7 @@ onMounted(() => {
             :loading="tabLoadingStates.equipment"
             :can-edit="canEditProject"
             @assign="openAssignEquipmentDialog(project)"
-            @unassign="openUnassignEquipmentDialog"
+            @remove="openUnassignEquipmentDialog"
             @refresh="() => refreshTab('equipment')"
           />
         </template>
@@ -788,17 +974,13 @@ onMounted(() => {
       max-width="800"
       persistent
     >
-      <VCard>
-        <VCardTitle>Editar Proyecto</VCardTitle>
-        <VCardText>
-          <ProjectForm
-            v-if="project"
-            :project="project"
-            @save="handleProjectUpdated"
-            @cancel="dialogs.edit = false"
-          />
-        </VCardText>
-      </VCard>
+      <ProjectForm
+        v-if="project"
+        :project="project"
+        :is-editing="true"
+        @save="handleProjectUpdated"
+        @cancel="dialogs.edit = false"
+      />
     </VDialog>
 
     <!-- Diálogo de Eliminación -->
@@ -856,7 +1038,7 @@ onMounted(() => {
     <AssignEquipmentDialogOrganism
       v-model:visible="dialogs.assignEquipment"
       :project-id="projectId"
-      @assigned="handleAssignEquipment"
+      @submit="handleAssignEquipment"
     />
 
     <!-- Diálogo de Desasignación de Equipo -->
@@ -864,7 +1046,7 @@ onMounted(() => {
       v-model:visible="dialogs.unassignEquipment"
       :equipment="selectedEquipmentForUnassign"
       :project-id="projectId"
-      @unassigned="handleUnassignEquipment"
+      @success="handleUnassignEquipment"
     />
 
     <!-- Diálogo de Agregar Costo -->

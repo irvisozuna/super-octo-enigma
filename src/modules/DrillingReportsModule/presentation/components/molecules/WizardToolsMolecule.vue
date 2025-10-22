@@ -19,6 +19,7 @@ const rules = REPORT_VALIDATION_RULES
 // Computed
 const formData = computed(() => wizardStore.formData)
 const availableShiftOptions = computed(() => wizardStore.availableShiftOptions)
+const isToolsStepValid = computed(() => wizardStore.isToolsStepValid)
 const getLastDepth = () => wizardStore.getLastDepth()
 
 // Options
@@ -117,7 +118,6 @@ const endDepthRule = (tool: any) => {
                   :items="availableShiftOptions"
                   :rules="[rules.required]"
                   prepend-inner-icon="tabler-clock"
-                  readonly
                   @update:model-value="(v) => updateToolAssignment(index, 'shift', v)"
                 />
               </VCol>
@@ -207,7 +207,7 @@ const endDepthRule = (tool: any) => {
             class="text-medium-emphasis mb-4"
           />
           <p class="text-body-2 text-medium-emphasis mb-4">
-            No hay herramientas registradas. Puedes omitir este paso si no se usaron herramientas.
+            No hay herramientas registradas. Debe agregar al menos una herramienta para continuar.
           </p>
           <VBtn
             color="warning"
@@ -217,6 +217,35 @@ const endDepthRule = (tool: any) => {
             Agregar Herramienta
           </VBtn>
         </VCard>
+      </VCol>
+
+      <!-- Validation Error -->
+      <VCol
+        v-if="formData.tool_assignments.length > 0 && !isToolsStepValid"
+        cols="12"
+      >
+        <VAlert
+          color="error"
+          variant="tonal"
+          border="start"
+          class="mb-4"
+        >
+          <template #title>
+            <VIcon
+              icon="tabler-alert-circle"
+              class="me-2"
+            />
+            Validación Requerida
+          </template>
+          <p class="mb-2">
+            Por favor complete todos los campos requeridos y verifique que:
+          </p>
+          <ul class="text-body-2">
+            <li>• Todas las herramientas tengan un nombre seleccionado</li>
+            <li>• La profundidad fin sea mayor que la profundidad inicio</li>
+            <li>• Todos los campos obligatorios estén completos</li>
+          </ul>
+        </VAlert>
       </VCol>
     </VRow>
   </div>

@@ -77,8 +77,6 @@ const validateStep2 = async () => {
 
 // Navigation
 const nextStep = async () => {
-  console.log('🔄 Next step called. Current step:', wizardStore.currentStep)
-
   if (wizardStore.currentStep === '1') {
     const valid = await validateStep1()
     if (!valid) {
@@ -92,6 +90,22 @@ const nextStep = async () => {
     const valid = await validateStep2()
     if (!valid) {
       console.log('❌ Step 2 validation failed')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '3') {
+    if (!wizardStore.isActivitiesStepValid) {
+      console.log('❌ Step 3 validation failed - activities step not valid')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '5') {
+    if (!wizardStore.isToolsStepValid) {
+      console.log('❌ Step 5 validation failed - tools step not valid')
 
       return
     }
@@ -125,7 +139,6 @@ const loadEquipment = async () => {
 }
 
 const loadEmployees = async () => {
-  console.log('👥 Loading employees...')
   loadingEmployees.value = true
   try {
     const response = await DrillingReportApiService.getEmployees?.() || { data: [] }
@@ -134,7 +147,6 @@ const loadEmployees = async () => {
       title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
       value: emp.id,
     }))
-    console.log('👥 Employee options:', employeeOptions.value.length, 'employees loaded')
   }
   catch (error) {
     console.error('❌ Error loading employees:', error)
@@ -196,7 +208,6 @@ defineExpose({
 
 // Watch for dialog open/close
 watch(() => props.modelValue, newValue => {
-  console.log('👁️ Wizard dialog opened:', newValue)
   if (newValue) {
     wizardStore.setStep('1')
     loadEquipment()
@@ -259,7 +270,6 @@ watch(() => props.error, newError => {
 })
 
 onMounted(() => {
-  console.log('🚀 Wizard mounted, modelValue:', props.modelValue)
   if (props.modelValue) {
     loadEquipment()
     loadEmployees()

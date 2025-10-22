@@ -12,7 +12,11 @@ const rules = REPORT_VALIDATION_RULES
 
 // Computed
 const formData = computed(() => wizardStore.formData)
-const availableShiftOptions = computed(() => wizardStore.availableShiftOptions)
+const availableShiftOptions = computed(() => {
+  const options = wizardStore.availableShiftOptions
+
+  return options
+})
 
 // Options
 const consumableTypeOptions = CONSUMABLE_TYPES
@@ -163,7 +167,6 @@ const updateConsumption = (index: number, field: string, value: any) => {
                   :items="availableShiftOptions"
                   :rules="[rules.required]"
                   prepend-inner-icon="tabler-clock"
-                  readonly
                   @update:model-value="(v) => updateConsumption(index, 'shift', v)"
                 />
               </VCol>

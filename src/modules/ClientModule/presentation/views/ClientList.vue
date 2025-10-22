@@ -1,253 +1,10 @@
-<script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import debounce from 'lodash/debounce'
-import { useI18n } from 'vue-i18n'
-import { useClientStore } from '../stores/clientStore'
-import type { ClientEntity } from '../../domain/entities/ClientEntity'
-import { ClientDomain } from '../../domain/entities/ClientEntity'
-
-// Composables
-const { t } = useI18n()
-const router = useRouter()
-
-// Store
-const clientStore = useClientStore()
-
-// Estado local para filtros múltiples
-const selectedStatuses = ref<string[]>([])
-const selectedBusinessTypes = ref<string[]>([])
-const selectedPaymentTerms = ref<string[]>([])
-
-// Headers para la tabla
-const headers = [
-  { title: t('ClientModule.client.fields.client_code'), key: 'client_code' },
-  { title: t('ClientModule.client.fields.business_type'), key: 'business_type' },
-  { title: t('ClientModule.client.fields.name'), key: 'name' },
-  { title: t('ClientModule.client.fields.email'), key: 'email' },
-  { title: t('ClientModule.client.fields.phone'), key: 'phone' },
-  { title: t('ClientModule.client.fields.city'), key: 'city' },
-  { title: t('ClientModule.common.status'), key: 'status' },
-  { title: t('ClientModule.common.actions'), key: 'actions', sortable: false },
-]
-
-// Opciones del menú de exportación
-const menuOptions = [
-  {
-    text: t('ClientModule.common.export_excel'),
-    icon: 'tabler-file-spreadsheet',
-    action: () => exportItems('excel'),
-  },
-  {
-    text: t('ClientModule.common.export_pdf'),
-    icon: 'tabler-file-type-pdf',
-    action: () => exportItems('pdf'),
-  },
-  {
-    text: t('ClientModule.common.export_csv'),
-    icon: 'tabler-file-text',
-    action: () => exportItems('csv'),
-  },
-]
-
-// Opciones para los selects
-const statusOptions = [
-  { value: 'active', title: t('ClientModule.client.status.active'), color: 'success' },
-  { value: 'inactive', title: t('ClientModule.client.status.inactive'), color: 'secondary' },
-  { value: 'suspended', title: t('ClientModule.client.status.suspended'), color: 'warning' },
-  { value: 'blacklisted', title: t('ClientModule.client.status.blacklisted'), color: 'error' },
-]
-
-const businessTypeOptions = [
-  { value: 'company', title: t('ClientModule.client.business_types.company') },
-  { value: 'individual', title: t('ClientModule.client.business_types.individual') },
-]
-
-const paymentTermsOptions = [
-  { value: 'immediate', title: t('ClientModule.client.payment_terms.immediate') },
-  { value: 'net_15', title: t('ClientModule.client.payment_terms.net_15') },
-  { value: 'net_30', title: t('ClientModule.client.payment_terms.net_30') },
-  { value: 'net_60', title: t('ClientModule.client.payment_terms.net_60') },
-  { value: 'net_90', title: t('ClientModule.client.payment_terms.net_90') },
-]
-
-// Computed para chips de filtros activos
-const activeFilters = computed(() => {
-  const filters: Array<{ label: string; value: string; type: string }> = []
-
-  if (clientStore.filters.search) {
-    filters.push({
-      label: `Búsqueda: ${clientStore.filters.search}`,
-      value: 'search',
-      type: 'search',
-    })
-  }
-
-  selectedStatuses.value.forEach(status => {
-    const option = statusOptions.find(o => o.value === status)
-    if (option) {
-      filters.push({
-        label: option.title,
-        value: status,
-        type: 'status',
-      })
-    }
-  })
-
-  selectedBusinessTypes.value.forEach(businessType => {
-    const option = businessTypeOptions.find(o => o.value === businessType)
-    if (option) {
-      filters.push({
-        label: option.title,
-        value: businessType,
-        type: 'business_type',
-      })
-    }
-  })
-
-  selectedPaymentTerms.value.forEach(terms => {
-    const option = paymentTermsOptions.find(o => o.value === terms)
-    if (option) {
-      filters.push({
-        label: option.title,
-        value: terms,
-        type: 'payment_terms',
-      })
-    }
-  })
-
-  return filters
-})
-
-const hasActiveFilters = computed(() => activeFilters.value.length > 0)
-
-// Métodos
-const debouncedFetchList = debounce(() => {
-  applyFiltersToStore()
-}, 500)
-
-function applyFiltersToStore() {
-  clientStore.updateFilters({
-    status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') : undefined,
-    business_type: selectedBusinessTypes.value.length > 0 ? selectedBusinessTypes.value[0] as any : undefined,
-    payment_terms: selectedPaymentTerms.value.length > 0 ? selectedPaymentTerms.value[0] as any : undefined,
-  })
-  clientStore.fetchList()
-}
-
-function applyFilters() {
-  debouncedFetchList()
-}
-
-function clearFilters() {
-  selectedStatuses.value = []
-  selectedBusinessTypes.value = []
-  selectedPaymentTerms.value = []
-
-  clientStore.updateFilters({
-    search: '',
-    status: undefined,
-    business_type: undefined,
-    city: undefined,
-    payment_terms: undefined,
-  })
-
-  nextTick(() => {
-    clientStore.fetchList()
-  })
-}
-
-function removeFilter(filter: { type: string; value: string }) {
-  if (filter.type === 'search')
-    clientStore.filters.search = ''
-
-  else if (filter.type === 'status')
-    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
-
-  else if (filter.type === 'business_type')
-    selectedBusinessTypes.value = selectedBusinessTypes.value.filter(b => b !== filter.value)
-
-  else if (filter.type === 'payment_terms')
-    selectedPaymentTerms.value = selectedPaymentTerms.value.filter(t => t !== filter.value)
-
-  applyFiltersToStore()
-}
-
-function navigateToView(item: ClientEntity) {
-  console.log('navigateToView', item)
-  router.push({ name: 'clients-detail', params: { id: item.id } })
-}
-
-function navigateToEdit(item: ClientEntity) {
-  router.push({ name: 'clients-edit', params: { id: item.id } })
-}
-
-async function deleteClient(item: ClientEntity) {
-  const displayName = ClientDomain.getDisplayName(item)
-  if (confirm(t('ClientModule.client.confirm_delete', { name: displayName }))) {
-    try {
-      await clientStore.deleteItem(item.id)
-    }
-    catch (error) {
-      console.error('Error deleting client:', error)
-    }
-  }
-}
-
-async function exportItems(format: 'excel' | 'pdf' | 'csv') {
-  try {
-    await clientStore.exportData(format)
-  }
-  catch (error) {
-    console.error('Error exporting:', error)
-  }
-}
-
-// Métodos auxiliares para los chips
-function getStatusColor(status: string) {
-  return ClientDomain.getStatusColor(status as any)
-}
-
-function getBusinessTypeLabel(type: string) {
-  return t(`ClientModule.client.business_types.${type}`)
-}
-
-function getPaymentTermsLabel(terms: string) {
-  return t(`ClientModule.client.payment_terms.${terms}`)
-}
-
-function getClientDisplayName(item: ClientEntity) {
-  return ClientDomain.getDisplayName(item)
-}
-
-// Handle VDataTableServer options update (pagination, sorting)
-function handleOptionsUpdate(options: any) {
-  const { page, itemsPerPage, sortBy } = options
-
-  const filters: any = {
-    page,
-    per_page: itemsPerPage,
-  }
-
-  // Handle sorting
-  if (sortBy && sortBy.length > 0) {
-    filters.sort_by = sortBy[0].key
-    filters.sort_order = sortBy[0].order || 'asc'
-  }
-
-  clientStore.fetchList(filters)
-}
-
-// No need for onMounted fetchList - VDataTableServer handles initial load via @update:options
-</script>
-
 <template>
   <VCard>
     <!-- Header mejorado con contador -->
     <VCardTitle class="d-flex align-center justify-space-between flex-wrap gap-4 pa-5">
       <div>
         <h4 class="text-h4 mb-1">
-          {{ t('ClientModule.client.title') }}
+          {{ $t('ClientModule.title') }}
           <VChip
             v-if="clientStore.totalItems > 0"
             size="small"
@@ -259,12 +16,19 @@ function handleOptionsUpdate(options: any) {
           </VChip>
         </h4>
         <p class="text-body-2 text-medium-emphasis mb-0">
-          {{ t('ClientModule.client.list_description') }}
+          {{ $t('ClientModule.list_description') }}
         </p>
       </div>
 
       <!-- Botones de acción principales -->
       <div class="d-flex gap-3">
+        <!-- Cache Status Indicator -->
+        <ClientCacheStatusIndicator
+          :show-detailed-info="true"
+          :show-actions="true"
+          variant="chip"
+        />
+
         <VMenu>
           <template #activator="{ props }">
             <VBtn
@@ -277,7 +41,7 @@ function handleOptionsUpdate(options: any) {
               <VIcon start>
                 tabler-download
               </VIcon>
-              {{ t('ClientModule.common.export') }}
+              {{ $t('ClientModule.common.export') }}
             </VBtn>
           </template>
 
@@ -302,7 +66,7 @@ function handleOptionsUpdate(options: any) {
           <VIcon start>
             tabler-plus
           </VIcon>
-          {{ t('ClientModule.client.actions.add') }}
+          {{ $t('ClientModule.actions.add') }}
         </VBtn>
       </div>
     </VCardTitle>
@@ -319,7 +83,7 @@ function handleOptionsUpdate(options: any) {
         >
           <VTextField
             v-model="clientStore.filters.search"
-            :label="t('ClientModule.client.search_placeholder')"
+            :label="$t('ClientModule.search.placeholder')"
             prepend-inner-icon="tabler-search"
             variant="outlined"
             density="compact"
@@ -333,11 +97,11 @@ function handleOptionsUpdate(options: any) {
         <VCol
           cols="12"
           sm="6"
-          md="2"
+          md="3"
         >
           <VSelect
             v-model="selectedStatuses"
-            :label="t('ClientModule.common.status')"
+            :label="$t('ClientModule.filters.status')"
             :items="statusOptions"
             variant="outlined"
             density="compact"
@@ -363,11 +127,11 @@ function handleOptionsUpdate(options: any) {
         <VCol
           cols="12"
           sm="6"
-          md="2"
+          md="3"
         >
           <VSelect
             v-model="selectedBusinessTypes"
-            :label="t('ClientModule.client.fields.business_type')"
+            :label="$t('ClientModule.filters.business_type')"
             :items="businessTypeOptions"
             variant="outlined"
             density="compact"
@@ -389,36 +153,6 @@ function handleOptionsUpdate(options: any) {
           </VSelect>
         </VCol>
 
-        <!-- Términos de Pago - Múltiple -->
-        <VCol
-          cols="12"
-          sm="6"
-          md="2"
-        >
-          <VSelect
-            v-model="selectedPaymentTerms"
-            :label="t('ClientModule.client.fields.payment_terms')"
-            :items="paymentTermsOptions"
-            variant="outlined"
-            density="compact"
-            multiple
-            chips
-            closable-chips
-            hide-details
-            @update:model-value="applyFilters"
-          >
-            <template #chip="{ item, index }">
-              <VChip
-                size="small"
-                closable
-                @click:close="selectedPaymentTerms.splice(index, 1); applyFilters()"
-              >
-                {{ item.title }}
-              </VChip>
-            </template>
-          </VSelect>
-        </VCol>
-
         <!-- Ciudad -->
         <VCol
           cols="12"
@@ -427,7 +161,7 @@ function handleOptionsUpdate(options: any) {
         >
           <VTextField
             v-model="clientStore.filters.city"
-            :label="t('ClientModule.client.fields.city')"
+            :label="$t('ClientModule.filters.city')"
             variant="outlined"
             density="compact"
             clearable
@@ -511,33 +245,22 @@ function handleOptionsUpdate(options: any) {
           </div>
         </template>
 
-        <!-- Slot para tipo de negocio -->
-        <template #item.business_type="{ item }">
-          <VChip
-            size="small"
-            variant="tonal"
-            :color="item.business_type === 'company' ? 'info' : 'secondary'"
-          >
-            {{ getBusinessTypeLabel(item.business_type) }}
-          </VChip>
-        </template>
-
-        <!-- Slot para nombre -->
-        <template #item.name="{ item }">
+        <!-- Slot para nombre de empresa -->
+        <template #item.business_name="{ item }">
           <div class="d-flex align-center">
             <VAvatar
               size="32"
               color="primary"
               class="me-2"
             >
-              <span>{{ getClientDisplayName(item).charAt(0) }}</span>
+              <span>{{ item.business_name?.charAt(0) }}</span>
             </VAvatar>
             <div>
               <div class="font-weight-medium">
-                {{ getClientDisplayName(item) }}
+                {{ item.business_name }}
               </div>
               <div
-                v-if="item.business_type === 'company' && item.trade_name"
+                v-if="item.trade_name"
                 class="text-caption text-disabled"
               >
                 {{ item.trade_name }}
@@ -546,29 +269,25 @@ function handleOptionsUpdate(options: any) {
           </div>
         </template>
 
-        <!-- Slot para email -->
-        <template #item.email="{ item }">
-          {{ item.primary_email || '-' }}
+        <!-- Slot para tipo de negocio -->
+        <template #item.business_type="{ item }">
+          <VChip
+            :color="getBusinessTypeColor(item.business_type)"
+            size="small"
+            variant="tonal"
+          >
+            {{ $t(`ClientModule.business_types.${item.business_type}`) }}
+          </VChip>
         </template>
 
-        <!-- Slot para teléfono -->
-        <template #item.phone="{ item }">
-          {{ item.primary_phone || item.secondary_phone || '-' }}
-        </template>
-
-        <!-- Slot para ciudad -->
-        <template #item.city="{ item }">
-          {{ item.city || '-' }}
-        </template>
-
-        <!-- Slot para estatus -->
+        <!-- Slot para estado -->
         <template #item.status="{ item }">
           <VChip
             :color="getStatusColor(item.status)"
             size="small"
             variant="tonal"
           >
-            {{ t(`ClientModule.client.status.${item.status}`) }}
+            {{ $t(`ClientModule.status.${item.status}`) }}
           </VChip>
         </template>
 
@@ -624,10 +343,10 @@ function handleOptionsUpdate(options: any) {
               tabler-users-off
             </VIcon>
             <h6 class="text-h6 mb-2">
-              {{ t('ClientModule.client.no_data') }}
+              {{ $t('ClientModule.no_data') }}
             </h6>
             <p class="text-body-2 mb-4">
-              {{ t('ClientModule.client.no_data_description') }}
+              {{ $t('ClientModule.no_data_description') }}
             </p>
             <VBtn
               color="primary"
@@ -636,14 +355,284 @@ function handleOptionsUpdate(options: any) {
               <VIcon start>
                 tabler-plus
               </VIcon>
-              {{ t('ClientModule.client.actions.add') }}
+              {{ $t('ClientModule.actions.add') }}
             </VBtn>
           </div>
         </template>
       </VDataTableServer>
     </VCardText>
+
+    <!-- Diálogo de confirmación de eliminación -->
+    <DeleteConfirmationDialog
+      :visible="showDeleteDialog"
+      :title="$t('ClientModule.delete.title')"
+      entity-name="cliente"
+      :entity-id="selectedClient?.id"
+      :warning-message="$t('ClientModule.delete.message')"
+      @close="showDeleteDialog = false"
+      @confirm="handleClientDelete"
+    />
   </VCard>
 </template>
+
+<script setup lang="ts">
+import { computed, nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import debounce from 'lodash/debounce'
+import { useI18n } from 'vue-i18n'
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
+import { useClientStore } from '../../presentation/stores/clientStore'
+import { useClientCacheV2 } from '../../infrastructure/cache/composables/useClientCacheV2'
+import ClientCacheStatusIndicator from '../../infrastructure/cache/components/ClientCacheStatusIndicator.vue'
+import type { ClientEntity } from '../../domain/entities/ClientEntity'
+
+// Composables
+const { t } = useI18n()
+const router = useRouter()
+
+// Store
+const clientStore = useClientStore()
+
+// Sistema de cache V2 (integrado en el store)
+const {
+  isCacheAvailable,
+  forceSync,
+  initializeClientCache
+} = useClientCacheV2()
+
+// Estado local para filtros múltiples
+const selectedStatuses = ref<string[]>([])
+const selectedBusinessTypes = ref<string[]>([])
+
+// Headers para la tabla
+const headers = [
+  { title: t('ClientModule.fields.client_code'), key: 'client_code' },
+  { title: t('ClientModule.fields.company_name'), key: 'business_name' },
+  { title: t('ClientModule.fields.trade_name'), key: 'trade_name' },
+  { title: t('ClientModule.fields.business_type'), key: 'business_type' },
+  { title: t('ClientModule.fields.status'), key: 'status' },
+  { title: t('ClientModule.fields.primary_phone'), key: 'primary_phone' },
+  { title: t('ClientModule.fields.city'), key: 'city' },
+  { title: t('common.actions'), key: 'actions', sortable: false },
+]
+
+// Opciones del menú de exportación
+const menuOptions = [
+  {
+    text: t('ClientModule.common.export_excel'),
+    icon: 'tabler-file-spreadsheet',
+    action: () => exportItems('excel'),
+  },
+  {
+    text: t('ClientModule.common.export_pdf'),
+    icon: 'tabler-file-type-pdf',
+    action: () => exportItems('pdf'),
+  },
+  {
+    text: t('ClientModule.common.export_csv'),
+    icon: 'tabler-file-text',
+    action: () => exportItems('csv'),
+  },
+]
+
+// Opciones para los selects
+const statusOptions = [
+  { value: 'active', title: t('ClientModule.status.active'), color: 'success' },
+  { value: 'inactive', title: t('ClientModule.status.inactive'), color: 'error' },
+  { value: 'pending', title: t('ClientModule.status.pending'), color: 'warning' },
+]
+
+const businessTypeOptions = [
+  { value: 'corporation', title: t('ClientModule.business_types.corporation') },
+  { value: 'llc', title: t('ClientModule.business_types.llc') },
+  { value: 'partnership', title: t('ClientModule.business_types.partnership') },
+  { value: 'sole_proprietorship', title: t('ClientModule.business_types.sole_proprietorship') },
+]
+
+// Computed para chips de filtros activos
+const activeFilters = computed(() => {
+  const filters: Array<{ label: string; value: string; type: string }> = []
+
+  if (clientStore.filters.search) {
+    filters.push({
+      label: `Búsqueda: ${clientStore.filters.search}`,
+      value: 'search',
+      type: 'search',
+    })
+  }
+
+  selectedStatuses.value.forEach(status => {
+    const option = statusOptions.find(o => o.value === status)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: status,
+        type: 'status',
+      })
+    }
+  })
+
+  selectedBusinessTypes.value.forEach(businessType => {
+    const option = businessTypeOptions.find(o => o.value === businessType)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: businessType,
+        type: 'business_type',
+      })
+    }
+  })
+
+  if (clientStore.filters.city) {
+    filters.push({
+      label: `Ciudad: ${clientStore.filters.city}`,
+      value: 'city',
+      type: 'city',
+    })
+  }
+
+  return filters
+})
+
+const hasActiveFilters = computed(() => activeFilters.value.length > 0)
+
+// Métodos
+const debouncedFetchList = debounce(() => {
+  applyFiltersToStore()
+}, 500)
+
+function applyFiltersToStore() {
+  clientStore.updateFilters({
+    status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') as any : undefined,
+    business_type: selectedBusinessTypes.value.length > 0 ? selectedBusinessTypes.value.join(',') as any : undefined,
+  })
+  clientStore.fetchList()
+}
+
+function applyFilters() {
+  debouncedFetchList()
+}
+
+function clearFilters() {
+  selectedStatuses.value = []
+  selectedBusinessTypes.value = []
+
+  clientStore.updateFilters({
+    search: '',
+    status: undefined,
+    business_type: undefined,
+    city: '',
+  })
+
+  nextTick(() => {
+    clientStore.fetchList()
+  })
+}
+
+function removeFilter(filter: { type: string; value: string }) {
+  if (filter.type === 'search')
+    clientStore.filters.search = ''
+
+  else if (filter.type === 'status')
+    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
+
+  else if (filter.type === 'business_type')
+    selectedBusinessTypes.value = selectedBusinessTypes.value.filter(t => t !== filter.value)
+
+  else if (filter.type === 'city')
+    clientStore.filters.city = ''
+
+  applyFiltersToStore()
+}
+
+function navigateToView(item: ClientEntity) {
+  router.push({ name: 'clients-detail', params: { id: item.id } })
+}
+
+function navigateToEdit(item: ClientEntity) {
+  router.push({ name: 'clients-edit', params: { id: item.id } })
+}
+
+async function deleteClient(item: ClientEntity) {
+  selectedClient.value = item
+  showDeleteDialog.value = true
+}
+
+async function handleClientDelete() {
+  if (!selectedClient.value) return
+  
+  try {
+    await clientStore.deleteItem(selectedClient.value.id)
+    
+    showDeleteDialog.value = false
+    selectedClient.value = null
+  } catch (error) {
+    console.error('Error eliminando cliente:', error)
+  }
+}
+
+async function exportItems(format: 'excel' | 'pdf' | 'csv') {
+  try {
+    await clientStore.exportData(format)
+  }
+  catch (error) {
+    console.error('Error exporting:', error)
+  }
+}
+
+// Métodos auxiliares para los chips
+function getStatusColor(status: string) {
+  const colors: Record<string, string> = {
+    active: 'success',
+    inactive: 'error',
+    pending: 'warning',
+  }
+
+  return colors[status?.toLowerCase()] || 'grey'
+}
+
+function getBusinessTypeColor(businessType: string) {
+  const colors: Record<string, string> = {
+    corporation: 'primary',
+    llc: 'secondary',
+    partnership: 'info',
+    sole_proprietorship: 'warning',
+  }
+
+  return colors[businessType?.toLowerCase()] || 'grey'
+}
+
+// Handle VDataTableServer options update (pagination, sorting)
+function handleOptionsUpdate(options: any) {
+  const { page, itemsPerPage, sortBy } = options
+
+  const filters: any = {
+    page,
+    per_page: itemsPerPage,
+  }
+
+  // Handle sorting
+  if (sortBy && sortBy.length > 0) {
+    filters.sort_by = sortBy[0].key
+    filters.sort_order = sortBy[0].order || 'asc'
+  }
+
+  clientStore.fetchList(filters)
+}
+
+// Diálogos
+const showDeleteDialog = ref(false)
+const selectedClient = ref<ClientEntity | null>(null)
+
+// Inicializar cache al montar
+nextTick(async () => {
+  try {
+    await clientStore.initializeCache()
+  } catch (error) {
+    console.error('Error inicializando cache:', error)
+  }
+})
+</script>
 
 <style scoped>
 .filter-field {

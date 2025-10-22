@@ -427,14 +427,14 @@ onMounted(() => {
                   variant="tonal"
                   :color="client.business_type === 'company' ? 'info' : 'secondary'"
                 >
-                  {{ t(`ClientModule.client.business_types.${client.business_type}`) }}
+                  {{ t(`ClientModule.business_types.${client.business_type}`) }}
                 </VChip>
                 <VChip
                   size="small"
                   :color="getStatusColor(client.status)"
                   variant="tonal"
                 >
-                  {{ t(`ClientModule.client.status.${client.status}`) }}
+                  {{ t(`ClientModule.status.${client.status}`) }}
                 </VChip>
                 <span class="text-body-2 text-disabled">
                   {{ client.client_code }}
@@ -459,7 +459,7 @@ onMounted(() => {
               color="success"
               @click="openActivateDialog"
             >
-              {{ t('ClientModule.client.actions.activate') }}
+              {{ t('ClientModule.actions.activate') }}
             </VBtn>
 
             <VBtn
@@ -467,7 +467,7 @@ onMounted(() => {
               color="warning"
               @click="openSuspendDialog"
             >
-              {{ t('ClientModule.client.actions.suspend') }}
+              {{ t('ClientModule.actions.suspend') }}
             </VBtn>
 
             <VBtn
@@ -475,7 +475,7 @@ onMounted(() => {
               color="secondary"
               @click="openDeactivateDialog"
             >
-              {{ t('ClientModule.client.actions.deactivate') }}
+              {{ t('ClientModule.actions.deactivate') }}
             </VBtn>
 
             <VBtn
@@ -483,7 +483,7 @@ onMounted(() => {
               color="error"
               @click="openBlacklistDialog"
             >
-              {{ t('ClientModule.client.actions.blacklist') }}
+              {{ t('ClientModule.actions.blacklist') }}
             </VBtn>
 
             <VBtn
@@ -620,7 +620,7 @@ onMounted(() => {
               Plazo de pago
             </div>
             <div class="text-body-1 font-weight-medium">
-              {{ client.payment_terms ? t(`ClientModule.client.payment_terms.${client.payment_terms}`) : 'De contado' }}
+              {{ client.payment_terms ? t(`ClientModule.payment_terms.${client.payment_terms}`) : 'De contado' }}
             </div>
           </VCol>
 
@@ -657,7 +657,7 @@ onMounted(() => {
               Límite de crédito
             </div>
             <div class="text-body-1 font-weight-medium">
-              {{ `$${client.credit_limit.toLocaleString()} ${client.credit_limit_currency || 'MXN'}` }}
+              {{ `$${client.credit_limit.amount.toLocaleString()} ${client.credit_limit.currency || 'MXN'}` }}
             </div>
           </VCol>
 
@@ -893,7 +893,7 @@ onMounted(() => {
                         size="x-small"
                         variant="tonal"
                       >
-                        {{ t(`ClientModule.client.status.${history.old_status}`) }}
+                        {{ t(`ClientModule.status.${history.old_status}`) }}
                       </VChip>
                       <VIcon size="16">
                         tabler-arrow-right
@@ -903,7 +903,7 @@ onMounted(() => {
                         size="x-small"
                         variant="tonal"
                       >
-                        {{ t(`ClientModule.client.status.${history.new_status}`) }}
+                        {{ t(`ClientModule.status.${history.new_status}`) }}
                       </VChip>
                     </div>
                     <div
@@ -939,7 +939,7 @@ onMounted(() => {
       type="error"
       variant="tonal"
     >
-      {{ t('ClientModule.client.not_found') }}
+      {{ t('ClientModule.not_found') }}
     </VAlert>
   </div>
 

@@ -320,13 +320,14 @@ onMounted(() => {
 </script>
 
 <template>
+        <DialogCloseBtn
+        v-if="showCloseButton"
+        @click="handleCancel"
+      />
   <VCard>
     <VCardTitle class="d-flex align-center justify-space-between">
       <span>{{ isEditing ? $t('DrillingReportsModule.projects.editProject') : $t('DrillingReportsModule.projects.newProject') }}</span>
-      <DialogCloseBtn
-        v-if="showCloseButton"
-        @click="closeDialog"
-      />
+
     </VCardTitle>
 
     <VCardText>

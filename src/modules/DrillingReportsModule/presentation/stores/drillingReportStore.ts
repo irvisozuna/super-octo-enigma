@@ -452,9 +452,9 @@ export const useDrillingReportStore = defineStore('drillingReport', () => {
     }
   }
 
-  const completeReport = async (reportId: string, data: { horometer_end_day?: number; horometer_end_night?: number }) => {
+  const completeReport = async (projectId: string, reportId: string, data: { horometer_end_day?: number; horometer_end_night?: number }) => {
     try {
-      const report = await DrillingReportApiService.completeReport(reportId, data)
+      const report = await DrillingReportApiService.completeReport(projectId, reportId)
 
       // Update current report
       if (currentReport.value?.id === reportId)
@@ -473,9 +473,9 @@ export const useDrillingReportStore = defineStore('drillingReport', () => {
     }
   }
 
-  const approveReport = async (reportId: string) => {
+  const approveReport = async (projectId: string, reportId: string, data?: { approved_by?: string }) => {
     try {
-      const report = await DrillingReportApiService.approveReport(reportId)
+      const report = await DrillingReportApiService.approveReport(projectId, reportId, data)
 
       // Update current report
       if (currentReport.value?.id === reportId)

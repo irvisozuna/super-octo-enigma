@@ -52,16 +52,12 @@ const rules = {
 const loadEquipment = async (searchTerm = '', page = 1, append = false) => {
   loadingEquipment.value = true
   try {
-    console.log('🔍 Loading equipment:', { searchTerm, page, append })
-
     const response = await EquipmentApiService.getEquipment({
       search: searchTerm,
       status: 'active',
       page,
       per_page: 50,
     })
-
-    console.log('📦 Equipment response:', response)
 
     // Handle different response structures
     let equipmentData = []
@@ -107,13 +103,6 @@ const loadEquipment = async (searchTerm = '', page = 1, append = false) => {
     currentPage.value = meta.current_page || page
     hasMorePages.value = meta.current_page < meta.last_page
     totalEquipment.value = meta.total || 0
-
-    console.log('✅ Equipment loaded:', {
-      count: equipmentOptions.value.length,
-      currentPage: currentPage.value,
-      hasMorePages: hasMorePages.value,
-      total: totalEquipment.value,
-    })
   }
   catch (error) {
     console.error('❌ Error loading equipment:', error)

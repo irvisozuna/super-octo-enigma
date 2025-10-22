@@ -249,14 +249,14 @@ onMounted(() => {
                   size="small"
                   variant="tonal"
                 >
-                  {{ t(`EmployeeModule.employee.positions.${employee.position}`) }}
+                  {{ t(`EmployeeModule.positions.${employee.position}`) }}
                 </VChip>
                 <VChip
                   size="small"
                   :color="getStatusColor(employee.status)"
                   variant="tonal"
                 >
-                  {{ t(`EmployeeModule.employee.status.${employee.status}`) }}
+                  {{ t(`EmployeeModule.status.${employee.status}`) }}
                 </VChip>
                 <span class="text-body-2 text-disabled">
                   {{ employee.employee_code }}
@@ -281,7 +281,7 @@ onMounted(() => {
               color="warning"
               @click="openSuspendDialog"
             >
-              {{ t('EmployeeModule.employee.actions.suspend') }}
+              {{ t('EmployeeModule.actions.suspend') }}
             </VBtn>
 
             <VBtn
@@ -289,7 +289,7 @@ onMounted(() => {
               color="success"
               @click="openReactivateDialog"
             >
-              {{ t('EmployeeModule.employee.actions.reactivate') }}
+              {{ t('EmployeeModule.actions.reactivate') }}
             </VBtn>
 
             <VBtn
@@ -297,7 +297,7 @@ onMounted(() => {
               color="error"
               @click="openTerminateDialog"
             >
-              {{ t('EmployeeModule.employee.actions.terminate') }}
+              {{ t('EmployeeModule.actions.terminate') }}
             </VBtn>
 
             <VBtn
@@ -321,19 +321,19 @@ onMounted(() => {
           <VIcon start>
             tabler-info-circle
           </VIcon>
-          {{ t('EmployeeModule.employee.tabs.info') }}
+          {{ t('EmployeeModule.tabs.info') }}
         </VTab>
         <VTab value="contact">
           <VIcon start>
             tabler-phone
           </VIcon>
-          {{ t('EmployeeModule.employee.tabs.contact') }}
+          {{ t('EmployeeModule.tabs.contact') }}
         </VTab>
         <VTab value="employment">
           <VIcon start>
             tabler-briefcase
           </VIcon>
-          {{ t('EmployeeModule.employee.tabs.employment') }}
+          {{ t('EmployeeModule.tabs.employment') }}
         </VTab>
         <VTab value="skills">
           <VIcon start>
@@ -382,7 +382,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.first_name') }}
+                    {{ t('EmployeeModule.fields.first_name') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.first_name }}
@@ -391,7 +391,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.last_name') }}
+                    {{ t('EmployeeModule.fields.last_name') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.last_name }}
@@ -400,7 +400,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.date_of_birth') }}
+                    {{ t('EmployeeModule.fields.date_of_birth') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.date_of_birth) }}
@@ -414,16 +414,16 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.gender') }}
+                    {{ t('EmployeeModule.fields.gender') }}
                   </div>
                   <div class="text-body-1">
-                    {{ employee.gender ? t(`EmployeeModule.employee.gender.${employee.gender}`) : '-' }}
+                    {{ employee.gender ? t(`EmployeeModule.gender.${employee.gender}`) : '-' }}
                   </div>
                 </div>
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.tax_id') }}
+                    {{ t('EmployeeModule.fields.tax_id') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.tax_id || '-' }}
@@ -442,7 +442,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.email') }}
+                    {{ t('EmployeeModule.fields.email') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.email || '-' }}
@@ -451,7 +451,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.primary_phone') }}
+                    {{ t('EmployeeModule.fields.primary_phone') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.primary_phone || '-' }}
@@ -460,7 +460,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.secondary_phone') }}
+                    {{ t('EmployeeModule.fields.secondary_phone') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.secondary_phone || '-' }}
@@ -474,7 +474,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.address') }}
+                    {{ t('EmployeeModule.fields.address') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.address_line_1 || '-' }}
@@ -489,7 +489,7 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.emergency_contact') }}
+                    {{ t('EmployeeModule.fields.emergency_contact') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.emergency_contact_name || '-' }}
@@ -514,7 +514,7 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.hire_date') }}
+                    {{ t('EmployeeModule.fields.hire_date') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.hire_date) }}
@@ -523,16 +523,16 @@ onMounted(() => {
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.position') }}
+                    {{ t('EmployeeModule.fields.position') }}
                   </div>
                   <div class="text-body-1">
-                    {{ t(`EmployeeModule.employee.positions.${employee.position}`) }}
+                    {{ t(`EmployeeModule.positions.${employee.position}`) }}
                   </div>
                 </div>
 
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.department') }}
+                    {{ t('EmployeeModule.fields.department') }}
                   </div>
                   <div class="text-body-1">
                     {{ employee.department || '-' }}
@@ -546,10 +546,10 @@ onMounted(() => {
               >
                 <div class="mb-4">
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.employment_type') }}
+                    {{ t('EmployeeModule.fields.employment_type') }}
                   </div>
                   <div class="text-body-1">
-                    {{ t(`EmployeeModule.employee.employment_types.${employee.employment_type}`) }}
+                    {{ t(`EmployeeModule.employment_types.${employee.employment_type}`) }}
                   </div>
                 </div>
 
@@ -558,7 +558,7 @@ onMounted(() => {
                   class="mb-4"
                 >
                   <div class="text-caption text-disabled mb-1">
-                    {{ t('EmployeeModule.employee.fields.termination_date') }}
+                    {{ t('EmployeeModule.fields.termination_date') }}
                   </div>
                   <div class="text-body-1">
                     {{ formatDate(employee.termination_date) }}
@@ -609,7 +609,7 @@ onMounted(() => {
       type="error"
       variant="tonal"
     >
-      {{ t('EmployeeModule.employee.not_found') }}
+      {{ t('EmployeeModule.not_found') }}
     </VAlert>
   </div>
 

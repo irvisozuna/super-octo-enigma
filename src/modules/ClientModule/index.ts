@@ -17,6 +17,10 @@ export * from './application/services/ClientApplicationService'
 export * from './infrastructure/api/services/ClientApiService'
 export * from './infrastructure/persistence/repositories/ClientRepositoryImpl'
 
+// Cache System - Sistema de cache reutilizable
+export * from './infrastructure/cache/composables/useClientCacheV2'
+export * from './infrastructure/cache/components/ClientCacheStatusIndicator.vue'
+
 // Presentation Layer
 export * from './presentation/stores/clientStore'
 export * from './presentation/composables/useClient'

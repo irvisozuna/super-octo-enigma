@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 
 interface PersonnelData {
@@ -127,17 +127,51 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       && (showNightShift.value ? formData.value.operator_night_id : true)
   })
 
+  // Validation for activities step
+  const isActivitiesStepValid = computed(() => {
+    // Must have at least one activity
+    if (formData.value.activities.length === 0)
+      return false
+
+    // All activities must have required fields
+    return formData.value.activities.every(activity =>
+      activity.activity_type
+      && activity.shift
+      && activity.hours !== null
+      && activity.hours > 0,
+    )
+  })
+
+  // Validation for tools step
+  const isToolsStepValid = computed(() => {
+    // Must have at least one tool
+    if (formData.value.tool_assignments.length === 0)
+      return false
+
+    // All tools must have required fields
+    return formData.value.tool_assignments.every(tool =>
+      tool.tool_id
+      && tool.tool_category
+      && tool.shift
+      && tool.start_depth_meters !== null
+      && tool.end_depth_meters !== null
+      && tool.end_depth_meters > tool.start_depth_meters,
+    )
+  })
+
   const availableShiftOptions = computed(() => {
-    const activityShiftOptions = [
-      { value: 'day', title: 'Día' },
-      { value: 'night', title: 'Noche' },
-      { value: 'mixed', title: 'Mixto' },
+    // Si el turno del reporte es "mixed", solo mostrar "day" y "night"
+    if (formData.value.shift === 'mixed') {
+      return [
+        { value: 'day', title: 'Día' },
+        { value: 'night', title: 'Noche' },
+      ]
+    }
+
+    // Si el turno del reporte es específico (day/night), solo mostrar ese turno
+    return [
+      { value: formData.value.shift, title: formData.value.shift === 'day' ? 'Día' : 'Noche' },
     ]
-
-    if (formData.value.shift === 'mixed')
-      return activityShiftOptions
-
-    return activityShiftOptions.filter(opt => opt.value === formData.value.shift)
   })
 
   // Actions
@@ -165,8 +199,6 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   }
 
   const resetForm = () => {
-    console.log('🧹 Resetting form to initial state')
-
     // Reset all form data to initial values
     formData.value = {
       report_date: new Date().toISOString().split('T')[0],
@@ -237,6 +269,62 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       ...activity,
     }
     isDirty.value = true
+  }
+
+  // Time calculation functions
+  const calculateEndTime = (startTime: string, hours: number): string => {
+    if (!startTime || !hours)
+      return ''
+
+    const [hoursStr, minutesStr] = startTime.split(':')
+    const startDate = new Date()
+
+    startDate.setHours(Number.parseInt(hoursStr), Number.parseInt(minutesStr), 0, 0)
+
+    const endDate = new Date(startDate.getTime() + (hours * 60 * 60 * 1000))
+
+    return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`
+  }
+
+  const calculateHoursFromTimes = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime)
+      return 0
+
+    const [startHours, startMinutes] = startTime.split(':').map(Number)
+    const [endHours, endMinutes] = endTime.split(':').map(Number)
+
+    const startTotalMinutes = startHours * 60 + startMinutes
+    const endTotalMinutes = endHours * 60 + endMinutes
+
+    // Handle case where end time is next day
+    let diffMinutes = endTotalMinutes - startTotalMinutes
+    if (diffMinutes < 0)
+      diffMinutes += 24 * 60 // Add 24 hours
+
+    return diffMinutes / 60
+  }
+
+  const updateActivityWithTimeCalculation = (index: number, field: string, value: any) => {
+    const activity = formData.value.activities[index]
+    const updatedActivity = { ...activity, [field]: value }
+
+    // If updating hours and we have start time, calculate end time
+    if (field === 'hours' && value && activity.start_time)
+      updatedActivity.end_time = calculateEndTime(activity.start_time, value)
+
+    // If updating start time and we have hours, calculate end time
+    if (field === 'start_time' && value && activity.hours)
+      updatedActivity.end_time = calculateEndTime(value, activity.hours)
+
+    // If updating end time, calculate hours
+    if (field === 'end_time' && value && activity.start_time)
+      updatedActivity.hours = calculateHoursFromTimes(activity.start_time, value)
+
+    // If updating start time and we have end time, calculate hours
+    if (field === 'start_time' && value && activity.end_time)
+      updatedActivity.hours = calculateHoursFromTimes(value, activity.end_time)
+
+    updateActivity(index, updatedActivity)
   }
 
   // Consumption Management
@@ -337,7 +425,6 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       }
 
       localStorage.setItem(draftKey, JSON.stringify(draft))
-      console.log('💾 Draft saved:', draftKey)
     }
     catch (error) {
       console.error('Error saving draft:', error)
@@ -397,7 +484,6 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       const draftKey = `report_draft_${projectId}_${wellId}`
 
       localStorage.removeItem(draftKey)
-      console.log(`🗑️ Draft cleared for key: ${draftKey}`)
 
       // Also clear the draft loaded message if any
       draftLoadedMessage.value = ''
@@ -424,6 +510,8 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     totalHoursWorked,
     calculatedHorometerEnd,
     isFormValid,
+    isActivitiesStepValid,
+    isToolsStepValid,
     availableShiftOptions,
 
     // Actions
@@ -439,6 +527,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     addActivity,
     removeActivity,
     updateActivity,
+    updateActivityWithTimeCalculation,
+    calculateEndTime,
+    calculateHoursFromTimes,
 
     // Consumption Management
     addConsumption,

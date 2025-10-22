@@ -9,6 +9,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ClientApplicationService } from '../../application/services/ClientApplicationService'
 import { ClientRepositoryImpl } from '../../infrastructure/persistence/repositories/ClientRepositoryImpl'
+import { useClientCacheV2 } from '../../infrastructure/cache/composables/useClientCacheV2'
 import type { ClientEntity, CreateClientRequest, UpdateClientRequest } from '../../domain/entities/ClientEntity'
 import type { ClientFilter } from '../../shared/types/index'
 
@@ -58,7 +59,7 @@ export const useClientStore = defineStore('client', () => {
   // Actions
 
   /**
-   * Fetch list of clients
+   * Fetch list of clients with cache integration
    */
   const fetchList = async (customFilters?: Partial<ClientFilter>) => {
     loading.value = true
@@ -66,6 +67,35 @@ export const useClientStore = defineStore('client', () => {
 
     try {
       const mergedFilters = { ...filters.value, ...customFilters }
+      
+      // Intentar obtener del cache primero si no hay filtros complejos
+      const hasSimpleFilters = !mergedFilters.search && 
+                              !mergedFilters.status && 
+                              !mergedFilters.business_type && 
+                              !mergedFilters.city
+      
+      if (hasSimpleFilters) {
+        try {
+          const cache = useClientCacheV2()
+          const cachedClients = await cache.getCachedClientsList()
+          
+          if (cachedClients && cachedClients.length > 0) {
+            console.log('📖 Usando datos del cache')
+            items.value = cachedClients
+            pagination.value = {
+              current_page: 1,
+              last_page: 1,
+              per_page: cachedClients.length,
+              total: cachedClients.length,
+            }
+            return
+          }
+        } catch (cacheError) {
+          console.warn('⚠️ Error accediendo al cache, continuando con servidor:', cacheError)
+        }
+      }
+
+      console.log('🌐 Cargando datos del servidor')
       const response = await applicationService.getClients(mergedFilters)
 
       items.value = response.data
@@ -74,6 +104,17 @@ export const useClientStore = defineStore('client', () => {
         last_page: response.last_page || 1,
         per_page: response.per_page || 20,
         total: response.total || 0,
+      }
+
+      // Cachear los datos obtenidos si no hay filtros complejos
+      if (hasSimpleFilters && response.data.length > 0) {
+        try {
+          const cache = useClientCacheV2()
+          await cache.cacheClientsList(response.data)
+          console.log('💾 Datos cacheados correctamente')
+        } catch (cacheError) {
+          console.warn('⚠️ Error cacheando datos:', cacheError)
+        }
       }
     }
     catch (err: any) {
@@ -517,6 +558,45 @@ export const useClientStore = defineStore('client', () => {
   }
 
   /**
+   * Initialize cache
+   */
+  const initializeCache = async () => {
+    try {
+      const cache = useClientCacheV2()
+      await cache.initializeClientCache()
+      console.log('✅ Cache de clientes inicializado')
+    } catch (error) {
+      console.error('❌ Error inicializando cache:', error)
+    }
+  }
+
+  /**
+   * Force sync cache
+   */
+  const forceSyncCache = async () => {
+    try {
+      const cache = useClientCacheV2()
+      await cache.forceSync()
+      console.log('🔄 Cache sincronizado')
+    } catch (error) {
+      console.error('❌ Error sincronizando cache:', error)
+    }
+  }
+
+  /**
+   * Clear cache
+   */
+  const clearCache = async () => {
+    try {
+      const cache = useClientCacheV2()
+      await cache.clearCache()
+      console.log('🧹 Cache limpiado')
+    } catch (error) {
+      console.error('❌ Error limpiando cache:', error)
+    }
+  }
+
+  /**
    * Update filters
    */
   const updateFilters = (newFilters: Partial<ClientFilter>) => {
@@ -564,6 +644,11 @@ export const useClientStore = defineStore('client', () => {
     clearError,
     reset,
     updateFilters,
+    
+    // Cache methods
+    initializeCache,
+    forceSyncCache,
+    clearCache,
 
     // Application Service for direct access
     applicationService,

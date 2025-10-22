@@ -184,22 +184,9 @@ export class DrillingReportApiService {
   }
 
   /**
-   * Complete a report
-   */
-  static async completeReport(reportId: string, data: {
-    horometer_end_day?: number
-    horometer_end_night?: number
-  }): Promise<{ data: DrillingReport }> {
-    return await rawApi(`${this.baseUrl}/${reportId}/complete`, {
-      method: 'POST',
-      body: data,
-    })
-  }
-
-  /**
    * Approve a report
    */
-  static async approveReport(reportId: string, data?: {
+  static async approveReport(projectId: string, reportId: string, data?: {
     comments?: string
     notify_client?: boolean
     send_email?: boolean
@@ -252,17 +239,13 @@ export class DrillingReportApiService {
    */
   static async getProjects(params: any = {}): Promise<any> {
     try {
-      console.log('🌐 DrillingReportApiService.getProjects llamado con params:', params)
+      // console.log('🌐 DrillingReportApiService.getProjects llamado con params:', params)
 
-      const response = await rawApi('/drilling/projects', {
+      // Devolver la respuesta completa, no solo response.data
+      return await rawApi('/drilling/projects', {
         method: 'GET',
         params,
       })
-
-      console.log('🌐 DrillingReportApiService.getProjects respuesta completa:', response)
-
-      // Devolver la respuesta completa, no solo response.data
-      return response
     }
     catch (error) {
       console.error('Error fetching projects:', error)
@@ -275,16 +258,10 @@ export class DrillingReportApiService {
    */
   static async getClients(params: any = {}): Promise<any> {
     try {
-      console.log('🌐 DrillingReportApiService.getClients llamado con params:', params)
-
-      const response = await rawApi('/clients', {
+      return await rawApi('/clients', {
         method: 'GET',
         params,
       })
-
-      console.log('🌐 DrillingReportApiService.getClients respuesta completa:', response)
-
-      return response
     }
     catch (error) {
       console.error('Error fetching clients:', error)
@@ -327,6 +304,47 @@ export class DrillingReportApiService {
     }
     catch (error) {
       console.error('Error fetching equipment:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get equipment assigned to a specific project
+   */
+  static async getProjectEquipment(projectId: string): Promise<any> {
+    try {
+      const response = await rawApi('/equipment-management/equipment', {
+        method: 'GET',
+        params: {
+          project_id: projectId,
+          per_page: 100, // Load all equipment for the project
+        },
+      })
+
+      // Handle different response structures
+      let equipmentData = []
+
+      if (response.data) {
+        if (Array.isArray(response.data))
+          equipmentData = response.data
+        else if (response.data.data)
+          equipmentData = response.data.data
+        else
+          equipmentData = [response.data]
+      }
+      else if (Array.isArray(response)) {
+        equipmentData = response
+      }
+
+      // Filter only equipment assigned to this project
+      const assignedEquipment = equipmentData.filter((equipment: any) =>
+        equipment.current_project_id === projectId,
+      )
+
+      return { data: assignedEquipment }
+    }
+    catch (error) {
+      console.error('❌ Error fetching project equipment:', error)
       throw error
     }
   }
@@ -840,20 +858,10 @@ export class DrillingReportApiService {
   /**
    * Complete a drilling report
    */
-  static async completeReport(reportId: string, data: { horometer_end_day?: number; horometer_end_night?: number }) {
+  static async completeReport(projectId: string, reportId: string) {
     return await rawApi(`/drilling/reports/${reportId}/complete`, {
       method: 'POST',
-      body: data,
-    })
-  }
-
-  /**
-   * Approve a drilling report
-   */
-  static async approveReport(reportId: string, data?: { approved_by?: string }) {
-    return await rawApi(`/drilling/reports/${reportId}/approve`, {
-      method: 'POST',
-      body: data || {},
+      body: { projectId, reportId },
     })
   }
 

@@ -28,6 +28,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+// Computed para calcular el porcentaje de uso del presupuesto
+const budgetUsagePercentage = computed(() => {
+  if (!props.project?.budget?.total || props.project.budget.total === 0)
+    return 0
+
+  const currentCost = props.project.budget?.current_cost || 0
+  const total = props.project.budget.total
+
+  return Math.round((currentCost / total) * 100)
+})
+
 // Computed para el estado del proyecto
 const projectStatus = computed(() => props.project?.status || 'unknown')
 
@@ -339,19 +350,19 @@ function handleStatusAction(action: string) {
           <!-- Fila 3: Barra de progreso del presupuesto -->
           <div class="mt-2">
             <VProgressLinear
-              :model-value="project.budget?.usage_percentage || 0"
-              :color="project.budget?.usage_percentage >= 90 ? 'error' : project.budget?.usage_percentage >= 75 ? 'warning' : 'success'"
+              :model-value="budgetUsagePercentage"
+              :color="budgetUsagePercentage >= 90 ? 'error' : budgetUsagePercentage >= 75 ? 'warning' : 'success'"
               height="6"
               rounded
               class="budget-progress"
             />
             <div class="d-flex justify-space-between mt-1">
               <span class="text-caption text-medium-emphasis">
-                {{ project.budget?.usage_percentage || 0 }}% del presupuesto utilizado
+                {{ budgetUsagePercentage }}% del presupuesto utilizado
               </span>
               <span
                 class="text-caption font-weight-medium"
-                :class="project.budget?.usage_percentage >= 90 ? 'text-error' : ''"
+                :class="budgetUsagePercentage >= 90 ? 'text-error' : ''"
               >
                 ${{ ((project.budget?.total || 0) - (project.budget?.current_cost || 0)).toLocaleString() }} restante
               </span>
@@ -395,8 +406,9 @@ function handleStatusAction(action: string) {
 }
 
 .metrics-bar {
-  padding: 12px 0;
   border-radius: 8px;
+  padding-block: 12px;
+  padding-inline: 0;
 }
 
 .metric-item {
@@ -404,7 +416,7 @@ function handleStatusAction(action: string) {
 }
 
 .budget-progress {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 5%);
 }
 
 .project-detail-content {
@@ -424,7 +436,7 @@ function handleStatusAction(action: string) {
   }
 
   .metric-item {
-    width: 100%;
+    inline-size: 100%;
   }
 }
 

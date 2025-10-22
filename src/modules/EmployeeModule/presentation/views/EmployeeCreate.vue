@@ -46,7 +46,7 @@ function cancel() {
     <VCardTitle>
       <div class="d-flex align-center justify-space-between">
         <h4 class="text-h4">
-          {{ t('EmployeeModule.employee.actions.create') }}
+          {{ t('EmployeeModule.actions.create') }}
         </h4>
       </div>
     </VCardTitle>
@@ -57,7 +57,7 @@ function cancel() {
           <!-- Basic Information -->
           <VCol cols="12">
             <h6 class="text-h6 mb-4">
-              {{ t('EmployeeModule.employee.sections.basic_info') }}
+              {{ t('EmployeeModule.sections.basic_info') }}
             </h6>
           </VCol>
 
@@ -67,7 +67,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.employee_code"
-              :label="`${t('EmployeeModule.employee.fields.employee_code')} *`"
+              :label="`${t('EmployeeModule.fields.employee_code')} *`"
               variant="outlined"
               required
             />
@@ -79,7 +79,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.first_name"
-              :label="`${t('EmployeeModule.employee.fields.first_name')} *`"
+              :label="`${t('EmployeeModule.fields.first_name')} *`"
               variant="outlined"
               required
             />
@@ -91,7 +91,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.last_name"
-              :label="`${t('EmployeeModule.employee.fields.last_name')} *`"
+              :label="`${t('EmployeeModule.fields.last_name')} *`"
               variant="outlined"
               required
             />
@@ -103,7 +103,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.date_of_birth"
-              :label="t('EmployeeModule.employee.fields.date_of_birth')"
+              :label="t('EmployeeModule.fields.date_of_birth')"
               type="date"
               variant="outlined"
             />
@@ -115,11 +115,11 @@ function cancel() {
           >
             <VSelect
               v-model="form.gender"
-              :label="t('EmployeeModule.employee.fields.gender')"
+              :label="t('EmployeeModule.fields.gender')"
               :items="[
-                { value: 'male', title: t('EmployeeModule.employee.gender.male') },
-                { value: 'female', title: t('EmployeeModule.employee.gender.female') },
-                { value: 'other', title: t('EmployeeModule.employee.gender.other') },
+                { value: 'male', title: t('EmployeeModule.gender.male') },
+                { value: 'female', title: t('EmployeeModule.gender.female') },
+                { value: 'other', title: t('EmployeeModule.gender.other') },
               ]"
               variant="outlined"
             />
@@ -131,7 +131,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.tax_id"
-              :label="t('EmployeeModule.employee.fields.tax_id')"
+              :label="t('EmployeeModule.fields.tax_id')"
               variant="outlined"
             />
           </VCol>
@@ -140,7 +140,7 @@ function cancel() {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('EmployeeModule.employee.sections.contact_info') }}
+              {{ t('EmployeeModule.sections.contact_info') }}
             </h6>
           </VCol>
 
@@ -150,7 +150,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.email"
-              :label="t('EmployeeModule.employee.fields.email')"
+              :label="t('EmployeeModule.fields.email')"
               type="email"
               variant="outlined"
             />
@@ -162,7 +162,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.primary_phone"
-              :label="t('EmployeeModule.employee.fields.primary_phone')"
+              :label="t('EmployeeModule.fields.primary_phone')"
               variant="outlined"
             />
           </VCol>
@@ -173,7 +173,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.secondary_phone"
-              :label="t('EmployeeModule.employee.fields.secondary_phone')"
+              :label="t('EmployeeModule.fields.secondary_phone')"
               variant="outlined"
             />
           </VCol>
@@ -185,7 +185,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.address_line_1"
-              :label="t('EmployeeModule.employee.fields.address_line_1')"
+              :label="t('EmployeeModule.fields.address_line_1')"
               variant="outlined"
             />
           </VCol>
@@ -196,7 +196,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.address_line_2"
-              :label="t('EmployeeModule.employee.fields.address_line_2')"
+              :label="t('EmployeeModule.fields.address_line_2')"
               variant="outlined"
             />
           </VCol>
@@ -207,7 +207,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.city"
-              :label="t('EmployeeModule.employee.fields.city')"
+              :label="t('EmployeeModule.fields.city')"
               variant="outlined"
             />
           </VCol>
@@ -218,7 +218,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.state"
-              :label="t('EmployeeModule.employee.fields.state')"
+              :label="t('EmployeeModule.fields.state')"
               variant="outlined"
             />
           </VCol>
@@ -229,7 +229,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.postal_code"
-              :label="t('EmployeeModule.employee.fields.postal_code')"
+              :label="t('EmployeeModule.fields.postal_code')"
               variant="outlined"
             />
           </VCol>
@@ -238,7 +238,7 @@ function cancel() {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('EmployeeModule.employee.sections.emergency_contact') }}
+              {{ t('EmployeeModule.sections.emergency_contact') }}
             </h6>
           </VCol>
 
@@ -248,7 +248,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.emergency_contact_name"
-              :label="t('EmployeeModule.employee.fields.emergency_contact_name')"
+              :label="t('EmployeeModule.fields.emergency_contact_name')"
               variant="outlined"
             />
           </VCol>
@@ -259,7 +259,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.emergency_contact_phone"
-              :label="t('EmployeeModule.employee.fields.emergency_contact_phone')"
+              :label="t('EmployeeModule.fields.emergency_contact_phone')"
               variant="outlined"
             />
           </VCol>
@@ -268,7 +268,7 @@ function cancel() {
           <VCol cols="12">
             <VDivider class="my-4" />
             <h6 class="text-h6 mb-4">
-              {{ t('EmployeeModule.employee.sections.employment_info') }}
+              {{ t('EmployeeModule.sections.employment_info') }}
             </h6>
           </VCol>
 
@@ -278,7 +278,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.hire_date"
-              :label="`${t('EmployeeModule.employee.fields.hire_date')} *`"
+              :label="`${t('EmployeeModule.fields.hire_date')} *`"
               type="date"
               variant="outlined"
               required
@@ -291,13 +291,13 @@ function cancel() {
           >
             <VSelect
               v-model="form.position"
-              :label="`${t('EmployeeModule.employee.fields.position')} *`"
+              :label="`${t('EmployeeModule.fields.position')} *`"
               :items="[
-                { value: 'operator', title: t('EmployeeModule.employee.positions.operator') },
-                { value: 'helper', title: t('EmployeeModule.employee.positions.helper') },
-                { value: 'manager', title: t('EmployeeModule.employee.positions.manager') },
-                { value: 'supervisor', title: t('EmployeeModule.employee.positions.supervisor') },
-                { value: 'admin', title: t('EmployeeModule.employee.positions.admin') },
+                { value: 'operator', title: t('EmployeeModule.positions.operator') },
+                { value: 'helper', title: t('EmployeeModule.positions.helper') },
+                { value: 'manager', title: t('EmployeeModule.positions.manager') },
+                { value: 'supervisor', title: t('EmployeeModule.positions.supervisor') },
+                { value: 'admin', title: t('EmployeeModule.positions.admin') },
               ]"
               variant="outlined"
               required
@@ -310,12 +310,12 @@ function cancel() {
           >
             <VSelect
               v-model="form.employment_type"
-              :label="`${t('EmployeeModule.employee.fields.employment_type')} *`"
+              :label="`${t('EmployeeModule.fields.employment_type')} *`"
               :items="[
-                { value: 'full_time', title: t('EmployeeModule.employee.employment_types.full_time') },
-                { value: 'part_time', title: t('EmployeeModule.employee.employment_types.part_time') },
-                { value: 'contractor', title: t('EmployeeModule.employee.employment_types.contractor') },
-                { value: 'temporary', title: t('EmployeeModule.employee.employment_types.temporary') },
+                { value: 'full_time', title: t('EmployeeModule.employment_types.full_time') },
+                { value: 'part_time', title: t('EmployeeModule.employment_types.part_time') },
+                { value: 'contractor', title: t('EmployeeModule.employment_types.contractor') },
+                { value: 'temporary', title: t('EmployeeModule.employment_types.temporary') },
               ]"
               variant="outlined"
               required
@@ -328,7 +328,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.department"
-              :label="t('EmployeeModule.employee.fields.department')"
+              :label="t('EmployeeModule.fields.department')"
               variant="outlined"
             />
           </VCol>
@@ -339,7 +339,7 @@ function cancel() {
           >
             <VTextField
               v-model.number="form.salary_amount"
-              :label="t('EmployeeModule.employee.fields.salary_amount')"
+              :label="t('EmployeeModule.fields.salary_amount')"
               type="number"
               variant="outlined"
             />
@@ -351,7 +351,7 @@ function cancel() {
           >
             <VTextField
               v-model="form.salary_currency"
-              :label="t('EmployeeModule.employee.fields.salary_currency')"
+              :label="t('EmployeeModule.fields.salary_currency')"
               variant="outlined"
               placeholder="MXN"
             />

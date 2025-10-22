@@ -14,6 +14,9 @@ defineEmits<{
   'view': [report: any]
   'edit': [report: any]
   'delete': [report: any]
+  'complete': [report: any]
+  'approve': [report: any]
+  'reject': [report: any]
 }>()
 
 const filters = ref({
@@ -28,14 +31,14 @@ const headers = [
   { title: 'Turno', key: 'shift', sortable: true },
   { title: 'Estado', key: 'status', sortable: true },
   { title: 'Profundidad', key: 'depth', sortable: false },
-  { title: 'Operador', key: 'operator_name', sortable: true },
-  { title: 'Acciones', key: 'actions', sortable: false, align: 'end' },
+  // { title: 'Operador', key: 'operator_name', sortable: true },
+  { title: 'Acciones', key: 'actions', sortable: false, align: 'end' as const },
 ]
 
 const statusOptions = [
   { title: 'Borrador', value: 'draft' },
   { title: 'Enviado', value: 'submitted' },
-  { title: 'Revisado', value: 'reviewed' },
+  { title: 'Pendiente Aprobación', value: 'pending_approval' },
   { title: 'Aprobado', value: 'approved' },
   { title: 'Rechazado', value: 'rejected' },
 ]
@@ -72,8 +75,39 @@ const filteredReports = computed(() => {
   return result
 })
 
+// Funciones para determinar acciones disponibles
+const getAvailableActions = (report: any) => {
+  const actions = []
+  
+  // Siempre disponible
+  actions.push('view')
+  
+  // Solo borradores pueden editarse
+  if (report.status === 'draft') {
+    actions.push('edit', 'delete')
+  }
+  
+  // Completar: solo borradores
+  if (report.status === 'draft') {
+    actions.push('complete')
+  }
+  
+  // Aprobar: solo pendientes de aprobación
+  if (report.status === 'pending_approval') {
+    actions.push('approve', 'reject')
+  }
+  
+  return actions
+}
+
+const canEdit = (report: any) => report.status === 'draft'
+const canDelete = (report: any) => report.status === 'draft'
+const canComplete = (report: any) => report.status === 'draft'
+const canApprove = (report: any) => report.status === 'pending_approval'
+const canReject = (report: any) => report.status === 'pending_approval'
+
 const getShiftColor = (shift: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     day: 'warning',
     night: 'info',
     mixed: 'primary',
@@ -83,7 +117,7 @@ const getShiftColor = (shift: string) => {
 }
 
 const getShiftLabel = (shift: string) => {
-  const labels = {
+  const labels: Record<string, string> = {
     day: 'Día',
     night: 'Noche',
     mixed: 'Mixto',
@@ -93,10 +127,10 @@ const getShiftLabel = (shift: string) => {
 }
 
 const getStatusColor = (status: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     draft: 'grey',
     submitted: 'info',
-    reviewed: 'warning',
+    pending_approval: 'warning',
     approved: 'success',
     rejected: 'error',
   }
@@ -105,10 +139,10 @@ const getStatusColor = (status: string) => {
 }
 
 const getStatusLabel = (status: string) => {
-  const labels = {
+  const labels: Record<string, string> = {
     draft: 'Borrador',
     submitted: 'Enviado',
-    reviewed: 'Revisado',
+    pending_approval: 'Pendiente Aprobación',
     approved: 'Aprobado',
     rejected: 'Rechazado',
   }
@@ -244,23 +278,15 @@ const getStatusLabel = (status: string) => {
 
       <!-- Depth Progress -->
       <template #item.depth="{ item }">
-        <div v-if="item.depth_from && item.depth_to">
-          <div class="text-body-2">
-            {{ item.depth_from }}m → {{ item.depth_to }}m
-          </div>
-          <div class="text-caption text-medium-emphasis">
-            Avance: {{ (item.depth_to - item.depth_from).toFixed(2) }}m
-          </div>
-        </div>
-        <span
-          v-else
-          class="text-medium-emphasis"
-        >N/A</span>
+        {{ item.totals.meters_drilled || 0 }} m
       </template>
+
+
 
       <!-- Actions -->
       <template #item.actions="{ item }">
-        <div class="d-flex gap-1">
+        <div class="d-flex gap-1 flex-wrap">
+          <!-- Ver Detalles - Siempre disponible -->
           <VTooltip text="Ver Detalles">
             <template #activator="{ props: tooltipProps }">
               <VBtn
@@ -272,19 +298,80 @@ const getStatusLabel = (status: string) => {
               />
             </template>
           </VTooltip>
-          <VTooltip text="Editar">
+
+          <!-- Editar - Solo borradores -->
+          <VTooltip 
+            v-if="canEdit(item)"
+            text="Editar"
+          >
             <template #activator="{ props: tooltipProps }">
               <VBtn
                 v-bind="tooltipProps"
                 icon="tabler-edit"
                 variant="text"
                 size="small"
-                :disabled="item.status !== 'draft'"
+                color="primary"
                 @click="$emit('edit', item)"
               />
             </template>
           </VTooltip>
-          <VTooltip text="Eliminar">
+
+          <!-- Completar - Solo borradores -->
+          <VTooltip 
+            v-if="canComplete(item)"
+            text="Completar Reporte"
+          >
+            <template #activator="{ props: tooltipProps }">
+              <VBtn
+                v-bind="tooltipProps"
+                icon="tabler-check"
+                variant="text"
+                size="small"
+                color="success"
+                @click="$emit('complete', item)"
+              />
+            </template>
+          </VTooltip>
+
+          <!-- Aprobar - Solo pendientes de aprobación -->
+          <VTooltip 
+            v-if="canApprove(item)"
+            text="Aprobar Reporte"
+          >
+            <template #activator="{ props: tooltipProps }">
+              <VBtn
+                v-bind="tooltipProps"
+                icon="tabler-circle-check"
+                variant="text"
+                size="small"
+                color="success"
+                @click="$emit('approve', item)"
+              />
+            </template>
+          </VTooltip>
+
+          <!-- Rechazar - Solo pendientes de aprobación -->
+          <VTooltip 
+            v-if="canReject(item)"
+            text="Rechazar Reporte"
+          >
+            <template #activator="{ props: tooltipProps }">
+              <VBtn
+                v-bind="tooltipProps"
+                icon="tabler-circle-x"
+                variant="text"
+                size="small"
+                color="error"
+                @click="$emit('reject', item)"
+              />
+            </template>
+          </VTooltip>
+
+          <!-- Eliminar - Solo borradores -->
+          <VTooltip 
+            v-if="canDelete(item)"
+            text="Eliminar"
+          >
             <template #activator="{ props: tooltipProps }">
               <VBtn
                 v-bind="tooltipProps"
@@ -292,7 +379,6 @@ const getStatusLabel = (status: string) => {
                 variant="text"
                 size="small"
                 color="error"
-                :disabled="item.status !== 'draft'"
                 @click="$emit('delete', item)"
               />
             </template>

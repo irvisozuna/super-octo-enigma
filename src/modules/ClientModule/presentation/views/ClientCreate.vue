@@ -248,7 +248,7 @@ function cancel() {
     <VCardTitle>
       <div class="d-flex align-center justify-space-between">
         <h4 class="text-h4">
-          {{ t('ClientModule.client.actions.create') }}
+          {{ t('ClientModule.actions.create') }}
         </h4>
       </div>
     </VCardTitle>
@@ -259,7 +259,7 @@ function cancel() {
           <!-- Business Type Selection -->
           <VCol cols="12">
             <h6 class="text-h6 mb-4">
-              {{ t('ClientModule.client.sections.business_type') }}
+              {{ t('ClientModule.sections.business_type') }}
             </h6>
           </VCol>
 

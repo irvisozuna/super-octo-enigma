@@ -248,38 +248,23 @@ const validateStep1 = async () => {
 }
 
 const nextStep = async () => {
-  console.log('🔄 Next step called. Current step:', currentStep.value)
-  console.log('📋 Form data shift:', formData.value.shift)
-  console.log('☀️ Show day shift:', showDayShift.value)
-  console.log('🌙 Show night shift:', showNightShift.value)
-
   if (currentStep.value === '1') {
     const valid = await validateStep1()
 
-    console.log('✅ Step 1 validation result:', valid)
-    if (!valid) {
-      console.log('❌ Step 1 validation failed, staying on step 1')
-
+    if (!valid)
       return
-    }
   }
 
   if (currentStep.value === '2' && step2Form.value) {
     const { valid } = await step2Form.value.validate()
 
-    console.log('✅ Step 2 validation result:', valid)
-    if (!valid) {
-      console.log('❌ Step 2 validation failed, staying on step 2')
-
+    if (!valid)
       return
-    }
   }
 
   const currentStepIndex = steps.findIndex(s => s.value === currentStep.value)
-  if (currentStepIndex < steps.length - 1) {
+  if (currentStepIndex < steps.length - 1)
     currentStep.value = steps[currentStepIndex + 1].value
-    console.log('➡️ Moved to step:', currentStep.value)
-  }
 }
 
 const previousStep = () => {
@@ -309,17 +294,14 @@ const loadEquipment = async () => {
 }
 
 const loadEmployees = async () => {
-  console.log('👥 Loading employees...')
   loadingEmployees.value = true
   try {
     const response = await DrillingReportApiService.getEmployees?.() || { data: [] }
 
-    console.log('👥 Employees response:', response)
     employeeOptions.value = (response.data || response || []).map((emp: any) => ({
       title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
       value: emp.id,
     }))
-    console.log('👥 Employee options:', employeeOptions.value.length, 'employees loaded')
   }
   catch (error) {
     console.error('❌ Error loading employees:', error)
@@ -327,7 +309,6 @@ const loadEmployees = async () => {
   }
   finally {
     loadingEmployees.value = false
-    console.log('👥 Loading employees finished. loadingEmployees:', loadingEmployees.value)
   }
 }
 
@@ -400,7 +381,6 @@ const saveDraft = () => {
     }
 
     localStorage.setItem(DRAFT_KEY.value, JSON.stringify(draft))
-    console.log('💾 Draft saved:', DRAFT_KEY.value)
   }
   catch (error) {
     console.error('Error saving draft:', error)
@@ -435,7 +415,6 @@ const loadDraft = () => {
       }
 
       draftLoadedMessage.value = `Se restauró el borrador guardado ${timeAgo}`
-      console.log('📂 Draft loaded from:', draft.timestamp)
 
       // Clear message after 5 seconds
       setTimeout(() => {
@@ -451,7 +430,6 @@ const loadDraft = () => {
 const clearDraft = () => {
   try {
     localStorage.removeItem(DRAFT_KEY.value)
-    console.log('🗑️ Draft cleared')
   }
   catch (error) {
     console.error('Error clearing draft:', error)
@@ -480,7 +458,6 @@ defineExpose({
 const DRAFT_KEY = computed(() => `report_draft_${props.projectId}_${props.wellId}`)
 
 watch(() => props.modelValue, newValue => {
-  console.log('👁️ Wizard dialog opened:', newValue)
   if (newValue) {
     currentStep.value = '1'
     loadEquipment()
@@ -503,12 +480,8 @@ watch(() => props.error, newError => {
   if (!newError)
     return
 
-  console.log('🔴 Wizard: Received error from parent:', newError)
-
   try {
     const errorObj = typeof newError === 'string' ? JSON.parse(newError) : newError
-
-    console.log('🔍 Wizard: Parsed error object:', errorObj)
 
     // Handle Laravel validation errors
     if (errorObj.errors) {
@@ -524,7 +497,6 @@ watch(() => props.error, newError => {
           return `${cleanField}: ${msg}`
         })
       })
-      console.log('📋 Validation errors:', validationErrors.value)
     }
     else if (errorObj.error) {
       // Handle structured error
@@ -556,11 +528,6 @@ watch(() => props.error, newError => {
 })
 
 watch(() => currentStep.value, (newStep, oldStep) => {
-  console.log(`📍 Step changed from ${oldStep} to ${newStep}`)
-  console.log('📋 Current shift:', formData.value.shift)
-  console.log('☀️ Show day shift:', showDayShift.value)
-  console.log('🌙 Show night shift:', showNightShift.value)
-
   if (newStep === '2') {
     console.log('👥 Employee options available:', employeeOptions.value)
     console.log('⚙️ Equipment options available:', equipmentOptions.value)
@@ -569,7 +536,6 @@ watch(() => currentStep.value, (newStep, oldStep) => {
 })
 
 onMounted(() => {
-  console.log('🚀 Wizard mounted, modelValue:', props.modelValue)
   if (props.modelValue) {
     loadEquipment()
     loadEmployees()

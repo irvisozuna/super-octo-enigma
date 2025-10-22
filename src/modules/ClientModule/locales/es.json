@@ -1,245 +1,258 @@
+
 {
-  "client": {
-    "title": "Clientes",
-    "list_title": "Lista de Clientes",
-    "list_description": "Gestión completa de clientes del sistema",
-    "search_placeholder": "Buscar por código, nombre o RFC",
-    "no_data": "No hay clientes registrados",
-    "no_data_description": "Comienza agregando tu primer cliente al sistema",
-    "not_found": "Cliente no encontrado",
+  "title": "Clientes",
+  "list_title": "Lista de Clientes",
+  "list_description": "Gestión completa de clientes del sistema",
+  "search_placeholder": "Buscar por código, nombre o RFC",
+  "no_data": "No hay clientes registrados",
+  "no_data_description": "Comienza agregando tu primer cliente al sistema",
+  "not_found": "Cliente no encontrado",
+
+  "fields": {
+    "client_code": "Código de Cliente",
+    "business_type": "Tipo de Negocio",
+    "company_name": "Razón Social",
+    "trade_name": "Nombre Comercial",
+    "contact_person": "Persona de Contacto",
+    "email": "Correo Electrónico",
+    "primary_phone": "Teléfono Principal",
+    "mobile": "Celular",
+    "website": "Sitio Web",
+    "address_line_1": "Dirección Línea 1",
+    "address_line_2": "Dirección Línea 2",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Estado",
+    "postal_code": "Código Postal",
+    "country": "País",
+    "rfc": "RFC",
+    "tax_regime": "Régimen Fiscal",
+    "cfdi_use": "Uso de CFDI",
+    "payment_terms": "Términos de Pago",
+    "credit_limit": "Límite de Crédito",
+    "credit_days": "Días de Crédito",
+    "discount_percentage": "Porcentaje de Descuento",
+    "notes": "Notas",
+    "tags": "Etiquetas",
+    "status": "Estado"
+  },
+  "search": {
+    "placeholder": "Buscar por código, nombre o RFC"
+  },
+  "filters": {
+    "status": "Estado",
+    "business_type": "Tipo de Negocio",
+    "city": "Ciudad",
+    "state": "Estado",
+    "payment_terms": "Términos de Pago",
+    "has_credit_limit": "Tiene Límite de Crédito",
+    "sort_by": "Ordenar por",
+    "sort_order": "Orden",
+    "page": "Página",
+    "per_page": "Por página"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "suspended": "Suspendido",
+    "blacklisted": "Lista Negra"
+  },
+
+  "business_types": {
+    "company": "Empresa",
+    "individual": "Persona Física"
+  },
+
+  "payment_terms": {
+    "immediate": "Inmediato",
+    "net_15": "Neto 15 días",
+    "net_30": "Neto 30 días",
+    "net_45": "Neto 45 días",
+    "net_60": "Neto 60 días",
+    "net_90": "Neto 90 días",
+    "custom": "Personalizado"
+  },
+
+  "tax_regimes": {
+    "601": "General de Ley Personas Morales",
+    "603": "Personas Morales con Fines no Lucrativos",
+    "605": "Sueldos y Salarios e Ingresos Asimilados a Salarios",
+    "606": "Arrendamiento",
+    "608": "Demás ingresos",
+    "610": "Residentes en el Extranjero sin Establecimiento Permanente en México",
+    "611": "Ingresos por Dividendos (socios y accionistas)",
+    "612": "Personas Físicas con Actividades Empresariales y Profesionales",
+    "614": "Ingresos por intereses",
+    "616": "Sin obligaciones fiscales",
+    "620": "Sociedades Cooperativas de Producción que optan por diferir sus ingresos",
+    "621": "Incorporación Fiscal",
+    "622": "Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras",
+    "623": "Opcional para Grupos de Sociedades",
+    "624": "Coordinados",
+    "625": "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas",
+    "626": "Régimen Simplificado de Confianza"
+  },
+
+  "cfdi_uses": {
+    "G01": "Adquisición de mercancías",
+    "G02": "Devoluciones, descuentos o bonificaciones",
+    "G03": "Gastos en general",
+    "I01": "Construcciones",
+    "I02": "Mobilario y equipo de oficina por inversiones",
+    "I03": "Equipo de transporte",
+    "I04": "Equipo de cómputo y accesorios",
+    "I05": "Dados, troqueles, moldes, matrices y herramental",
+    "I06": "Comunicaciones telefónicas",
+    "I07": "Comunicaciones satelitales",
+    "I08": "Otra maquinaria y equipo",
+    "D01": "Honorarios médicos, dentales y gastos hospitalarios",
+    "D02": "Gastos médicos por incapacidad o discapacidad",
+    "D03": "Gastos funerales",
+    "D04": "Donativos",
+    "D05": "Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)",
+    "D06": "Aportaciones voluntarias al SAR",
+    "D07": "Primas por seguros de gastos médicos",
+    "D08": "Gastos de transportación escolar obligatoria",
+    "D09": "Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones",
+    "D10": "Pagos por servicios educativos (colegiaturas)",
+    "P01": "Por definir",
+    "S01": "Sin efectos fiscales"
+  },
+
+  "sections": {
+    "basic_info": "Información Básica",
+    "contact_info": "Información de Contacto",
+    "address_info": "Información de Dirección",
+    "fiscal_info": "Información Fiscal",
+    "credit_info": "Información de Crédito",
+    "additional_info": "Información Adicional",
+    "business_types": "Tipos de Negocio"
+  },
+
+  "tabs": {
+    "info": "Información",
+    "contacts": "Contactos",
+    "history": "Historial",
+    "documents": "Documentos",
+    "transactions": "Transacciones",
+    "statistics": "Estadísticas"
+  },
+
+  "actions": {
+    "add": "Agregar Cliente",
+    "create": "Crear Cliente",
+    "edit": "Editar Cliente",
+    "view": "Ver Cliente",
+    "delete": "Eliminar Cliente",
+    "activate": "Activar",
+    "suspend": "Suspender",
+    "deactivate": "Desactivar",
+    "blacklist": "Lista Negra",
+    "update_credit_limit": "Actualizar Límite de Crédito"
+  },
+
+  "messages": {
+    "created_success": "Cliente creado exitosamente",
+    "updated_success": "Cliente actualizado exitosamente",
+    "deleted_success": "Cliente eliminado exitosamente",
+    "activated_success": "Cliente activado exitosamente",
+    "suspended_success": "Cliente suspendido exitosamente",
+    "deactivated_success": "Cliente desactivado exitosamente",
+    "blacklisted_success": "Cliente agregado a lista negra exitosamente",
+    "credit_limit_updated": "Límite de crédito actualizado exitosamente",
+    "error_loading": "Error al cargar el cliente",
+    "error_creating": "Error al crear el cliente",
+    "error_updating": "Error al actualizar el cliente",
+    "error_deleting": "Error al eliminar el cliente"
+  },
+
+  "confirm_delete": "¿Está seguro de eliminar al cliente {name}?",
+  "confirm_activate": "¿Está seguro de activar al cliente {name}?",
+  "confirm_suspend": "¿Está seguro de suspender al cliente {name}?",
+  "confirm_deactivate": "¿Está seguro de desactivar al cliente {name}?",
+  "confirm_blacklist": "¿Está seguro de agregar al cliente {name} a la lista negra? Esta acción requiere autorización especial.",
+
+  "validation": {
+    "client_code_required": "El código de cliente es requerido",
+    "client_code_taken": "El código de cliente ya está en uso",
+    "business_type_required": "El tipo de negocio es requerido",
+    "company_name_required": "La razón social es requerida",
+    "contact_person_required": "La persona de contacto es requerida",
+    "email_invalid": "El correo electrónico no es válido",
+    "phone_invalid": "El teléfono no es válido",
+    "rfc_invalid": "El RFC no es válido",
+    "rfc_required": "El RFC es requerido",
+    "credit_limit_invalid": "El límite de crédito debe ser un número positivo",
+    "credit_days_invalid": "Los días de crédito deben ser un número positivo",
+    "discount_invalid": "El porcentaje de descuento debe estar entre 0 y 100",
+    "name_required": "El nombre es requerido"
+  },
+
+  "contacts": {
+    "title": "Contactos",
+    "description": "Gestión de contactos del cliente",
+    "add": "Agregar Contacto",
+    "edit": "Editar Contacto",
+    "delete": "Eliminar Contacto",
+    "primary": "Principal",
+    "set_primary": "Establecer como Principal",
+    "no_contacts": "No hay contactos registrados para este cliente",
+    "confirm_delete_title": "Confirmar Eliminación",
+    "confirm_delete_message": "¿Está seguro de eliminar el contacto {name}?",
 
     "fields": {
-      "client_code": "Código de Cliente",
-      "business_type": "Tipo de Negocio",
-      "company_name": "Razón Social",
-      "trade_name": "Nombre Comercial",
-      "contact_person": "Persona de Contacto",
+      "name": "Nombre",
+      "position": "Puesto",
       "email": "Correo Electrónico",
       "phone": "Teléfono",
       "mobile": "Celular",
-      "website": "Sitio Web",
-      "address_line_1": "Dirección Línea 1",
-      "address_line_2": "Dirección Línea 2",
-      "address": "Dirección",
-      "city": "Ciudad",
-      "state": "Estado",
-      "postal_code": "Código Postal",
-      "country": "País",
-      "rfc": "RFC",
-      "tax_regime": "Régimen Fiscal",
-      "cfdi_use": "Uso de CFDI",
-      "payment_terms": "Términos de Pago",
-      "credit_limit": "Límite de Crédito",
-      "credit_days": "Días de Crédito",
-      "discount_percentage": "Porcentaje de Descuento",
-      "notes": "Notas",
-      "tags": "Etiquetas",
-      "status": "Estado"
-    },
-
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo",
-      "suspended": "Suspendido",
-      "blacklisted": "Lista Negra"
-    },
-
-    "business_types": {
-      "company": "Empresa",
-      "individual": "Persona Física"
-    },
-
-    "payment_terms": {
-      "immediate": "Inmediato",
-      "net_15": "Neto 15 días",
-      "net_30": "Neto 30 días",
-      "net_45": "Neto 45 días",
-      "net_60": "Neto 60 días",
-      "net_90": "Neto 90 días",
-      "custom": "Personalizado"
-    },
-
-    "tax_regimes": {
-      "601": "General de Ley Personas Morales",
-      "603": "Personas Morales con Fines no Lucrativos",
-      "605": "Sueldos y Salarios e Ingresos Asimilados a Salarios",
-      "606": "Arrendamiento",
-      "608": "Demás ingresos",
-      "610": "Residentes en el Extranjero sin Establecimiento Permanente en México",
-      "611": "Ingresos por Dividendos (socios y accionistas)",
-      "612": "Personas Físicas con Actividades Empresariales y Profesionales",
-      "614": "Ingresos por intereses",
-      "616": "Sin obligaciones fiscales",
-      "620": "Sociedades Cooperativas de Producción que optan por diferir sus ingresos",
-      "621": "Incorporación Fiscal",
-      "622": "Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras",
-      "623": "Opcional para Grupos de Sociedades",
-      "624": "Coordinados",
-      "625": "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas",
-      "626": "Régimen Simplificado de Confianza"
-    },
-
-    "cfdi_uses": {
-      "G01": "Adquisición de mercancías",
-      "G02": "Devoluciones, descuentos o bonificaciones",
-      "G03": "Gastos en general",
-      "I01": "Construcciones",
-      "I02": "Mobilario y equipo de oficina por inversiones",
-      "I03": "Equipo de transporte",
-      "I04": "Equipo de cómputo y accesorios",
-      "I05": "Dados, troqueles, moldes, matrices y herramental",
-      "I06": "Comunicaciones telefónicas",
-      "I07": "Comunicaciones satelitales",
-      "I08": "Otra maquinaria y equipo",
-      "D01": "Honorarios médicos, dentales y gastos hospitalarios",
-      "D02": "Gastos médicos por incapacidad o discapacidad",
-      "D03": "Gastos funerales",
-      "D04": "Donativos",
-      "D05": "Intereses reales efectivamente pagados por créditos hipotecarios (casa habitación)",
-      "D06": "Aportaciones voluntarias al SAR",
-      "D07": "Primas por seguros de gastos médicos",
-      "D08": "Gastos de transportación escolar obligatoria",
-      "D09": "Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones",
-      "D10": "Pagos por servicios educativos (colegiaturas)",
-      "P01": "Por definir",
-      "S01": "Sin efectos fiscales"
-    },
-
-    "sections": {
-      "basic_info": "Información Básica",
-      "contact_info": "Información de Contacto",
-      "address_info": "Información de Dirección",
-      "fiscal_info": "Información Fiscal",
-      "credit_info": "Información de Crédito",
-      "additional_info": "Información Adicional"
-    },
-
-    "tabs": {
-      "info": "Información",
-      "contacts": "Contactos",
-      "history": "Historial",
-      "documents": "Documentos",
-      "transactions": "Transacciones",
-      "statistics": "Estadísticas"
-    },
-
-    "actions": {
-      "add": "Agregar Cliente",
-      "create": "Crear Cliente",
-      "edit": "Editar Cliente",
-      "view": "Ver Cliente",
-      "delete": "Eliminar Cliente",
-      "activate": "Activar",
-      "suspend": "Suspender",
-      "deactivate": "Desactivar",
-      "blacklist": "Lista Negra",
-      "update_credit_limit": "Actualizar Límite de Crédito"
+      "is_primary": "Contacto Principal",
+      "notes": "Notas"
     },
 
     "messages": {
-      "created_success": "Cliente creado exitosamente",
-      "updated_success": "Cliente actualizado exitosamente",
-      "deleted_success": "Cliente eliminado exitosamente",
-      "activated_success": "Cliente activado exitosamente",
-      "suspended_success": "Cliente suspendido exitosamente",
-      "deactivated_success": "Cliente desactivado exitosamente",
-      "blacklisted_success": "Cliente agregado a lista negra exitosamente",
-      "credit_limit_updated": "Límite de crédito actualizado exitosamente",
-      "error_loading": "Error al cargar el cliente",
-      "error_creating": "Error al crear el cliente",
-      "error_updating": "Error al actualizar el cliente",
-      "error_deleting": "Error al eliminar el cliente"
-    },
-
-    "confirm_delete": "¿Está seguro de eliminar al cliente {name}?",
-    "confirm_activate": "¿Está seguro de activar al cliente {name}?",
-    "confirm_suspend": "¿Está seguro de suspender al cliente {name}?",
-    "confirm_deactivate": "¿Está seguro de desactivar al cliente {name}?",
-    "confirm_blacklist": "¿Está seguro de agregar al cliente {name} a la lista negra? Esta acción requiere autorización especial.",
-
-    "validation": {
-      "client_code_required": "El código de cliente es requerido",
-      "client_code_taken": "El código de cliente ya está en uso",
-      "business_type_required": "El tipo de negocio es requerido",
-      "company_name_required": "La razón social es requerida",
-      "contact_person_required": "La persona de contacto es requerida",
-      "email_invalid": "El correo electrónico no es válido",
-      "phone_invalid": "El teléfono no es válido",
-      "rfc_invalid": "El RFC no es válido",
-      "rfc_required": "El RFC es requerido",
-      "credit_limit_invalid": "El límite de crédito debe ser un número positivo",
-      "credit_days_invalid": "Los días de crédito deben ser un número positivo",
-      "discount_invalid": "El porcentaje de descuento debe estar entre 0 y 100",
-      "name_required": "El nombre es requerido"
-    },
-
-    "contacts": {
-      "title": "Contactos",
-      "description": "Gestión de contactos del cliente",
-      "add": "Agregar Contacto",
-      "edit": "Editar Contacto",
-      "delete": "Eliminar Contacto",
-      "primary": "Principal",
-      "set_primary": "Establecer como Principal",
-      "no_contacts": "No hay contactos registrados para este cliente",
-      "confirm_delete_title": "Confirmar Eliminación",
-      "confirm_delete_message": "¿Está seguro de eliminar el contacto {name}?",
-
-      "fields": {
-        "name": "Nombre",
-        "position": "Puesto",
-        "email": "Correo Electrónico",
-        "phone": "Teléfono",
-        "mobile": "Celular",
-        "is_primary": "Contacto Principal",
-        "notes": "Notas"
-      },
-
-      "messages": {
-        "created_success": "Contacto creado exitosamente",
-        "updated_success": "Contacto actualizado exitosamente",
-        "deleted_success": "Contacto eliminado exitosamente",
-        "primary_updated": "Contacto principal actualizado exitosamente",
-        "error_creating": "Error al crear el contacto",
-        "error_updating": "Error al actualizar el contacto",
-        "error_deleting": "Error al eliminar el contacto"
-      }
-    },
-
-    "history": {
-      "title": "Historial de Estados",
-      "description": "Cronología de cambios de estado del cliente",
-      "no_history": "No hay eventos registrados en el historial de estados",
-      "changed_by": "Por",
-      "reason": "Razón",
-      "notes": "Notas",
-      "effective_date": "Fecha Efectiva",
-
-      "events": {
-        "created": "Cliente Creado",
-        "activated": "Cliente Activado",
-        "suspended": "Cliente Suspendido",
-        "deactivated": "Cliente Desactivado",
-        "blacklisted": "Cliente en Lista Negra",
-        "status_change": "Cambio de Estado",
-        "credit_limit_change": "Cambio de Límite de Crédito"
-      }
-    },
-
-    "statistics": {
-      "title": "Estadísticas de Clientes",
-      "total_clients": "Total de Clientes",
-      "active_clients": "Clientes Activos",
-      "inactive_clients": "Clientes Inactivos",
-      "suspended_clients": "Clientes Suspendidos",
-      "blacklisted_clients": "Clientes en Lista Negra",
-      "total_companies": "Total de Empresas",
-      "total_individuals": "Total de Personas Físicas",
-      "total_credit_limit": "Límite de Crédito Total",
-      "average_credit_days": "Días de Crédito Promedio"
+      "created_success": "Contacto creado exitosamente",
+      "updated_success": "Contacto actualizado exitosamente",
+      "deleted_success": "Contacto eliminado exitosamente",
+      "primary_updated": "Contacto principal actualizado exitosamente",
+      "error_creating": "Error al crear el contacto",
+      "error_updating": "Error al actualizar el contacto",
+      "error_deleting": "Error al eliminar el contacto"
     }
   },
 
+  "history": {
+    "title": "Historial de Estados",
+    "description": "Cronología de cambios de estado del cliente",
+    "no_history": "No hay eventos registrados en el historial de estados",
+    "changed_by": "Por",
+    "reason": "Razón",
+    "notes": "Notas",
+    "effective_date": "Fecha Efectiva",
+
+    "events": {
+      "created": "Cliente Creado",
+      "activated": "Cliente Activado",
+      "suspended": "Cliente Suspendido",
+      "deactivated": "Cliente Desactivado",
+      "blacklisted": "Cliente en Lista Negra",
+      "status_change": "Cambio de Estado",
+      "credit_limit_change": "Cambio de Límite de Crédito"
+    }
+  },
+
+  "statistics": {
+    "title": "Estadísticas de Clientes",
+    "total_clients": "Total de Clientes",
+    "active_clients": "Clientes Activos",
+    "inactive_clients": "Clientes Inactivos",
+    "suspended_clients": "Clientes Suspendidos",
+    "blacklisted_clients": "Clientes en Lista Negra",
+    "total_companies": "Total de Empresas",
+    "total_individuals": "Total de Personas Físicas",
+    "total_credit_limit": "Límite de Crédito Total",
+    "average_credit_days": "Días de Crédito Promedio"
+  },
   "common": {
     "status": "Estado",
     "actions": "Acciones",
@@ -252,6 +265,7 @@
     "close": "Cerrar",
     "confirm": "Confirmar",
     "export": "Exportar",
+    "refresh": "Actualizar",
     "export_excel": "Exportar a Excel",
     "export_pdf": "Exportar a PDF",
     "export_csv": "Exportar a CSV",

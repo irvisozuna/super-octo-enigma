@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { formatDate } from '../../../shared/utils/dateUtils'
-import { EquipmentApiService } from '../../../infrastructure/api/services/EquipmentApiService'
+import { computed, ref } from 'vue'
 
 export interface ProjectEquipmentTabProps {
   projectId: string
+  equipment?: any[]
   loading?: boolean
+  canEdit?: boolean
 }
 
 const props = withDefaults(defineProps<ProjectEquipmentTabProps>(), {
+  equipment: () => [],
   loading: false,
+  canEdit: true,
 })
 
 const emit = defineEmits<{
@@ -19,76 +21,16 @@ const emit = defineEmits<{
 }>()
 
 // Local state
-const equipment = ref<any[]>([])
-const loadingEquipment = ref(false)
 const error = ref<string | null>(null)
 
-// Load equipment for the project
-const loadEquipment = async () => {
-  if (!props.projectId || loadingEquipment.value)
-    return
-
-  loadingEquipment.value = true
-  error.value = null
-
-  try {
-    console.log('🔍 Loading equipment for project:', props.projectId, 'at', new Date().toISOString())
-
-    const response = await EquipmentApiService.getEquipment({
-      project_id: props.projectId,
-      per_page: 100, // Load more equipment if needed
-    })
-
-    console.log('📦 Equipment response:', response)
-
-    // Handle different response structures
-    let equipmentData = []
-
-    if (response.data) {
-      if (Array.isArray(response.data))
-        equipmentData = response.data
-      else if (response.data.data)
-        equipmentData = response.data.data
-      else
-        equipmentData = [response.data]
-    }
-    else if (Array.isArray(response)) {
-      equipmentData = response
-    }
-
-    // Filter only equipment assigned to this project
-    equipment.value = equipmentData.filter((item: any) =>
-      item.current_project_id === props.projectId,
-    )
-
-    console.log('✅ Equipment loaded:', {
-      total: equipmentData.length,
-      assigned: equipment.value.length,
-      projectId: props.projectId,
-    })
-  }
-  catch (err: any) {
-    console.error('❌ Error loading equipment:', err)
-    error.value = err.message || 'Error al cargar equipos'
-    equipment.value = []
-  }
-  finally {
-    loadingEquipment.value = false
-  }
-}
-
-// Watch for project ID changes
-watch(() => props.projectId, newProjectId => {
-  if (newProjectId)
-    loadEquipment()
-}, { immediate: true })
-
-// Expose load method for parent component
+// Expose refresh method for parent component
 defineExpose({
-  loadEquipment,
+  refresh: () => {
+    // This will be handled by the parent component
+  },
 })
 
-const totalEquipment = computed(() => equipment.value.length)
+const totalEquipment = computed(() => props.equipment?.length || 0)
 
 const getEquipmentIcon = (type: string) => {
   const icons: Record<string, string> = {
@@ -168,6 +110,7 @@ const getStatusLabel = (status: string) => {
         </p>
       </div>
       <VBtn
+        v-if="canEdit"
         color="primary"
         prepend-icon="tabler-tool"
         @click="$emit('assign')"
@@ -178,7 +121,7 @@ const getStatusLabel = (status: string) => {
 
     <!-- Loading State -->
     <div
-      v-if="loadingEquipment"
+      v-if="loading"
       class="text-center pa-8"
     >
       <VIcon
@@ -213,9 +156,9 @@ const getStatusLabel = (status: string) => {
     </VAlert>
 
     <!-- Equipment Grid -->
-    <VRow v-else-if="equipment.length > 0">
+    <VRow v-else-if="props.equipment && props.equipment.length > 0">
       <VCol
-        v-for="item in equipment"
+        v-for="item in props.equipment"
         :key="item.id"
         cols="12"
         sm="6"
@@ -340,6 +283,7 @@ const getStatusLabel = (status: string) => {
           Aún no se han asignado equipos a este proyecto
         </p>
         <VBtn
+          v-if="canEdit"
           color="primary"
           prepend-icon="tabler-tool"
           @click="$emit('assign')"

@@ -12,9 +12,12 @@ const rules = REPORT_VALIDATION_RULES
 
 // Computed
 const formData = computed(() => wizardStore.formData)
-const availableShiftOptions = computed(() => wizardStore.availableShiftOptions)
+const availableShiftOptions = computed(() => {
+  return wizardStore.availableShiftOptions
+})
 const totalHoursWorked = computed(() => wizardStore.totalHoursWorked)
 const calculatedHorometerEnd = computed(() => wizardStore.calculatedHorometerEnd)
+const isActivitiesStepValid = computed(() => wizardStore.isActivitiesStepValid)
 
 // Activity options
 const activityTypeOptions = ACTIVITY_TYPES
@@ -33,7 +36,12 @@ const addActivityFromTemplate = (template: any) => {
 const removeActivity = (index: number) => wizardStore.removeActivity(index)
 
 const updateActivity = (index: number, field: string, value: any) => {
-  wizardStore.updateActivity(index, { [field]: value })
+  // Use the time calculation function for time-related fields
+  if (['hours', 'start_time', 'end_time'].includes(field)) {
+    wizardStore.updateActivityWithTimeCalculation(index, field, value)
+  } else {
+    wizardStore.updateActivity(index, { [field]: value })
+  }
 }
 
 const calculateHorometer = () => {
@@ -128,7 +136,6 @@ const calculateHorometer = () => {
                   :items="availableShiftOptions"
                   :rules="[rules.required]"
                   prepend-inner-icon="tabler-clock"
-                  readonly
                   @update:model-value="(v) => updateActivity(index, 'shift', v)"
                 />
               </VCol>
@@ -209,7 +216,7 @@ const calculateHorometer = () => {
             class="text-medium-emphasis mb-4"
           />
           <p class="text-body-2 text-medium-emphasis mb-4">
-            No hay actividades registradas. Agrega la primera actividad del turno.
+            No hay actividades registradas. Debe agregar al menos una actividad para continuar.
           </p>
           <VBtn
             color="success"
@@ -219,6 +226,35 @@ const calculateHorometer = () => {
             Agregar Primera Actividad
           </VBtn>
         </VCard>
+      </VCol>
+
+      <!-- Validation Error -->
+      <VCol
+        v-if="formData.activities.length > 0 && !isActivitiesStepValid"
+        cols="12"
+      >
+        <VAlert
+          color="error"
+          variant="tonal"
+          border="start"
+          class="mb-4"
+        >
+          <template #title>
+            <VIcon
+              icon="tabler-alert-circle"
+              class="me-2"
+            />
+            Validación Requerida
+          </template>
+          <p class="mb-2">
+            Por favor complete todos los campos requeridos:
+          </p>
+          <ul class="text-body-2">
+            <li>• Todas las actividades deben tener un tipo seleccionado</li>
+            <li>• Todas las actividades deben tener un turno asignado</li>
+            <li>• Todas las actividades deben tener horas trabajadas (mayor a 0)</li>
+          </ul>
+        </VAlert>
       </VCol>
     </VRow>
 

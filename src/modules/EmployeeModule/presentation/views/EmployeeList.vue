@@ -20,11 +20,11 @@ const selectedEmploymentTypes = ref<string[]>([])
 
 // Headers para la tabla
 const headers = [
-  { title: t('EmployeeModule.employee.fields.employee_code'), key: 'employee_code' },
-  { title: t('EmployeeModule.employee.fields.full_name'), key: 'full_name' },
-  { title: t('EmployeeModule.employee.fields.position'), key: 'position' },
-  { title: t('EmployeeModule.employee.fields.department'), key: 'department' },
-  { title: t('EmployeeModule.employee.fields.employment_type'), key: 'employment_type' },
+  { title: t('EmployeeModule.fields.employee_code'), key: 'employee_code' },
+  { title: t('EmployeeModule.fields.full_name'), key: 'full_name' },
+  { title: t('EmployeeModule.fields.position'), key: 'position' },
+  { title: t('EmployeeModule.fields.department'), key: 'department' },
+  { title: t('EmployeeModule.fields.employment_type'), key: 'employment_type' },
   { title: t('EmployeeModule.common.status'), key: 'status' },
   { title: t('EmployeeModule.common.actions'), key: 'actions', sortable: false },
 ]
@@ -50,26 +50,26 @@ const menuOptions = [
 
 // Opciones para los selects
 const statusOptions = [
-  { value: 'active', title: t('EmployeeModule.employee.status.active'), color: 'success' },
-  { value: 'inactive', title: t('EmployeeModule.employee.status.inactive'), color: 'warning' },
-  { value: 'suspended', title: t('EmployeeModule.employee.status.suspended'), color: 'error' },
-  { value: 'terminated', title: t('EmployeeModule.employee.status.terminated'), color: 'error' },
-  { value: 'vacation', title: t('EmployeeModule.employee.status.vacation'), color: 'info' },
+  { value: 'active', title: t('EmployeeModule.status.active'), color: 'success' },
+  { value: 'inactive', title: t('EmployeeModule.status.inactive'), color: 'warning' },
+  { value: 'suspended', title: t('EmployeeModule.status.suspended'), color: 'error' },
+  { value: 'terminated', title: t('EmployeeModule.status.terminated'), color: 'error' },
+  { value: 'vacation', title: t('EmployeeModule.status.vacation'), color: 'info' },
 ]
 
 const positionOptions = [
-  { value: 'operator', title: t('EmployeeModule.employee.positions.operator') },
-  { value: 'helper', title: t('EmployeeModule.employee.positions.helper') },
-  { value: 'manager', title: t('EmployeeModule.employee.positions.manager') },
-  { value: 'supervisor', title: t('EmployeeModule.employee.positions.supervisor') },
-  { value: 'admin', title: t('EmployeeModule.employee.positions.admin') },
+  { value: 'operator', title: t('EmployeeModule.positions.operator') },
+  { value: 'helper', title: t('EmployeeModule.positions.helper') },
+  { value: 'manager', title: t('EmployeeModule.positions.manager') },
+  { value: 'supervisor', title: t('EmployeeModule.positions.supervisor') },
+  { value: 'admin', title: t('EmployeeModule.positions.admin') },
 ]
 
 const employmentTypeOptions = [
-  { value: 'full_time', title: t('EmployeeModule.employee.employment_types.full_time') },
-  { value: 'part_time', title: t('EmployeeModule.employee.employment_types.part_time') },
-  { value: 'contractor', title: t('EmployeeModule.employee.employment_types.contractor') },
-  { value: 'temporary', title: t('EmployeeModule.employee.employment_types.temporary') },
+  { value: 'full_time', title: t('EmployeeModule.employment_types.full_time') },
+  { value: 'part_time', title: t('EmployeeModule.employment_types.part_time') },
+  { value: 'contractor', title: t('EmployeeModule.employment_types.contractor') },
+  { value: 'temporary', title: t('EmployeeModule.employment_types.temporary') },
 ]
 
 // Computed para chips de filtros activos
@@ -183,7 +183,7 @@ function navigateToEdit(item: EmployeeEntity) {
 }
 
 async function deleteEmployee(item: EmployeeEntity) {
-  if (confirm(t('EmployeeModule.employee.confirm_delete', { name: item.full_name }))) {
+  if (confirm(t('EmployeeModule.confirm_delete', { name: item.full_name }))) {
     try {
       await employeeStore.deleteItem(item.id)
     }
@@ -216,11 +216,11 @@ function getStatusColor(status: string) {
 }
 
 function getPositionLabel(position: string) {
-  return t(`EmployeeModule.employee.positions.${position}`)
+  return t(`EmployeeModule.positions.${position}`)
 }
 
 function getEmploymentTypeLabel(type: string) {
-  return t(`EmployeeModule.employee.employment_types.${type}`)
+  return t(`EmployeeModule.employment_types.${type}`)
 }
 
 // Handle VDataTableServer options update (pagination, sorting)
@@ -250,7 +250,7 @@ function handleOptionsUpdate(options: any) {
     <VCardTitle class="d-flex align-center justify-space-between flex-wrap gap-4 pa-5">
       <div>
         <h4 class="text-h4 mb-1">
-          {{ t('EmployeeModule.employee.title') }}
+          {{ t('EmployeeModule.title') }}
           <VChip
             v-if="employeeStore.totalItems > 0"
             size="small"
@@ -262,7 +262,7 @@ function handleOptionsUpdate(options: any) {
           </VChip>
         </h4>
         <p class="text-body-2 text-medium-emphasis mb-0">
-          {{ t('EmployeeModule.employee.list_description') }}
+          {{ t('EmployeeModule.list_description') }}
         </p>
       </div>
 
@@ -305,7 +305,7 @@ function handleOptionsUpdate(options: any) {
           <VIcon start>
             tabler-plus
           </VIcon>
-          {{ t('EmployeeModule.employee.actions.add') }}
+          {{ t('EmployeeModule.actions.add') }}
         </VBtn>
       </div>
     </VCardTitle>
@@ -322,7 +322,7 @@ function handleOptionsUpdate(options: any) {
         >
           <VTextField
             v-model="employeeStore.filters.search"
-            :label="t('EmployeeModule.employee.search_placeholder')"
+            :label="t('EmployeeModule.search_placeholder')"
             prepend-inner-icon="tabler-search"
             variant="outlined"
             density="compact"
@@ -370,7 +370,7 @@ function handleOptionsUpdate(options: any) {
         >
           <VSelect
             v-model="selectedPositions"
-            :label="t('EmployeeModule.employee.fields.position')"
+            :label="t('EmployeeModule.fields.position')"
             :items="positionOptions"
             variant="outlined"
             density="compact"
@@ -400,7 +400,7 @@ function handleOptionsUpdate(options: any) {
         >
           <VSelect
             v-model="selectedEmploymentTypes"
-            :label="t('EmployeeModule.employee.fields.employment_type')"
+            :label="t('EmployeeModule.fields.employment_type')"
             :items="employmentTypeOptions"
             variant="outlined"
             density="compact"
@@ -547,7 +547,7 @@ function handleOptionsUpdate(options: any) {
             size="small"
             variant="tonal"
           >
-            {{ t(`EmployeeModule.employee.status.${item.status}`) }}
+            {{ t(`EmployeeModule.status.${item.status}`) }}
           </VChip>
         </template>
 
@@ -603,10 +603,10 @@ function handleOptionsUpdate(options: any) {
               tabler-users-off
             </VIcon>
             <h6 class="text-h6 mb-2">
-              {{ t('EmployeeModule.employee.no_data') }}
+              {{ t('EmployeeModule.no_data') }}
             </h6>
             <p class="text-body-2 mb-4">
-              {{ t('EmployeeModule.employee.no_data_description') }}
+              {{ t('EmployeeModule.no_data_description') }}
             </p>
             <VBtn
               color="primary"
@@ -615,7 +615,7 @@ function handleOptionsUpdate(options: any) {
               <VIcon start>
                 tabler-plus
               </VIcon>
-              {{ t('EmployeeModule.employee.actions.add') }}
+              {{ t('EmployeeModule.actions.add') }}
             </VBtn>
           </div>
         </template>

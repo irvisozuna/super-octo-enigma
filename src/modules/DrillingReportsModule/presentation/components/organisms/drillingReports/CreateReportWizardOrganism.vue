@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReportWizardStore } from '../../../stores/reportWizardStore'
+import { useProjectDetailStore } from '../../../stores/projectDetailStore'
 import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
 import { REPORT_WIZARD_STEPS } from '../../../../shared/constants'
 
@@ -34,6 +35,7 @@ const { t } = useI18n()
 
 // Store
 const wizardStore = useReportWizardStore()
+const detailStore = useProjectDetailStore()
 
 // Form refs
 const step1Form = ref()
@@ -77,8 +79,6 @@ const validateStep2 = async () => {
 
 // Navigation
 const nextStep = async () => {
-  console.log('🔄 Next step called. Current step:', wizardStore.currentStep)
-
   if (wizardStore.currentStep === '1') {
     const valid = await validateStep1()
     if (!valid) {
@@ -97,6 +97,22 @@ const nextStep = async () => {
     }
   }
 
+  if (wizardStore.currentStep === '3') {
+    if (!wizardStore.isActivitiesStepValid) {
+      console.log('❌ Step 3 validation failed - activities step not valid')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '5') {
+    if (!wizardStore.isToolsStepValid) {
+      console.log('❌ Step 5 validation failed - tools step not valid')
+
+      return
+    }
+  }
+
   wizardStore.nextStep()
 }
 
@@ -108,15 +124,16 @@ const previousStep = () => {
 const loadEquipment = async () => {
   loadingEquipment.value = true
   try {
-    const response = await DrillingReportApiService.getEquipment?.() || { data: [] }
+    // Use the store method instead of calling API directly
+    const response = await detailStore.loadTabData('equipment', props.projectId, true)
 
-    equipmentOptions.value = (response.data || response || []).map((eq: any) => ({
-      title: eq.name || eq.equipment_name,
+    equipmentOptions.value = (response || []).map((eq: any) => ({
+      title: eq.equipment_name || eq.name,
       value: eq.id,
     }))
   }
   catch (error) {
-    console.error('Error loading equipment:', error)
+    console.error('❌ Error loading equipment:', error)
     equipmentOptions.value = []
   }
   finally {
@@ -125,16 +142,15 @@ const loadEquipment = async () => {
 }
 
 const loadEmployees = async () => {
-  console.log('👥 Loading employees...')
   loadingEmployees.value = true
   try {
-    const response = await DrillingReportApiService.getEmployees?.() || { data: [] }
+    // Use the store method instead of calling API directly
+    const response = await detailStore.loadTabData('personnel', props.projectId, true)
 
-    employeeOptions.value = (response.data || response || []).map((emp: any) => ({
+    employeeOptions.value = (response || []).map((emp: any) => ({
       title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
       value: emp.id,
     }))
-    console.log('👥 Employee options:', employeeOptions.value.length, 'employees loaded')
   }
   catch (error) {
     console.error('❌ Error loading employees:', error)
@@ -148,15 +164,16 @@ const loadEmployees = async () => {
 const loadTools = async () => {
   loadingTools.value = true
   try {
-    const response = await DrillingReportApiService.getTools?.() || { data: [] }
+    // Use the store method instead of calling API directly
+    const response = await detailStore.loadTabData('tools', props.projectId, true)
 
-    toolOptions.value = (response.data || response || []).map((tool: any) => ({
+    toolOptions.value = (response || []).map((tool: any) => ({
       title: tool.name || tool.tool_name,
       value: tool.id,
     }))
   }
   catch (error) {
-    console.error('Error loading tools:', error)
+    console.error('❌ Error loading tools:', error)
     toolOptions.value = []
   }
   finally {
@@ -178,8 +195,6 @@ const handleSubmit = async () => {
 }
 
 const handleCancel = () => {
-  console.log('🚫 Cancel clicked - clearing all data')
-
   // Clear draft when user cancels
   wizardStore.clearDraft(props.projectId, props.wellId)
 
@@ -195,8 +210,6 @@ const handleCancel = () => {
 
 // Method to be called from parent on success
 const onSuccess = () => {
-  console.log('✅ Save successful - clearing all data')
-
   // Clear draft after successful save
   wizardStore.clearDraft(props.projectId, props.wellId)
 
@@ -212,7 +225,6 @@ const onSuccess = () => {
 
 // Method to be called from parent on error (optional)
 const onError = (error: any) => {
-  console.log('❌ Save failed - keeping draft')
   // Draft is kept so user doesn't lose data
   // Error handling is done through the error prop watcher
 }
@@ -225,7 +237,6 @@ defineExpose({
 
 // Watch for dialog open/close
 watch(() => props.modelValue, newValue => {
-  console.log('👁️ Wizard dialog opened:', newValue)
   if (newValue) {
     // Always start fresh
     wizardStore.setStep('1')
@@ -240,15 +251,14 @@ watch(() => props.modelValue, newValue => {
     const draftLoaded = wizardStore.loadDraft(props.projectId, props.wellId)
 
     // If no draft loaded, ensure we start with clean form
-    if (!draftLoaded) {
-      console.log('🆕 No draft found - starting with clean form')
+    if (!draftLoaded)
       wizardStore.resetForm()
-    } else {
+
+    else
       console.log('📋 Draft loaded successfully')
-    }
-  } else {
+  }
+  else {
     // When dialog closes, ensure everything is clean for next time
-    console.log('🔒 Dialog closed - cleaning up')
     wizardStore.clearError()
   }
 })
@@ -304,7 +314,6 @@ watch(() => props.error, newError => {
 })
 
 onMounted(() => {
-  console.log('🚀 Wizard mounted, modelValue:', props.modelValue)
   if (props.modelValue) {
     loadEquipment()
     loadEmployees()

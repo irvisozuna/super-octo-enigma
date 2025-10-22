@@ -223,6 +223,7 @@ async function loadClient() {
 
     const client = clientStore.currentItem
     if (client) {
+      console.log(client)
       setValues({
         business_type: client.business_type,
         business_name: client.business_name,
@@ -251,8 +252,8 @@ async function loadClient() {
         cfdi_use: client.cfdi_use,
         payment_terms: client.payment_terms,
         payment_methods: client.payment_methods,
-        credit_limit: client.credit_limit,
-        credit_limit_currency: client.credit_limit_currency,
+        credit_limit: client.credit_limit?.amount,
+        credit_limit_currency: client.credit_limit?.currency ?? 'MXN',
         notes: client.notes,
         tags: client.tags,
       })
@@ -304,7 +305,7 @@ onMounted(() => {
     <VCardTitle>
       <div class="d-flex align-center justify-space-between">
         <h4 class="text-h4">
-          {{ t('ClientModule.client.actions.edit') }}
+          {{ t('ClientModule.actions.edit') }}
         </h4>
         <VChip
           v-if="clientStore.currentItem"
@@ -322,7 +323,7 @@ onMounted(() => {
           <!-- Business Type Selection -->
           <VCol cols="12">
             <h6 class="text-h6 mb-4">
-              {{ t('ClientModule.client.sections.business_type') }}
+              {{ t('ClientModule.sections.business_types') }}
             </h6>
           </VCol>
 
@@ -761,6 +762,7 @@ onMounted(() => {
             cols="12"
             md="3"
           >
+          {{ client }}
             <VTextField
               v-model.number="credit_limit"
               label="Límite de Crédito"

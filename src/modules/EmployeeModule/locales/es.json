@@ -1,141 +1,138 @@
 {
-  "employee": {
-    "title": "Empleados",
-    "list_title": "Lista de Empleados",
-    "list_description": "Gestión completa de empleados del sistema",
-    "search_placeholder": "Buscar por nombre, código o email",
-    "no_data": "No hay empleados registrados",
-    "no_data_description": "Comienza agregando tu primer empleado al sistema",
-    "no_skills": "No hay habilidades registradas para este empleado",
-    "not_found": "Empleado no encontrado",
-    "years_experience": "años de experiencia",
+  "title": "Empleados",
+  "list_title": "Lista de Empleados",
+  "list_description": "Gestión completa de empleados del sistema",
+  "search_placeholder": "Buscar por nombre, código o email",
+  "no_data": "No hay empleados registrados",
+  "no_data_description": "Comienza agregando tu primer empleado al sistema",
+  "no_skills": "No hay habilidades registradas para este empleado",
+  "not_found": "Empleado no encontrado",
+  "years_experience": "años de experiencia",
 
-    "fields": {
-      "employee_code": "Código de Empleado",
-      "first_name": "Nombre",
-      "last_name": "Apellido",
-      "full_name": "Nombre Completo",
-      "date_of_birth": "Fecha de Nacimiento",
-      "gender": "Género",
-      "tax_id": "RFC/CURP",
-      "photo_url": "Foto",
-      "primary_phone": "Teléfono Principal",
-      "secondary_phone": "Teléfono Secundario",
-      "email": "Correo Electrónico",
-      "address_line_1": "Dirección Línea 1",
-      "address_line_2": "Dirección Línea 2",
-      "address": "Dirección",
-      "city": "Ciudad",
-      "state": "Estado",
-      "postal_code": "Código Postal",
-      "country": "País",
-      "emergency_contact_name": "Nombre del Contacto de Emergencia",
-      "emergency_contact_phone": "Teléfono de Emergencia",
-      "emergency_contact": "Contacto de Emergencia",
-      "hire_date": "Fecha de Contratación",
-      "termination_date": "Fecha de Terminación",
-      "position": "Puesto",
-      "department": "Departamento",
-      "employment_type": "Tipo de Empleo",
-      "salary_amount": "Salario",
-      "salary_currency": "Moneda"
-    },
-
-    "positions": {
-      "operator": "Operador",
-      "helper": "Ayudante",
-      "manager": "Gerente",
-      "supervisor": "Supervisor",
-      "admin": "Administrador"
-    },
-
-    "employment_types": {
-      "full_time": "Tiempo Completo",
-      "part_time": "Medio Tiempo",
-      "contractor": "Contratista",
-      "temporary": "Temporal"
-    },
-
-    "status": {
-      "active": "Activo",
-      "inactive": "Inactivo",
-      "suspended": "Suspendido",
-      "terminated": "Terminado",
-      "vacation": "Vacaciones"
-    },
-
-    "gender": {
-      "male": "Masculino",
-      "female": "Femenino",
-      "other": "Otro"
-    },
-
-    "proficiency": {
-      "beginner": "Principiante",
-      "intermediate": "Intermedio",
-      "advanced": "Avanzado",
-      "expert": "Experto"
-    },
-
-    "sections": {
-      "basic_info": "Información Básica",
-      "contact_info": "Información de Contacto",
-      "emergency_contact": "Contacto de Emergencia",
-      "employment_info": "Información de Empleo"
-    },
-
-    "tabs": {
-      "info": "Información",
-      "contact": "Contacto",
-      "employment": "Empleo",
-      "skills": "Habilidades",
-      "certifications": "Certificaciones",
-      "history": "Historial"
-    },
-
-    "actions": {
-      "add": "Agregar Empleado",
-      "create": "Crear Empleado",
-      "edit": "Editar Empleado",
-      "view": "Ver Empleado",
-      "delete": "Eliminar Empleado",
-      "suspend": "Suspender",
-      "reactivate": "Reactivar",
-      "terminate": "Terminar"
-    },
-
-    "messages": {
-      "created_success": "Empleado creado exitosamente",
-      "updated_success": "Empleado actualizado exitosamente",
-      "deleted_success": "Empleado eliminado exitosamente",
-      "suspended_success": "Empleado suspendido exitosamente",
-      "reactivated_success": "Empleado reactivado exitosamente",
-      "terminated_success": "Empleado terminado exitosamente",
-      "error_loading": "Error al cargar el empleado",
-      "error_creating": "Error al crear el empleado",
-      "error_updating": "Error al actualizar el empleado",
-      "error_deleting": "Error al eliminar el empleado"
-    },
-
-    "confirm_delete": "¿Está seguro de eliminar al empleado {name}?",
-    "confirm_suspend": "¿Está seguro de suspender al empleado {name}?",
-    "confirm_reactivate": "¿Está seguro de reactivar al empleado {name}?",
-    "confirm_terminate": "¿Está seguro de terminar al empleado {name}? Esta acción no se puede deshacer.",
-
-    "validation": {
-      "employee_code_required": "El código de empleado es requerido",
-      "employee_code_taken": "El código de empleado ya está en uso",
-      "first_name_required": "El nombre es requerido",
-      "last_name_required": "El apellido es requerido",
-      "hire_date_required": "La fecha de contratación es requerida",
-      "position_required": "El puesto es requerido",
-      "employment_type_required": "El tipo de empleo es requerido",
-      "email_invalid": "El correo electrónico no es válido",
-      "phone_invalid": "El teléfono no es válido",
-      "min_age": "El empleado debe ser mayor de 18 años"
-    }
+  "fields": {
+    "employee_code": "Código de Empleado",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "full_name": "Nombre Completo",
+    "date_of_birth": "Fecha de Nacimiento",
+    "gender": "Género",
+    "tax_id": "RFC/CURP",
+    "photo_url": "Foto",
+    "primary_phone": "Teléfono Principal",
+    "secondary_phone": "Teléfono Secundario",
+    "email": "Correo Electrónico",
+    "address_line_1": "Dirección Línea 1",
+    "address_line_2": "Dirección Línea 2",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Estado",
+    "postal_code": "Código Postal",
+    "country": "País",
+    "emergency_contact_name": "Nombre del Contacto de Emergencia",
+    "emergency_contact_phone": "Teléfono de Emergencia",
+    "emergency_contact": "Contacto de Emergencia",
+    "hire_date": "Fecha de Contratación",
+    "termination_date": "Fecha de Terminación",
+    "position": "Puesto",
+    "department": "Departamento",
+    "employment_type": "Tipo de Empleo",
+    "salary_amount": "Salario",
+    "salary_currency": "Moneda"
   },
 
+  "positions": {
+    "operator": "Operador",
+    "helper": "Ayudante",
+    "manager": "Gerente",
+    "supervisor": "Supervisor",
+    "admin": "Administrador"
+  },
+
+  "employment_types": {
+    "full_time": "Tiempo Completo",
+    "part_time": "Medio Tiempo",
+    "contractor": "Contratista",
+    "temporary": "Temporal"
+  },
+
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "suspended": "Suspendido",
+    "terminated": "Terminado",
+    "vacation": "Vacaciones"
+  },
+
+  "gender": {
+    "male": "Masculino",
+    "female": "Femenino",
+    "other": "Otro"
+  },
+
+  "proficiency": {
+    "beginner": "Principiante",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzado",
+    "expert": "Experto"
+  },
+
+  "sections": {
+    "basic_info": "Información Básica",
+    "contact_info": "Información de Contacto",
+    "emergency_contact": "Contacto de Emergencia",
+    "employment_info": "Información de Empleo"
+  },
+
+  "tabs": {
+    "info": "Información",
+    "contact": "Contacto",
+    "employment": "Empleo",
+    "skills": "Habilidades",
+    "certifications": "Certificaciones",
+    "history": "Historial"
+  },
+
+  "actions": {
+    "add": "Agregar Empleado",
+    "create": "Crear Empleado",
+    "edit": "Editar Empleado",
+    "view": "Ver Empleado",
+    "delete": "Eliminar Empleado",
+    "suspend": "Suspender",
+    "reactivate": "Reactivar",
+    "terminate": "Terminar"
+  },
+
+  "messages": {
+    "created_success": "Empleado creado exitosamente",
+    "updated_success": "Empleado actualizado exitosamente",
+    "deleted_success": "Empleado eliminado exitosamente",
+    "suspended_success": "Empleado suspendido exitosamente",
+    "reactivated_success": "Empleado reactivado exitosamente",
+    "terminated_success": "Empleado terminado exitosamente",
+    "error_loading": "Error al cargar el empleado",
+    "error_creating": "Error al crear el empleado",
+    "error_updating": "Error al actualizar el empleado",
+    "error_deleting": "Error al eliminar el empleado"
+  },
+
+  "confirm_delete": "¿Está seguro de eliminar al empleado {name}?",
+  "confirm_suspend": "¿Está seguro de suspender al empleado {name}?",
+  "confirm_reactivate": "¿Está seguro de reactivar al empleado {name}?",
+  "confirm_terminate": "¿Está seguro de terminar al empleado {name}? Esta acción no se puede deshacer.",
+
+  "validation": {
+    "employee_code_required": "El código de empleado es requerido",
+    "employee_code_taken": "El código de empleado ya está en uso",
+    "first_name_required": "El nombre es requerido",
+    "last_name_required": "El apellido es requerido",
+    "hire_date_required": "La fecha de contratación es requerida",
+    "position_required": "El puesto es requerido",
+    "employment_type_required": "El tipo de empleo es requerido",
+    "email_invalid": "El correo electrónico no es válido",
+    "phone_invalid": "El teléfono no es válido",
+    "min_age": "El empleado debe ser mayor de 18 años"
+  },
   "common": {
     "status": "Estado",
     "actions": "Acciones",

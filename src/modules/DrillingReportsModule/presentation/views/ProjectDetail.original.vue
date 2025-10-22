@@ -35,7 +35,7 @@ import WellDetailsDialogOrganism from '../components/organisms/WellDetailsDialog
 
 // VERSIÓN WIZARD CON SMART AUTOMATION (ACTIVA)
 import CreateReportDialogOrganism from '../components/organisms/CreateReportWizardOrganism.vue'
-import AddCostDialogOrganism from '../components/organisms/AddCostDialogOrganism.vue'
+import AddCostDialogOrganism from '../components/organisms/cost/AddCostDialogOrganism.vue'
 import AssignWellDialogOrganism from '../components/organisms/AssignWellDialogOrganism.vue'
 import AssignEquipmentDialogOrganism from '../components/organisms/AssignEquipmentDialogOrganism.vue'
 import UnassignEquipmentDialogOrganism from '../components/organisms/UnassignEquipmentDialogOrganism.vue'

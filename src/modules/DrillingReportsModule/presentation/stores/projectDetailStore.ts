@@ -275,9 +275,28 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
           break
 
         case 'equipment':
-          const equipmentResponse = await DrillingReportApiService.getProjectEquipment?.(projectId)
+
+          const equipmentResponse = await DrillingReportApiService.getProjectEquipment(projectId)
 
           data = equipmentResponse?.data || []
+          break
+
+        case 'personnel':
+
+          const personnelResponse = await DrillingReportApiService.getEmployees({ project_id: projectId })
+
+          data = Array.isArray(personnelResponse?.data)
+            ? personnelResponse.data
+            : (personnelResponse?.data?.data || [])
+          break
+
+        case 'tools':
+
+          const toolsResponse = await DrillingReportApiService.getTools({ project_id: projectId })
+
+          data = Array.isArray(toolsResponse?.data)
+            ? toolsResponse.data
+            : (toolsResponse?.data?.data || [])
           break
 
         case 'documents':
@@ -575,7 +594,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
         assignment_date: new Date().toISOString().split('T')[0],
         notes: notes || '',
       })
-      
+
       // Recargar datos del proyecto para reflejar el cambio
       await loadProject(projectId)
     }
@@ -607,7 +626,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
       console.log('🔵 Calling DrillingReportApiService.assignPersonnel...')
       await DrillingReportApiService.assignPersonnel(projectId, data)
       console.log('✅ DrillingReportApiService.assignPersonnel successful')
-      
+
       // Recargar datos del proyecto para reflejar el cambio
       console.log('🔵 Reloading project data...')
       await loadProject(projectId)
@@ -621,6 +640,146 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
     }
     finally {
       loadingStates.personnel = false
+    }
+  }
+
+  // ========== REPORT STATUS MANAGEMENT ==========
+
+  /**
+   * Completar reporte (cambiar a "pending_approval")
+   */
+  const completeReport = async (projectId: string, reportId: string) => {
+    loadingStates.reports = true
+    errors.reports = null
+    try {
+      await DrillingReportApiService.completeReport(projectId, reportId)
+
+      // Invalidar cache de reportes para recargar
+      invalidateTabCache('reports')
+    }
+    catch (err: any) {
+      errors.reports = err
+      throw err
+    }
+    finally {
+      loadingStates.reports = false
+    }
+  }
+
+  /**
+   * Aprobar reporte (cambiar a "approved")
+   */
+  const approveReport = async (projectId: string, reportId: string) => {
+    loadingStates.reports = true
+    errors.reports = null
+    try {
+      await DrillingReportApiService.approveReport(projectId, reportId)
+
+      // Invalidar cache de reportes para recargar
+      invalidateTabCache('reports')
+    }
+    catch (err: any) {
+      errors.reports = err
+      throw err
+    }
+    finally {
+      loadingStates.reports = false
+    }
+  }
+
+  /**
+   * Rechazar reporte (cambiar a "rejected")
+   */
+  const rejectReport = async (projectId: string, reportId: string) => {
+    loadingStates.reports = true
+    errors.reports = null
+    try {
+      await DrillingReportApiService.rejectReport(projectId, reportId)
+
+      // Invalidar cache de reportes para recargar
+      invalidateTabCache('reports')
+    }
+    catch (err: any) {
+      errors.reports = err
+      throw err
+    }
+    finally {
+      loadingStates.reports = false
+    }
+  }
+
+  // ========== EQUIPMENT MANAGEMENT ==========
+
+  /**
+   * Asignar equipo al proyecto
+   */
+  const assignEquipmentToProject = async (projectId: string, data: {
+    equipment_id: string
+    notes?: string
+  }) => {
+    loadingStates.equipment = true
+    errors.equipment = null
+    try {
+      console.log('🔵 projectDetailStore.assignEquipmentToProject called with:', { projectId, data })
+
+      // Importar EquipmentApiService dinámicamente para evitar dependencias circulares
+      const { EquipmentApiService } = await import('../../infrastructure/api/services/EquipmentApiService')
+
+      console.log('🔵 Calling EquipmentApiService.assignToProject...')
+
+      const result = await EquipmentApiService.assignToProject(data.equipment_id, projectId, data.notes)
+
+      console.log('🔵 EquipmentApiService.assignToProject result:', result)
+
+      // Invalidar cache de equipos para recargar
+      invalidateTabCache('equipment')
+
+      console.log('✅ Equipment assigned successfully')
+    }
+    catch (err: any) {
+      console.error('❌ Error in assignEquipmentToProject:', err)
+      console.error('❌ Error details:', {
+        message: err.message,
+        status: err.status,
+        response: err.response,
+      })
+      errors.equipment = err
+      throw err
+    }
+    finally {
+      loadingStates.equipment = false
+    }
+  }
+
+  /**
+   * Desasignar equipo del proyecto
+   */
+  const unassignEquipmentFromProject = async (projectId: string, data: {
+    equipment_id: string
+    notes?: string
+  }) => {
+    loadingStates.equipment = true
+    errors.equipment = null
+    try {
+      console.log('🔵 projectDetailStore.unassignEquipmentFromProject called with:', { projectId, data })
+
+      // Importar EquipmentApiService dinámicamente para evitar dependencias circulares
+      const { EquipmentApiService } = await import('../../infrastructure/api/services/EquipmentApiService')
+
+      await EquipmentApiService.unassignFromProject(data.equipment_id, data.notes)
+
+      // Invalidar cache de equipos para recargar
+      invalidateTabCache('equipment')
+
+      console.log('✅ Equipment unassigned successfully')
+    }
+    catch (err: any) {
+      console.error('❌ Error in unassignEquipmentFromProject:', err)
+      errors.equipment = err
+      throw err
+    }
+    finally {
+      loadingStates.equipment = false
     }
   }
 
@@ -664,6 +823,11 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
     createReport,
     assignWellToProject,
     assignPersonnelToProject,
+    completeReport,
+    approveReport,
+    rejectReport,
+    assignEquipmentToProject,
+    unassignEquipmentFromProject,
     invalidateTabCache,
     $reset,
   }

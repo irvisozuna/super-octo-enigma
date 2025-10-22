@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { EquipmentApiService } from '../../../../infrastructure/api/services/EquipmentApiService'
 
 interface Props {
   visible: boolean
@@ -11,7 +10,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:visible', value: boolean): void
-  (e: 'success'): void
+  (e: 'success', data: { equipment_id: string; notes?: string }): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -36,8 +35,7 @@ const rules = {
   maxLength: (value: string) => !value || value.length <= 500 || 'Máximo 500 caracteres',
 }
 
-// Local loading state
-const localLoading = ref(false)
+// No local loading state needed - handled by parent
 
 // Handle form submission
 const handleSubmit = async () => {
@@ -45,21 +43,13 @@ const handleSubmit = async () => {
   if (!valid)
     return
 
-  localLoading.value = true
-
-  try {
-    await EquipmentApiService.unassignFromProject(props.equipment.id, formData.value.notes)
-    emit('success')
-    handleClose()
-  }
-  catch (error: any) {
-    console.error('❌ Error unassigning equipment:', error)
-
-    // Handle error - you can add error state here if needed
-  }
-  finally {
-    localLoading.value = false
-  }
+  // Emit data to parent component instead of calling API directly
+  emit('success', {
+    equipment_id: props.equipment.id,
+    notes: formData.value.notes,
+  })
+  
+  handleClose()
 }
 
 // Handle dialog close
@@ -141,7 +131,7 @@ watch(() => props.visible, newVisible => {
         </VBtn>
         <VBtn
           color="warning"
-          :loading="localLoading"
+          :loading="loading"
           @click="handleSubmit"
         >
           {{ $t('DrillingReportsModule.equipment.unassignEquipment') }}

@@ -52,6 +52,10 @@ export interface ClientStatusHistoryEntity {
   created_at: string
 }
 
+export interface CreditLimitEntity {
+  amount: number
+  currency: string
+}
 /**
  * Main Client Entity
  */
@@ -98,7 +102,7 @@ export interface ClientEntity {
   // Business terms
   payment_terms?: PaymentTerms
   payment_methods?: PaymentMethod[]
-  credit_limit?: number
+  credit_limit?: CreditLimitEntity
   credit_limit_currency?: string
 
   // Notes and metadata

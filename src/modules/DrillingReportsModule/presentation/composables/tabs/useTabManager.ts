@@ -214,11 +214,14 @@ export function useTabManager(projectId?: string) {
 
     // Cambiar tab
     activeTab.value = tabName
+    console.log('✅ Tab switched to:', tabName)
 
     // Lazy load si es necesario
     const config = getTabConfig(tabName)
-    if (config?.lazyLoad)
+    if (config?.lazyLoad) {
+      console.log('🔄 Loading data for tab:', tabName)
       await loadTabData(tabName)
+    }
 
     return true
   }
