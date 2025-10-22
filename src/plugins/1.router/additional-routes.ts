@@ -1,9 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { useCookie } from '@/@core/composable/useCookie'
+import { useTenantStore } from '@/stores/tenant.store'
 
 // 👉 Redirects
 export const redirects: RouteRecordRaw[] = [
-  // ℹ️ We are redirecting to different pages based on role.
+  // ℹ️ We are redirecting to different pages based on role and tenant configuration.
   // NOTE: Role is just for UI purposes. ACL is based on abilities.
   {
     path: '/',
@@ -14,8 +15,20 @@ export const redirects: RouteRecordRaw[] = [
       const accessToken = useCookie<string | null | undefined>('accessToken')
       const roleName = (userData.value as any)?.roles?.[0]?.name?.toString()?.toLowerCase()
 
-      // If logged in (has userData), route to a default home even if role isn't matched explicitly
+      // If logged in (has userData), route to home page
       if (userData.value || accessToken.value) {
+        // Obtener homeUrl del tenant si existe
+        const tenantStore = useTenantStore()
+        const homeUrl = (tenantStore.data as any)?.homeUrl
+
+        // Si el tenant tiene homeUrl configurado, usarlo
+        if (homeUrl) {
+          console.log('🏠 Redirecting to tenant homeUrl:', homeUrl)
+
+          return { name: homeUrl }
+        }
+
+        // Fallback basado en rol
         if (roleName === 'admin')
           return { name: 'dashboards-crm' }
 

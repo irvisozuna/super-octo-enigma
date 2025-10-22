@@ -61,6 +61,6 @@ const { isAdmin } = useCurrentUser()
     </template>
 
     <!-- 👉 Customizer -->
-    <Customizer v-if="isAdmin" />
+    <CustomizerWithSave v-if="isAdmin" />
   </HorizontalNavLayout>
 </template>

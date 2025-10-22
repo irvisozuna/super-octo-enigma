@@ -341,6 +341,7 @@ declare global {
   const useSwipe: typeof import('@vueuse/core')['useSwipe']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useTemplateRefsList: typeof import('@vueuse/core')['useTemplateRefsList']
+  const useTenantConfig: typeof import('./src/composables/useTenantConfig')['useTenantConfig']
   const useTenantTheme: typeof import('./src/composables/useTenantTheme')['useTenantTheme']
   const useTextDirection: typeof import('@vueuse/core')['useTextDirection']
   const useTextSelection: typeof import('@vueuse/core')['useTextSelection']
@@ -744,6 +745,7 @@ declare module 'vue' {
     readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
     readonly useTemplateRefsList: UnwrapRef<typeof import('@vueuse/core')['useTemplateRefsList']>
+    readonly useTenantConfig: UnwrapRef<typeof import('./src/composables/useTenantConfig')['useTenantConfig']>
     readonly useTenantTheme: UnwrapRef<typeof import('./src/composables/useTenantTheme')['useTenantTheme']>
     readonly useTextDirection: UnwrapRef<typeof import('@vueuse/core')['useTextDirection']>
     readonly useTextSelection: UnwrapRef<typeof import('@vueuse/core')['useTextSelection']>

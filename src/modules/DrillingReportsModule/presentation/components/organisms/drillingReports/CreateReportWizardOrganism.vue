@@ -168,7 +168,7 @@ const loadTools = async () => {
     const response = await detailStore.loadTabData('tools', props.projectId, true)
 
     toolOptions.value = (response || []).map((tool: any) => ({
-      title: tool.name || tool.tool_name,
+      title: tool.serial_number || tool.tool_type,
       value: tool.id,
     }))
   }

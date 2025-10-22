@@ -1,7 +1,9 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { VForm } from 'vuetify/components/VForm'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
+import { useTenantConfig } from '@/composables/useTenantConfig'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -13,9 +15,22 @@ import { themeConfig } from '@themeConfig'
 
 const authV2LoginIllustrationLight = '/images/simos_logo (2).png'
 
-let authThemeImg = useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
-if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas')
-  authThemeImg = useGenerateImageVariant(authV2LoginOomsapasIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
+// Usar logo del tenant si está disponible
+const { loginLogo } = useTenantConfig()
+
+const authThemeImg = computed(() => {
+  // Si hay logo del tenant, usarlo
+  if (loginLogo.value) {
+    return loginLogo.value
+  }
+
+  // Fallback a imágenes por defecto
+  if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas') {
+    return useGenerateImageVariant(authV2LoginOomsapasIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
+  }
+
+  return useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
+})
 
 const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
 

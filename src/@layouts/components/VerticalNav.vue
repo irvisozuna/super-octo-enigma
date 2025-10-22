@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Component } from 'vue'
+import { computed } from 'vue'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { VNodeRenderer } from './VNodeRenderer'
 import { layoutConfig } from '@layouts'
@@ -7,6 +8,7 @@ import { VerticalNavGroup, VerticalNavLink, VerticalNavSectionTitle } from '@lay
 import { useLayoutConfigStore } from '@layouts/stores/config'
 import { injectionKeyIsVerticalNavHovered } from '@layouts/symbols'
 import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@layouts/types'
+import { useTenantConfig } from '@/composables/useTenantConfig'
 
 interface Props {
   tag?: string | Component
@@ -26,6 +28,36 @@ const isHovered = useElementHover(refNav)
 provide(injectionKeyIsVerticalNavHovered, isHovered)
 
 const configStore = useLayoutConfigStore()
+
+// Obtener logo y título del tenant
+const { menuLogo, appTitle } = useTenantConfig()
+
+// Logo dinámico: usa el del tenant si existe, sino el del layoutConfig
+const dynamicLogo = computed(() => {
+  console.log('🔍 Menu logo:', menuLogo.value)
+  if (menuLogo.value) {
+    // Retornar un h('img') con el logo del tenant
+    // Ajustar el tamaño según si el título está visible o no
+    const logoStyle = hideTitleAndIcon.value
+      ? 'max-width: 60px; max-height: 40px; object-fit: contain; width: auto; height: auto;'
+      : 'max-width: 150px; max-height: 48px; object-fit: contain;'
+
+    return h('img', {
+      src: menuLogo.value,
+      alt: 'Logo',
+      style: logoStyle,
+      class: hideTitleAndIcon.value ? 'logo-solo' : 'logo-con-titulo',
+    })
+  }
+
+  // Fallback al logo por defecto
+  return layoutConfig.app.logo
+})
+
+// Título dinámico
+const dynamicTitle = computed(() => {
+  return appTitle.value || layoutConfig.app.title
+})
 
 const resolveNavItemComponent = (item: NavLink | NavSectionTitle | NavGroup): unknown => {
   if ('heading' in item)
@@ -78,14 +110,14 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
           to="/"
           class="app-logo app-title-wrapper"
         >
-          <VNodeRenderer :nodes="layoutConfig.app.logo" />
+          <VNodeRenderer :nodes="dynamicLogo" />
 
           <Transition name="vertical-nav-app-title">
             <h1
               v-show="!hideTitleAndIcon"
               class="app-logo-title"
             >
-              <!-- {{ layoutConfig.app.title }} -->
+              {{ dynamicTitle }}
             </h1>
           </Transition>
         </RouterLink>
@@ -155,6 +187,25 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
     letter-spacing: 0.25px;
     line-height: 1.5rem;
     text-transform: capitalize;
+  }
+
+  // Estilos para el logo cuando está solo (sin título)
+  :deep(.logo-solo) {
+    display: block;
+    block-size: auto !important;
+    inline-size: auto !important;
+    margin-block: 0;
+    margin-inline: auto;
+    max-block-size: 40px !important;
+    max-inline-size: 60px !important;
+    object-fit: contain !important;
+  }
+
+  // Estilos para el logo cuando está con título
+  :deep(.logo-con-titulo) {
+    max-block-size: 48px !important;
+    max-inline-size: 150px !important;
+    object-fit: contain !important;
   }
 }
 </style>

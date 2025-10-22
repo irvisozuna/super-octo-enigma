@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 export interface TenantAssets {
   logo?: string
+  menu?: string
   favicon?: string
   loading?: string
 }
@@ -28,6 +29,19 @@ export interface TenantData {
   plan?: string
   flags?: Record<string, any>
   version: string
+
+  // Company configuration fields (opcional, viene del backend)
+  primaryColor?: string
+  primaryDarkenColor?: string
+  secondaryColor?: string
+  secondaryDarkenColor?: string
+  skin?: 'default' | 'bordered'
+  semiDarkMenu?: boolean
+  layout?: 'vertical' | 'collapsed' | 'horizontal'
+  contentWidth?: 'boxed' | 'fluid'
+  appTitle?: string
+  homeUrl?: string // URL de inicio después del login (ej: "/dashboards/crm")
+  updatedAt?: string
 }
 
 export interface TenantState {

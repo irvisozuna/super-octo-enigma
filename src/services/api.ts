@@ -82,8 +82,6 @@ export async function rawApi(
       'X-Organization': `${organization}`,
     }
   }
-  else {
-  }
 
   // 6. Manejo del body:
   //    - Si es un objeto normal, lo convertimos a JSON.

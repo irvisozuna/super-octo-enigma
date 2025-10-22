@@ -6,7 +6,6 @@ import { initConfigStore, useConfigStore } from '@core/stores/config'
 import { hexToRgb } from '@core/utils/colorConverter'
 import { useTenantTheme } from '@/composables/useTenantTheme'
 import { useTenantStore } from '@/stores/tenant.store'
-import { initTenant } from '@core/initTenant'
 import TenantBootstrapLoader from '@/components/TenantBootstrapLoader.vue'
 import TenantErrorScreen from '@/components/TenantErrorScreen.vue'
 
@@ -22,8 +21,8 @@ const configStore = useConfigStore()
 // Aplicar tema del tenant
 const { applyBranding } = useTenantTheme()
 
-// Inicializar tenant de manera asíncrona
-initTenant()
+// NOTA: initTenant() se llama en main.ts ANTES de montar la app
+// para asegurar que la configuración esté lista antes del primer render
 </script>
 
 <template>

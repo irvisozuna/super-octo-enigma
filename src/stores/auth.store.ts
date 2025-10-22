@@ -30,6 +30,8 @@ export const useAuthStore = defineStore('auth', {
         // Remove "userAbilities" from cookie
         useCookie('userAbilityRules').value = null
         useCookie('dolibarrToken').value = null
+
+        sessionStorage.removeItem('userAbilityRules')
       }
     },
   },

@@ -7,7 +7,7 @@ export interface TenantBootstrapConfig {
 
 export class TenantBootstrapService {
   private config: TenantBootstrapConfig
-  private tenantStore = useTenantStore()
+  private _tenantStore: ReturnType<typeof useTenantStore> | null = null
 
   constructor(config: TenantBootstrapConfig = {}) {
     this.config = {
@@ -15,6 +15,16 @@ export class TenantBootstrapService {
       fallbackOrganization: import.meta.env.VITE_API_ORGANIZATION || '',
       ...config,
     }
+  }
+
+  /**
+   * Lazy getter for tenant store (to avoid Pinia initialization issues)
+   */
+  private get tenantStore(): ReturnType<typeof useTenantStore> {
+    if (!this._tenantStore) {
+      this._tenantStore = useTenantStore()
+    }
+    return this._tenantStore
   }
 
   /**
@@ -34,22 +44,11 @@ export class TenantBootstrapService {
   }
 
   /**
-   * Aplica el branding del tenant al DOM
+   * Aplica el branding básico del tenant al DOM (solo para fallback)
+   * La configuración completa se aplica en loadCompanyConfiguration
    */
   private applyBranding(tenantData: TenantData): void {
-    // Actualizar título
-    if (tenantData.name)
-      document.title = tenantData.name
-
-    // Actualizar favicon
-    if (tenantData.assets.favicon)
-      this.updateFavicon(tenantData.assets.favicon)
-
-    // Aplicar colores del tema
-    if (tenantData.theme)
-      this.applyTheme(tenantData.theme)
-
-    // Aplicar logo de carga si existe
+    // Solo aplicar logo de carga si existe (el resto lo hace loadCompanyConfiguration)
     if (tenantData.assets.loading)
       this.updateLoadingLogo(tenantData.assets.loading)
   }
@@ -140,7 +139,7 @@ export class TenantBootstrapService {
     const data = await response.json()
 
     // Validar estructura de datos
-    if (!data.companyId || !data.slug || !data.name)
+    if (!data.companyId || !data.slug)
       throw new Error('Invalid tenant data structure')
 
     return data as TenantData
@@ -148,43 +147,55 @@ export class TenantBootstrapService {
 
   /**
    * Proceso principal de bootstrap del tenant
+   * NOTA: Si el tenant ya fue pre-cargado, solo inicializa stores
    */
   async bootstrap(): Promise<void> {
     try {
       this.tenantStore.setLoading(true)
-      this.tenantStore.reset()
 
-      // 1. Detectar host o tenant
-      const { host, tenant } = this.detectHostOrTenant()
-
-      // 2. Intentar cargar desde cache primero
+      // 1. Intentar cargar desde localStorage (ya pre-cargado)
       const cachedData = this.tenantStore.loadFromCache()
       if (cachedData) {
-        console.log('Loading tenant from cache:', cachedData.slug)
+        console.log('📦 Tenant already pre-loaded, initializing stores:', cachedData.slug)
         this.tenantStore.setTenantData(cachedData)
-        this.applyBranding(cachedData)
 
+        // NO aplicar branding/configuración aquí - ya se hizo en preload
+        // Solo guardar en cache de Pinia para uso posterior
+        const { CompanyConfigCacheService } = await import('@/modules/CompanyConfigModule/infrastructure/cache/CompanyConfigCacheService')
+        const cacheService = new CompanyConfigCacheService()
+        const cachedConfig = await cacheService.getCachedConfig(cachedData.companyId)
+
+        if (cachedConfig) {
+          const { useCompanyConfigStore } = await import('@/modules/CompanyConfigModule/presentation/stores/companyConfigStore')
+          const companyConfigStore = useCompanyConfigStore()
+          companyConfigStore.config = cachedConfig
+          companyConfigStore.originalConfig = { ...cachedConfig }
+          companyConfigStore.isDirty = false
+        }
+
+        this.tenantStore.setLoading(false)
         return
       }
 
-      // 3. Resolver desde API
-      console.log('Resolving tenant from API:', { host, tenant })
+      // 2. Si no hay cache (caso raro), cargar desde API
+      console.log('⚠️ No pre-loaded tenant found, loading from API...')
+      this.tenantStore.reset()
 
+      const { host, tenant } = this.detectHostOrTenant()
       const tenantData = await this.resolveTenantFromAPI(host, tenant)
 
-      // 4. Aplicar branding
       this.applyBranding(tenantData)
-
-      // 5. Guardar en store y cache
       this.tenantStore.setTenantData(tenantData)
       this.tenantStore.saveToCache()
 
-      console.log('Tenant bootstrap completed:', tenantData.slug)
+      await this.loadCompanyConfiguration(tenantData.companyId, tenantData)
+
+      this.tenantStore.setLoading(false)
+      console.log('✅ Tenant bootstrap completed:', tenantData.slug)
     }
     catch (error) {
       console.error('Tenant bootstrap failed:', error)
 
-      // Si hay un fallback organization, usarlo
       if (this.config.fallbackOrganization) {
         console.log('Using fallback organization:', this.config.fallbackOrganization)
 
@@ -207,11 +218,135 @@ export class TenantBootstrapService {
 
         this.tenantStore.setTenantData(fallbackData)
         this.applyBranding(fallbackData)
+        await this.loadCompanyConfiguration(fallbackData.companyId)
       }
       else {
         this.tenantStore.setError(error instanceof Error ? error.message : 'Failed to resolve tenant')
       }
+
+      this.tenantStore.setLoading(false)
     }
+  }
+
+  /**
+   * Carga la configuración de la compañía
+   */
+  private async loadCompanyConfiguration(companyId: string, tenantData?: TenantData): Promise<void> {
+    try {
+      console.log('🎨 Loading company configuration for:', companyId)
+
+      // SIEMPRE usar la configuración del tenant si está disponible
+      // El tenant bootstrap ya trae toda la configuración necesaria
+      if (tenantData && this.hasCompanyConfig(tenantData)) {
+        console.log('✅ Using company configuration from tenant response')
+
+        const config = {
+          companyId,
+          primaryColor: tenantData.primaryColor || '#7367F0',
+          primaryDarkenColor: tenantData.primaryDarkenColor || '#675DD8',
+          secondaryColor: tenantData.secondaryColor || '#FF9F43',
+          secondaryDarkenColor: tenantData.secondaryDarkenColor || '#E6892E',
+          theme: (tenantData.theme as any) || 'light',
+          skin: tenantData.skin || 'default',
+          semiDarkMenu: tenantData.semiDarkMenu || false,
+          layout: tenantData.layout || 'vertical',
+          contentWidth: tenantData.contentWidth || 'fluid',
+          appTitle: tenantData.appTitle || tenantData.name || 'Application',
+          loginLogo: tenantData.assets?.logo,
+          menuLogo: tenantData.assets?.logo,
+          favicon: tenantData.assets?.favicon,
+          version: tenantData.version ? Number.parseInt(tenantData.version.toString()) : 1,
+          updatedAt: tenantData.updatedAt,
+        }
+
+        console.log('🎨 Configuration to apply:', {
+          primaryColor: config.primaryColor,
+          secondaryColor: config.secondaryColor,
+          theme: config.theme,
+          skin: config.skin,
+          appTitle: config.appTitle,
+          layout: config.layout,
+          semiDarkMenu: config.semiDarkMenu,
+        })
+
+        // Aplicar configuración sin usar composables de Vue (para bootstrap)
+        console.log('🔧 Applying configuration via cookies and storage...')
+        await this.applyConfigurationBootstrap(config)
+
+        // Guardar en cache para próximas cargas
+        const { CompanyConfigCacheService } = await import('@/modules/CompanyConfigModule/infrastructure/cache/CompanyConfigCacheService')
+        const cacheService = new CompanyConfigCacheService()
+        await cacheService.saveCachedConfig(config)
+
+        // Guardar en el store (sin aplicar, solo para que esté disponible)
+        const { useCompanyConfigStore } = await import('@/modules/CompanyConfigModule/presentation/stores/companyConfigStore')
+        const companyConfigStore = useCompanyConfigStore()
+        companyConfigStore.config = config
+        companyConfigStore.originalConfig = { ...config }
+        companyConfigStore.isDirty = false
+
+        console.log('✅ Company configuration applied successfully!')
+        console.log('🍪 Cookies set for persistence')
+        console.log('💾 Cache saved to IndexedDB')
+      }
+      else {
+        console.log('⚠️ No company configuration in tenant response, using defaults')
+        console.log('📋 Tenant data:', tenantData)
+      }
+    }
+    catch (error) {
+      console.error('❌ Failed to load company configuration:', error)
+      console.error('Error details:', error)
+
+      // La aplicación puede continuar con la configuración por defecto
+    }
+  }
+
+  /**
+   * Aplica la configuración usando cookies y localStorage (sin composables de Vue)
+   * Esto se usa durante el bootstrap antes de que Vue esté completamente inicializado
+   */
+  private async applyConfigurationBootstrap(config: any): Promise<void> {
+    const { cookieRef, namespaceConfig } = await import('@layouts/stores/config')
+    const { useStorage } = await import('@vueuse/core')
+
+    // Guardar colores en cookies para ambos temas
+    cookieRef('lightThemePrimaryColor', null).value = config.primaryColor
+    cookieRef('darkThemePrimaryColor', null).value = config.primaryColor
+    cookieRef('lightThemePrimaryDarkenColor', null).value = config.primaryDarkenColor
+    cookieRef('darkThemePrimaryDarkenColor', null).value = config.primaryDarkenColor
+    cookieRef('lightThemeSecondaryColor', null).value = config.secondaryColor
+    cookieRef('darkThemeSecondaryColor', null).value = config.secondaryColor
+    cookieRef('lightThemeSecondaryDarkenColor', null).value = config.secondaryDarkenColor
+    cookieRef('darkThemeSecondaryDarkenColor', null).value = config.secondaryDarkenColor
+
+    // Guardar initial loader color
+    useStorage<string | null>(namespaceConfig('initial-loader-color'), null).value = config.primaryColor
+
+    // Actualizar título de la app
+    if (config.appTitle) {
+      document.title = config.appTitle
+    }
+
+    // Actualizar favicon si existe
+    if (config.favicon) {
+      this.updateFavicon(config.favicon)
+    }
+
+    console.log('✅ Bootstrap configuration applied (cookies + storage)')
+  }
+
+  /**
+   * Verifica si el tenant trae configuración de compañía
+   */
+  private hasCompanyConfig(tenantData: any): boolean {
+    return !!(
+      tenantData.primaryColor
+      || tenantData.theme
+      || tenantData.appTitle
+      || tenantData.skin
+      || tenantData.layout
+    )
   }
 
   /**
@@ -219,6 +354,17 @@ export class TenantBootstrapService {
    */
   async forceRefresh(): Promise<void> {
     this.tenantStore.clearCache()
+
+    // También limpiar cache de configuración
+    const companyId = this.tenantStore.currentTenant?.companyId
+    if (companyId) {
+      // Import dinámico para evitar dependencia circular
+      const { useCompanyConfigStore } = await import('@/modules/CompanyConfigModule/presentation/stores/companyConfigStore')
+      const companyConfigStore = useCompanyConfigStore()
+
+      await companyConfigStore.forceRefresh(companyId)
+    }
+
     await this.bootstrap()
   }
 
