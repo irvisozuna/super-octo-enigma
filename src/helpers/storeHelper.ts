@@ -1,5 +1,5 @@
 // Asegúrate de que este sea el Pinia principal
-import { store } from '@/plugins/2.pinia'
+import { store } from '@/plugins/0.pinia'
 import { stores } from '@/stores/crudFactory' // Ajusta con la ubicación real
 
 /**

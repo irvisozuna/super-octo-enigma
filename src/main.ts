@@ -29,12 +29,15 @@ async function bootstrapApp() {
 
     // 1. PRE-CARGAR tenant y configuración (sin Vue/Pinia, solo cookies)
     console.log('⏳ Pre-loading tenant configuration...')
+
     const { preloadTenantConfiguration } = await import('@core/initTenant')
+
     await preloadTenantConfiguration()
     console.log('✅ Pre-load complete. Current title:', document.title)
 
     // 2. Crear vue app
     console.log('🔧 Creating Vue app...')
+
     const app = createApp(App)
 
     // 3. Register plugins (Vuetify ahora lee cookies con valores correctos)
@@ -51,23 +54,24 @@ async function bootstrapApp() {
 
     // 6. Remover loading screen
     console.log('✅ App mounted successfully!')
+
     const loadingBg = document.getElementById('loading-bg')
-    if (loadingBg) {
+    if (loadingBg)
       loadingBg.style.display = 'none'
-    }
   }
   catch (error) {
     console.error('❌ Failed to bootstrap app:', error)
+
     // Intentar montar la app de todas formas (sin personalización)
     const app = createApp(App)
+
     registerPlugins(app)
     app.mount('#app')
 
     // Remover loading screen incluso si hay error
     const loadingBg = document.getElementById('loading-bg')
-    if (loadingBg) {
+    if (loadingBg)
       loadingBg.style.display = 'none'
-    }
   }
 }
 
