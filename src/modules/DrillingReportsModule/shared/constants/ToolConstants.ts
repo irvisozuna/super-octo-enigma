@@ -44,7 +44,7 @@ export const TOOL_WIZARD_CATEGORIES = [
     translationKey: 'DrillingReportsModule.tools.drill_bit_tricone',
   },
   {
-    title: 'Escariador',
+    title: 'Escarreador',
     value: 'reamer',
     icon: 'tabler-tool',
     color: '#F59E0B',

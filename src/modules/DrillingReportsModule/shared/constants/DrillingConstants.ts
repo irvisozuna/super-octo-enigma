@@ -42,7 +42,7 @@ export const UNITS = [
 // Tool Categories
 export const TOOL_CATEGORIES = [
   { value: 'drill_bit', label: 'Broca de Perforación', icon: 'mdi-drill' },
-  { value: 'reamer', label: 'Escariador', icon: 'mdi-tools' },
+  { value: 'reamer', label: 'Escarreador', icon: 'mdi-tools' },
   { value: 'stabilizer', label: 'Estabilizador', icon: 'mdi-circle' },
   { value: 'drill_pipe', label: 'Tubería de Perforación', icon: 'mdi-pipe' },
   { value: 'drill_collar', label: 'Portamecha', icon: 'mdi-weight' },

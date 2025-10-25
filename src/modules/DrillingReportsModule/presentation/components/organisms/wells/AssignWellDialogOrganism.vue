@@ -1,43 +1,59 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import * as yup from 'yup'
 import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
+import { validateWellData, wellValidationSchema } from '../../../schemas'
+import { useWellOptions } from '../../../composables/useWellOptions'
+import { useNotification } from '@/helpers/notificationHelper'
+import { useErrorTranslation } from '@/helpers/errorTranslationHelper'
 
-export interface AssignWellDialogProps {
+export interface WellDialogProps {
   modelValue: boolean
   projectId: string
+  projectStatus?: string
+  well?: any
   loading?: boolean
 }
 
-const props = withDefaults(defineProps<AssignWellDialogProps>(), {
+const props = withDefaults(defineProps<WellDialogProps>(), {
   loading: false,
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'assign': [wellId: string, notes?: string]
-  'create': [data: any] // includes project_id for single-call creation + assignment
+  'create': [data: any]
+  'update': [wellId: string, data: any]
+  'delete': [wellId: string]
 }>()
 
-const assignFormRef = ref()
-const createFormRef = ref()
-const mode = ref<'assign' | 'create'>('assign')
+const formRef = ref()
+const isEditing = computed(() => !!props.well)
 
-const availableWells = ref<any[]>([])
-const loadingWells = ref(false)
+const isDeletable = computed(() => {
+  if (!props.well || !props.projectStatus)
+    return false
+
+  return props.projectStatus === 'planned' && props.well.status === 'planned'
+})
+
+const isEditable = computed(() => {
+  if (!props.well)
+    return true
+
+  return props.well.status === 'planned'
+})
+
+// Composables
+const { showSuccess, showError } = useNotification()
+const { translateError } = useErrorTranslation()
+const { statusOptions, drillingTypeOptions } = useWellOptions()
 
 const localDialog = computed({
   get: () => props.modelValue,
   set: value => emit('update:modelValue', value),
 })
 
-const isCreatingNew = computed(() => mode.value === 'create')
-
-const assignData = ref({
-  well_id: null as string | null,
-  notes: '',
-})
-
-const createData = ref({
+const formData = ref({
   well_name: '',
   well_code: '',
   location: '',
@@ -55,113 +71,165 @@ const createData = ref({
   notes: '',
 })
 
-const statusOptions = [
-  { title: 'Planificado', value: 'planned' },
-  { title: 'Perforando', value: 'drilling' },
-  { title: 'Completado', value: 'completed' },
-  { title: 'Suspendido', value: 'suspended' },
-  { title: 'Abandonado', value: 'abandoned' },
-]
+// Options are now provided by the composable
 
-const drillingTypeOptions = [
-  { title: 'Rotatorio', value: 'rotary' },
-  { title: 'Percusión', value: 'percussion' },
-  { title: 'Direccional', value: 'directional' },
-  { title: 'Horizontal', value: 'horizontal' },
-  { title: 'Otro', value: 'other' },
-]
+// Helper function to create Vuetify rules from Yup schema
+const createVuetifyRule = (yupSchema: any) => {
+  return (value: any) => {
+    try {
+      yupSchema.validateSync(value)
 
-const rules = {
-  required: (value: any) => !!value || 'Campo requerido',
-  positiveNumber: (value: number) => !value || value >= 0 || 'Debe ser mayor o igual a 0',
-  latitude: (value: number) => !value || (value >= -90 && value <= 90) || 'Debe estar entre -90 y 90',
-  longitude: (value: number) => !value || (value >= -180 && value <= 180) || 'Debe estar entre -180 y 180',
-  maxLength: (max: number) => (value: string) =>
-    !value || value.length <= max || `Máximo ${max} caracteres`,
+      return true
+    }
+    catch (error) {
+      if (error instanceof yup.ValidationError)
+        return error.message
+
+      return 'Error de validación'
+    }
+  }
 }
 
-const loadAvailableWells = async () => {
-  loadingWells.value = true
-  try {
-    // Load all wells for now - can filter later if needed
-    const response = await DrillingReportApiService.getWells?.() || { data: [] }
+// Validation rules for Vuetify (generated from Yup schema)
+const rules = {
+  required: (v: any) => {
+    if (!v)
+      return 'Este campo es requerido'
+    if (typeof v === 'string' && v.trim() === '')
+      return 'Este campo no puede estar vacío'
 
-    availableWells.value = response?.data || []
-  }
-  catch (error) {
-    console.error('Error loading available wells:', error)
-    availableWells.value = []
-  }
-  finally {
-    loadingWells.value = false
+    return true
+  },
+  wellName: createVuetifyRule(wellValidationSchema.fields.well_name),
+  wellCode: createVuetifyRule(wellValidationSchema.fields.well_code),
+  location: createVuetifyRule(wellValidationSchema.fields.location),
+  latitude: createVuetifyRule(wellValidationSchema.fields.surface_coordinates.fields.latitude),
+  longitude: createVuetifyRule(wellValidationSchema.fields.surface_coordinates.fields.longitude),
+  plannedDepth: createVuetifyRule(wellValidationSchema.fields.planned_depth_meters),
+  holeDiameter: createVuetifyRule(wellValidationSchema.fields.hole_diameter_inches),
+  currentDepth: createVuetifyRule(wellValidationSchema.fields.current_depth_meters),
+  status: createVuetifyRule(wellValidationSchema.fields.status),
+  drillingType: createVuetifyRule(wellValidationSchema.fields.drilling_type),
+  spudDate: createVuetifyRule(wellValidationSchema.fields.spud_date),
+  expectedEndDate: createVuetifyRule(wellValidationSchema.fields.expected_end_date),
+  notes: createVuetifyRule(wellValidationSchema.fields.notes),
+}
+
+// Load well data when editing
+const loadWellData = () => {
+  if (props.well) {
+    formData.value = {
+      well_name: props.well.wellName || '',
+      well_code: props.well.wellCode || '',
+      location: props.well.location || '',
+      surface_coordinates: {
+        latitude: props.well.surfaceCoordinates?.latitude || null,
+        longitude: props.well.surfaceCoordinates?.longitude || null,
+      },
+      planned_depth_meters: props.well.plannedDepthMeters || null,
+      hole_diameter_inches: props.well.holeDiameterInches || null,
+      current_depth_meters: props.well.currentDepthMeters || 0,
+      status: props.well.status || 'planned',
+      drilling_type: props.well.drillingType || null,
+      spud_date: props.well.spudDate || '',
+      expected_end_date: props.well.expectedEndDate || '',
+      notes: props.well.notes || '',
+    }
   }
 }
 
 const handleSubmit = async () => {
-  if (mode.value === 'assign') {
-    const { valid } = await assignFormRef.value.validate()
-    if (!valid)
-      return
+  const { valid } = await formRef.value.validate()
+  if (!valid)
+    return
 
-    emit('assign', assignData.value.well_id!, assignData.value.notes)
-  }
-  else {
-    const { valid } = await createFormRef.value.validate()
-    if (!valid)
-      return
-
-    // Emit with project_id included for single-call backend
-    emit('create', {
-      ...createData.value,
+  try {
+    const payload = {
+      ...formData.value,
       project_id: props.projectId,
-    })
+    }
+
+    // Validate with Yup using helper function
+    const validationResult = await validateWellData(payload)
+
+    if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.errors)
+
+      return
+    }
+
+    const validatedData = validationResult.data
+
+    if (isEditing.value) {
+      // Update existing well
+      emit('update', props.well!.id, validatedData)
+      showSuccess('DrillingReportsModule.wells.updated_successfully', 'DrillingReportsModule.wells.well_updated')
+    }
+    else {
+      // Create new well
+      emit('create', validatedData)
+      showSuccess('DrillingReportsModule.wells.created_successfully', 'DrillingReportsModule.wells.well_created')
+    }
+  }
+  catch (error: any) {
+    console.error('Error saving well:', error)
+
+    const errorMessage = isEditing.value
+      ? 'DrillingReportsModule.wells.update_error'
+      : 'DrillingReportsModule.wells.save_error'
+
+    const errorTitle = 'DrillingReportsModule.wells.well_error'
+
+    if (error?.response?.data?.error?.message) {
+      const translatedMessage = translateError(error.response.data.error.message, 'well')
+
+      showError(translatedMessage, errorTitle)
+    }
+    else if (error?.response?.data?.message) {
+      const translatedMessage = translateError(error.response.data.message, 'well')
+
+      showError(translatedMessage, errorTitle)
+    }
+    else if (error?.message) {
+      showError(error.message, errorTitle)
+    }
+    else {
+      showError(errorMessage, errorTitle)
+    }
+  }
+}
+
+const handleDelete = async () => {
+  if (!props.well?.id)
+    return
+
+  try {
+    emit('delete', props.well.id)
+    showSuccess('DrillingReportsModule.wells.deleted_successfully', 'DrillingReportsModule.wells.well_deleted')
+    localDialog.value = false
+  }
+  catch (error: any) {
+    console.error('Error deleting well:', error)
+    showError('DrillingReportsModule.wells.delete_error', 'DrillingReportsModule.wells.well_error')
   }
 }
 
 const handleCancel = () => {
-  assignFormRef.value?.reset()
-  createFormRef.value?.reset()
+  formRef.value?.reset()
   localDialog.value = false
 }
 
-// Load available wells when dialog opens in assign mode
-watch([() => props.modelValue, mode], ([dialogOpen, currentMode]) => {
-  if (dialogOpen && currentMode === 'assign')
-    loadAvailableWells()
-})
-
-// Reset forms when dialog opens
+// Load well data when dialog opens
 watch(() => props.modelValue, newValue => {
-  if (newValue) {
-    mode.value = 'assign'
-    assignData.value = {
-      well_id: null,
-      notes: '',
-    }
-    createData.value = {
-      well_name: '',
-      well_code: '',
-      location: '',
-      surface_coordinates: {
-        latitude: null,
-        longitude: null,
-      },
-      planned_depth_meters: null,
-      hole_diameter_inches: null,
-      current_depth_meters: 0,
-      status: 'planned',
-      drilling_type: null,
-      spud_date: '',
-      expected_end_date: '',
-      notes: '',
-    }
-  }
+  if (newValue)
+    loadWellData()
 })
 
-onMounted(() => {
-  if (props.modelValue && mode.value === 'assign')
-    loadAvailableWells()
-})
+// Watch for well changes
+watch(() => props.well, () => {
+  if (props.modelValue)
+    loadWellData()
+}, { deep: true })
 </script>
 
 <template>
@@ -179,7 +247,9 @@ onMounted(() => {
             color="primary"
             size="20"
           />
-          <span class="text-h6">Asignar Pozo al Proyecto</span>
+          <span class="text-h6">
+            {{ isEditing ? 'Editar Pozo' : 'Crear Nuevo Pozo' }}
+          </span>
         </div>
         <VBtn
           icon="tabler-x"
@@ -191,95 +261,29 @@ onMounted(() => {
 
       <VDivider />
 
-      <!-- Tabs for mode selection -->
-      <VTabs
-        v-model="mode"
-        color="primary"
-        class=""
-        density="compact"
-      >
-        <VTab value="assign">
-          <VIcon
-            start
-            icon="tabler-link"
-            size="18"
-          />
-          Asignar Existente
-        </VTab>
-        <VTab value="create">
-          <VIcon
-            start
-            icon="tabler-plus"
-            size="18"
-          />
-          Crear Nuevo
-        </VTab>
-      </VTabs>
-
-      <VDivider />
-
       <VCardText
         class="pa-4"
         style="max-block-size: 60vh; overflow-y: auto;"
       >
-        <!-- Assign Existing Well Form -->
-        <VForm
-          v-if="mode === 'assign'"
-          ref="assignFormRef"
-          @submit.prevent="handleSubmit"
+        <!-- Info message for non-editable wells -->
+        <VAlert
+          v-if="isEditing && !isEditable"
+          type="warning"
+          variant="tonal"
+          class="mb-4"
         >
-          <VRow dense>
-            <VCol cols="12">
-              <VAutocomplete
-                v-model="assignData.well_id"
-                label="Seleccionar Pozo *"
-                :items="availableWells"
-                :loading="loadingWells"
-                item-title="name"
-                item-value="id"
-                prepend-inner-icon="tabler-droplet"
-                :rules="[rules.required]"
-                density="compact"
-                clearable
-                required
-              >
-                <template #item="{ props: itemProps, item }">
-                  <VListItem v-bind="itemProps">
-                    <template #prepend>
-                      <VAvatar
-                        color="primary"
-                        variant="tonal"
-                      >
-                        <VIcon icon="tabler-droplet" />
-                      </VAvatar>
-                    </template>
-                    <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
-                    <VListItemSubtitle>
-                      {{ item.raw.location }} • {{ item.raw.status }}
-                    </VListItemSubtitle>
-                  </VListItem>
-                </template>
-              </VAutocomplete>
-            </VCol>
+          <template #prepend>
+            <VIcon icon="tabler-alert-triangle" />
+          </template>
+          <VAlertTitle>Pozo en Progreso</VAlertTitle>
+          <div class="text-body-2">
+            Este pozo ya ha sido iniciado y no puede ser editado. Solo se puede eliminar si el proyecto está en estado "Planeado" y el pozo no ha sido iniciado.
+          </div>
+        </VAlert>
 
-            <VCol cols="12">
-              <VTextarea
-                v-model="assignData.notes"
-                label="Notas"
-                rows="2"
-                counter="500"
-                :rules="[rules.maxLength(500)]"
-                prepend-inner-icon="tabler-note"
-                density="compact"
-              />
-            </VCol>
-          </VRow>
-        </VForm>
-
-        <!-- Create New Well Form -->
+        <!-- Well Form -->
         <VForm
-          v-else
-          ref="createFormRef"
+          ref="formRef"
           class="compact-form"
           @submit.prevent="handleSubmit"
         >
@@ -290,10 +294,11 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model="createData.well_name"
+                v-model="formData.well_name"
                 label="Nombre del Pozo *"
                 prepend-inner-icon="tabler-droplet"
-                :rules="[rules.required, rules.maxLength(200)]"
+                :rules="[rules.wellName]"
+                :disabled="isEditing && !isEditable"
                 counter="200"
                 required
               />
@@ -305,10 +310,11 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model="createData.well_code"
+                v-model="formData.well_code"
                 label="Código del Pozo"
                 prepend-inner-icon="tabler-hash"
-                :rules="[rules.maxLength(100)]"
+                :rules="[rules.wellCode]"
+                :disabled="isEditing && !isEditable"
                 counter="100"
               />
             </VCol>
@@ -316,10 +322,11 @@ onMounted(() => {
             <!-- Location -->
             <VCol cols="12">
               <VTextField
-                v-model="createData.location"
+                v-model="formData.location"
                 label="Ubicación *"
                 prepend-inner-icon="tabler-map-pin"
-                :rules="[rules.required, rules.maxLength(300)]"
+                :rules="[rules.location]"
+                :disabled="isEditing && !isEditable"
                 counter="300"
                 required
               />
@@ -331,12 +338,13 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model.number="createData.surface_coordinates.latitude"
+                v-model.number="formData.surface_coordinates.latitude"
                 label="Latitud *"
                 type="number"
                 step="0.000001"
                 prepend-inner-icon="tabler-compass"
-                :rules="[rules.required, rules.latitude]"
+                :rules="[rules.latitude]"
+                :disabled="isEditing && !isEditable"
                 placeholder="-90 a 90"
                 required
               />
@@ -347,12 +355,13 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model.number="createData.surface_coordinates.longitude"
+                v-model.number="formData.surface_coordinates.longitude"
                 label="Longitud *"
                 type="number"
                 step="0.000001"
                 prepend-inner-icon="tabler-compass"
-                :rules="[rules.required, rules.longitude]"
+                :rules="[rules.longitude]"
+                :disabled="isEditing && !isEditable"
                 placeholder="-180 a 180"
                 required
               />
@@ -364,14 +373,15 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model.number="createData.planned_depth_meters"
+                v-model.number="formData.planned_depth_meters"
                 label="Profundidad Planificada *"
                 type="number"
                 step="0.01"
                 min="0"
                 prepend-inner-icon="tabler-ruler"
                 suffix="m"
-                :rules="[rules.required, rules.positiveNumber]"
+                :rules="[rules.plannedDepth]"
+                :disabled="isEditing && !isEditable"
                 required
               />
             </VCol>
@@ -382,14 +392,15 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model.number="createData.hole_diameter_inches"
+                v-model.number="formData.hole_diameter_inches"
                 label="Diámetro del Hoyo *"
                 type="number"
                 step="0.125"
                 min="0"
                 prepend-inner-icon="tabler-circle"
                 suffix="in"
-                :rules="[rules.required, rules.positiveNumber]"
+                :rules="[rules.holeDiameter]"
+                :disabled="isEditing && !isEditable"
                 required
               />
             </VCol>
@@ -400,14 +411,15 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model.number="createData.current_depth_meters"
+                v-model.number="formData.current_depth_meters"
                 label="Profundidad Actual"
                 type="number"
                 step="0.01"
                 min="0"
                 prepend-inner-icon="tabler-arrow-down"
                 suffix="m"
-                :rules="[rules.positiveNumber]"
+                :rules="[rules.currentDepth]"
+                :disabled="isEditing && !isEditable"
               />
             </VCol>
 
@@ -417,11 +429,12 @@ onMounted(() => {
               md="6"
             >
               <VSelect
-                v-model="createData.status"
+                v-model="formData.status"
                 label="Estado *"
                 :items="statusOptions"
                 prepend-inner-icon="tabler-status-change"
-                :rules="[rules.required]"
+                :rules="[rules.status]"
+                :disabled="isEditing && !isEditable"
                 required
               />
             </VCol>
@@ -432,10 +445,12 @@ onMounted(() => {
               md="6"
             >
               <VSelect
-                v-model="createData.drilling_type"
+                v-model="formData.drilling_type"
                 label="Tipo de Perforación"
                 :items="drillingTypeOptions"
                 prepend-inner-icon="tabler-tool"
+                :rules="[rules.drillingType]"
+                :disabled="isEditing && !isEditable"
               />
             </VCol>
 
@@ -445,11 +460,12 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model="createData.spud_date"
+                v-model="formData.spud_date"
                 label="Fecha de Inicio (Spud Date) *"
                 type="date"
                 prepend-inner-icon="tabler-calendar"
-                :rules="[rules.required]"
+                :rules="[rules.spudDate]"
+                :disabled="isEditing && !isEditable"
                 required
               />
             </VCol>
@@ -460,21 +476,24 @@ onMounted(() => {
               md="6"
             >
               <VTextField
-                v-model="createData.expected_end_date"
+                v-model="formData.expected_end_date"
                 label="Fecha Esperada de Fin"
                 type="date"
                 prepend-inner-icon="tabler-calendar-check"
+                :rules="[rules.expectedEndDate]"
+                :disabled="isEditing && !isEditable"
               />
             </VCol>
 
             <!-- Notes -->
             <VCol cols="12">
               <VTextarea
-                v-model="createData.notes"
+                v-model="formData.notes"
                 label="Notas"
                 rows="3"
                 counter="1000"
-                :rules="[rules.maxLength(1000)]"
+                :rules="[rules.notes]"
+                :disabled="isEditing && !isEditable"
                 prepend-inner-icon="tabler-note"
               />
             </VCol>
@@ -486,22 +505,39 @@ onMounted(() => {
 
       <VCardActions class="pa-4">
         <VSpacer />
+
+        <!-- Delete button (only if editing and deletable) -->
+        <VBtn
+          v-if="isEditing && isDeletable"
+          color="error"
+          variant="outlined"
+          @click="handleDelete"
+        >
+          <VIcon
+            start
+            icon="tabler-trash"
+          />
+          Eliminar
+        </VBtn>
+
         <VBtn
           variant="text"
           @click="handleCancel"
         >
           Cancelar
         </VBtn>
+
         <VBtn
           color="primary"
           :loading="loading"
+          :disabled="isEditing && !isEditable"
           @click="handleSubmit"
         >
           <VIcon
             start
-            :icon="mode === 'assign' ? 'tabler-link' : 'tabler-device-floppy'"
+            :icon="isEditing ? 'tabler-device-floppy' : 'tabler-plus'"
           />
-          {{ mode === 'assign' ? 'Asignar' : 'Crear y Asignar' }}
+          {{ isEditing ? 'Actualizar' : 'Crear' }}
         </VBtn>
       </VCardActions>
     </VCard>

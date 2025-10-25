@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { VForm } from 'vuetify/components/VForm'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import { useTenantConfig } from '@/composables/useTenantConfig'
+import { initializeMenus } from '@/navigation'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -117,6 +118,9 @@ const login = async () => {
     profileCookie.value = profile
     companyCookie.value = company
     userDataCookie.value = slimUserData
+
+    // Reinicializar los menús después del login para cargar los elementos según permisos
+    initializeMenus()
 
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect

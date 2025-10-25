@@ -4,24 +4,43 @@ import WellProgressVisualizationMolecule from '../molecules/WellProgressVisualiz
 
 interface Well {
   id: string
-  name: string
-  status: string
-  well_type: string
-  depth_planned: number
-  depth_actual?: number
-  depth_remaining?: number
-  progress_percentage?: number
-  diameter: number
-  coordinates: {
+  company_id: string
+  project_id: string
+  well_number: string
+  well_name: string
+  surface_coordinates: {
     latitude: number
     longitude: number
   }
-  start_date?: string
-  completion_date?: string
-  purpose?: string
-  statistics?: {
+  bottom_coordinates?: {
+    latitude: number
+    longitude: number
+  } | null
+  status: string
+  depth: {
+    planned_meters: number
+    current_meters: number
+    remaining_meters: number
+    progress_percentage: number
+  }
+  hole_diameter_inches: number
+  purpose?: string | null
+  well_type: string
+  dates: {
+    spud_date: string
+    completion_date?: string | null
+  }
+  statistics: {
     drilling_section_count: number
     lithology_log_count: number
+  }
+  drilling_sections: any[]
+  lithology_logs: any[]
+  equipment_usage: any[]
+  timestamps: {
+    created_at: string
+    updated_at: string
+    deleted_at?: string | null
   }
 }
 
@@ -43,10 +62,10 @@ const isOpen = computed({
 })
 
 const progress = computed(() => {
-  if (!props.well?.depth_actual || !props.well?.depth_planned)
+  if (!props.well?.depth)
     return 0
 
-  return (props.well.depth_actual / props.well.depth_planned) * 100
+  return props.well.depth.progress_percentage || 0
 })
 
 const getStatusColor = (status: string): string => {
@@ -100,7 +119,7 @@ const close = () => {
             color="primary"
             size="20"
           />
-          <span class="text-h6">{{ well.name }}</span>
+          <span class="text-h6">{{ well.well_name }}</span>
         </div>
         <VBtn
           icon="tabler-x"
@@ -120,10 +139,10 @@ const close = () => {
         >
           <VCol cols="12">
             <WellProgressVisualizationMolecule
-              :depth-planned="well.depth_planned"
-              :depth-actual="well.depth_actual || 0"
+              :depth-planned="well.depth?.planned_meters || 0"
+              :depth-actual="well.depth?.current_meters || 0"
               :status="well.status"
-              :well-name="well.name"
+              :well-name="well.well_name"
             />
           </VCol>
         </VRow>
@@ -165,6 +184,26 @@ const close = () => {
             </div>
           </VCol>
 
+          <!-- Well Number -->
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <div class="detail-block">
+              <p class="text-caption text-medium-emphasis mb-1">
+                <VIcon
+                  icon="tabler-hash"
+                  size="16"
+                  class="me-1"
+                />
+                Número de Pozo
+              </p>
+              <p class="text-body-1 font-weight-medium">
+                {{ well.well_number }}
+              </p>
+            </div>
+          </VCol>
+
           <!-- Planned Depth -->
           <VCol
             cols="12"
@@ -180,14 +219,14 @@ const close = () => {
                 Profundidad Planificada
               </p>
               <p class="text-h6 font-weight-medium">
-                {{ well.depth_planned }} m
+                {{ well.depth?.planned_meters || 0 }} m
               </p>
             </div>
           </VCol>
 
           <!-- Current Depth -->
           <VCol
-            v-if="well.depth_actual"
+            v-if="well.depth?.current_meters > 0"
             cols="12"
             sm="6"
           >
@@ -201,7 +240,7 @@ const close = () => {
                 Profundidad Actual
               </p>
               <p class="text-h6 font-weight-medium">
-                {{ well.depth_actual }} m
+                {{ well.depth?.current_meters || 0 }} m
               </p>
             </div>
           </VCol>
@@ -221,7 +260,7 @@ const close = () => {
                 Diámetro
               </p>
               <p class="text-h6 font-weight-medium">
-                {{ well.diameter }}"
+                {{ well.hole_diameter_inches }}"
               </p>
             </div>
           </VCol>
@@ -241,14 +280,14 @@ const close = () => {
                 Coordenadas
               </p>
               <p class="text-body-2">
-                {{ well.coordinates.latitude.toFixed(6) }}, {{ well.coordinates.longitude.toFixed(6) }}
+                {{ well.surface_coordinates?.latitude?.toFixed(6) || 'N/A' }}, {{ well.surface_coordinates?.longitude?.toFixed(6) || 'N/A' }}
               </p>
             </div>
           </VCol>
 
           <!-- Start Date -->
           <VCol
-            v-if="well.start_date"
+            v-if="well.dates?.spud_date"
             cols="12"
             sm="6"
           >
@@ -262,14 +301,14 @@ const close = () => {
                 Fecha de Inicio
               </p>
               <p class="text-body-1">
-                {{ new Date(well.start_date).toLocaleDateString() }}
+                {{ new Date(well.dates.spud_date).toLocaleDateString() }}
               </p>
             </div>
           </VCol>
 
           <!-- Completion Date -->
           <VCol
-            v-if="well.completion_date"
+            v-if="well.dates?.completion_date"
             cols="12"
             sm="6"
           >
@@ -283,14 +322,14 @@ const close = () => {
                 Fecha de Completación
               </p>
               <p class="text-body-1">
-                {{ new Date(well.completion_date).toLocaleDateString() }}
+                {{ new Date(well.dates.completion_date).toLocaleDateString() }}
               </p>
             </div>
           </VCol>
 
           <!-- Progress Bar -->
           <VCol
-            v-if="well.depth_actual !== undefined && well.depth_planned"
+            v-if="well.depth?.current_meters > 0"
             cols="12"
           >
             <VDivider class="my-3" />
@@ -305,15 +344,15 @@ const close = () => {
                 rounded
               />
               <div class="d-flex justify-space-between mt-1">
-                <span class="text-caption">{{ well.depth_actual }} m</span>
+                <span class="text-caption">{{ well.depth?.current_meters || 0 }} m</span>
                 <span class="text-caption font-weight-bold">{{ progress.toFixed(1) }}%</span>
-                <span class="text-caption">{{ well.depth_planned }} m</span>
+                <span class="text-caption">{{ well.depth?.planned_meters || 0 }} m</span>
               </div>
               <p
-                v-if="well.depth_remaining"
+                v-if="well.depth?.remaining_meters > 0"
                 class="text-caption text-medium-emphasis mt-2 mb-0"
               >
-                Restante: {{ well.depth_remaining }} m
+                Restante: {{ well.depth?.remaining_meters || 0 }} m
               </p>
             </div>
           </VCol>
@@ -382,6 +421,7 @@ const close = () => {
 
 <style scoped lang="scss">
 .detail-block {
-  padding: 0.5rem 0;
+  padding-block: 0.5rem;
+  padding-inline: 0;
 }
 </style>

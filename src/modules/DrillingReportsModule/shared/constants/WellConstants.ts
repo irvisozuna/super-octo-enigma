@@ -10,6 +10,11 @@ export const WELL_TYPES = [
   { value: 'production', label: 'Producción', icon: '⚡', description: 'Pozo para producción de recursos' },
   { value: 'injection', label: 'Inyección', icon: '💉', description: 'Pozo para inyección de fluidos' },
   { value: 'monitoring', label: 'Monitoreo', icon: '📊', description: 'Pozo para monitoreo ambiental' },
+  { value: 'rotary', label: 'Rotatorio', icon: '🔩', description: 'Pozo para perforación rotatoria' },
+  { value: 'percussion', label: 'Percusión', icon: '🔩', description: 'Pozo para perforación percusión' },
+  { value: 'directional', label: 'Direccional', icon: '🔩', description: 'Pozo para perforación direccional' },
+  { value: 'horizontal', label: 'Horizontal', icon: '🔩', description: 'Pozo para perforación horizontal' },
+  { value: 'other', label: 'Otro', icon: '🔩', description: 'Pozo para perforación otro' },
 ]
 
 export const WELL_DEPTH_CATEGORIES = [

@@ -5,6 +5,7 @@ import ProjectProgressBarAtom from '../atoms/ProjectProgressBarAtom.vue'
 
 export interface WellInfoCardProps {
   well?: Well | null
+  projectStatus?: string
   loading?: boolean
 }
 
@@ -12,8 +13,8 @@ const props = defineProps<WellInfoCardProps>()
 
 defineEmits<{
   'view-details': []
-  'assign-well': []
-  'change-well': []
+  'create-well': []
+  'delete-well': []
 }>()
 
 const statusConfig = {
@@ -49,6 +50,21 @@ const wellTypeLabel = computed(() => {
     return ''
 
   return wellTypeConfig[props.well.well_type] || props.well.well_type
+})
+
+// Reglas de negocio
+const isDeletable = computed(() => {
+  if (!props.well || !props.projectStatus)
+    return false
+
+  return props.projectStatus === 'planned' && props.well.status === 'planned'
+})
+
+const canShowActions = computed(() => {
+  if (!props.well)
+    return true // Si no hay pozo, mostrar crear
+
+  return isDeletable.value // Solo mostrar acciones si se puede eliminar
 })
 </script>
 
@@ -161,9 +177,27 @@ const wellTypeLabel = computed(() => {
         >
           No hay pozo asignado a este proyecto
         </VAlert>
+
+        <!-- Mensaje informativo para pozos no editables -->
+        <VAlert
+          v-if="well && !canShowActions"
+          type="warning"
+          variant="tonal"
+          density="compact"
+          class="mt-2"
+        >
+          <template #prepend>
+            <VIcon icon="tabler-alert-triangle" />
+          </template>
+          <VAlertTitle>Pozo en Progreso</VAlertTitle>
+          <div class="text-body-2">
+            Este pozo ya ha sido iniciado y no puede ser eliminado.
+          </div>
+        </VAlert>
       </VCardText>
 
       <VCardActions>
+        <!-- Botón Ver Detalles (siempre visible cuando hay pozo) -->
         <VBtn
           v-if="well"
           variant="text"
@@ -177,25 +211,31 @@ const wellTypeLabel = computed(() => {
             size="18"
           />
         </VBtn>
-        <VSpacer />
+
+        <!-- Botón para crear pozo (solo si no hay pozo) -->
         <VBtn
           v-if="!well"
           color="primary"
           variant="tonal"
           size="small"
           prepend-icon="tabler-plus"
-          @click="$emit('assign-well')"
+          @click="$emit('create-well')"
         >
-          Asignar Pozo
+          Crear Pozo
         </VBtn>
+
+        <VSpacer />
+
+        <!-- Botón de eliminar (solo si se puede eliminar) -->
         <VBtn
-          v-else
-          variant="text"
+          v-if="well && isDeletable"
+          color="error"
+          variant="outlined"
           size="small"
-          prepend-icon="tabler-replace"
-          @click="$emit('change-well')"
+          prepend-icon="tabler-trash"
+          @click="$emit('delete-well')"
         >
-          Cambiar Pozo
+          Eliminar
         </VBtn>
       </VCardActions>
     </VCard>

@@ -18,14 +18,129 @@ const formData = computed(() => wizardStore.formData)
 const showDayShift = computed(() => wizardStore.showDayShift)
 const showNightShift = computed(() => wizardStore.showNightShift)
 
+// Filtered employee options for each field
+const dayOperatorOptions = computed(() => props.employeeOptions)
+
+const dayHelper1Options = computed(() => {
+  const selectedOperator = formData.value.operator_day_id
+  const selectedHelper2 = formData.value.helper2_day_id
+  
+  return props.employeeOptions.filter(employee => 
+    employee.value !== selectedOperator && 
+    employee.value !== selectedHelper2
+  )
+})
+
+const dayHelper2Options = computed(() => {
+  const selectedOperator = formData.value.operator_day_id
+  const selectedHelper1 = formData.value.helper1_day_id
+  
+  return props.employeeOptions.filter(employee => 
+    employee.value !== selectedOperator && 
+    employee.value !== selectedHelper1
+  )
+})
+
+const nightOperatorOptions = computed(() => props.employeeOptions)
+
+const nightHelper1Options = computed(() => {
+  const selectedOperator = formData.value.operator_night_id
+  const selectedHelper2 = formData.value.helper2_night_id
+  
+  return props.employeeOptions.filter(employee => 
+    employee.value !== selectedOperator && 
+    employee.value !== selectedHelper2
+  )
+})
+
+const nightHelper2Options = computed(() => {
+  const selectedOperator = formData.value.operator_night_id
+  const selectedHelper1 = formData.value.helper1_night_id
+  
+  return props.employeeOptions.filter(employee => 
+    employee.value !== selectedOperator && 
+    employee.value !== selectedHelper1
+  )
+})
+
+// Validation for step completion
+const isPersonnelStepValid = computed(() => {
+  if (!showDayShift.value && !showNightShift.value) return false
+  
+  let isValid = true
+  
+  // Day shift validation
+  if (showDayShift.value) {
+    if (!formData.value.operator_day_id) isValid = false
+    if (!formData.value.horometer_start_day) isValid = false
+    if (!formData.value.horometer_end_day) isValid = false
+    
+    // Validate horometer logic
+    if (formData.value.horometer_start_day && formData.value.horometer_end_day) {
+      if (formData.value.horometer_start_day >= formData.value.horometer_end_day) {
+        isValid = false
+      }
+    }
+  }
+  
+  // Night shift validation
+  if (showNightShift.value) {
+    if (!formData.value.operator_night_id) isValid = false
+    if (!formData.value.horometer_start_night) isValid = false
+    if (!formData.value.horometer_end_night) isValid = false
+    
+    // Validate horometer logic
+    if (formData.value.horometer_start_night && formData.value.horometer_end_night) {
+      if (formData.value.horometer_start_night >= formData.value.horometer_end_night) {
+        isValid = false
+      }
+    }
+  }
+  
+  return isValid
+})
+
 // Handlers
 const updateField = (field: string, value: any) => {
   wizardStore.updateFormData({ [field]: value })
+  
+  // Clear helpers when operator changes
+  if (field === 'operator_day_id') {
+    if (formData.value.helper1_day_id === value) {
+      wizardStore.updateFormData({ helper1_day_id: null })
+    }
+    if (formData.value.helper2_day_id === value) {
+      wizardStore.updateFormData({ helper2_day_id: null })
+    }
+  }
+  
+  if (field === 'operator_night_id') {
+    if (formData.value.helper1_night_id === value) {
+      wizardStore.updateFormData({ helper1_night_id: null })
+    }
+    if (formData.value.helper2_night_id === value) {
+      wizardStore.updateFormData({ helper2_night_id: null })
+    }
+  }
+  
+  // Clear helper2 when helper1 changes
+  if (field === 'helper1_day_id' && formData.value.helper2_day_id === value) {
+    wizardStore.updateFormData({ helper2_day_id: null })
+  }
+  
+  if (field === 'helper1_night_id' && formData.value.helper2_night_id === value) {
+    wizardStore.updateFormData({ helper2_night_id: null })
+  }
 }
 
 const calculateHorometer = () => {
   // Auto-calculated in store's computed property
 }
+
+// Expose validation state to parent
+defineExpose({
+  isPersonnelStepValid
+})
 </script>
 
 <template>
@@ -69,7 +184,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.operator_day_id"
                 label="Operador *"
-                :items="employeeOptions"
+                :items="dayOperatorOptions"
                 :loading="loadingEmployees"
                 :rules="showDayShift ? [rules.required] : []"
                 class="mb-3"
@@ -79,7 +194,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.helper1_day_id"
                 label="Ayudante 1"
-                :items="employeeOptions"
+                :items="dayHelper1Options"
                 :loading="loadingEmployees"
                 class="mb-3"
                 prepend-inner-icon="tabler-user"
@@ -89,7 +204,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.helper2_day_id"
                 label="Ayudante 2"
-                :items="employeeOptions"
+                :items="dayHelper2Options"
                 :loading="loadingEmployees"
                 class="mb-3"
                 prepend-inner-icon="tabler-user"
@@ -103,7 +218,14 @@ const calculateHorometer = () => {
                 step="0.1"
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
-                :rules="showDayShift ? [rules.required, rules.positiveNumber] : []"
+                :rules="showDayShift ? [
+                  rules.required, 
+                  rules.positiveNumber,
+                  (v) => {
+                    if (!v || !formData.horometer_end_day) return true
+                    return v < formData.horometer_end_day || 'El horómetro inicio debe ser menor al horómetro fin'
+                  }
+                ] : []"
                 class="mb-3"
                 @update:model-value="(v) => updateField('horometer_start_day', Number(v))"
                 @blur="calculateHorometer"
@@ -115,7 +237,14 @@ const calculateHorometer = () => {
                 step="0.1"
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
-                :rules="showDayShift ? [rules.required, rules.positiveNumber] : []"
+                :rules="showDayShift ? [
+                  rules.required, 
+                  rules.positiveNumber,
+                  (v) => {
+                    if (!v || !formData.horometer_start_day) return true
+                    return v > formData.horometer_start_day || 'El horómetro fin debe ser mayor al horómetro inicio'
+                  }
+                ] : []"
                 @update:model-value="(v) => updateField('horometer_end_day', Number(v))"
                 @blur="calculateHorometer"
               />
@@ -138,7 +267,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.operator_night_id"
                 label="Operador *"
-                :items="employeeOptions"
+                :items="nightOperatorOptions"
                 :loading="loadingEmployees"
                 :rules="showNightShift ? [rules.required] : []"
                 class="mb-3"
@@ -148,7 +277,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.helper1_night_id"
                 label="Ayudante 1"
-                :items="employeeOptions"
+                :items="nightHelper1Options"
                 :loading="loadingEmployees"
                 class="mb-3"
                 prepend-inner-icon="tabler-user"
@@ -158,7 +287,7 @@ const calculateHorometer = () => {
               <VSelect
                 :model-value="formData.helper2_night_id"
                 label="Ayudante 2"
-                :items="employeeOptions"
+                :items="nightHelper2Options"
                 :loading="loadingEmployees"
                 class="mb-3"
                 prepend-inner-icon="tabler-user"
@@ -172,7 +301,14 @@ const calculateHorometer = () => {
                 step="0.1"
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
-                :rules="showNightShift ? [rules.required, rules.positiveNumber] : []"
+                :rules="showNightShift ? [
+                  rules.required, 
+                  rules.positiveNumber,
+                  (v) => {
+                    if (!v || !formData.horometer_end_night) return true
+                    return v < formData.horometer_end_night || 'El horómetro inicio debe ser menor al horómetro fin'
+                  }
+                ] : []"
                 class="mb-3"
                 @update:model-value="(v) => updateField('horometer_start_night', Number(v))"
                 @blur="calculateHorometer"
@@ -184,14 +320,22 @@ const calculateHorometer = () => {
                 step="0.1"
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
-                :rules="showNightShift ? [rules.required, rules.positiveNumber] : []"
+                :rules="showNightShift ? [
+                  rules.required, 
+                  rules.positiveNumber,
+                  (v) => {
+                    if (!v || !formData.horometer_start_night) return true
+                    return v > formData.horometer_start_night || 'El horómetro fin debe ser mayor al horómetro inicio'
+                  }
+                ] : []"
                 @update:model-value="(v) => updateField('horometer_end_night', Number(v))"
                 @blur="calculateHorometer"
               />
             </VCardText>
           </VCard>
         </VCol>
-
+      </VRow>
+      <VRow>
         <!-- RPM -->
         <VCol
           cols="12"

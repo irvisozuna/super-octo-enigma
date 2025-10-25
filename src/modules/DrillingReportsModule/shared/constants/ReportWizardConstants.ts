@@ -61,7 +61,7 @@ export const TOOL_CATEGORY_OPTIONS = TOOL_WIZARD_CATEGORIES
 
 export const REPORT_VALIDATION_RULES = {
   required: (value: any) => !!value || 'Campo requerido',
-  positiveNumber: (value: number) => !value || value > 0 || 'Debe ser mayor a 0',
+  positiveNumber: (value: number) => !value || value >= 0 || 'Debe ser mayor o igual a 0',
   dateNotFuture: (value: string) => {
     if (!value)
       return true

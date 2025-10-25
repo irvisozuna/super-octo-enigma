@@ -1,10 +1,14 @@
 export const EQUIPMENT_TYPES = [
   { value: 'drill_rig', label: 'Perforadora', icon: '🔩', category: 'drilling' },
+  { value: 'core_drill', label: 'Perforadora de núcleo', icon: '🔩', category: 'drilling' },
+  { value: 'rotary_drill', label: 'Perforadora rotatoria', icon: '🔩', category: 'drilling' },
   { value: 'pump', label: 'Bomba', icon: '⚡', category: 'mechanical' },
   { value: 'generator', label: 'Generador', icon: '🔌', category: 'electrical' },
   { value: 'compressor', label: 'Compresor', icon: '💨', category: 'mechanical' },
   { value: 'crane', label: 'Grúa', icon: '🏗️', category: 'lifting' },
+  { value: 'vehicle', label: 'Vehículo', icon: '🚗', category: 'lifting' },
   { value: 'other', label: 'Otro', icon: '🔧', category: 'misc' },
+
 ]
 
 export const EQUIPMENT_STATUS = [

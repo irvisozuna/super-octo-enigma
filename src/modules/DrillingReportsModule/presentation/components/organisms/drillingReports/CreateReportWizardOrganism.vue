@@ -40,6 +40,7 @@ const detailStore = useProjectDetailStore()
 // Form refs
 const step1Form = ref()
 const step2Form = ref()
+const step2Personnel = ref()
 
 // Loading states
 const loadingEquipment = ref(false)
@@ -73,6 +74,11 @@ const validateStep2 = async () => {
   if (!step2Form.value)
     return false
   const { valid } = await step2Form.value.validate()
+  
+  // Also check personnel step validation
+  if (valid && step2Personnel.value) {
+    return step2Personnel.value.isPersonnelStepValid
+  }
 
   return valid
 }
@@ -148,8 +154,8 @@ const loadEmployees = async () => {
     const response = await detailStore.loadTabData('personnel', props.projectId, true)
 
     employeeOptions.value = (response || []).map((emp: any) => ({
-      title: emp.full_name || `${emp.first_name} ${emp.last_name}`,
-      value: emp.id,
+      title: emp.employee?.full_name || emp.full_name || emp.name || 'N/A',
+      value: emp.employee?.id || emp.id,
     }))
   }
   catch (error) {
@@ -437,6 +443,7 @@ onMounted(() => {
             <VStepperWindowItem value="2">
               <VForm ref="step2Form">
                 <WizardPersonnelMolecule
+                  ref="step2Personnel"
                   :employee-options="employeeOptions"
                   :loading-employees="loadingEmployees"
                 />
@@ -458,6 +465,7 @@ onMounted(() => {
               <WizardToolsMolecule
                 :tool-options="toolOptions"
                 :loading-tools="loadingTools"
+                :current-well="detailStore.currentWell"
               />
             </VStepperWindowItem>
 

@@ -44,6 +44,7 @@ import AssignEquipmentDialogOrganism from '../components/organisms/equipment/Ass
 import UnassignEquipmentDialogOrganism from '../components/organisms/equipment/UnassignEquipmentDialogOrganism.vue'
 import AddCostDialogOrganism from '../components/organisms/cost/AddCostDialogOrganism.vue'
 import AssignWellDialogOrganism from '../components/organisms/wells/AssignWellDialogOrganism.vue'
+import WellDetailsDialogOrganism from '../components/organisms/WellDetailsDialogOrganism.vue'
 
 // Componentes adicionales existentes
 import WellInfoCardMolecule from '../components/molecules/WellInfoCardMolecule.vue'
@@ -440,13 +441,6 @@ async function handleAddCostSubmit(costData: any) {
       refreshProject(), // Recargar datos del proyecto para actualizar estadísticas
     ])
 
-    // Log para verificar que los datos se actualizaron
-    console.log('💰 Presupuesto actualizado:', {
-      total: project.value?.budget?.total,
-      current: project.value?.budget?.current_cost,
-      statistics: statistics.value,
-    })
-
     showSnackbar({
       title: 'Éxito',
       message: 'Costo agregado correctamente',
@@ -637,6 +631,46 @@ function handleViewAllPersonnel() {
  */
 function handleViewBudgetDetails() {
   activeTab.value = 'budget'
+}
+
+/**
+ * Manejar "Ver Detalles" del pozo
+ */
+function handleViewWellDetails() {
+  dialogs.wellDetails = true
+}
+
+/**
+ * Manejar "Crear Pozo"
+ */
+function handleCreateWell() {
+  dialogs.assignWell = true
+}
+
+/**
+ * Manejar "Eliminar Pozo"
+ */
+async function handleDeleteWell() {
+  if (!currentWell.value)
+    return
+
+  try {
+    await deleteWell(currentWell.value.id)
+    await refreshProject()
+
+    showSnackbar({
+      title: 'Éxito',
+      message: 'Pozo eliminado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error: any) {
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al eliminar el pozo',
+      color: 'error',
+    })
+  }
 }
 
 // ========== REPORT ACTIONS ==========
@@ -832,8 +866,9 @@ onMounted(() => {
                   :well="currentWell"
                   :loading="loading"
                   :show-actions="canEditProject"
-                  @change-well="handleChangeWell"
-                  @assign-well="handleAssignWell"
+                  @view-details="handleViewWellDetails"
+                  @create-well="handleCreateWell"
+                  @delete-well="handleDeleteWell"
                 />
               </VCol>
 
@@ -1063,6 +1098,12 @@ onMounted(() => {
       :project-id="projectId"
       @assign="handleWellAssigned"
       @create="handleWellCreated"
+    />
+
+    <!-- Diálogo de Detalles del Pozo -->
+    <WellDetailsDialogOrganism
+      v-model="dialogs.wellDetails"
+      :well="currentWell"
     />
 
     <!-- Diálogo de Lista de Personal -->

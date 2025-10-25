@@ -86,12 +86,13 @@ export function useTabManager(projectId?: string) {
       requiresStatus: ['active', 'suspended', 'completed'],
       lazyLoad: true,
     },
-    {
-      name: 'history',
-      label: 'Historial',
-      icon: 'tabler-history',
-      lazyLoad: true,
-    },
+
+    // {
+    //   name: 'history',
+    //   label: 'Historial',
+    //   icon: 'tabler-history',
+    //   lazyLoad: true,
+    // },
   ]
 
   /**

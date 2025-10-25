@@ -117,6 +117,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['vuetify'],
+    include: [
+      'vue',
+      'vue-router',
+      'pinia',
+      'ofetch',
+      'yup',
+    ],
     entries: [
       './src/**/*.vue',
     ],

@@ -18,14 +18,20 @@ export const redirects: RouteRecordRaw[] = [
       // If logged in (has userData), route to home page
       if (userData.value || accessToken.value) {
         // Obtener homeUrl del tenant si existe
-        const tenantStore = useTenantStore()
-        const homeUrl = (tenantStore.data as any)?.homeUrl
+        try {
+          const tenantStore = useTenantStore()
+          const homeUrl = (tenantStore.data as any)?.homeUrl
 
-        // Si el tenant tiene homeUrl configurado, usarlo
-        if (homeUrl) {
-          console.log('🏠 Redirecting to tenant homeUrl:', homeUrl)
+          // Si el tenant tiene homeUrl configurado, usarlo
+          if (homeUrl) {
+            console.log('🏠 Redirecting to tenant homeUrl:', homeUrl)
 
-          return { name: homeUrl }
+            return { name: homeUrl }
+          }
+        }
+        catch (error) {
+          // Si hay error accediendo al store (Pinia no disponible), continuar con fallback
+          console.warn('⚠️ Tenant store not available, using fallback routing:', error)
         }
 
         // Fallback basado en rol

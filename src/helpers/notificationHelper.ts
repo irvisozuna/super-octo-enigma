@@ -1,4 +1,5 @@
 import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore'
+import { useI18n } from 'vue-i18n'
 
 /**
  * Helper para notificaciones / snackbars.
@@ -6,13 +7,15 @@ import { useGlobalSnackbarStore } from '@/stores/globalSnackbarStore'
  */
 export function useNotification() {
   const snackbarStore = useGlobalSnackbarStore()
+  const { t } = useI18n()
 
   function showSuccess(
     messageKey: string,
     title = 'common.success',
     variables: Record<string, any> = {},
   ) {
-    snackbarStore.showSnackbar(title, { messageKey, variables }, 'success', {
+    const translatedTitle = t(title)
+    snackbarStore.showSnackbar(translatedTitle, { messageKey, variables }, 'success', {
       position: 'top end',
     })
   }
@@ -22,7 +25,8 @@ export function useNotification() {
     title = 'common.error',
     variables: Record<string, any> = {},
   ) {
-    snackbarStore.showSnackbar(title, { messageKey, variables }, 'error', {
+    const translatedTitle = t(title)
+    snackbarStore.showSnackbar(translatedTitle, { messageKey, variables }, 'error', {
       position: 'top end',
     })
   }
@@ -32,7 +36,8 @@ export function useNotification() {
     title = 'common.info',
     variables: Record<string, any> = {},
   ) {
-    snackbarStore.showSnackbar(title, { messageKey, variables }, 'info', {
+    const translatedTitle = t(title)
+    snackbarStore.showSnackbar(translatedTitle, { messageKey, variables }, 'info', {
       position: 'top end',
     })
   }
@@ -42,7 +47,8 @@ export function useNotification() {
     title = 'common.warning',
     variables: Record<string, any> = {},
   ) {
-    snackbarStore.showSnackbar(title, { messageKey, variables }, 'warning', {
+    const translatedTitle = t(title)
+    snackbarStore.showSnackbar(translatedTitle, { messageKey, variables }, 'warning', {
       position: 'top end',
     })
   }

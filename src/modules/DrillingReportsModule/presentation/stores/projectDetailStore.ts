@@ -283,7 +283,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
 
         case 'personnel':
 
-          const personnelResponse = await DrillingReportApiService.getEmployees({ project_id: projectId })
+          const personnelResponse = await DrillingReportApiService.getProjectPersonnel(projectId, { active: true })
 
           data = Array.isArray(personnelResponse?.data)
             ? personnelResponse.data

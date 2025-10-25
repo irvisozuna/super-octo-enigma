@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue'
+import * as yup from 'yup'
 import { type CreateEquipmentDto, type UpdateEquipmentDto, useEquipmentStore } from '../stores/equipmentStore'
+import {
+  equipmentUpdateValidationSchema,
+  equipmentValidationSchema,
+  validateEquipmentData,
+} from '../schemas'
+import { EQUIPMENT_TYPES } from '../../shared/constants/EquipmentConstants'
 import { useAppManager } from '@/composables/useAppManager'
+import { useNotification } from '@/helpers/notificationHelper'
+import { useErrorTranslation } from '@/helpers/errorTranslationHelper'
 
 // Props
 interface Props {
@@ -25,6 +34,8 @@ const emit = defineEmits<{
 // Composables
 const { closeDialog } = useAppManager()
 const equipmentStore = useEquipmentStore()
+const { showSuccess, showError } = useNotification()
+const { translateError } = useErrorTranslation()
 
 // Form ref
 const formRef = ref()
@@ -50,21 +61,43 @@ const formData = reactive<CreateEquipmentDto>({
 // Specifications array for UI
 const specifications = ref<Array<{ key: string; value: string }>>([])
 
-// Type options
-const typeOptions = [
-  { title: 'Equipo de perforación', value: 'drill_rig' },
-  { title: 'Perforadora de núcleo', value: 'core_drill' },
-  { title: 'Perforadora rotatoria', value: 'rotary_drill' },
-  { title: 'Bomba', value: 'pump' },
-  { title: 'Compresor', value: 'compressor' },
-  { title: 'Generador', value: 'generator' },
-  { title: 'Vehículo', value: 'vehicle' },
-  { title: 'Otro', value: 'other' },
-]
+// Type options (imported from constants)
+const typeOptions = EQUIPMENT_TYPES
 
-// Validation rules
+// Helper function to create Vuetify rules from Yup schema
+const createVuetifyRule = (yupSchema: any) => {
+  return (value: any) => {
+    try {
+      yupSchema.validateSync(value)
+
+      return true
+    }
+    catch (error) {
+      if (error instanceof yup.ValidationError)
+        return error.message
+
+      return 'Error de validación'
+    }
+  }
+}
+
+// Validation rules for Vuetify (generated from Yup schema)
 const rules = {
-  required: (v: any) => !!v || 'Este campo es requerido',
+  required: (v: any) => {
+    if (!v)
+      return 'Este campo es requerido'
+    if (typeof v === 'string' && v.trim() === '')
+      return 'Este campo no puede estar vacío'
+
+    return true
+  },
+  equipmentCode: createVuetifyRule(equipmentValidationSchema.fields.equipment_code),
+  equipmentName: createVuetifyRule(equipmentValidationSchema.fields.equipment_name),
+  equipmentType: createVuetifyRule(equipmentValidationSchema.fields.equipment_type),
+  serialNumber: createVuetifyRule(equipmentValidationSchema.fields.serial_number),
+  yearManufactured: createVuetifyRule(equipmentValidationSchema.fields.year_manufactured),
+  serviceIntervalHours: createVuetifyRule(equipmentValidationSchema.fields.service_interval_hours),
+  initialOperatingHours: createVuetifyRule(equipmentValidationSchema.fields.initial_operating_hours),
 }
 
 // Watch equipment prop for editing
@@ -123,29 +156,68 @@ const handleSubmit = async () => {
     // Build specifications object
     formData.specifications = getSpecificationsObject()
 
+    // Validate with Yup using helper function
+    const validationResult = await validateEquipmentData(formData, props.isEditing)
+
+    if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.errors)
+
+      // You could show these errors to the user
+      return
+    }
+
+    const validatedData = validationResult.data
+
     if (props.isEditing) {
       // For editing, only send updatable fields
       const updateData: UpdateEquipmentDto = {
-        equipment_name: formData.equipment_name,
-        manufacturer: formData.manufacturer,
-        model: formData.model,
-        specifications: formData.specifications,
-        service_interval_hours: formData.service_interval_hours,
+        equipment_name: validatedData.equipment_name,
+        manufacturer: validatedData.manufacturer,
+        model: validatedData.model,
+        specifications: validatedData.specifications,
+        service_interval_hours: validatedData.service_interval_hours,
       }
 
       await equipmentStore.updateEquipment(props.equipment.id, updateData)
+      showSuccess('DrillingReportsModule.equipment.updated_successfully', 'DrillingReportsModule.equipment.equipment_updated')
     }
     else {
       // For creating, send all fields
-      await equipmentStore.createEquipment(formData)
+      await equipmentStore.createEquipment(validatedData)
+      showSuccess('DrillingReportsModule.equipment.created_successfully', 'DrillingReportsModule.equipment.equipment_created')
     }
 
     emit('submit')
     if (props.showCloseButton)
       closeDialog()
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error saving equipment:', error)
+
+    // Extract specific error message from backend
+    const errorMessage = 'DrillingReportsModule.equipment.save_error'
+    const errorTitle = 'DrillingReportsModule.equipment.equipment_error'
+
+    if (error?.response?.data?.error?.message) {
+      // Show the specific backend error message from the error object (translated)
+      const translatedMessage = translateError(error.response.data.error.message, 'equipment')
+
+      showError(translatedMessage, 'DrillingReportsModule.equipment.equipment_error')
+    }
+    else if (error?.response?.data?.message) {
+      // Show the specific backend error message (legacy format, translated)
+      const translatedMessage = translateError(error.response.data.message, 'equipment')
+
+      showError(translatedMessage, 'DrillingReportsModule.equipment.equipment_error')
+    }
+    else if (error?.message) {
+      // Show generic error message if no specific backend message
+      showError(error.message, 'DrillingReportsModule.equipment.equipment_error')
+    }
+    else {
+      // Fallback to translated error message
+      showError(errorMessage, errorTitle)
+    }
   }
   finally {
     loading.value = false
@@ -202,7 +274,7 @@ onMounted(() => {
             <VTextField
               v-model="formData.equipment_code"
               label="Código del Equipo *"
-              :rules="[rules.required]"
+              :rules="[rules.equipmentCode]"
               :disabled="isEditing"
               required
               prepend-inner-icon="tabler-barcode"
@@ -217,7 +289,7 @@ onMounted(() => {
             <VTextField
               v-model="formData.equipment_name"
               label="Nombre del Equipo *"
-              :rules="[rules.required]"
+              :rules="[rules.equipmentName]"
               required
               prepend-inner-icon="tabler-tool"
             />
@@ -232,8 +304,10 @@ onMounted(() => {
               v-model="formData.equipment_type"
               :items="typeOptions"
               label="Tipo de Equipo *"
-              :rules="[rules.required]"
+              :rules="[rules.equipmentType]"
               required
+              item-title="label"
+              item-value="value"
               prepend-inner-icon="tabler-category"
             />
           </VCol>
@@ -269,7 +343,9 @@ onMounted(() => {
           >
             <VTextField
               v-model="formData.serial_number"
-              label="Número de Serie"
+              label="Número de Serie *"
+              :rules="[rules.serialNumber]"
+              required
               prepend-inner-icon="tabler-hash"
             />
           </VCol>
@@ -281,10 +357,12 @@ onMounted(() => {
           >
             <VTextField
               v-model.number="formData.year_manufactured"
-              label="Año de Fabricación"
+              label="Año de Fabricación *"
               type="number"
               :min="1900"
               :max="new Date().getFullYear() + 1"
+              :rules="[rules.yearManufactured]"
+              required
               prepend-inner-icon="tabler-calendar"
             />
           </VCol>
@@ -309,10 +387,12 @@ onMounted(() => {
           >
             <VTextField
               v-model.number="formData.service_interval_hours"
-              label="Intervalo de Servicio (horas)"
+              label="Intervalo de Servicio (horas) *"
               type="number"
               step="50"
               min="0"
+              :rules="[rules.serviceIntervalHours]"
+              required
               prepend-inner-icon="tabler-clock-hour-4"
               suffix="hrs"
             />
@@ -326,10 +406,12 @@ onMounted(() => {
           >
             <VTextField
               v-model.number="formData.initial_operating_hours"
-              label="Horas de Operación Iniciales"
+              label="Horas de Operación Iniciales *"
               type="number"
               step="0.1"
               min="0"
+              :rules="[rules.initialOperatingHours]"
+              required
               prepend-inner-icon="tabler-hourglass"
               suffix="hrs"
             />
