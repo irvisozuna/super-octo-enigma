@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { useNotification } from '@/helpers/notificationHelper'
+import { useNotificationDirect } from '@/helpers/notificationHelper'
 import { rawApi } from '@/services/api'
 import { db } from '@/services/indexedDbService'
 import { echo } from '@/services/websocketService'
@@ -109,7 +109,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     // Métodos auxiliares
     // ==========
     async function handleApiError(err: any, defaultKey: string) {
-      const { showError } = useNotification()
+      const { showError } = useNotificationDirect()
 
       if (err instanceof Error && ((err as any).status === 422 || (err as any).status === 400) && (err as any).errors) {
         const validationErrors = Object.values((err as any).errors).flat().join('\n')
@@ -234,7 +234,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
           total.value = localData.length
 
           // Indicar que estamos en modo offline
-          const { showError } = useNotification()
+          const { showError } = useNotificationDirect()
 
           showError('crud.offlineMode', '', {
             message: 'Trabajando en modo offline. Los datos podrían no estar actualizados.',
@@ -380,7 +380,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       loading.value = true
       error.value = null
 
-      const { showSuccess, showError } = useNotification()
+      const { showSuccess, showError } = useNotificationDirect()
 
       try {
         if (!navigator.onLine) {
@@ -469,7 +469,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       loading.value = true
       error.value = null
 
-      const { showSuccess, showError } = useNotification()
+      const { showSuccess, showError } = useNotificationDirect()
 
       try {
         if (!navigator.onLine) {
@@ -534,7 +534,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       loading.value = true
       error.value = null
 
-      const { showSuccess, showError } = useNotification()
+      const { showSuccess, showError } = useNotificationDirect()
 
       try {
         if (!navigator.onLine) {
@@ -595,7 +595,7 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
       loading.value = true
       error.value = null
 
-      const { showSuccess, showError } = useNotification()
+      const { showSuccess, showError } = useNotificationDirect()
 
       try {
         if (!navigator.onLine) {
