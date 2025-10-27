@@ -2,41 +2,54 @@
  * Documents Module Menu Configuration
  */
 
-import type { MenuItem } from '@/@layouts/types'
+import type { VerticalNavItems } from '@layouts/types'
+import { createValidatedMenu } from '@/utils/menuValidator'
 
-export const documentsMenuItems: MenuItem[] = [
+const documentsMenu: VerticalNavItems = [
   {
-    title: 'Documents',
+    title: 'Documentos',
     icon: { icon: 'tabler-file-text' },
-    to: { name: 'documents-list' },
+    action: 'read',
+    subject: 'Document',
     children: [
       {
-        title: 'All Documents',
+        title: 'Todos los Documentos',
         icon: { icon: 'tabler-file-text' },
-        to: { name: 'documents-list' },
+        to: 'documents-list',
+        action: 'read',
+        subject: 'Document',
       },
       {
-        title: 'Create Document',
+        title: 'Crear Documento',
         icon: { icon: 'tabler-plus' },
-        to: { name: 'documents-create' },
+        to: 'documents-create',
+        action: 'upload',
+        subject: 'Document',
       },
       {
-        title: 'Bulk Upload',
+        title: 'Carga Masiva',
         icon: { icon: 'tabler-upload' },
-        to: { name: 'documents-bulk-upload' },
+        to: 'documents-bulk-upload',
+        action: 'upload',
+        subject: 'Document',
       },
       {
-        title: 'Templates',
+        title: 'Plantillas',
         icon: { icon: 'tabler-template' },
-        to: { name: 'documents-templates' },
+        to: 'documents-templates',
+        action: 'read',
+        subject: 'Document',
       },
       {
-        title: 'Statistics',
+        title: 'Estadísticas',
         icon: { icon: 'tabler-chart-bar' },
-        to: { name: 'documents-statistics' },
+        to: 'documents-statistics',
+        action: 'read',
+        subject: 'Document',
       },
     ],
   },
 ]
 
-export default documentsMenuItems
+// Validar menú en desarrollo
+export default createValidatedMenu(documentsMenu, 'DocumentsModule')

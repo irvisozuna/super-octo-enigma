@@ -13,7 +13,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Documents',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -24,7 +24,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Create Document',
       requiresAuth: true,
       action: 'create',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -35,7 +35,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Document Detail',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -46,7 +46,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Edit Document',
       requiresAuth: true,
       action: 'update',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -57,7 +57,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Document Versions',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -68,7 +68,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Share Document',
       requiresAuth: true,
       action: 'share',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -79,7 +79,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Document Access Logs',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -90,7 +90,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Document Statistics',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -101,7 +101,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Document Templates',
       requiresAuth: true,
       action: 'read',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
   {
@@ -112,7 +112,7 @@ const documentRoutes: RouteRecordRaw[] = [
       title: 'Bulk Upload Documents',
       requiresAuth: true,
       action: 'create',
-      subject: 'documents',
+      subject: 'Document',
     },
   },
 

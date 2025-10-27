@@ -2,50 +2,121 @@
  * Drilling Reports Menu Configuration
  */
 
-export default [
+import type { VerticalNavItems } from '@layouts/types'
+import { createValidatedMenu } from '@/utils/menuValidator'
+
+const drillingReportsMenu: VerticalNavItems = [
+  // {
+  //   title: 'Reportes de Perforación',
+  //   icon: { icon: 'tabler-checkup-list' },
+  //   action: 'read',
+  //   subject: 'DrillingReport',
+  //   children: [
+  //     {
+  //       title: 'Lista de Reportes',
+  //       icon: { icon: 'tabler-list-details' },
+  //       to: 'DrillingReportsList',
+  //       action: 'read',
+  //       subject: 'DrillingReport',
+  //     },
+  //     {
+  //       title: 'Nuevo Reporte',
+  //       icon: { icon: 'tabler-plus' },
+  //       to: 'DrillingReportsCreate',
+  //       action: 'create',
+  //       subject: 'DrillingReport',
+  //     },
+  //   ],
+  // },
   {
-    title: 'Reportes de Perforación',
-    icon: { icon: 'tabler-checkup-list' },
-    to: { name: 'DrillingReportsList' },
-    permissions: ['drilling.reports.view'],
+    title: 'Proyectos',
+    icon: { icon: 'tabler-folder' },
+    action: 'read',
+    subject: 'Project',
     children: [
       {
-        title: 'Lista de Reportes',
-        icon: { icon: 'tabler-list-details' },
-        to: { name: 'DrillingReportsList' },
-        permissions: ['drilling.reports.view'],
+        title: 'Lista de Proyectos',
+        icon: { icon: 'tabler-list' },
+        to: 'drilling-projects',
+        action: 'read',
+        subject: 'Project',
       },
       {
-        title: 'Nuevo Reporte',
+        title: 'Nuevo Proyecto',
         icon: { icon: 'tabler-plus' },
-        to: { name: 'DrillingReportsCreate' },
-        permissions: ['drilling.reports.create'],
+        to: 'drilling-projects-create',
+        action: 'create',
+        subject: 'Project',
       },
     ],
   },
   {
-    title: 'Proyectos',
-    icon: { icon: 'tabler-folder' },
-    to: { name: 'drilling-projects' },
-    permissions: ['drilling.projects.view'],
+    title: 'Pozos',
+    icon: { icon: 'tabler-trowel' },
+    action: 'read',
+    subject: 'Well',
+    children: [
+      {
+        title: 'Lista de Pozos',
+        icon: { icon: 'tabler-list' },
+        to: 'drilling-wells',
+        action: 'read',
+        subject: 'Well',
+      },
+      {
+        title: 'Nuevo Pozo',
+        icon: { icon: 'tabler-plus' },
+        to: 'drilling-wells-create',
+        action: 'create',
+        subject: 'Well',
+      },
+    ],
   },
-
-  // {
-  //   title: 'Pozos',
-  //   icon: { icon: 'tabler-trowel' },
-  //   to: { name: 'drilling-wells' },
-  //   permissions: ['drilling.wells.view'],
-  // },
   {
     title: 'Herramientas',
     icon: { icon: 'tabler-gavel' },
-    to: { name: 'drilling-tools' },
-    permissions: ['drilling.tools.view'],
+    action: 'read',
+    subject: 'Tool',
+    children: [
+      {
+        title: 'Lista de Herramientas',
+        icon: { icon: 'tabler-list' },
+        to: 'drilling-tools',
+        action: 'read',
+        subject: 'Tool',
+      },
+      {
+        title: 'Nueva Herramienta',
+        icon: { icon: 'tabler-plus' },
+        to: 'drilling-tools-create',
+        action: 'create',
+        subject: 'Tool',
+      },
+    ],
   },
   {
     title: 'Equipos',
     icon: { icon: 'tabler-backhoe' },
-    to: { name: 'drilling-equipment' },
-    permissions: ['drilling.equipment.view'],
+    action: 'read',
+    subject: 'Equipment',
+    children: [
+      {
+        title: 'Lista de Equipos',
+        icon: { icon: 'tabler-list' },
+        to: 'drilling-equipment',
+        action: 'read',
+        subject: 'Equipment',
+      },
+      {
+        title: 'Nuevo Equipo',
+        icon: { icon: 'tabler-plus' },
+        to: 'drilling-equipment-create',
+        action: 'create',
+        subject: 'Equipment',
+      },
+    ],
   },
 ]
+
+// Validar menú en desarrollo
+export default createValidatedMenu(drillingReportsMenu, 'DrillingReportsModule')

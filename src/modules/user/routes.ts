@@ -12,7 +12,16 @@ const userRoutes: RouteRecordRaw[] = [
     component: userComponent,
     meta: {
       action: 'read',
-      subject: 'users',
+      subject: 'User',
+    },
+  },
+  {
+    path: '/users/create',
+    name: 'UsersCreate',
+    component: userAddComponent,
+    meta: {
+      action: 'create',
+      subject: 'User',
     },
   },
   {
@@ -21,7 +30,34 @@ const userRoutes: RouteRecordRaw[] = [
     component: userViewComponent,
     meta: {
       action: 'read',
-      subject: 'users',
+      subject: 'User',
+    },
+  },
+  {
+    path: '/users/:id/edit',
+    name: 'UserEdit',
+    component: userEditComponent,
+    meta: {
+      action: 'update',
+      subject: 'User',
+    },
+  },
+  {
+    path: '/user-roles',
+    name: 'UserRolesList',
+    component: () => import('./views/UserRolesList.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'UserRoles',
+    },
+  },
+  {
+    path: '/user-permissions',
+    name: 'UserPermissionsList',
+    component: () => import('./views/UserPermissionsList.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'UserPermissions',
     },
   },
 ]
