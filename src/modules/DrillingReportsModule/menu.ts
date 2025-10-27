@@ -99,7 +99,7 @@ const drillingReportsMenu: VerticalNavItems = [
     title: 'Equipos',
     icon: { icon: 'tabler-backhoe' },
     action: 'read',
-    subject: 'Equipment',
+    subject: 'Tool',
     children: [
       {
         title: 'Lista de Equipos',
