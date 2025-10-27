@@ -10,21 +10,21 @@ const clientMenu: VerticalNavItems = [
     title: 'Clientes',
     icon: { icon: 'tabler-users' },
     action: 'read',
-    subject: 'clients',
+    subject: 'Client',
     children: [
       {
         title: 'Lista de Clientes',
         icon: { icon: 'tabler-list' },
         to: 'clients-list',
         action: 'read',
-        subject: 'clients',
+        subject: 'Client',
       },
       {
         title: 'Nuevo Cliente',
         icon: { icon: 'tabler-user-plus' },
         to: 'clients-create',
         action: 'create',
-        subject: 'clients',
+        subject: 'Client',
       },
 
       // TODO: Agregar vista de estadísticas
@@ -33,7 +33,7 @@ const clientMenu: VerticalNavItems = [
       //   icon: { icon: 'tabler-chart-bar' },
       //   to: 'clients-statistics',
       //   action: 'read',
-      //   subject: 'clients',
+      //   subject: 'Client',
       // },
     ],
   },

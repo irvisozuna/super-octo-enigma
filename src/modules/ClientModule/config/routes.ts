@@ -14,7 +14,7 @@ const clientRoutes: RouteRecordRaw[] = [
       title: 'Clientes',
       requiresAuth: true,
       action: 'read',
-      subject: 'clients',
+      subject: 'Client',
     },
   },
   {
@@ -26,7 +26,7 @@ const clientRoutes: RouteRecordRaw[] = [
       title: 'Crear Cliente',
       requiresAuth: true,
       action: 'create',
-      subject: 'clients',
+      subject: 'Client',
     },
   },
   {
@@ -38,7 +38,7 @@ const clientRoutes: RouteRecordRaw[] = [
       title: 'Detalle del Cliente',
       requiresAuth: true,
       action: 'read',
-      subject: 'clients',
+      subject: 'Client',
     },
   },
   {
@@ -50,7 +50,7 @@ const clientRoutes: RouteRecordRaw[] = [
       title: 'Editar Cliente',
       requiresAuth: true,
       action: 'update',
-      subject: 'clients',
+      subject: 'Client',
     },
   },
 ]

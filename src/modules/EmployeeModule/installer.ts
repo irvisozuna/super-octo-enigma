@@ -81,26 +81,26 @@ export class EmployeeModuleInstaller {
     // Add CASL abilities for module permissions
     const abilities = [
       // Employee general
-      { action: 'read', subject: 'employees' },
+      { action: 'read', subject: 'Employee' },
 
       // View permissions
-      { action: 'view', subject: 'employees' },
+      { action: 'view', subject: 'Employee' },
       { action: 'view', subject: 'employee-detail' },
 
       // CRUD permissions
-      { action: 'create', subject: 'employees' },
-      { action: 'update', subject: 'employees' },
-      { action: 'delete', subject: 'employees' },
+      { action: 'create', subject: 'Employee' },
+      { action: 'update', subject: 'Employee' },
+      { action: 'delete', subject: 'Employee' },
 
       // Status management
-      { action: 'suspend', subject: 'employees' },
-      { action: 'reactivate', subject: 'employees' },
-      { action: 'terminate', subject: 'employees' },
+      { action: 'suspend', subject: 'Employee' },
+      { action: 'reactivate', subject: 'Employee' },
+      { action: 'terminate', subject: 'Employee' },
 
       // Special permissions
       { action: 'view', subject: 'employee-salaries' },
       { action: 'update', subject: 'employee-salaries' },
-      { action: 'export', subject: 'employees' },
+      { action: 'export', subject: 'Employee' },
       { action: 'view', subject: 'employment-history' },
 
       // Skills & Certifications

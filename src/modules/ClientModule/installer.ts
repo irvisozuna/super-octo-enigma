@@ -81,27 +81,27 @@ export class ClientModuleInstaller {
     // Add CASL abilities for module permissions
     const abilities = [
       // Client general
-      { action: 'read', subject: 'clients' },
+      { action: 'read', subject: 'Client' },
 
       // View permissions
-      { action: 'view', subject: 'clients' },
+      { action: 'view', subject: 'Client' },
       { action: 'view', subject: 'client-detail' },
 
       // CRUD permissions
-      { action: 'create', subject: 'clients' },
-      { action: 'update', subject: 'clients' },
-      { action: 'delete', subject: 'clients' },
+      { action: 'create', subject: 'Client' },
+      { action: 'update', subject: 'Client' },
+      { action: 'delete', subject: 'Client' },
 
       // Status management
-      { action: 'activate', subject: 'clients' },
-      { action: 'suspend', subject: 'clients' },
-      { action: 'deactivate', subject: 'clients' },
-      { action: 'blacklist', subject: 'clients' },
+      { action: 'activate', subject: 'Client' },
+      { action: 'suspend', subject: 'Client' },
+      { action: 'deactivate', subject: 'Client' },
+      { action: 'blacklist', subject: 'Client' },
 
       // Special permissions
       { action: 'view', subject: 'client-credit-limit' },
       { action: 'update', subject: 'client-credit-limit' },
-      { action: 'export', subject: 'clients' },
+      { action: 'export', subject: 'Client' },
       { action: 'view', subject: 'client-status-history' },
 
       // Contact management
