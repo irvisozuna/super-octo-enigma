@@ -1,16 +1,16 @@
 export default [
-  {
-    title: 'Dashboards',
-    icon: { icon: 'tabler-smart-home' },
-    children: [
-      {
-        title: 'Welcome',
-        to: 'dashboards-default',
-        action: 'read',
-        subject: 'Profile',
-      },
-    ],
-  },
+  // {
+  //   title: 'Dashboards',
+  //   icon: { icon: 'tabler-smart-home' },
+  //   children: [
+  //     {
+  //       title: 'Welcome',
+  //       to: 'dashboards-default',
+  //       action: 'read',
+  //       subject: 'Profile',
+  //     },
+  //   ],
+  // },
   {
     title: 'Usuarios',
     icon: { icon: 'tabler-users' },
