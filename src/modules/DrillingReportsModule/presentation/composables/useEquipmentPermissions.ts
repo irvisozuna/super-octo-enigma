@@ -10,20 +10,20 @@ export const useEquipmentPermissions = () => {
   const { can } = useAbility()
 
   // View permissions
-  const canViewEquipment = computed(() => can('read', 'drilling-equipment'))
-  const canViewEquipmentDetail = computed(() => can('read', 'drilling-equipment-detail'))
+  const canViewEquipment = computed(() => can('read', 'Tool'))
+  const canViewEquipmentDetail = computed(() => can('read', 'Tool'))
 
   // CRUD permissions
-  const canCreateEquipment = computed(() => can('create', 'drilling-equipment'))
-  const canUpdateEquipment = computed(() => can('update', 'drilling-equipment'))
-  const canDeleteEquipment = computed(() => can('delete', 'drilling-equipment'))
+  const canCreateEquipment = computed(() => can('create', 'Tool'))
+  const canUpdateEquipment = computed(() => can('update', 'Tool'))
+  const canDeleteEquipment = computed(() => can('delete', 'Tool'))
 
   // Assignment permissions
-  const canAssignEquipment = computed(() => can('assign', 'drilling-equipment'))
-  const canUnassignEquipment = computed(() => can('unassign', 'drilling-equipment'))
+  const canAssignEquipment = computed(() => can('assign', 'Tool'))
+  const canUnassignEquipment = computed(() => can('unassign', 'Tool'))
 
   // Export permissions
-  const canExportEquipment = computed(() => can('export', 'drilling-equipment'))
+  const canExportEquipment = computed(() => can('export', 'Tool'))
 
   // Combined permissions
   const canManageEquipment = computed(() =>

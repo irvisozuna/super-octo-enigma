@@ -41,13 +41,6 @@ const drillingReportsMenu: VerticalNavItems = [
         action: 'read',
         subject: 'Project',
       },
-      {
-        title: 'Nuevo Proyecto',
-        icon: { icon: 'tabler-plus' },
-        to: 'drilling-projects-create',
-        action: 'create',
-        subject: 'Project',
-      },
     ],
   },
 
@@ -86,13 +79,6 @@ const drillingReportsMenu: VerticalNavItems = [
         action: 'read',
         subject: 'Tool',
       },
-      {
-        title: 'Nueva Herramienta',
-        icon: { icon: 'tabler-plus' },
-        to: 'drilling-tools-create',
-        action: 'create',
-        subject: 'Tool',
-      },
     ],
   },
   {
@@ -106,13 +92,6 @@ const drillingReportsMenu: VerticalNavItems = [
         icon: { icon: 'tabler-list' },
         to: 'drilling-equipment',
         action: 'read',
-        subject: 'Tool',
-      },
-      {
-        title: 'Nuevo Equipo',
-        icon: { icon: 'tabler-plus' },
-        to: 'drilling-equipment-create',
-        action: 'create',
         subject: 'Tool',
       },
     ],
