@@ -31,20 +31,6 @@ export default [
         action: 'create',
         subject: 'User',
       },
-      {
-        title: 'Roles de Usuario',
-        icon: { icon: 'tabler-shield' },
-        to: 'UserRolesList',
-        action: 'manage',
-        subject: 'UserRoles',
-      },
-      {
-        title: 'Permisos de Usuario',
-        icon: { icon: 'tabler-key' },
-        to: 'UserPermissionsList',
-        action: 'manage',
-        subject: 'UserPermissions',
-      },
     ],
   },
 ]

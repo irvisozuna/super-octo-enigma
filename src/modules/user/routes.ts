@@ -42,24 +42,6 @@ const userRoutes: RouteRecordRaw[] = [
       subject: 'User',
     },
   },
-  {
-    path: '/user-roles',
-    name: 'UserRolesList',
-    component: () => import('./views/UserRolesList.vue'),
-    meta: {
-      action: 'manage',
-      subject: 'UserRoles',
-    },
-  },
-  {
-    path: '/user-permissions',
-    name: 'UserPermissionsList',
-    component: () => import('./views/UserPermissionsList.vue'),
-    meta: {
-      action: 'manage',
-      subject: 'UserPermissions',
-    },
-  },
 ]
 
 export default userRoutes
