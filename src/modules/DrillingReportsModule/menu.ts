@@ -50,28 +50,29 @@ const drillingReportsMenu: VerticalNavItems = [
       },
     ],
   },
-  {
-    title: 'Pozos',
-    icon: { icon: 'tabler-trowel' },
-    action: 'read',
-    subject: 'Well',
-    children: [
-      {
-        title: 'Lista de Pozos',
-        icon: { icon: 'tabler-list' },
-        to: 'drilling-wells',
-        action: 'read',
-        subject: 'Well',
-      },
-      {
-        title: 'Nuevo Pozo',
-        icon: { icon: 'tabler-plus' },
-        to: 'drilling-wells-create',
-        action: 'create',
-        subject: 'Well',
-      },
-    ],
-  },
+
+  // {
+  //   title: 'Pozos',
+  //   icon: { icon: 'tabler-trowel' },
+  //   action: 'read',
+  //   subject: 'Well',
+  //   children: [
+  //     {
+  //       title: 'Lista de Pozos',
+  //       icon: { icon: 'tabler-list' },
+  //       to: 'drilling-wells',
+  //       action: 'read',
+  //       subject: 'Well',
+  //     },
+  //     {
+  //       title: 'Nuevo Pozo',
+  //       icon: { icon: 'tabler-plus' },
+  //       to: 'drilling-wells-create',
+  //       action: 'create',
+  //       subject: 'Well',
+  //     },
+  //   ],
+  // },
   {
     title: 'Herramientas',
     icon: { icon: 'tabler-gavel' },
@@ -105,14 +106,14 @@ const drillingReportsMenu: VerticalNavItems = [
         icon: { icon: 'tabler-list' },
         to: 'drilling-equipment',
         action: 'read',
-        subject: 'Equipment',
+        subject: 'Tool',
       },
       {
         title: 'Nuevo Equipo',
         icon: { icon: 'tabler-plus' },
         to: 'drilling-equipment-create',
         action: 'create',
-        subject: 'Equipment',
+        subject: 'Tool',
       },
     ],
   },
