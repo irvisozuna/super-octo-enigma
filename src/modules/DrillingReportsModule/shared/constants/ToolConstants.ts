@@ -149,6 +149,17 @@ export const TOOL_PERMISSIONS = {
   EXPORT: 'tools.export',
 }
 
+export const CORE_SIZES = [
+  { value: 'BQ', label: 'BQ', description: 'BQ Standard', diameterInches: 2.360 },
+  { value: 'NQ', label: 'NQ', description: 'NQ Standard', diameterInches: 2.980 },
+  { value: 'HQ', label: 'HQ', description: 'HQ Standard', diameterInches: 3.780 },
+  { value: 'PQ', label: 'PQ', description: 'PQ Standard', diameterInches: 4.827 },
+  { value: 'NQ3', label: 'NQ3', description: 'NQ Three-tube system', diameterInches: 2.980 },
+  { value: 'HQ3', label: 'HQ3', description: 'HQ Three-tube system', diameterInches: 3.780 },
+  { value: 'PQ3', label: 'PQ3', description: 'PQ Three-tube system', diameterInches: 4.827 },
+  { value: 'BQ3', label: 'BQ3', description: 'BQ Three-tube system', diameterInches: 2.360 },
+]
+
 export const TOOL_NOTIFICATIONS = {
   CREATED: 'tool_created',
   UPDATED: 'tool_updated',

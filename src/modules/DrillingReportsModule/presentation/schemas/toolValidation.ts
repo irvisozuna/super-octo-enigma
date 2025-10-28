@@ -1,4 +1,5 @@
 import * as yup from 'yup'
+import { CORE_SIZES } from '../../shared/constants/ToolConstants'
 
 /**
  * Schema de validación para el formulario de herramientas
@@ -67,6 +68,12 @@ export const toolValidationSchema = yup.object({
     .trim()
     .min(1, 'Este campo no puede estar vacío')
     .max(50, 'La matriz no puede exceder 50 caracteres'),
+  
+  core_size: yup
+    .string()
+    .optional()
+    .nullable()
+    .oneOf([...CORE_SIZES.map(c => c.value), null, ''], 'Tamaño de núcleo no válido'),
 })
 
 /**
@@ -135,6 +142,12 @@ export const toolUpdateValidationSchema = yup.object({
     .trim()
     .min(1, 'Este campo no puede estar vacío')
     .max(50, 'La matriz no puede exceder 50 caracteres'),
+  
+  core_size: yup
+    .string()
+    .optional()
+    .nullable()
+    .oneOf([...CORE_SIZES.map(c => c.value), null, ''], 'Tamaño de núcleo no válido'),
 })
 
 /**

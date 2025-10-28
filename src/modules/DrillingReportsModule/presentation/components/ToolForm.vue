@@ -3,9 +3,8 @@ import { computed, reactive, ref, watch } from 'vue'
 import * as yup from 'yup'
 import { useI18n } from 'vue-i18n'
 import { useToolsStore } from '../stores/toolsStore'
-import { TOOL_MATERIALS } from '../../shared/constants/ToolConstants'
+import { CORE_SIZES, TOOL_MATERIALS } from '../../shared/constants/ToolConstants'
 import {
-  toolUpdateValidationSchema,
   toolValidationSchema,
   validateToolData,
 } from '../schemas'
@@ -54,6 +53,7 @@ const formData = reactive({
   brand: '',
   diameter: null as number | null,
   matrix: '',
+  core_size: null as string | null,
 })
 
 // Tool type options - usando constantes y traducciones
@@ -61,6 +61,14 @@ const toolTypeOptions = computed(() =>
   TOOL_MATERIALS.map(tool => ({
     title: t(tool.translationKey),
     value: tool.value,
+  })),
+)
+
+// Core size options - con diámetros incluidos
+const coreSizeOptions = computed(() =>
+  CORE_SIZES.map(size => ({
+    title: `${size.label} - ${size.description} (${size.diameterInches}")`,
+    value: size.value,
   })),
 )
 
@@ -98,6 +106,7 @@ const rules = {
   brand: createVuetifyRule(toolValidationSchema.fields.brand),
   diameter: createVuetifyRule(toolValidationSchema.fields.diameter),
   matrix: createVuetifyRule(toolValidationSchema.fields.matrix),
+  coreSize: createVuetifyRule(toolValidationSchema.fields.core_size),
 }
 
 // Watch for tool changes - Mapear estructura del backend a formulario
@@ -125,6 +134,7 @@ watch(() => props.tool, newTool => {
       formData.brand = newTool.specifications.brand || ''
       formData.diameter = newTool.specifications.diameter || null
       formData.matrix = newTool.specifications.matrix || ''
+      formData.core_size = newTool.specifications.core_size || null
     }
   }
   else {
@@ -136,8 +146,18 @@ watch(() => props.tool, newTool => {
     formData.brand = ''
     formData.diameter = null
     formData.matrix = ''
+    formData.core_size = null
   }
 }, { immediate: true })
+
+// Watch for core size changes to auto-fill diameter
+watch(() => formData.core_size, newCoreSize => {
+  if (newCoreSize) {
+    const selectedSize = CORE_SIZES.find(s => s.value === newCoreSize)
+    if (selectedSize)
+      formData.diameter = selectedSize.diameterInches
+  }
+})
 
 // Methods
 const handleSubmit = async () => {
@@ -155,6 +175,7 @@ const handleSubmit = async () => {
       brand: formData.brand,
       diameter: Number(formData.diameter),
       matrix: formData.matrix,
+      core_size: formData.core_size,
     }
 
     // Validate with Yup using helper function
@@ -340,6 +361,23 @@ const handleCancel = () => {
               required
               prepend-inner-icon="tabler-diamond"
               placeholder="Ej: PDC, Tricone, etc."
+            />
+          </VCol>
+
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <VSelect
+              v-model="formData.core_size"
+              :items="coreSizeOptions"
+              :label="$t('DrillingReportsModule.tools.coreSize')"
+              :rules="[rules.coreSize]"
+              clearable
+              prepend-inner-icon="tabler-ruler-measure"
+              :placeholder="$t('DrillingReportsModule.tools.coreSizePlaceholder')"
+              :hint="$t('DrillingReportsModule.tools.coreSizeHint')"
+              persistent-hint
             />
           </VCol>
 
