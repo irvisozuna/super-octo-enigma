@@ -112,9 +112,11 @@ const loadEmployees = async () => {
 
 const handleSubmit = async () => {
   console.log('🔵 AssignPersonnelDialog.handleSubmit called')
+
   const { valid } = await form.value.validate()
   if (!valid) {
     console.log('❌ Form validation failed')
+
     return
   }
 
@@ -135,17 +137,6 @@ const handleSubmit = async () => {
   // Don't reset form here - let parent component handle success/error
 }
 
-// Method to be called from parent on success
-const onSuccess = () => {
-  resetForm()
-  localDialog.value = false
-}
-
-// Expose method for parent to call
-defineExpose({
-  onSuccess,
-})
-
 const resetForm = () => {
   formData.value = {
     employee_id: null,
@@ -158,10 +149,22 @@ const resetForm = () => {
   form.value?.reset()
 }
 
+// Method to be called from parent on success
+const onSuccess = () => {
+  resetForm()
+}
+
+// Expose method for parent to call
+defineExpose({
+  onSuccess,
+})
+
 watch(() => props.modelValue, newValue => {
   if (newValue) {
     loadEmployees()
     errorMessage.value = '' // Clear error when opening
+    // Reset form when opening (to clear previous data if dialog was closed without submitting)
+    resetForm()
   }
 })
 

@@ -171,6 +171,9 @@ const deleteCostDialog = ref(false)
 const costToDelete = ref<any>(null)
 const deletingCost = ref(false)
 
+// Referencia al diálogo de asignación de personal
+const assignPersonnelDialogRef = ref<any>(null)
+
 // ========== EVENT HANDLERS ==========
 
 /**
@@ -252,6 +255,17 @@ async function handleAssignPersonnel(data: any) {
     console.log('🔵 Starting personnel assignment with data:', data)
     await assignPersonnel(data)
     console.log('✅ Personnel assignment successful')
+
+    // Llamar al método onSuccess del diálogo para limpiar el formulario
+    if (assignPersonnelDialogRef.value?.onSuccess)
+      assignPersonnelDialogRef.value.onSuccess()
+
+    // Invalidar cache del proyecto para forzar recarga
+    detailStore.invalidateTabCache('project')
+
+    // Recargar datos del proyecto para sincronizar estado
+    await refreshProject()
+
     dialogs.assignPersonnel = false
     await refreshTab('overview')
     showSnackbar({
@@ -624,6 +638,25 @@ async function handleWellCreated(wellData: any) {
  */
 function handleViewAllPersonnel() {
   dialogs.personnelList = true
+}
+
+/**
+ * Manejar cuando se remueve el personal del proyecto
+ */
+async function handlePersonnelRemoved() {
+  // Invalidar cache del proyecto
+  detailStore.invalidateTabCache('project')
+
+  // Recargar datos del proyecto para sincronizar estado
+  await refreshProject()
+
+  // Refrescar el tab overview que muestra el personal
+  await refreshTab('overview')
+
+  showSnackbar({
+    message: 'Personal removido correctamente',
+    color: 'success',
+  })
 }
 
 /**
@@ -1063,6 +1096,7 @@ onMounted(() => {
 
     <!-- Diálogo de Asignación de Personal -->
     <AssignPersonnelDialogOrganism
+      ref="assignPersonnelDialogRef"
       v-model="dialogs.assignPersonnel"
       :project-id="projectId"
       :available-personnel="availablePersonnel"
@@ -1111,6 +1145,7 @@ onMounted(() => {
       v-model="dialogs.personnelList"
       :project-id="projectId"
       @assign-new="openAssignPersonnelDialog(project)"
+      @personnel-removed="handlePersonnelRemoved"
     />
 
     <!-- Diálogo de Confirmación de Eliminación de Costo -->

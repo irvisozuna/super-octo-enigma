@@ -4,11 +4,9 @@ import type { ComputedRef, Ref } from 'vue'
 
 interface PersonnelData {
   operator_day_id: string | null
-  helper1_day_id: string | null
-  helper2_day_id: string | null
+  helper_day_ids: string[]
   operator_night_id: string | null
-  helper1_night_id: string | null
-  helper2_night_id: string | null
+  helper_night_ids: string[]
   horometer_start_day: number | null
   horometer_start_night: number | null
   horometer_end_day: number | null
@@ -79,11 +77,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     shift: 'day',
     equipment_id: null,
     operator_day_id: null,
-    helper1_day_id: null,
-    helper2_day_id: null,
+    helper_day_ids: [],
     operator_night_id: null,
-    helper1_night_id: null,
-    helper2_night_id: null,
+    helper_night_ids: [],
     horometer_start_day: null,
     horometer_start_night: null,
     horometer_end_day: null,
@@ -205,11 +201,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       shift: 'day',
       equipment_id: null,
       operator_day_id: null,
-      helper1_day_id: null,
-      helper2_day_id: null,
+      helper_day_ids: [],
       operator_night_id: null,
-      helper1_night_id: null,
-      helper2_night_id: null,
+      helper_night_ids: [],
       horometer_start_day: null,
       horometer_start_night: null,
       horometer_end_day: null,

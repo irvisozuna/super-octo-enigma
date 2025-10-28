@@ -49,6 +49,11 @@ const selectedProject = ref(null)
 const deleting = ref(false)
 const exporting = ref(false)
 
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false
+  selectedProject.value = null
+}
+
 // Table configuration
 const headers = computed(() => [
   { title: t('DrillingReportsModule.projects.projectName'), key: 'project_name', sortable: true },
@@ -364,7 +369,7 @@ onMounted(() => {
       title="Eliminar Proyecto"
       confirmation-word="ELIMINAR"
       @confirm="confirmDeleteProject"
-      @cancel="showDeleteDialog = false"
+      @close="closeDeleteDialog"
     >
       <template #default>
         <div v-if="selectedProject">

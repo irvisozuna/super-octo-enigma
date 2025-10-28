@@ -425,7 +425,7 @@ onMounted(() => {
                 color="primary"
                 :loading="loading"
               >
-                {{ t('common.save') }}
+                {{ t('EmployeeModule.common.save') }}
               </VBtn>
             </div>
           </VCol>

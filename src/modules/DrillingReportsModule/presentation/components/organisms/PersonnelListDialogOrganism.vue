@@ -10,6 +10,7 @@ interface Props {
 interface Emits {
   (e: 'update:modelValue', value: boolean): void
   (e: 'assign-new'): void
+  (e: 'personnel-removed'): void
 }
 
 const props = defineProps<Props>()
@@ -66,6 +67,7 @@ const handleRemove = async () => {
     await projectsStore.removePersonnelFromProject(props.projectId, personnelToRemove.value.employee_id)
     showConfirmDialog.value = false
     personnelToRemove.value = null
+    emit('personnel-removed') // Emit event to parent to refresh data
   }
   catch (error) {
     console.error('Error removing personnel:', error)

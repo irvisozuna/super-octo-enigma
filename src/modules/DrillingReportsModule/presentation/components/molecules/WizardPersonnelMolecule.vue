@@ -21,115 +21,79 @@ const showNightShift = computed(() => wizardStore.showNightShift)
 // Filtered employee options for each field
 const dayOperatorOptions = computed(() => props.employeeOptions)
 
-const dayHelper1Options = computed(() => {
+const dayHelpersOptions = computed(() => {
   const selectedOperator = formData.value.operator_day_id
-  const selectedHelper2 = formData.value.helper2_day_id
-  
-  return props.employeeOptions.filter(employee => 
-    employee.value !== selectedOperator && 
-    employee.value !== selectedHelper2
-  )
-})
 
-const dayHelper2Options = computed(() => {
-  const selectedOperator = formData.value.operator_day_id
-  const selectedHelper1 = formData.value.helper1_day_id
-  
-  return props.employeeOptions.filter(employee => 
-    employee.value !== selectedOperator && 
-    employee.value !== selectedHelper1
+  return props.employeeOptions.filter(employee =>
+    employee.value !== selectedOperator,
   )
 })
 
 const nightOperatorOptions = computed(() => props.employeeOptions)
 
-const nightHelper1Options = computed(() => {
+const nightHelpersOptions = computed(() => {
   const selectedOperator = formData.value.operator_night_id
-  const selectedHelper2 = formData.value.helper2_night_id
-  
-  return props.employeeOptions.filter(employee => 
-    employee.value !== selectedOperator && 
-    employee.value !== selectedHelper2
-  )
-})
 
-const nightHelper2Options = computed(() => {
-  const selectedOperator = formData.value.operator_night_id
-  const selectedHelper1 = formData.value.helper1_night_id
-  
-  return props.employeeOptions.filter(employee => 
-    employee.value !== selectedOperator && 
-    employee.value !== selectedHelper1
+  return props.employeeOptions.filter(employee =>
+    employee.value !== selectedOperator,
   )
 })
 
 // Validation for step completion
 const isPersonnelStepValid = computed(() => {
-  if (!showDayShift.value && !showNightShift.value) return false
-  
+  if (!showDayShift.value && !showNightShift.value)
+    return false
+
   let isValid = true
-  
+
   // Day shift validation
   if (showDayShift.value) {
-    if (!formData.value.operator_day_id) isValid = false
-    if (!formData.value.horometer_start_day) isValid = false
-    if (!formData.value.horometer_end_day) isValid = false
-    
+    if (!formData.value.operator_day_id)
+      isValid = false
+    if (!formData.value.horometer_start_day)
+      isValid = false
+    if (!formData.value.horometer_end_day)
+      isValid = false
+
     // Validate horometer logic
-    if (formData.value.horometer_start_day && formData.value.horometer_end_day) {
-      if (formData.value.horometer_start_day >= formData.value.horometer_end_day) {
-        isValid = false
-      }
-    }
+    if (formData.value.horometer_start_day && formData.value.horometer_end_day && formData.value.horometer_start_day >= formData.value.horometer_end_day)
+      isValid = false
   }
-  
+
   // Night shift validation
   if (showNightShift.value) {
-    if (!formData.value.operator_night_id) isValid = false
-    if (!formData.value.horometer_start_night) isValid = false
-    if (!formData.value.horometer_end_night) isValid = false
-    
+    if (!formData.value.operator_night_id)
+      isValid = false
+    if (!formData.value.horometer_start_night)
+      isValid = false
+    if (!formData.value.horometer_end_night)
+      isValid = false
+
     // Validate horometer logic
-    if (formData.value.horometer_start_night && formData.value.horometer_end_night) {
-      if (formData.value.horometer_start_night >= formData.value.horometer_end_night) {
-        isValid = false
-      }
-    }
+    if (formData.value.horometer_start_night && formData.value.horometer_end_night && formData.value.horometer_start_night >= formData.value.horometer_end_night)
+      isValid = false
   }
-  
+
   return isValid
 })
 
 // Handlers
 const updateField = (field: string, value: any) => {
   wizardStore.updateFormData({ [field]: value })
-  
+
   // Clear helpers when operator changes
   if (field === 'operator_day_id') {
-    if (formData.value.helper1_day_id === value) {
-      wizardStore.updateFormData({ helper1_day_id: null })
-    }
-    if (formData.value.helper2_day_id === value) {
-      wizardStore.updateFormData({ helper2_day_id: null })
-    }
+    // Remove the selected operator from helpers if they were selected
+    const updatedHelpers = formData.value.helper_day_ids.filter(id => id !== value)
+
+    wizardStore.updateFormData({ helper_day_ids: updatedHelpers })
   }
-  
+
   if (field === 'operator_night_id') {
-    if (formData.value.helper1_night_id === value) {
-      wizardStore.updateFormData({ helper1_night_id: null })
-    }
-    if (formData.value.helper2_night_id === value) {
-      wizardStore.updateFormData({ helper2_night_id: null })
-    }
-  }
-  
-  // Clear helper2 when helper1 changes
-  if (field === 'helper1_day_id' && formData.value.helper2_day_id === value) {
-    wizardStore.updateFormData({ helper2_day_id: null })
-  }
-  
-  if (field === 'helper1_night_id' && formData.value.helper2_night_id === value) {
-    wizardStore.updateFormData({ helper2_night_id: null })
+    // Remove the selected operator from helpers if they were selected
+    const updatedHelpers = formData.value.helper_night_ids.filter(id => id !== value)
+
+    wizardStore.updateFormData({ helper_night_ids: updatedHelpers })
   }
 }
 
@@ -139,7 +103,7 @@ const calculateHorometer = () => {
 
 // Expose validation state to parent
 defineExpose({
-  isPersonnelStepValid
+  isPersonnelStepValid,
 })
 </script>
 
@@ -191,25 +155,19 @@ defineExpose({
                 prepend-inner-icon="tabler-user"
                 @update:model-value="(v) => updateField('operator_day_id', v)"
               />
-              <VSelect
-                :model-value="formData.helper1_day_id"
-                label="Ayudante 1"
-                :items="dayHelper1Options"
+              <VAutocomplete
+                :model-value="formData.helper_day_ids"
+                label="Ayudantes"
+                :items="dayHelpersOptions"
                 :loading="loadingEmployees"
-                class="mb-3"
-                prepend-inner-icon="tabler-user"
+                multiple
+                chips
+                closable-chips
                 clearable
-                @update:model-value="(v) => updateField('helper1_day_id', v)"
-              />
-              <VSelect
-                :model-value="formData.helper2_day_id"
-                label="Ayudante 2"
-                :items="dayHelper2Options"
-                :loading="loadingEmployees"
                 class="mb-3"
-                prepend-inner-icon="tabler-user"
-                clearable
-                @update:model-value="(v) => updateField('helper2_day_id', v)"
+                prepend-inner-icon="tabler-users"
+                placeholder="Selecciona uno o más ayudantes..."
+                @update:model-value="(v) => updateField('helper_day_ids', v)"
               />
               <VTextField
                 :model-value="formData.horometer_start_day"
@@ -219,12 +177,12 @@ defineExpose({
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
                 :rules="showDayShift ? [
-                  rules.required, 
+                  rules.required,
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_end_day) return true
                     return v < formData.horometer_end_day || 'El horómetro inicio debe ser menor al horómetro fin'
-                  }
+                  },
                 ] : []"
                 class="mb-3"
                 @update:model-value="(v) => updateField('horometer_start_day', Number(v))"
@@ -238,12 +196,12 @@ defineExpose({
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
                 :rules="showDayShift ? [
-                  rules.required, 
+                  rules.required,
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_start_day) return true
                     return v > formData.horometer_start_day || 'El horómetro fin debe ser mayor al horómetro inicio'
-                  }
+                  },
                 ] : []"
                 @update:model-value="(v) => updateField('horometer_end_day', Number(v))"
                 @blur="calculateHorometer"
@@ -274,25 +232,19 @@ defineExpose({
                 prepend-inner-icon="tabler-user"
                 @update:model-value="(v) => updateField('operator_night_id', v)"
               />
-              <VSelect
-                :model-value="formData.helper1_night_id"
-                label="Ayudante 1"
-                :items="nightHelper1Options"
+              <VAutocomplete
+                :model-value="formData.helper_night_ids"
+                label="Ayudantes"
+                :items="nightHelpersOptions"
                 :loading="loadingEmployees"
-                class="mb-3"
-                prepend-inner-icon="tabler-user"
+                multiple
+                chips
+                closable-chips
                 clearable
-                @update:model-value="(v) => updateField('helper1_night_id', v)"
-              />
-              <VSelect
-                :model-value="formData.helper2_night_id"
-                label="Ayudante 2"
-                :items="nightHelper2Options"
-                :loading="loadingEmployees"
                 class="mb-3"
-                prepend-inner-icon="tabler-user"
-                clearable
-                @update:model-value="(v) => updateField('helper2_night_id', v)"
+                prepend-inner-icon="tabler-users"
+                placeholder="Selecciona uno o más ayudantes..."
+                @update:model-value="(v) => updateField('helper_night_ids', v)"
               />
               <VTextField
                 :model-value="formData.horometer_start_night"
@@ -302,12 +254,12 @@ defineExpose({
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
                 :rules="showNightShift ? [
-                  rules.required, 
+                  rules.required,
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_end_night) return true
                     return v < formData.horometer_end_night || 'El horómetro inicio debe ser menor al horómetro fin'
-                  }
+                  },
                 ] : []"
                 class="mb-3"
                 @update:model-value="(v) => updateField('horometer_start_night', Number(v))"
@@ -321,12 +273,12 @@ defineExpose({
                 prepend-inner-icon="tabler-clock-hour-4"
                 suffix="hrs"
                 :rules="showNightShift ? [
-                  rules.required, 
+                  rules.required,
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_start_night) return true
                     return v > formData.horometer_start_night || 'El horómetro fin debe ser mayor al horómetro inicio'
-                  }
+                  },
                 ] : []"
                 @update:model-value="(v) => updateField('horometer_end_night', Number(v))"
                 @blur="calculateHorometer"
