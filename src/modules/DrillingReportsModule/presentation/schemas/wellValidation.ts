@@ -65,7 +65,7 @@ export const wellValidationSchema = yup.object({
   drilling_type: yup
     .string()
     .nullable()
-    .oneOf(['rotary', 'percussion', 'directional', 'horizontal', 'other'], 'Tipo de perforación no válido'),
+    .oneOf(['exploration', 'production', 'injection', 'monitoring', 'rotary', 'percussion', 'directional', 'horizontal', 'other'], 'Tipo de perforación no válido'),
 
   spud_date: yup
     .string()
