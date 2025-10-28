@@ -324,7 +324,7 @@ const handleCancel = () => {
               max="1000"
               required
               prepend-inner-icon="tabler-circle"
-              suffix="mm"
+              suffix="inches"
               placeholder="Ej: 12.5"
             />
           </VCol>
