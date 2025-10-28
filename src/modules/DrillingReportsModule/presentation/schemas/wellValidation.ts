@@ -97,13 +97,6 @@ export const wellValidationSchema = yup.object({
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/
 
       return dateRegex.test(value)
-    })
-    .test('after-spud', 'La fecha esperada de fin debe ser posterior a la fecha de inicio', function (value) {
-      const { spud_date } = this.parent
-      if (!value || !spud_date)
-        return true
-
-      return new Date(value) > new Date(spud_date)
     }),
 
   notes: yup
