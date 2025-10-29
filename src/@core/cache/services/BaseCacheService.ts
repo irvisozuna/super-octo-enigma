@@ -3,8 +3,8 @@
  * Implementa lógica común de cache para todos los módulos
  */
 
-import { BaseIndexedDBService } from './BaseIndexedDBService'
-import { CachePriority, SyncStatus, type CacheModuleConfig, type BaseCacheData } from '../types/cache.types'
+import { type BaseCacheData, type CacheModuleConfig, CachePriority, SyncStatus } from '../types/cache.types'
+import type { BaseIndexedDBService } from './BaseIndexedDBService'
 
 export abstract class BaseCacheService<TEntity = any> {
   protected indexedDB: BaseIndexedDBService
@@ -20,7 +20,7 @@ export abstract class BaseCacheService<TEntity = any> {
 
   constructor(
     indexedDB: BaseIndexedDBService,
-    config: CacheModuleConfig
+    config: CacheModuleConfig,
   ) {
     this.indexedDB = indexedDB
     this.config = config
@@ -30,7 +30,7 @@ export abstract class BaseCacheService<TEntity = any> {
       pendingChanges: 0,
       conflicts: 0,
       cacheSize: 0,
-      efficiency: 0
+      efficiency: 0,
     }
   }
 
@@ -93,16 +93,15 @@ export abstract class BaseCacheService<TEntity = any> {
    * Guardar datos en cache
    */
   async set<T>(key: string, data: T, priority: CachePriority = CachePriority.MEDIUM): Promise<void> {
-    if (!this.config.enabled || !this.state.isEnabled) {
+    if (!this.config.enabled || !this.state.isEnabled)
       return
-    }
 
     try {
       const storeName = this.getStoreNameByKey(key)
       const transformedData = this.transformDataForCache(data, key)
-      
+
       let cacheData: any
-      
+
       if (this.isListKey(key)) {
         // Para listas, crear un objeto con id específico
         cacheData = {
@@ -110,15 +109,16 @@ export abstract class BaseCacheService<TEntity = any> {
           data: transformedData,
           cached_at: new Date().toISOString(),
           version: Date.now(),
-          sync_status: SyncStatus.SYNCED
+          sync_status: SyncStatus.SYNCED,
         }
-      } else {
+      }
+      else {
         // Para objetos individuales, mantener la estructura original
         cacheData = {
           ...transformedData,
           cached_at: new Date().toISOString(),
           version: Date.now(),
-          sync_status: SyncStatus.SYNCED
+          sync_status: SyncStatus.SYNCED,
         }
       }
 
@@ -126,7 +126,8 @@ export abstract class BaseCacheService<TEntity = any> {
       await this.updateCacheState()
 
       console.log(`💾 Datos cacheados: ${key}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error guardando en cache:', error)
       throw error
     }
@@ -136,34 +137,34 @@ export abstract class BaseCacheService<TEntity = any> {
    * Obtener datos del cache
    */
   async get<T>(key: string): Promise<T | null> {
-    if (!this.config.enabled || !this.state.isEnabled) {
+    if (!this.config.enabled || !this.state.isEnabled)
       return null
-    }
 
     try {
       const storeName = this.getStoreNameByKey(key)
       const data = await this.indexedDB.get<any>(storeName, key)
 
-      if (!data) {
+      if (!data)
         return null
-      }
 
       // Verificar si el cache es válido (TTL)
       if (!this.isCacheValid(data.cached_at, this.getConfigByKey(key).ttl)) {
         await this.delete(key)
+
         return null
       }
 
       console.log(`📖 Datos obtenidos del cache: ${key}`)
-      
+
       // Si es una lista, devolver solo los datos
-      if (this.isListKey(key) && data.data) {
+      if (this.isListKey(key) && data.data)
         return this.transformDataFromCache(data.data, key) as T
-      }
-      
+
       return this.transformDataFromCache(data, key) as T
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error obteniendo del cache:', error)
+
       return null
     }
   }
@@ -174,10 +175,12 @@ export abstract class BaseCacheService<TEntity = any> {
   async delete(key: string): Promise<void> {
     try {
       const storeName = this.getStoreNameByKey(key)
+
       await this.indexedDB.delete(storeName, key)
       await this.updateCacheState()
       console.log(`🗑️ Datos eliminados del cache: ${key}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error eliminando del cache:', error)
       throw error
     }
@@ -188,12 +191,13 @@ export abstract class BaseCacheService<TEntity = any> {
    */
   async clear(): Promise<void> {
     try {
-      for (const storeName of Object.keys(this.config.stores)) {
+      for (const storeName of Object.keys(this.config.stores))
         await this.indexedDB.clear(storeName)
-      }
+
       await this.updateCacheState()
       console.log('🧹 Cache limpiado completamente')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error limpiando cache:', error)
       throw error
     }
@@ -211,18 +215,21 @@ export abstract class BaseCacheService<TEntity = any> {
    */
   async cleanupExpired(): Promise<number> {
     let totalDeleted = 0
-    
+
     for (const [storeName, config] of Object.entries(this.config.stores)) {
       try {
         const deleted = await this.indexedDB.cleanupExpired(storeName, config.ttl)
+
         totalDeleted += deleted
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Error limpiando ${storeName}:`, error)
       }
     }
 
     await this.updateCacheState()
     console.log(`🧹 Limpiados ${totalDeleted} elementos expirados`)
+
     return totalDeleted
   }
 
@@ -242,7 +249,7 @@ export abstract class BaseCacheService<TEntity = any> {
     const now = new Date()
     const cached = new Date(cachedAt)
     const diffMinutes = (now.getTime() - cached.getTime()) / (1000 * 60)
-    
+
     return diffMinutes <= ttlMinutes
   }
 
@@ -253,10 +260,11 @@ export abstract class BaseCacheService<TEntity = any> {
     try {
       const stats = await this.getStats()
       const totalItems = Object.values(stats).reduce((sum, count) => sum + count, 0)
-      
+
       this.state.cacheSize = totalItems
       this.state.efficiency = totalItems > 0 ? (totalItems / this.getMaxCacheSize()) * 100 : 0
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error actualizando estado del cache:', error)
     }
   }

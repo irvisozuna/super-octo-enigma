@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { useTheme } from 'vuetify'
-import { useConfigStore } from '@core/stores/config'
-import { cookieRef, namespaceConfig } from '@layouts/stores/config'
 import { useStorage } from '@vueuse/core'
 import type { CompanyConfigEntity } from '../../domain/entities/CompanyConfigEntity'
 import { CompanyConfigApiService } from '../../infrastructure/api/CompanyConfigApiService'
 import { LoadCompanyConfigUseCase } from '../../application/usecases/LoadCompanyConfigUseCase'
 import { SaveCompanyConfigUseCase } from '../../application/usecases/SaveCompanyConfigUseCase'
+import { cookieRef, namespaceConfig } from '@layouts/stores/config'
+import { useConfigStore } from '@core/stores/config'
 
 interface CompanyConfigState {
   config: CompanyConfigEntity | null
@@ -66,7 +66,8 @@ export const useCompanyConfigStore = defineStore('companyConfig', {
      * Save company configuration
      */
     async saveConfig() {
-      if (!this.config) return
+      if (!this.config)
+        return
 
       this.saving = true
       this.error = null
@@ -100,7 +101,8 @@ export const useCompanyConfigStore = defineStore('companyConfig', {
      * Update configuration locally (without saving)
      */
     updateConfig(updates: Partial<CompanyConfigEntity>) {
-      if (!this.config) return
+      if (!this.config)
+        return
 
       this.config = {
         ...this.config,
@@ -168,17 +170,17 @@ export const useCompanyConfigStore = defineStore('companyConfig', {
       useStorage<string | null>(namespaceConfig('initial-loader-color'), null).value = config.primaryColor
 
       // Apply logos if available
-      if (config.favicon) {
+      if (config.favicon)
         this.updateFavicon(config.favicon)
-      }
     },
 
     /**
      * Update favicon
      */
     updateFavicon(faviconUrl: string) {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
+      const link = document.querySelector('link[rel*=\'icon\']') as HTMLLinkElement
         || document.createElement('link')
+
       link.type = 'image/x-icon'
       link.rel = 'shortcut icon'
       link.href = faviconUrl
@@ -202,6 +204,7 @@ export const useCompanyConfigStore = defineStore('companyConfig', {
     async forceRefresh(companyId: string) {
       // Clear cache first
       const repository = new CompanyConfigApiService()
+
       await repository.clearCache(companyId)
 
       // Reload with force refresh

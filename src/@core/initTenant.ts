@@ -26,9 +26,8 @@ export const preloadTenantConfiguration = async (): Promise<void> => {
       tenantData = await fetchTenantFromAPI(host, tenant)
 
       // Guardar en localStorage para próxima carga
-      if (tenantData) {
+      if (tenantData)
         saveTenantToLocalStorage(tenantData)
-      }
     }
 
     // 4. Si tenemos tenant data, aplicar configuración a cookies/localStorage
@@ -39,6 +38,7 @@ export const preloadTenantConfiguration = async (): Promise<void> => {
   }
   catch (error) {
     console.error('⚠️ Failed to pre-load tenant configuration:', error)
+
     // Continuar de todas formas - la app usará valores por defecto
   }
 }
@@ -49,7 +49,9 @@ export const preloadTenantConfiguration = async (): Promise<void> => {
 export const initTenant = async (): Promise<void> => {
   try {
     console.log('⏳ Initializing tenant stores and cache...')
+
     const { tenantBootstrapService } = await import('@/services/tenantBootstrapService')
+
     await tenantBootstrapService.bootstrap()
     console.log('✅ Tenant stores initialized successfully')
   }
@@ -89,6 +91,7 @@ function loadTenantFromLocalStorage(): TenantData | null {
 
       if (elapsed > maxAge) {
         console.log('⏰ Tenant cache expired')
+
         return null
       }
     }
@@ -97,6 +100,7 @@ function loadTenantFromLocalStorage(): TenantData | null {
   }
   catch (error) {
     console.error('Failed to load tenant from cache:', error)
+
     return null
   }
 }
@@ -137,6 +141,7 @@ async function fetchTenantFromAPI(host: string, tenant?: string): Promise<Tenant
   }
   catch (error) {
     console.error('Failed to fetch tenant from API:', error)
+
     return null
   }
 }
@@ -157,6 +162,7 @@ async function applyConfigurationToStorage(tenantData: TenantData): Promise<void
   // Función auxiliar para setear cookie
   const setCookie = (name: string, value: string) => {
     const expires = new Date()
+
     expires.setFullYear(expires.getFullYear() + 1) // 1 año
     document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
   }
@@ -190,9 +196,11 @@ async function applyConfigurationToStorage(tenantData: TenantData): Promise<void
   // Actualizar favicon
   if (config.favicon) {
     const existingFavicons = document.querySelectorAll('link[rel*="icon"]')
+
     existingFavicons.forEach(link => link.remove())
 
     const link = document.createElement('link')
+
     link.rel = 'icon'
     link.href = config.favicon
     document.head.appendChild(link)

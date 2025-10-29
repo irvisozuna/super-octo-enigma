@@ -30,23 +30,25 @@ export class CompanyConfigCacheService {
       const cacheKey = `config_${companyId}`
       const cached = await this.db.configs.get(cacheKey)
 
-      if (!cached) {
+      if (!cached)
         return null
-      }
 
       // Verificar si el cache ha expirado
       const now = Date.now()
       if (now - cached.cachedAt > this.CACHE_TTL) {
         await this.clearCache(companyId)
+
         return null
       }
 
       // Eliminar campos de cache antes de retornar
       const { cacheKey: _, cachedAt: __, ...config } = cached
+
       return config
     }
     catch (error) {
       console.error('Error getting cached config:', error)
+
       return null
     }
   }
@@ -54,6 +56,7 @@ export class CompanyConfigCacheService {
   async saveCachedConfig(config: CompanyConfigEntity): Promise<void> {
     try {
       const cacheKey = `config_${config.companyId}`
+
       const cachedConfig: CachedConfig = {
         ...config,
         cacheKey,
@@ -70,6 +73,7 @@ export class CompanyConfigCacheService {
   async clearCache(companyId: string): Promise<void> {
     try {
       const cacheKey = `config_${companyId}`
+
       await this.db.configs.delete(cacheKey)
     }
     catch (error) {
@@ -89,7 +93,8 @@ export class CompanyConfigCacheService {
   async isCacheValid(companyId: string, serverVersion: number): Promise<boolean> {
     try {
       const cached = await this.getCachedConfig(companyId)
-      if (!cached) return false
+      if (!cached)
+        return false
 
       return cached.version === serverVersion
     }

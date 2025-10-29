@@ -21,9 +21,9 @@ export class TenantBootstrapService {
    * Lazy getter for tenant store (to avoid Pinia initialization issues)
    */
   private get tenantStore(): ReturnType<typeof useTenantStore> {
-    if (!this._tenantStore) {
+    if (!this._tenantStore)
       this._tenantStore = useTenantStore()
-    }
+
     return this._tenantStore
   }
 
@@ -168,12 +168,14 @@ export class TenantBootstrapService {
         if (cachedConfig) {
           const { useCompanyConfigStore } = await import('@/modules/CompanyConfigModule/presentation/stores/companyConfigStore')
           const companyConfigStore = useCompanyConfigStore()
+
           companyConfigStore.config = cachedConfig
           companyConfigStore.originalConfig = { ...cachedConfig }
           companyConfigStore.isDirty = false
         }
 
         this.tenantStore.setLoading(false)
+
         return
       }
 
@@ -276,11 +278,13 @@ export class TenantBootstrapService {
         // Guardar en cache para próximas cargas
         const { CompanyConfigCacheService } = await import('@/modules/CompanyConfigModule/infrastructure/cache/CompanyConfigCacheService')
         const cacheService = new CompanyConfigCacheService()
+
         await cacheService.saveCachedConfig(config)
 
         // Guardar en el store (sin aplicar, solo para que esté disponible)
         const { useCompanyConfigStore } = await import('@/modules/CompanyConfigModule/presentation/stores/companyConfigStore')
         const companyConfigStore = useCompanyConfigStore()
+
         companyConfigStore.config = config
         companyConfigStore.originalConfig = { ...config }
         companyConfigStore.isDirty = false
@@ -324,14 +328,12 @@ export class TenantBootstrapService {
     useStorage<string | null>(namespaceConfig('initial-loader-color'), null).value = config.primaryColor
 
     // Actualizar título de la app
-    if (config.appTitle) {
+    if (config.appTitle)
       document.title = config.appTitle
-    }
 
     // Actualizar favicon si existe
-    if (config.favicon) {
+    if (config.favicon)
       this.updateFavicon(config.favicon)
-    }
 
     console.log('✅ Bootstrap configuration applied (cookies + storage)')
   }

@@ -17,25 +17,25 @@ export class DocumentsIndexedDBService extends BaseIndexedDBService {
           { name: 'status', keyPath: 'status' },
           { name: 'category', keyPath: 'category' },
           { name: 'cached_at', keyPath: 'cached_at' },
-          { name: 'sync_status', keyPath: 'sync_status' }
-        ]
+          { name: 'sync_status', keyPath: 'sync_status' },
+        ],
       },
       categories: {
         name: 'categories',
         keyPath: 'id',
         indexes: [
           { name: 'name', keyPath: 'name' },
-          { name: 'cached_at', keyPath: 'cached_at' }
-        ]
+          { name: 'cached_at', keyPath: 'cached_at' },
+        ],
       },
       statistics: {
         name: 'statistics',
         keyPath: 'id',
         indexes: [
           { name: 'type', keyPath: 'type' },
-          { name: 'cached_at', keyPath: 'cached_at' }
-        ]
-      }
+          { name: 'cached_at', keyPath: 'cached_at' },
+        ],
+      },
     }
 
     super('DocumentsModuleCache', 1, stores)

@@ -32,16 +32,16 @@ export abstract class BaseIndexedDBService {
         resolve()
       }
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result
-        
+
         // Crear stores dinámicamente
         Object.values(this.stores).forEach(storeConfig => {
           if (!db.objectStoreNames.contains(storeConfig.name)) {
-            const store = db.createObjectStore(storeConfig.name, { 
-              keyPath: storeConfig.keyPath 
+            const store = db.createObjectStore(storeConfig.name, {
+              keyPath: storeConfig.keyPath,
             })
-            
+
             // Crear índices
             storeConfig.indexes.forEach(index => {
               store.createIndex(index.name, index.keyPath, { unique: index.unique || false })
@@ -53,11 +53,11 @@ export abstract class BaseIndexedDBService {
   }
 
   protected async getStore(storeName: string, mode: IDBTransactionMode = 'readonly'): Promise<IDBObjectStore> {
-    if (!this.db) {
+    if (!this.db)
       throw new Error('IndexedDB no está inicializado')
-    }
 
     const transaction = this.db.transaction([storeName], mode)
+
     return transaction.objectStore(storeName)
   }
 
@@ -135,11 +135,12 @@ export abstract class BaseIndexedDBService {
   // Método para obtener estadísticas
   async getStats(): Promise<Record<string, number>> {
     const stats: Record<string, number> = {}
-    
+
     for (const storeName of Object.keys(this.stores)) {
       try {
         stats[storeName] = await this.count(storeName)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Error obteniendo estadísticas para ${storeName}:`, error)
         stats[storeName] = 0
       }
@@ -157,19 +158,20 @@ export abstract class BaseIndexedDBService {
     return new Promise((resolve, reject) => {
       const request = store.openCursor()
 
-      request.onsuccess = (event) => {
+      request.onsuccess = event => {
         const cursor = (event.target as IDBRequest).result
-        
+
         if (cursor) {
           const data = cursor.value
-          
+
           if (data.cached_at && data.cached_at < cutoffTime) {
             cursor.delete()
             deletedCount++
           }
-          
+
           cursor.continue()
-        } else {
+        }
+        else {
           resolve(deletedCount)
         }
       }

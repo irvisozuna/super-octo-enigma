@@ -3,18 +3,17 @@
  * Extiende el composable base con funcionalidad específica
  */
 
-import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
+import { computed, ref } from 'vue'
 import { EmployeeCacheService } from '../services/EmployeeCacheService'
-import { ref, computed } from 'vue'
+import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
 
 // Instancia singleton del servicio de cache
 let cacheServiceInstance: EmployeeCacheService | null = null
 
 export function useEmployeeCache() {
   // Crear instancia singleton
-  if (!cacheServiceInstance) {
+  if (!cacheServiceInstance)
     cacheServiceInstance = new EmployeeCacheService()
-  }
 
   // Usar el composable base
   const baseCache = useBaseCache(cacheServiceInstance, 'EmployeeModule')
@@ -28,7 +27,8 @@ export function useEmployeeCache() {
     try {
       await cacheServiceInstance!.cacheEmployeesList(employees)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando lista de empleados:', error)
       throw error
     }
@@ -41,7 +41,8 @@ export function useEmployeeCache() {
     try {
       await cacheServiceInstance!.cacheEmployee(employee)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando empleado:', error)
       throw error
     }
@@ -53,8 +54,10 @@ export function useEmployeeCache() {
   async function getCachedEmployeesList(): Promise<any[] | null> {
     try {
       return await cacheServiceInstance!.get('employees_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo lista de empleados del cache:', error)
+
       return null
     }
   }
@@ -65,8 +68,10 @@ export function useEmployeeCache() {
   async function getCachedEmployee(employeeId: string): Promise<any | null> {
     try {
       return await cacheServiceInstance!.get(`employee_${employeeId}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo empleado del cache:', error)
+
       return null
     }
   }
@@ -78,7 +83,8 @@ export function useEmployeeCache() {
     try {
       await cacheServiceInstance!.cacheDepartments(departments)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando departamentos:', error)
       throw error
     }
@@ -90,8 +96,10 @@ export function useEmployeeCache() {
   async function getCachedDepartments(): Promise<any[] | null> {
     try {
       return await cacheServiceInstance!.get('departments_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo departamentos del cache:', error)
+
       return null
     }
   }
@@ -103,7 +111,8 @@ export function useEmployeeCache() {
     try {
       await cacheServiceInstance!.cacheEmployeeStats(stats)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando estadísticas de empleados:', error)
       throw error
     }
@@ -115,8 +124,10 @@ export function useEmployeeCache() {
   async function getCachedEmployeeStats(): Promise<any | null> {
     try {
       return await cacheServiceInstance!.get('employee_statistics')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo estadísticas del cache:', error)
+
       return null
     }
   }
@@ -128,7 +139,8 @@ export function useEmployeeCache() {
     try {
       await cacheServiceInstance!.init()
       console.log('✅ Cache de empleados inicializado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error inicializando cache de empleados:', error)
       throw error
     }
@@ -139,7 +151,7 @@ export function useEmployeeCache() {
   return {
     // Funcionalidad base del cache
     ...baseCache,
-    
+
     // Funcionalidad específica de empleados
     cacheEmployeesList,
     cacheEmployee,
@@ -149,6 +161,6 @@ export function useEmployeeCache() {
     getCachedDepartments,
     cacheEmployeeStats,
     getCachedEmployeeStats,
-    initializeEmployeeCache
+    initializeEmployeeCache,
   }
 }

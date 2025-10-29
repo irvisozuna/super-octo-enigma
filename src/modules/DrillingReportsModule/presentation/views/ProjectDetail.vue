@@ -45,6 +45,7 @@ import UnassignEquipmentDialogOrganism from '../components/organisms/equipment/U
 import AddCostDialogOrganism from '../components/organisms/cost/AddCostDialogOrganism.vue'
 import AssignWellDialogOrganism from '../components/organisms/wells/AssignWellDialogOrganism.vue'
 import WellDetailsDialogOrganism from '../components/organisms/WellDetailsDialogOrganism.vue'
+import DrillingReportPrintView from '../components/organisms/DrillingReportPrintView.vue'
 
 // Componentes adicionales existentes
 import WellInfoCardMolecule from '../components/molecules/WellInfoCardMolecule.vue'
@@ -170,6 +171,10 @@ const canEditProject = computed(() =>
 const deleteCostDialog = ref(false)
 const costToDelete = ref<any>(null)
 const deletingCost = ref(false)
+
+// Estado para el diálogo de vista detallada del reporte
+const showReportDetailDialog = ref(false)
+const selectedReportForDetail = ref<any>(null)
 
 // Referencia al diálogo de asignación de personal
 const assignPersonnelDialogRef = ref<any>(null)
@@ -714,12 +719,9 @@ async function handleDeleteWell() {
 function handleViewReport(report: any) {
   console.log('Ver reporte:', report)
 
-  // TODO: Implementar vista de detalles del reporte
-  showSnackbar({
-    title: 'Información',
-    message: 'La funcionalidad de vista de detalles estará disponible próximamente',
-    color: 'info',
-  })
+  // Abrir dialog con vista de impresión del reporte
+  showReportDetailDialog.value = true
+  selectedReportForDetail.value = report
 }
 
 /**
@@ -1190,6 +1192,27 @@ onMounted(() => {
       :error="reportError"
       @submit="handleCreateReportSubmit"
     />
+
+    <!-- Diálogo de Vista Detallada del Reporte -->
+    <VDialog
+      v-model="showReportDetailDialog"
+      max-width="95vw"
+      max-height="95vh"
+      scrollable
+      persistent
+    >
+      <VCard
+        class="report-dialog-card"
+        flat
+      >
+        <DrillingReportPrintView
+          v-if="selectedReportForDetail"
+          :report-id="selectedReportForDetail.id"
+          :show-actions="true"
+          @close="showReportDetailDialog = false"
+        />
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
@@ -1197,6 +1220,23 @@ onMounted(() => {
 .project-detail-view {
   overflow: auto;
   block-size: 100%;
+}
+
+.report-dialog-card {
+  overflow: hidden;
+  padding: 0;
+  block-size: 95vh;
+}
+
+.report-dialog-card :deep(.v-card__text) {
+  overflow: auto;
+  padding: 0;
+  block-size: 100%;
+}
+
+.report-dialog-card :deep(.v-card__title),
+.report-dialog-card :deep(.v-card__actions) {
+  display: none;
 }
 
 /* Estilos responsive para móvil */

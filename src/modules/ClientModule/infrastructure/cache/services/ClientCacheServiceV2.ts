@@ -3,15 +3,15 @@
  * Usa el sistema base reutilizable
  */
 
-import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
-import { ClientIndexedDBService } from './ClientIndexedDBService'
-import { CachePriority, SyncStatus, type CacheModuleConfig } from '@/@core/cache/types/cache.types'
 import type { ClientEntity } from '../../../domain/entities/ClientEntity'
+import { ClientIndexedDBService } from './ClientIndexedDBService'
+import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
+import { type CacheModuleConfig, CachePriority, SyncStatus } from '@/@core/cache/types/cache.types'
 
 export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
   constructor() {
     const indexedDB = new ClientIndexedDBService()
-    
+
     const config: CacheModuleConfig = {
       enabled: true,
       dbName: 'ClientModuleCache',
@@ -22,29 +22,29 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
           priority: CachePriority.HIGH,
           ttl: 5, // 5 minutos
           maxSize: 1000,
-          encrypted: false
+          encrypted: false,
         },
         contacts: {
           key: 'contacts',
           priority: CachePriority.MEDIUM,
           ttl: 15, // 15 minutos
           maxSize: 5000,
-          encrypted: false
+          encrypted: false,
         },
         statistics: {
           key: 'statistics',
           priority: CachePriority.LOW,
           ttl: 60, // 1 hora
           maxSize: 100,
-          encrypted: false
-        }
+          encrypted: false,
+        },
       },
       sync: {
         enabled: true,
         interval: 300000, // 5 minutos
         retryAttempts: 3,
-        conflictResolution: 'server'
-      }
+        conflictResolution: 'server',
+      },
     }
 
     super(indexedDB, config)
@@ -53,27 +53,26 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
   // ========== IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS ==========
 
   protected getStoreNameByKey(key: string): string {
-    if (key.includes('clients_list') || key.startsWith('client_')) {
+    if (key.includes('clients_list') || key.startsWith('client_'))
       return 'clients'
-    }
-    if (key.includes('contact')) {
+
+    if (key.includes('contact'))
       return 'contacts'
-    }
+
     return 'statistics'
   }
 
   protected getConfigByKey(key: string): { ttl: number; maxSize: number; encrypted: boolean } {
     const storeName = this.getStoreNameByKey(key)
     const config = this.config.stores[storeName]
-    
-    if (!config) {
+
+    if (!config)
       throw new Error(`Configuración no encontrada para la clave: ${key}`)
-    }
 
     return {
       ttl: config.ttl,
       maxSize: config.maxSize,
-      encrypted: config.encrypted
+      encrypted: config.encrypted,
     }
   }
 
@@ -82,10 +81,11 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
     if (key.includes('clients_list') && Array.isArray(data)) {
       return data.map(client => ({
         ...client,
+
         // Asegurar que los campos requeridos estén presentes
         client_code: client.client_code || client.id,
         status: client.status || 'active',
-        business_type: client.business_type || 'unknown'
+        business_type: client.business_type || 'unknown',
       }))
     }
 
@@ -97,10 +97,11 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
     if (key.includes('clients_list') && Array.isArray(data)) {
       return data.map(client => ({
         ...client,
+
         // Limpiar campos de cache si es necesario
         cached_at: undefined,
         version: undefined,
-        sync_status: undefined
+        sync_status: undefined,
       }))
     }
 
@@ -126,7 +127,7 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
       state: client.state,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: SyncStatus.SYNCED
+      sync_status: SyncStatus.SYNCED,
     }))
 
     await this.set('clients_list', cacheData, CachePriority.HIGH)
@@ -149,7 +150,7 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
       state: client.state,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: SyncStatus.SYNCED
+      sync_status: SyncStatus.SYNCED,
     }
 
     await this.set(`client_${client.id}`, cacheData, CachePriority.MEDIUM)
@@ -169,7 +170,7 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
       is_primary: contact.is_primary,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: SyncStatus.SYNCED
+      sync_status: SyncStatus.SYNCED,
     }))
 
     await this.set('contacts_list', cacheData, CachePriority.MEDIUM)
@@ -187,7 +188,7 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
       clients_by_industry: stats.clients_by_industry,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: SyncStatus.SYNCED
+      sync_status: SyncStatus.SYNCED,
     }
 
     await this.set('client_statistics', cacheData, CachePriority.LOW)
@@ -198,10 +199,10 @@ export class ClientCacheServiceV2 extends BaseCacheService<ClientEntity> {
    */
   async forceSync(): Promise<void> {
     console.log('🔄 Iniciando sincronización forzada de clientes...')
-    
+
     // Aquí implementarías la lógica específica de sincronización
     // Por ejemplo, llamar a la API y actualizar el cache
-    
+
     await this.updateCacheState()
     console.log('✅ Sincronización de clientes completada')
   }

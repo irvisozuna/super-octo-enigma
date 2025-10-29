@@ -74,11 +74,10 @@ const validateStep2 = async () => {
   if (!step2Form.value)
     return false
   const { valid } = await step2Form.value.validate()
-  
+
   // Also check personnel step validation
-  if (valid && step2Personnel.value) {
+  if (valid && step2Personnel.value)
     return step2Personnel.value.isPersonnelStepValid
-  }
 
   return valid
 }

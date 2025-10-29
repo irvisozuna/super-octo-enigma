@@ -762,7 +762,7 @@ onMounted(() => {
             cols="12"
             md="3"
           >
-          {{ client }}
+            {{ client }}
             <VTextField
               v-model.number="credit_limit"
               label="Límite de Crédito"

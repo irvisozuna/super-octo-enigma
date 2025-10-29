@@ -3,15 +3,15 @@
  * Extiende el servicio base con lógica específica de empleados
  */
 
-import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
-import { EmployeeIndexedDBService } from './EmployeeIndexedDBService'
-import { CachePriority, type CacheModuleConfig } from '@/@core/cache/types/cache.types'
 import type { EmployeeEntity } from '../../../domain/entities/EmployeeEntity'
+import { EmployeeIndexedDBService } from './EmployeeIndexedDBService'
+import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
+import { type CacheModuleConfig, CachePriority } from '@/@core/cache/types/cache.types'
 
 export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
   constructor() {
     const indexedDB = new EmployeeIndexedDBService()
-    
+
     const config: CacheModuleConfig = {
       enabled: true,
       dbName: 'EmployeeModuleCache',
@@ -22,29 +22,29 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
           priority: CachePriority.HIGH,
           ttl: 10, // 10 minutos
           maxSize: 2000,
-          encrypted: false
+          encrypted: false,
         },
         departments: {
           key: 'departments',
           priority: CachePriority.MEDIUM,
           ttl: 30, // 30 minutos
           maxSize: 100,
-          encrypted: false
+          encrypted: false,
         },
         statistics: {
           key: 'statistics',
           priority: CachePriority.LOW,
           ttl: 60, // 1 hora
           maxSize: 50,
-          encrypted: false
-        }
+          encrypted: false,
+        },
       },
       sync: {
         enabled: true,
         interval: 300000, // 5 minutos
         retryAttempts: 3,
-        conflictResolution: 'server'
-      }
+        conflictResolution: 'server',
+      },
     }
 
     super(indexedDB, config)
@@ -53,27 +53,26 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
   // ========== IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS ==========
 
   protected getStoreNameByKey(key: string): string {
-    if (key.includes('employees_list') || key.startsWith('employee_')) {
+    if (key.includes('employees_list') || key.startsWith('employee_'))
       return 'employees'
-    }
-    if (key.includes('department')) {
+
+    if (key.includes('department'))
       return 'departments'
-    }
+
     return 'statistics'
   }
 
   protected getConfigByKey(key: string): { ttl: number; maxSize: number; encrypted: boolean } {
     const storeName = this.getStoreNameByKey(key)
     const config = this.config.stores[storeName]
-    
-    if (!config) {
+
+    if (!config)
       throw new Error(`Configuración no encontrada para la clave: ${key}`)
-    }
 
     return {
       ttl: config.ttl,
       maxSize: config.maxSize,
-      encrypted: config.encrypted
+      encrypted: config.encrypted,
     }
   }
 
@@ -82,10 +81,11 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
     if (key.includes('employees_list') && Array.isArray(data)) {
       return data.map(employee => ({
         ...employee,
+
         // Asegurar que los campos requeridos estén presentes
         employee_code: employee.employee_code || employee.id,
         status: employee.status || 'active',
-        department: employee.department || 'unknown'
+        department: employee.department || 'unknown',
       }))
     }
 
@@ -97,10 +97,11 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
     if (key.includes('employees_list') && Array.isArray(data)) {
       return data.map(employee => ({
         ...employee,
+
         // Limpiar campos de cache si es necesario
         cached_at: undefined,
         version: undefined,
-        sync_status: undefined
+        sync_status: undefined,
       }))
     }
 
@@ -127,7 +128,7 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
       salary: employee.salary,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }))
 
     await this.set('employees_list', cacheData, CachePriority.HIGH)
@@ -151,7 +152,7 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
       salary: employee.salary,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }
 
     await this.set(`employee_${employee.id}`, cacheData, CachePriority.MEDIUM)
@@ -168,7 +169,7 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
       manager_id: dept.manager_id,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }))
 
     await this.set('departments_list', cacheData, CachePriority.MEDIUM)
@@ -186,7 +187,7 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
       average_salary: stats.average_salary,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }
 
     await this.set('employee_statistics', cacheData, CachePriority.LOW)
@@ -197,10 +198,10 @@ export class EmployeeCacheService extends BaseCacheService<EmployeeEntity> {
    */
   async forceSync(): Promise<void> {
     console.log('🔄 Iniciando sincronización forzada de empleados...')
-    
+
     // Aquí implementarías la lógica específica de sincronización
     // Por ejemplo, llamar a la API y actualizar el cache
-    
+
     await this.updateCacheState()
     console.log('✅ Sincronización de empleados completada')
   }

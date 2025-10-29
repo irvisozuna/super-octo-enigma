@@ -1,3 +1,135 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { BaseCacheComposable } from '../composables/useBaseCache'
+
+// Definir el componente para poder exportarlo
+defineOptions({
+  name: 'BaseCacheStatusIndicator',
+})
+
+const props = withDefaults(defineProps<Props>(), {
+  moduleName: 'Cache',
+  showDetailedInfo: true,
+  showActions: true,
+  variant: 'chip',
+})
+
+interface Props {
+  cacheComposable: BaseCacheComposable
+  moduleName?: string
+  showDetailedInfo?: boolean
+  showActions?: boolean
+  variant?: 'chip' | 'badge' | 'icon'
+  customStatusText?: string
+  customStatusColor?: string
+  customStatusIcon?: string
+}
+
+const { t } = useI18n()
+
+// Extraer propiedades del composable
+const {
+  isCacheAvailable,
+  hasPendingChanges,
+  hasConflicts,
+  formattedStats,
+  loading,
+} = props.cacheComposable
+
+// ========== ESTADO CALCULADO ==========
+
+const statusColor = computed(() => {
+  if (props.customStatusColor)
+    return props.customStatusColor
+
+  if (hasConflicts.value)
+    return 'error'
+  if (hasPendingChanges.value)
+    return 'warning'
+  if (!isCacheAvailable.value)
+    return 'secondary'
+
+  return 'success'
+})
+
+const statusIcon = computed(() => {
+  if (props.customStatusIcon)
+    return props.customStatusIcon
+
+  if (hasConflicts.value)
+    return 'tabler-alert-triangle'
+  if (hasPendingChanges.value)
+    return 'tabler-clock'
+  if (!isCacheAvailable.value)
+    return 'tabler-wifi-off'
+
+  return 'tabler-check'
+})
+
+const statusText = computed(() => {
+  if (props.customStatusText)
+    return props.customStatusText
+
+  if (hasConflicts.value)
+    return t('cache.status.conflicts')
+  if (hasPendingChanges.value)
+    return t('cache.status.pending')
+  if (!isCacheAvailable.value)
+    return t('cache.status.offline')
+
+  return t('cache.status.online')
+})
+
+const isSyncing = computed(() => loading.value)
+const isEnabled = computed(() => isCacheAvailable.value)
+
+const hasIssues = computed(() => {
+  return hasConflicts.value || hasPendingChanges.value || !isCacheAvailable.value
+})
+
+const detailedTooltip = computed(() => {
+  const stats = formattedStats.value
+
+  return `
+    ${t('cache.info.module')}: ${props.moduleName}
+    ${t('cache.info.status')}: ${stats.status}
+    ${t('cache.info.last_sync')}: ${stats.lastSync}
+    ${t('cache.info.cache_size')}: ${stats.cacheSize}
+    ${t('cache.info.efficiency')}: ${stats.efficiency}
+  `.trim()
+})
+
+// ========== MÉTODOS ==========
+
+async function handleForceSync() {
+  try {
+    await props.cacheComposable.forceSync()
+  }
+  catch (error) {
+    console.error('Error en sincronización forzada:', error)
+  }
+}
+
+async function handleClearCache() {
+  try {
+    await props.cacheComposable.clearCache()
+  }
+  catch (error) {
+    console.error('Error limpiando cache:', error)
+  }
+}
+
+async function handleToggleCache() {
+  try {
+    await props.cacheComposable.toggleCache(!isEnabled.value)
+  }
+  catch (error) {
+    console.error('Error alternando cache:', error)
+  }
+}
+</script>
+
 <template>
   <VChip
     :color="statusColor"
@@ -43,21 +175,30 @@
       </template>
 
       <VList>
-        <VListItem @click="handleForceSync" :disabled="isSyncing">
+        <VListItem
+          :disabled="isSyncing"
+          @click="handleForceSync"
+        >
           <template #prepend>
             <VIcon icon="tabler-refresh" />
           </template>
           <VListItemTitle>{{ $t('cache.actions.force_sync') }}</VListItemTitle>
         </VListItem>
 
-        <VListItem @click="handleClearCache" :disabled="isSyncing">
+        <VListItem
+          :disabled="isSyncing"
+          @click="handleClearCache"
+        >
           <template #prepend>
             <VIcon icon="tabler-trash" />
           </template>
           <VListItemTitle>{{ $t('cache.actions.clear_cache') }}</VListItemTitle>
         </VListItem>
 
-        <VListItem @click="handleToggleCache" :disabled="isSyncing">
+        <VListItem
+          :disabled="isSyncing"
+          @click="handleToggleCache"
+        >
           <template #prepend>
             <VIcon :icon="isEnabled ? 'tabler-toggle-right' : 'tabler-toggle-left'" />
           </template>
@@ -69,120 +210,6 @@
     </VMenu>
   </VChip>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { BaseCacheComposable } from '../composables/useBaseCache'
-
-// Definir el componente para poder exportarlo
-defineOptions({
-  name: 'BaseCacheStatusIndicator'
-})
-
-interface Props {
-  cacheComposable: BaseCacheComposable
-  moduleName?: string
-  showDetailedInfo?: boolean
-  showActions?: boolean
-  variant?: 'chip' | 'badge' | 'icon'
-  customStatusText?: string
-  customStatusColor?: string
-  customStatusIcon?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  moduleName: 'Cache',
-  showDetailedInfo: true,
-  showActions: true,
-  variant: 'chip'
-})
-
-const { t } = useI18n()
-
-// Extraer propiedades del composable
-const {
-  isCacheAvailable,
-  hasPendingChanges,
-  hasConflicts,
-  formattedStats,
-  loading
-} = props.cacheComposable
-
-// ========== ESTADO CALCULADO ==========
-
-const statusColor = computed(() => {
-  if (props.customStatusColor) return props.customStatusColor
-  
-  if (hasConflicts.value) return 'error'
-  if (hasPendingChanges.value) return 'warning'
-  if (!isCacheAvailable.value) return 'secondary'
-  return 'success'
-})
-
-const statusIcon = computed(() => {
-  if (props.customStatusIcon) return props.customStatusIcon
-  
-  if (hasConflicts.value) return 'tabler-alert-triangle'
-  if (hasPendingChanges.value) return 'tabler-clock'
-  if (!isCacheAvailable.value) return 'tabler-wifi-off'
-  return 'tabler-check'
-})
-
-const statusText = computed(() => {
-  if (props.customStatusText) return props.customStatusText
-  
-  if (hasConflicts.value) return t('cache.status.conflicts')
-  if (hasPendingChanges.value) return t('cache.status.pending')
-  if (!isCacheAvailable.value) return t('cache.status.offline')
-  return t('cache.status.online')
-})
-
-const isSyncing = computed(() => loading.value)
-const isEnabled = computed(() => isCacheAvailable.value)
-
-const hasIssues = computed(() => {
-  return hasConflicts.value || hasPendingChanges.value || !isCacheAvailable.value
-})
-
-const detailedTooltip = computed(() => {
-  const stats = formattedStats.value
-
-  return `
-    ${t('cache.info.module')}: ${props.moduleName}
-    ${t('cache.info.status')}: ${stats.status}
-    ${t('cache.info.last_sync')}: ${stats.lastSync}
-    ${t('cache.info.cache_size')}: ${stats.cacheSize}
-    ${t('cache.info.efficiency')}: ${stats.efficiency}
-  `.trim()
-})
-
-// ========== MÉTODOS ==========
-
-async function handleForceSync() {
-  try {
-    await props.cacheComposable.forceSync()
-  } catch (error) {
-    console.error('Error en sincronización forzada:', error)
-  }
-}
-
-async function handleClearCache() {
-  try {
-    await props.cacheComposable.clearCache()
-  } catch (error) {
-    console.error('Error limpiando cache:', error)
-  }
-}
-
-async function handleToggleCache() {
-  try {
-    await props.cacheComposable.toggleCache(!isEnabled.value)
-  } catch (error) {
-    console.error('Error alternando cache:', error)
-  }
-}
-</script>
 
 <style scoped>
 .cache-status-indicator {

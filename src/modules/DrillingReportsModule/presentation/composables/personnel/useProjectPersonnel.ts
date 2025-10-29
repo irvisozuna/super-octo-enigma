@@ -196,15 +196,17 @@ export function useProjectPersonnel(projectId?: string) {
   async function assignPersonnel(data: PersonnelAssignment) {
     console.log('🔵 useProjectPersonnel.assignPersonnel called with:', data)
     console.log('🔵 projectId:', projectId)
-    
+
     if (!projectId)
       throw new Error('Project ID is required')
 
     // Validar antes de asignar
     console.log('🔵 Validating assignment...')
+
     const errors = validateAssignment(data)
     if (errors.length > 0) {
       const errorMessage = errors.map(e => e.message).join(', ')
+
       console.error('❌ Validation errors:', errors)
       throw new Error(errorMessage)
     }
@@ -213,6 +215,7 @@ export function useProjectPersonnel(projectId?: string) {
     return withErrorHandling(
       async () => {
         console.log('🔵 Calling detailStore.assignPersonnelToProject...')
+
         // Usar el detailStore en lugar del projectsStore (mantiene arquitectura DDD)
         const result = await detailStore.assignPersonnelToProject(projectId, {
           employee_id: data.employee_id,
@@ -222,6 +225,7 @@ export function useProjectPersonnel(projectId?: string) {
           estimated_hours: data.expected_hours,
           notes: data.notes,
         })
+
         console.log('✅ detailStore.assignPersonnelToProject result:', result)
 
         // Recargar personal después de asignar

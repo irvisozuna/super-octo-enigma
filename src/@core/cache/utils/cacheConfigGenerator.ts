@@ -3,7 +3,7 @@
  * Facilita la creación de configuraciones específicas para cada módulo
  */
 
-import { CachePriority, type CacheModuleConfig } from '../types/cache.types'
+import type { type CacheModuleConfig, CachePriority } from '../types/cache.types'
 
 export interface ModuleCacheConfig {
   moduleName: string
@@ -42,11 +42,11 @@ export function generateCacheConfig(config: ModuleCacheConfig): CacheModuleConfi
           priority: storeConfig.priority,
           ttl: storeConfig.ttl,
           maxSize: storeConfig.maxSize,
-          encrypted: storeConfig.encrypted
-        }
-      ])
+          encrypted: storeConfig.encrypted,
+        },
+      ]),
     ),
-    sync: config.sync
+    sync: config.sync,
   }
 }
 
@@ -60,9 +60,9 @@ export const CACHE_PRESETS = {
       enabled: true,
       interval: 600000, // 10 minutos
       retryAttempts: 5,
-      conflictResolution: 'manual' as const
+      conflictResolution: 'manual' as const,
     },
-    defaultEncryption: true
+    defaultEncryption: true,
   },
 
   // Para módulos con datos frecuentemente actualizados (inventario, etc.)
@@ -71,9 +71,9 @@ export const CACHE_PRESETS = {
       enabled: true,
       interval: 300000, // 5 minutos
       retryAttempts: 3,
-      conflictResolution: 'server' as const
+      conflictResolution: 'server' as const,
     },
-    defaultEncryption: false
+    defaultEncryption: false,
   },
 
   // Para módulos con datos estáticos (catálogos, configuraciones, etc.)
@@ -82,10 +82,10 @@ export const CACHE_PRESETS = {
       enabled: true,
       interval: 1800000, // 30 minutos
       retryAttempts: 2,
-      conflictResolution: 'client' as const
+      conflictResolution: 'client' as const,
     },
-    defaultEncryption: false
-  }
+    defaultEncryption: false,
+  },
 }
 
 /**
@@ -96,14 +96,14 @@ export function createStoreConfig(
   priority: CachePriority,
   ttl: number,
   maxSize: number,
-  encrypted: boolean = false
+  encrypted: boolean = false,
 ) {
   return {
     key,
     priority,
     ttl,
     maxSize,
-    encrypted
+    encrypted,
   }
 }
 
@@ -113,15 +113,15 @@ export function createStoreConfig(
 export function generateModuleCacheConfig(
   moduleName: string,
   preset: keyof typeof CACHE_PRESETS,
-  customStores: Record<string, any>
+  customStores: Record<string, any>,
 ): ModuleCacheConfig {
   const presetConfig = CACHE_PRESETS[preset]
-  
+
   return {
     moduleName,
     dbName: `${moduleName}Cache`,
     dbVersion: 1,
     stores: customStores,
-    sync: presetConfig.sync
+    sync: presetConfig.sync,
   }
 }

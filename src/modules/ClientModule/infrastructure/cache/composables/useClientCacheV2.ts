@@ -3,19 +3,18 @@
  * Usa el sistema base reutilizable
  */
 
-import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
+import { computed, ref } from 'vue'
 import { ClientCacheServiceV2 } from '../services/ClientCacheServiceV2'
-import { ref, computed } from 'vue'
 import type { ClientEntity } from '../../../domain/entities/ClientEntity'
+import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
 
 // Instancia singleton del servicio de cache
 let cacheServiceInstance: ClientCacheServiceV2 | null = null
 
 export function useClientCacheV2() {
   // Crear instancia singleton
-  if (!cacheServiceInstance) {
+  if (!cacheServiceInstance)
     cacheServiceInstance = new ClientCacheServiceV2()
-  }
 
   // Usar el composable base
   const baseCache = useBaseCache(cacheServiceInstance, 'ClientModule')
@@ -29,7 +28,8 @@ export function useClientCacheV2() {
     try {
       await cacheServiceInstance!.cacheClientsList(clients)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando lista de clientes:', error)
       throw error
     }
@@ -42,7 +42,8 @@ export function useClientCacheV2() {
     try {
       await cacheServiceInstance!.cacheClient(client)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando cliente:', error)
       throw error
     }
@@ -54,8 +55,10 @@ export function useClientCacheV2() {
   async function getCachedClientsList(): Promise<ClientEntity[] | null> {
     try {
       return await cacheServiceInstance!.get('clients_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo lista de clientes del cache:', error)
+
       return null
     }
   }
@@ -66,8 +69,10 @@ export function useClientCacheV2() {
   async function getCachedClient(clientId: string): Promise<ClientEntity | null> {
     try {
       return await cacheServiceInstance!.get(`client_${clientId}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo cliente del cache:', error)
+
       return null
     }
   }
@@ -79,7 +84,8 @@ export function useClientCacheV2() {
     try {
       await cacheServiceInstance!.cacheClientContacts(contacts)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando contactos de clientes:', error)
       throw error
     }
@@ -91,8 +97,10 @@ export function useClientCacheV2() {
   async function getCachedClientContacts(): Promise<any[] | null> {
     try {
       return await cacheServiceInstance!.get('contacts_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo contactos del cache:', error)
+
       return null
     }
   }
@@ -104,7 +112,8 @@ export function useClientCacheV2() {
     try {
       await cacheServiceInstance!.cacheClientStats(stats)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando estadísticas de clientes:', error)
       throw error
     }
@@ -116,8 +125,10 @@ export function useClientCacheV2() {
   async function getCachedClientStats(): Promise<any | null> {
     try {
       return await cacheServiceInstance!.get('client_statistics')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo estadísticas del cache:', error)
+
       return null
     }
   }
@@ -129,7 +140,8 @@ export function useClientCacheV2() {
     try {
       await cacheServiceInstance!.init()
       console.log('✅ Cache de clientes inicializado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error inicializando cache de clientes:', error)
       throw error
     }
@@ -163,16 +175,23 @@ export function useClientCacheV2() {
   }): Promise<ClientEntity[]> {
     try {
       const clients = await getCachedClientsList()
-      if (!clients) return []
+      if (!clients)
+        return []
 
       return clients.filter(client => {
-        if (criteria.status && client.status !== criteria.status) return false
-        if (criteria.business_type && client.business_type !== criteria.business_type) return false
-        if (criteria.industry && client.industry !== criteria.industry) return false
+        if (criteria.status && client.status !== criteria.status)
+          return false
+        if (criteria.business_type && client.business_type !== criteria.business_type)
+          return false
+        if (criteria.industry && client.industry !== criteria.industry)
+          return false
+
         return true
       })
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error buscando clientes en cache:', error)
+
       return []
     }
   }
@@ -182,13 +201,14 @@ export function useClientCacheV2() {
    */
   const cacheStats = computed(() => {
     const state = baseCache.cacheState.value
+
     return {
       totalClients: state.cacheSize,
       efficiency: state.efficiency,
       lastSync: state.lastSync,
       hasPendingChanges: baseCache.hasPendingChanges.value,
       hasConflicts: baseCache.hasConflicts.value,
-      isOnline: baseCache.isCacheAvailable.value
+      isOnline: baseCache.isCacheAvailable.value,
     }
   })
 
@@ -197,7 +217,7 @@ export function useClientCacheV2() {
   return {
     // Funcionalidad base del cache
     ...baseCache,
-    
+
     // Funcionalidad específica de clientes
     cacheClientsList,
     cacheClient,
@@ -208,13 +228,13 @@ export function useClientCacheV2() {
     cacheClientStats,
     getCachedClientStats,
     initializeClientCache,
-    
+
     // Métodos de compatibilidad
     cacheClients,
     getCachedClients,
-    
+
     // Funcionalidad adicional
     searchCachedClients,
-    cacheStats
+    cacheStats,
   }
 }

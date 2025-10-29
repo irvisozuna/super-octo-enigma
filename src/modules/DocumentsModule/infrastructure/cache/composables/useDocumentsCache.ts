@@ -3,17 +3,16 @@
  * Extiende el composable base con funcionalidad específica
  */
 
-import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
 import { DocumentsCacheService } from '../services/DocumentsCacheService'
+import { useBaseCache } from '@/@core/cache/composables/useBaseCache'
 
 // Instancia singleton del servicio de cache
 let cacheServiceInstance: DocumentsCacheService | null = null
 
 export function useDocumentsCache() {
   // Crear instancia singleton
-  if (!cacheServiceInstance) {
+  if (!cacheServiceInstance)
     cacheServiceInstance = new DocumentsCacheService()
-  }
 
   // Usar el composable base
   const baseCache = useBaseCache(cacheServiceInstance, 'DocumentsModule')
@@ -27,7 +26,8 @@ export function useDocumentsCache() {
     try {
       await cacheServiceInstance!.cacheDocumentsList(documents)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando lista de documentos:', error)
       throw error
     }
@@ -40,7 +40,8 @@ export function useDocumentsCache() {
     try {
       await cacheServiceInstance!.cacheDocument(document)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando documento:', error)
       throw error
     }
@@ -52,8 +53,10 @@ export function useDocumentsCache() {
   async function getCachedDocumentsList(): Promise<any[] | null> {
     try {
       return await cacheServiceInstance!.get('documents_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo lista de documentos del cache:', error)
+
       return null
     }
   }
@@ -64,8 +67,10 @@ export function useDocumentsCache() {
   async function getCachedDocument(documentId: string): Promise<any | null> {
     try {
       return await cacheServiceInstance!.get(`document_${documentId}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo documento del cache:', error)
+
       return null
     }
   }
@@ -77,7 +82,8 @@ export function useDocumentsCache() {
     try {
       await cacheServiceInstance!.cacheDocumentCategories(categories)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando categorías de documentos:', error)
       throw error
     }
@@ -89,8 +95,10 @@ export function useDocumentsCache() {
   async function getCachedDocumentCategories(): Promise<any[] | null> {
     try {
       return await cacheServiceInstance!.get('categories_list')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo categorías del cache:', error)
+
       return null
     }
   }
@@ -102,7 +110,8 @@ export function useDocumentsCache() {
     try {
       await cacheServiceInstance!.cacheDocumentStats(stats)
       await baseCache.updateCacheState()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error cacheando estadísticas de documentos:', error)
       throw error
     }
@@ -114,8 +123,10 @@ export function useDocumentsCache() {
   async function getCachedDocumentStats(): Promise<any | null> {
     try {
       return await cacheServiceInstance!.get('document_statistics')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error obteniendo estadísticas del cache:', error)
+
       return null
     }
   }
@@ -127,7 +138,8 @@ export function useDocumentsCache() {
     try {
       await cacheServiceInstance!.init()
       console.log('✅ Cache de documentos inicializado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error inicializando cache de documentos:', error)
       throw error
     }
@@ -138,7 +150,7 @@ export function useDocumentsCache() {
   return {
     // Funcionalidad base del cache
     ...baseCache,
-    
+
     // Funcionalidad específica de documentos
     cacheDocumentsList,
     cacheDocument,
@@ -148,6 +160,6 @@ export function useDocumentsCache() {
     getCachedDocumentCategories,
     cacheDocumentStats,
     getCachedDocumentStats,
-    initializeDocumentsCache
+    initializeDocumentsCache,
   }
 }

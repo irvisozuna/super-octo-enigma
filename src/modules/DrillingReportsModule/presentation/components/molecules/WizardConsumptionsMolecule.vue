@@ -12,10 +12,9 @@ const rules = REPORT_VALIDATION_RULES
 
 // Computed
 const formData = computed(() => wizardStore.formData)
-const availableShiftOptions = computed(() => {
-  const options = wizardStore.availableShiftOptions
 
-  return options
+const availableShiftOptions = computed(() => {
+  return wizardStore.availableShiftOptions
 })
 
 // Options

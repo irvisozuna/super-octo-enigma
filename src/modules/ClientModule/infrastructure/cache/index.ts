@@ -33,6 +33,7 @@ export type { ClientEntity } from '../../domain/entities/ClientEntity'
 export async function initializeClientCacheSystem(): Promise<void> {
   const { useClientCacheV2 } = await import('./composables/useClientCacheV2')
   const cache = useClientCacheV2()
+
   await cache.initializeClientCache()
 }
 
@@ -46,9 +47,9 @@ export async function getCacheSystemInfo(): Promise<{
   const { useClientCacheV2 } = await import('./composables/useClientCacheV2')
   const cache = useClientCacheV2()
   const stats = await cache.getCacheStats()
-  
+
   return {
     currentSystem: 'v2',
-    stats
+    stats,
   }
 }

@@ -56,6 +56,7 @@ export interface CreditLimitEntity {
   amount: number
   currency: string
 }
+
 /**
  * Main Client Entity
  */

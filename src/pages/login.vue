@@ -21,14 +21,12 @@ const { loginLogo } = useTenantConfig()
 
 const authThemeImg = computed(() => {
   // Si hay logo del tenant, usarlo
-  if (loginLogo.value) {
+  if (loginLogo.value)
     return loginLogo.value
-  }
 
   // Fallback a imágenes por defecto
-  if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas') {
+  if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas')
     return useGenerateImageVariant(authV2LoginOomsapasIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
-  }
 
   return useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
 })

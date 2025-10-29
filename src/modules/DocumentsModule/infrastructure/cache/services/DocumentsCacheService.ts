@@ -3,14 +3,14 @@
  * Extiende el servicio base con lógica específica de documentos
  */
 
-import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
 import { DocumentsIndexedDBService } from './DocumentsIndexedDBService'
-import { CachePriority, type CacheModuleConfig } from '@/@core/cache/types/cache.types'
+import { BaseCacheService } from '@/@core/cache/services/BaseCacheService'
+import { type CacheModuleConfig, CachePriority } from '@/@core/cache/types/cache.types'
 
 export class DocumentsCacheService extends BaseCacheService {
   constructor() {
     const indexedDB = new DocumentsIndexedDBService()
-    
+
     const config: CacheModuleConfig = {
       enabled: true,
       dbName: 'DocumentsModuleCache',
@@ -21,29 +21,29 @@ export class DocumentsCacheService extends BaseCacheService {
           priority: CachePriority.HIGH,
           ttl: 15, // 15 minutos
           maxSize: 5000,
-          encrypted: true // Los documentos pueden contener información sensible
+          encrypted: true, // Los documentos pueden contener información sensible
         },
         categories: {
           key: 'categories',
           priority: CachePriority.MEDIUM,
           ttl: 60, // 1 hora
           maxSize: 200,
-          encrypted: false
+          encrypted: false,
         },
         statistics: {
           key: 'statistics',
           priority: CachePriority.LOW,
           ttl: 120, // 2 horas
           maxSize: 100,
-          encrypted: false
-        }
+          encrypted: false,
+        },
       },
       sync: {
         enabled: true,
         interval: 600000, // 10 minutos
         retryAttempts: 5,
-        conflictResolution: 'manual' // Los documentos requieren resolución manual de conflictos
-      }
+        conflictResolution: 'manual', // Los documentos requieren resolución manual de conflictos
+      },
     }
 
     super(indexedDB, config)
@@ -52,27 +52,26 @@ export class DocumentsCacheService extends BaseCacheService {
   // ========== IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS ==========
 
   protected getStoreNameByKey(key: string): string {
-    if (key.includes('documents_list') || key.startsWith('document_')) {
+    if (key.includes('documents_list') || key.startsWith('document_'))
       return 'documents'
-    }
-    if (key.includes('category')) {
+
+    if (key.includes('category'))
       return 'categories'
-    }
+
     return 'statistics'
   }
 
   protected getConfigByKey(key: string): { ttl: number; maxSize: number; encrypted: boolean } {
     const storeName = this.getStoreNameByKey(key)
     const config = this.config.stores[storeName]
-    
-    if (!config) {
+
+    if (!config)
       throw new Error(`Configuración no encontrada para la clave: ${key}`)
-    }
 
     return {
       ttl: config.ttl,
       maxSize: config.maxSize,
-      encrypted: config.encrypted
+      encrypted: config.encrypted,
     }
   }
 
@@ -81,10 +80,11 @@ export class DocumentsCacheService extends BaseCacheService {
     if (key.includes('documents_list') && Array.isArray(data)) {
       return data.map(document => ({
         ...document,
+
         // Asegurar que los campos requeridos estén presentes
         document_type: document.document_type || 'unknown',
         status: document.status || 'draft',
-        category: document.category || 'uncategorized'
+        category: document.category || 'uncategorized',
       }))
     }
 
@@ -96,10 +96,11 @@ export class DocumentsCacheService extends BaseCacheService {
     if (key.includes('documents_list') && Array.isArray(data)) {
       return data.map(document => ({
         ...document,
+
         // Limpiar campos de cache si es necesario
         cached_at: undefined,
         version: undefined,
-        sync_status: undefined
+        sync_status: undefined,
       }))
     }
 
@@ -124,7 +125,7 @@ export class DocumentsCacheService extends BaseCacheService {
       author_id: document.author_id,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }))
 
     await this.set('documents_list', cacheData, CachePriority.HIGH)
@@ -146,7 +147,7 @@ export class DocumentsCacheService extends BaseCacheService {
       author_id: document.author_id,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }
 
     await this.set(`document_${document.id}`, cacheData, CachePriority.MEDIUM)
@@ -163,7 +164,7 @@ export class DocumentsCacheService extends BaseCacheService {
       color: category.color,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }))
 
     await this.set('categories_list', cacheData, CachePriority.MEDIUM)
@@ -181,7 +182,7 @@ export class DocumentsCacheService extends BaseCacheService {
       total_size: stats.total_size,
       cached_at: new Date().toISOString(),
       version: Date.now(),
-      sync_status: 'synced' as const
+      sync_status: 'synced' as const,
     }
 
     await this.set('document_statistics', cacheData, CachePriority.LOW)
@@ -192,10 +193,10 @@ export class DocumentsCacheService extends BaseCacheService {
    */
   async forceSync(): Promise<void> {
     console.log('🔄 Iniciando sincronización forzada de documentos...')
-    
+
     // Aquí implementarías la lógica específica de sincronización
     // Por ejemplo, llamar a la API y actualizar el cache
-    
+
     await this.updateCacheState()
     console.log('✅ Sincronización de documentos completada')
   }

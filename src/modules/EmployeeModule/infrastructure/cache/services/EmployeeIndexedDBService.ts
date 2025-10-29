@@ -17,25 +17,25 @@ export class EmployeeIndexedDBService extends BaseIndexedDBService {
           { name: 'status', keyPath: 'status' },
           { name: 'department', keyPath: 'department' },
           { name: 'cached_at', keyPath: 'cached_at' },
-          { name: 'sync_status', keyPath: 'sync_status' }
-        ]
+          { name: 'sync_status', keyPath: 'sync_status' },
+        ],
       },
       departments: {
         name: 'departments',
         keyPath: 'id',
         indexes: [
           { name: 'name', keyPath: 'name' },
-          { name: 'cached_at', keyPath: 'cached_at' }
-        ]
+          { name: 'cached_at', keyPath: 'cached_at' },
+        ],
       },
       statistics: {
         name: 'statistics',
         keyPath: 'id',
         indexes: [
           { name: 'type', keyPath: 'type' },
-          { name: 'cached_at', keyPath: 'cached_at' }
-        ]
-      }
+          { name: 'cached_at', keyPath: 'cached_at' },
+        ],
+      },
     }
 
     super('EmployeeModuleCache', 1, stores)

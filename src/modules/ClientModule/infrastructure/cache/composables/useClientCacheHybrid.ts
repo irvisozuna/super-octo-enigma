@@ -1,18 +1,18 @@
 /**
  * Composable híbrido para Cache de Clientes
- * 
+ *
  * Proporciona API compatible con el sistema anterior
  * pero usa internamente el nuevo sistema V2
  */
 
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useClientCacheV2 } from './useClientCacheV2'
 import type { ClientEntity } from '../../domain/entities/ClientEntity'
+import { useClientCacheV2 } from './useClientCacheV2'
 
 export function useClientCacheHybrid() {
   const { t } = useI18n()
-  
+
   // Usar solo el nuevo sistema V2
   const newCache = useClientCacheV2()
 
@@ -27,7 +27,7 @@ export function useClientCacheHybrid() {
     isOnline: newCache.isCacheAvailable.value,
     lastSync: newCache.cacheState.value.lastSync,
     pendingChanges: newCache.cacheState.value.pendingChanges,
-    conflicts: newCache.cacheState.value.conflicts
+    conflicts: newCache.cacheState.value.conflicts,
   }))
 
   const loading = computed(() => newCache.loading.value)
@@ -44,7 +44,7 @@ export function useClientCacheHybrid() {
   const performanceStats = computed(() => ({
     hitRate: newCache.cacheState.value.efficiency,
     cacheSize: newCache.cacheState.value.cacheSize,
-    lastCleanup: new Date().toISOString()
+    lastCleanup: new Date().toISOString(),
   }))
 
   // ========== MÉTODOS DE CACHE ==========
@@ -54,6 +54,7 @@ export function useClientCacheHybrid() {
    */
   async function getCachedClients(): Promise<ClientEntity[]> {
     const clients = await newCache.getCachedClientsList()
+
     return clients || []
   }
 
@@ -144,6 +145,6 @@ export function useClientCacheHybrid() {
     initializeCache,
 
     // Acceso directo al sistema V2
-    newSystem: newCache
+    newSystem: newCache,
   }
 }

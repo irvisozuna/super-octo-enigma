@@ -31,6 +31,7 @@ const headers = [
   { title: 'Turno', key: 'shift', sortable: true },
   { title: 'Estado', key: 'status', sortable: true },
   { title: 'Profundidad', key: 'depth', sortable: false },
+
   // { title: 'Operador', key: 'operator_name', sortable: true },
   { title: 'Acciones', key: 'actions', sortable: false, align: 'end' as const },
 ]
@@ -78,25 +79,22 @@ const filteredReports = computed(() => {
 // Funciones para determinar acciones disponibles
 const getAvailableActions = (report: any) => {
   const actions = []
-  
+
   // Siempre disponible
   actions.push('view')
-  
+
   // Solo borradores pueden editarse
-  if (report.status === 'draft') {
+  if (report.status === 'draft')
     actions.push('edit', 'delete')
-  }
-  
+
   // Completar: solo borradores
-  if (report.status === 'draft') {
+  if (report.status === 'draft')
     actions.push('complete')
-  }
-  
+
   // Aprobar: solo pendientes de aprobación
-  if (report.status === 'pending_approval') {
+  if (report.status === 'pending_approval')
     actions.push('approve', 'reject')
-  }
-  
+
   return actions
 }
 
@@ -281,8 +279,6 @@ const getStatusLabel = (status: string) => {
         {{ item.totals.meters_drilled || 0 }} m
       </template>
 
-
-
       <!-- Actions -->
       <template #item.actions="{ item }">
         <div class="d-flex gap-1 flex-wrap">
@@ -300,7 +296,7 @@ const getStatusLabel = (status: string) => {
           </VTooltip>
 
           <!-- Editar - Solo borradores -->
-          <VTooltip 
+          <VTooltip
             v-if="canEdit(item)"
             text="Editar"
           >
@@ -317,7 +313,7 @@ const getStatusLabel = (status: string) => {
           </VTooltip>
 
           <!-- Completar - Solo borradores -->
-          <VTooltip 
+          <VTooltip
             v-if="canComplete(item)"
             text="Completar Reporte"
           >
@@ -334,7 +330,7 @@ const getStatusLabel = (status: string) => {
           </VTooltip>
 
           <!-- Aprobar - Solo pendientes de aprobación -->
-          <VTooltip 
+          <VTooltip
             v-if="canApprove(item)"
             text="Aprobar Reporte"
           >
@@ -351,7 +347,7 @@ const getStatusLabel = (status: string) => {
           </VTooltip>
 
           <!-- Rechazar - Solo pendientes de aprobación -->
-          <VTooltip 
+          <VTooltip
             v-if="canReject(item)"
             text="Rechazar Reporte"
           >
@@ -368,7 +364,7 @@ const getStatusLabel = (status: string) => {
           </VTooltip>
 
           <!-- Eliminar - Solo borradores -->
-          <VTooltip 
+          <VTooltip
             v-if="canDelete(item)"
             text="Eliminar"
           >

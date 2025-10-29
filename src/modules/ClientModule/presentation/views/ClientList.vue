@@ -1,3 +1,265 @@
+<script setup lang="ts">
+import { computed, nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import debounce from 'lodash/debounce'
+import { useI18n } from 'vue-i18n'
+import { useClientStore } from '../../presentation/stores/clientStore'
+import { useClientCacheV2 } from '../../infrastructure/cache/composables/useClientCacheV2'
+import ClientCacheStatusIndicator from '../../infrastructure/cache/components/ClientCacheStatusIndicator.vue'
+import type { ClientEntity } from '../../domain/entities/ClientEntity'
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
+
+// Composables
+const { t } = useI18n()
+const router = useRouter()
+
+// Store
+const clientStore = useClientStore()
+
+// Sistema de cache V2 (integrado en el store)
+const {
+  isCacheAvailable,
+  forceSync,
+  initializeClientCache,
+} = useClientCacheV2()
+
+// Estado local para filtros múltiples
+const selectedStatuses = ref<string[]>([])
+const selectedBusinessTypes = ref<string[]>([])
+
+// Headers para la tabla
+const headers = [
+  { title: t('ClientModule.fields.client_code'), key: 'client_code' },
+  { title: t('ClientModule.fields.company_name'), key: 'business_name' },
+  { title: t('ClientModule.fields.trade_name'), key: 'trade_name' },
+  { title: t('ClientModule.fields.business_type'), key: 'business_type' },
+  { title: t('ClientModule.fields.status'), key: 'status' },
+  { title: t('ClientModule.fields.primary_phone'), key: 'primary_phone' },
+  { title: t('ClientModule.fields.city'), key: 'city' },
+  { title: t('common.actions'), key: 'actions', sortable: false },
+]
+
+// Opciones del menú de exportación
+const menuOptions = [
+  {
+    text: t('ClientModule.common.export_excel'),
+    icon: 'tabler-file-spreadsheet',
+    action: () => exportItems('excel'),
+  },
+  {
+    text: t('ClientModule.common.export_pdf'),
+    icon: 'tabler-file-type-pdf',
+    action: () => exportItems('pdf'),
+  },
+  {
+    text: t('ClientModule.common.export_csv'),
+    icon: 'tabler-file-text',
+    action: () => exportItems('csv'),
+  },
+]
+
+// Opciones para los selects
+const statusOptions = [
+  { value: 'active', title: t('ClientModule.status.active'), color: 'success' },
+  { value: 'inactive', title: t('ClientModule.status.inactive'), color: 'error' },
+  { value: 'pending', title: t('ClientModule.status.pending'), color: 'warning' },
+]
+
+const businessTypeOptions = [
+  { value: 'corporation', title: t('ClientModule.business_types.corporation') },
+  { value: 'llc', title: t('ClientModule.business_types.llc') },
+  { value: 'partnership', title: t('ClientModule.business_types.partnership') },
+  { value: 'sole_proprietorship', title: t('ClientModule.business_types.sole_proprietorship') },
+]
+
+// Computed para chips de filtros activos
+const activeFilters = computed(() => {
+  const filters: Array<{ label: string; value: string; type: string }> = []
+
+  if (clientStore.filters.search) {
+    filters.push({
+      label: `Búsqueda: ${clientStore.filters.search}`,
+      value: 'search',
+      type: 'search',
+    })
+  }
+
+  selectedStatuses.value.forEach(status => {
+    const option = statusOptions.find(o => o.value === status)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: status,
+        type: 'status',
+      })
+    }
+  })
+
+  selectedBusinessTypes.value.forEach(businessType => {
+    const option = businessTypeOptions.find(o => o.value === businessType)
+    if (option) {
+      filters.push({
+        label: option.title,
+        value: businessType,
+        type: 'business_type',
+      })
+    }
+  })
+
+  if (clientStore.filters.city) {
+    filters.push({
+      label: `Ciudad: ${clientStore.filters.city}`,
+      value: 'city',
+      type: 'city',
+    })
+  }
+
+  return filters
+})
+
+const hasActiveFilters = computed(() => activeFilters.value.length > 0)
+
+// Métodos
+const debouncedFetchList = debounce(() => {
+  applyFiltersToStore()
+}, 500)
+
+function applyFiltersToStore() {
+  clientStore.updateFilters({
+    status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') as any : undefined,
+    business_type: selectedBusinessTypes.value.length > 0 ? selectedBusinessTypes.value.join(',') as any : undefined,
+  })
+  clientStore.fetchList()
+}
+
+function applyFilters() {
+  debouncedFetchList()
+}
+
+function clearFilters() {
+  selectedStatuses.value = []
+  selectedBusinessTypes.value = []
+
+  clientStore.updateFilters({
+    search: '',
+    status: undefined,
+    business_type: undefined,
+    city: '',
+  })
+
+  nextTick(() => {
+    clientStore.fetchList()
+  })
+}
+
+function removeFilter(filter: { type: string; value: string }) {
+  if (filter.type === 'search')
+    clientStore.filters.search = ''
+
+  else if (filter.type === 'status')
+    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
+
+  else if (filter.type === 'business_type')
+    selectedBusinessTypes.value = selectedBusinessTypes.value.filter(t => t !== filter.value)
+
+  else if (filter.type === 'city')
+    clientStore.filters.city = ''
+
+  applyFiltersToStore()
+}
+
+function navigateToView(item: ClientEntity) {
+  router.push({ name: 'clients-detail', params: { id: item.id } })
+}
+
+function navigateToEdit(item: ClientEntity) {
+  router.push({ name: 'clients-edit', params: { id: item.id } })
+}
+
+async function deleteClient(item: ClientEntity) {
+  selectedClient.value = item
+  showDeleteDialog.value = true
+}
+
+async function handleClientDelete() {
+  if (!selectedClient.value)
+    return
+
+  try {
+    await clientStore.deleteItem(selectedClient.value.id)
+
+    showDeleteDialog.value = false
+    selectedClient.value = null
+  }
+  catch (error) {
+    console.error('Error eliminando cliente:', error)
+  }
+}
+
+async function exportItems(format: 'excel' | 'pdf' | 'csv') {
+  try {
+    await clientStore.exportData(format)
+  }
+  catch (error) {
+    console.error('Error exporting:', error)
+  }
+}
+
+// Métodos auxiliares para los chips
+function getStatusColor(status: string) {
+  const colors: Record<string, string> = {
+    active: 'success',
+    inactive: 'error',
+    pending: 'warning',
+  }
+
+  return colors[status?.toLowerCase()] || 'grey'
+}
+
+function getBusinessTypeColor(businessType: string) {
+  const colors: Record<string, string> = {
+    corporation: 'primary',
+    llc: 'secondary',
+    partnership: 'info',
+    sole_proprietorship: 'warning',
+  }
+
+  return colors[businessType?.toLowerCase()] || 'grey'
+}
+
+// Handle VDataTableServer options update (pagination, sorting)
+function handleOptionsUpdate(options: any) {
+  const { page, itemsPerPage, sortBy } = options
+
+  const filters: any = {
+    page,
+    per_page: itemsPerPage,
+  }
+
+  // Handle sorting
+  if (sortBy && sortBy.length > 0) {
+    filters.sort_by = sortBy[0].key
+    filters.sort_order = sortBy[0].order || 'asc'
+  }
+
+  clientStore.fetchList(filters)
+}
+
+// Diálogos
+const showDeleteDialog = ref(false)
+const selectedClient = ref<ClientEntity | null>(null)
+
+// Inicializar cache al montar
+nextTick(async () => {
+  try {
+    await clientStore.initializeCache()
+  }
+  catch (error) {
+    console.error('Error inicializando cache:', error)
+  }
+})
+</script>
+
 <template>
   <VCard>
     <!-- Header mejorado con contador -->
@@ -374,265 +636,6 @@
     />
   </VCard>
 </template>
-
-<script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import debounce from 'lodash/debounce'
-import { useI18n } from 'vue-i18n'
-import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
-import { useClientStore } from '../../presentation/stores/clientStore'
-import { useClientCacheV2 } from '../../infrastructure/cache/composables/useClientCacheV2'
-import ClientCacheStatusIndicator from '../../infrastructure/cache/components/ClientCacheStatusIndicator.vue'
-import type { ClientEntity } from '../../domain/entities/ClientEntity'
-
-// Composables
-const { t } = useI18n()
-const router = useRouter()
-
-// Store
-const clientStore = useClientStore()
-
-// Sistema de cache V2 (integrado en el store)
-const {
-  isCacheAvailable,
-  forceSync,
-  initializeClientCache
-} = useClientCacheV2()
-
-// Estado local para filtros múltiples
-const selectedStatuses = ref<string[]>([])
-const selectedBusinessTypes = ref<string[]>([])
-
-// Headers para la tabla
-const headers = [
-  { title: t('ClientModule.fields.client_code'), key: 'client_code' },
-  { title: t('ClientModule.fields.company_name'), key: 'business_name' },
-  { title: t('ClientModule.fields.trade_name'), key: 'trade_name' },
-  { title: t('ClientModule.fields.business_type'), key: 'business_type' },
-  { title: t('ClientModule.fields.status'), key: 'status' },
-  { title: t('ClientModule.fields.primary_phone'), key: 'primary_phone' },
-  { title: t('ClientModule.fields.city'), key: 'city' },
-  { title: t('common.actions'), key: 'actions', sortable: false },
-]
-
-// Opciones del menú de exportación
-const menuOptions = [
-  {
-    text: t('ClientModule.common.export_excel'),
-    icon: 'tabler-file-spreadsheet',
-    action: () => exportItems('excel'),
-  },
-  {
-    text: t('ClientModule.common.export_pdf'),
-    icon: 'tabler-file-type-pdf',
-    action: () => exportItems('pdf'),
-  },
-  {
-    text: t('ClientModule.common.export_csv'),
-    icon: 'tabler-file-text',
-    action: () => exportItems('csv'),
-  },
-]
-
-// Opciones para los selects
-const statusOptions = [
-  { value: 'active', title: t('ClientModule.status.active'), color: 'success' },
-  { value: 'inactive', title: t('ClientModule.status.inactive'), color: 'error' },
-  { value: 'pending', title: t('ClientModule.status.pending'), color: 'warning' },
-]
-
-const businessTypeOptions = [
-  { value: 'corporation', title: t('ClientModule.business_types.corporation') },
-  { value: 'llc', title: t('ClientModule.business_types.llc') },
-  { value: 'partnership', title: t('ClientModule.business_types.partnership') },
-  { value: 'sole_proprietorship', title: t('ClientModule.business_types.sole_proprietorship') },
-]
-
-// Computed para chips de filtros activos
-const activeFilters = computed(() => {
-  const filters: Array<{ label: string; value: string; type: string }> = []
-
-  if (clientStore.filters.search) {
-    filters.push({
-      label: `Búsqueda: ${clientStore.filters.search}`,
-      value: 'search',
-      type: 'search',
-    })
-  }
-
-  selectedStatuses.value.forEach(status => {
-    const option = statusOptions.find(o => o.value === status)
-    if (option) {
-      filters.push({
-        label: option.title,
-        value: status,
-        type: 'status',
-      })
-    }
-  })
-
-  selectedBusinessTypes.value.forEach(businessType => {
-    const option = businessTypeOptions.find(o => o.value === businessType)
-    if (option) {
-      filters.push({
-        label: option.title,
-        value: businessType,
-        type: 'business_type',
-      })
-    }
-  })
-
-  if (clientStore.filters.city) {
-    filters.push({
-      label: `Ciudad: ${clientStore.filters.city}`,
-      value: 'city',
-      type: 'city',
-    })
-  }
-
-  return filters
-})
-
-const hasActiveFilters = computed(() => activeFilters.value.length > 0)
-
-// Métodos
-const debouncedFetchList = debounce(() => {
-  applyFiltersToStore()
-}, 500)
-
-function applyFiltersToStore() {
-  clientStore.updateFilters({
-    status: selectedStatuses.value.length > 0 ? selectedStatuses.value.join(',') as any : undefined,
-    business_type: selectedBusinessTypes.value.length > 0 ? selectedBusinessTypes.value.join(',') as any : undefined,
-  })
-  clientStore.fetchList()
-}
-
-function applyFilters() {
-  debouncedFetchList()
-}
-
-function clearFilters() {
-  selectedStatuses.value = []
-  selectedBusinessTypes.value = []
-
-  clientStore.updateFilters({
-    search: '',
-    status: undefined,
-    business_type: undefined,
-    city: '',
-  })
-
-  nextTick(() => {
-    clientStore.fetchList()
-  })
-}
-
-function removeFilter(filter: { type: string; value: string }) {
-  if (filter.type === 'search')
-    clientStore.filters.search = ''
-
-  else if (filter.type === 'status')
-    selectedStatuses.value = selectedStatuses.value.filter(s => s !== filter.value)
-
-  else if (filter.type === 'business_type')
-    selectedBusinessTypes.value = selectedBusinessTypes.value.filter(t => t !== filter.value)
-
-  else if (filter.type === 'city')
-    clientStore.filters.city = ''
-
-  applyFiltersToStore()
-}
-
-function navigateToView(item: ClientEntity) {
-  router.push({ name: 'clients-detail', params: { id: item.id } })
-}
-
-function navigateToEdit(item: ClientEntity) {
-  router.push({ name: 'clients-edit', params: { id: item.id } })
-}
-
-async function deleteClient(item: ClientEntity) {
-  selectedClient.value = item
-  showDeleteDialog.value = true
-}
-
-async function handleClientDelete() {
-  if (!selectedClient.value) return
-  
-  try {
-    await clientStore.deleteItem(selectedClient.value.id)
-    
-    showDeleteDialog.value = false
-    selectedClient.value = null
-  } catch (error) {
-    console.error('Error eliminando cliente:', error)
-  }
-}
-
-async function exportItems(format: 'excel' | 'pdf' | 'csv') {
-  try {
-    await clientStore.exportData(format)
-  }
-  catch (error) {
-    console.error('Error exporting:', error)
-  }
-}
-
-// Métodos auxiliares para los chips
-function getStatusColor(status: string) {
-  const colors: Record<string, string> = {
-    active: 'success',
-    inactive: 'error',
-    pending: 'warning',
-  }
-
-  return colors[status?.toLowerCase()] || 'grey'
-}
-
-function getBusinessTypeColor(businessType: string) {
-  const colors: Record<string, string> = {
-    corporation: 'primary',
-    llc: 'secondary',
-    partnership: 'info',
-    sole_proprietorship: 'warning',
-  }
-
-  return colors[businessType?.toLowerCase()] || 'grey'
-}
-
-// Handle VDataTableServer options update (pagination, sorting)
-function handleOptionsUpdate(options: any) {
-  const { page, itemsPerPage, sortBy } = options
-
-  const filters: any = {
-    page,
-    per_page: itemsPerPage,
-  }
-
-  // Handle sorting
-  if (sortBy && sortBy.length > 0) {
-    filters.sort_by = sortBy[0].key
-    filters.sort_order = sortBy[0].order || 'asc'
-  }
-
-  clientStore.fetchList(filters)
-}
-
-// Diálogos
-const showDeleteDialog = ref(false)
-const selectedClient = ref<ClientEntity | null>(null)
-
-// Inicializar cache al montar
-nextTick(async () => {
-  try {
-    await clientStore.initializeCache()
-  } catch (error) {
-    console.error('Error inicializando cache:', error)
-  }
-})
-</script>
 
 <style scoped>
 .filter-field {

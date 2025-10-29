@@ -48,7 +48,7 @@ const handleSubmit = async () => {
     equipment_id: props.equipment.id,
     notes: formData.value.notes,
   })
-  
+
   handleClose()
 }
 

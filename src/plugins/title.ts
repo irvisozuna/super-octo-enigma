@@ -9,8 +9,7 @@ export default function (app: App) {
 
   // Solo setear el título si NO ha sido configurado previamente (document.title vacío o "Loading...")
   watchEffect(() => {
-    if (!document.title || document.title === 'Loading...') {
+    if (!document.title || document.title === 'Loading...')
       document.title = themeConfig.app.title || 'Default Title'
-    }
   })
 }

@@ -67,18 +67,18 @@ export const useClientStore = defineStore('client', () => {
 
     try {
       const mergedFilters = { ...filters.value, ...customFilters }
-      
+
       // Intentar obtener del cache primero si no hay filtros complejos
-      const hasSimpleFilters = !mergedFilters.search && 
-                              !mergedFilters.status && 
-                              !mergedFilters.business_type && 
-                              !mergedFilters.city
-      
+      const hasSimpleFilters = !mergedFilters.search
+                              && !mergedFilters.status
+                              && !mergedFilters.business_type
+                              && !mergedFilters.city
+
       if (hasSimpleFilters) {
         try {
           const cache = useClientCacheV2()
           const cachedClients = await cache.getCachedClientsList()
-          
+
           if (cachedClients && cachedClients.length > 0) {
             console.log('📖 Usando datos del cache')
             items.value = cachedClients
@@ -88,14 +88,17 @@ export const useClientStore = defineStore('client', () => {
               per_page: cachedClients.length,
               total: cachedClients.length,
             }
+
             return
           }
-        } catch (cacheError) {
+        }
+        catch (cacheError) {
           console.warn('⚠️ Error accediendo al cache, continuando con servidor:', cacheError)
         }
       }
 
       console.log('🌐 Cargando datos del servidor')
+
       const response = await applicationService.getClients(mergedFilters)
 
       items.value = response.data
@@ -110,9 +113,11 @@ export const useClientStore = defineStore('client', () => {
       if (hasSimpleFilters && response.data.length > 0) {
         try {
           const cache = useClientCacheV2()
+
           await cache.cacheClientsList(response.data)
           console.log('💾 Datos cacheados correctamente')
-        } catch (cacheError) {
+        }
+        catch (cacheError) {
           console.warn('⚠️ Error cacheando datos:', cacheError)
         }
       }
@@ -563,9 +568,11 @@ export const useClientStore = defineStore('client', () => {
   const initializeCache = async () => {
     try {
       const cache = useClientCacheV2()
+
       await cache.initializeClientCache()
       console.log('✅ Cache de clientes inicializado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error inicializando cache:', error)
     }
   }
@@ -576,9 +583,11 @@ export const useClientStore = defineStore('client', () => {
   const forceSyncCache = async () => {
     try {
       const cache = useClientCacheV2()
+
       await cache.forceSync()
       console.log('🔄 Cache sincronizado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error sincronizando cache:', error)
     }
   }
@@ -589,9 +598,11 @@ export const useClientStore = defineStore('client', () => {
   const clearCache = async () => {
     try {
       const cache = useClientCacheV2()
+
       await cache.clearCache()
       console.log('🧹 Cache limpiado')
-    } catch (error) {
+    }
+    catch (error) {
       console.error('❌ Error limpiando cache:', error)
     }
   }
@@ -644,7 +655,7 @@ export const useClientStore = defineStore('client', () => {
     clearError,
     reset,
     updateFilters,
-    
+
     // Cache methods
     initializeCache,
     forceSyncCache,

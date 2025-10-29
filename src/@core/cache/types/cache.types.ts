@@ -7,7 +7,7 @@
 export enum CachePriority {
   HIGH = 'high',
   MEDIUM = 'medium',
-  LOW = 'low'
+  LOW = 'low',
 }
 
 // Estados de sincronización
@@ -15,7 +15,7 @@ export enum SyncStatus {
   SYNCED = 'synced',
   PENDING = 'pending',
   CONFLICT = 'conflict',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 // Configuración base de cache

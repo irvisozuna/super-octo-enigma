@@ -15,6 +15,7 @@ export class LoadCompanyConfigUseCase {
           const serverVersion = await this.repository.getConfigVersion(companyId)
           if (cachedConfig.version === serverVersion) {
             console.log('Loading company config from cache')
+
             return cachedConfig
           }
         }
@@ -22,11 +23,13 @@ export class LoadCompanyConfigUseCase {
 
       // Cargar desde el servidor
       console.log('Loading company config from server')
+
       const config = await this.repository.getConfig(companyId)
 
       if (config) {
         // Guardar en cache
         await this.repository.saveCachedConfig(config)
+
         return config
       }
 
@@ -38,9 +41,8 @@ export class LoadCompanyConfigUseCase {
 
       // Intentar cargar desde cache como fallback
       const cachedConfig = await this.repository.getCachedConfig(companyId)
-      if (cachedConfig) {
+      if (cachedConfig)
         return cachedConfig
-      }
 
       // Retornar configuración por defecto
       return CompanyConfig.getDefaultConfig()

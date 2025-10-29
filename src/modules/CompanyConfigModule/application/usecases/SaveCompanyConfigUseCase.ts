@@ -8,14 +8,13 @@ export class SaveCompanyConfigUseCase {
     try {
       // Incrementar versión
       const currentVersion = config.version || 0
+
       config.version = currentVersion + 1
       config.updatedAt = new Date().toISOString()
 
       // Guardar en servidor
-      const savedConfig = await this.repository.saveConfig(config)
-
       // El cache se actualiza automáticamente en el repositorio
-      return savedConfig
+      return await this.repository.saveConfig(config)
     }
     catch (error) {
       console.error('Error saving company config:', error)
