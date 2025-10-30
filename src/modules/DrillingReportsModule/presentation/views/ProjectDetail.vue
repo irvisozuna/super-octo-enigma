@@ -1205,12 +1205,28 @@ onMounted(() => {
         class="report-dialog-card"
         flat
       >
-        <DrillingReportPrintView
-          v-if="selectedReportForDetail"
-          :report-id="selectedReportForDetail.id"
-          :show-actions="true"
-          @close="showReportDetailDialog = false"
-        />
+        <VCardTitle class="d-flex justify-space-between align-center pa-4">
+          <span class="text-h6">Reporte de Perforación</span>
+          <VBtn
+            icon
+            variant="text"
+            color="default"
+            @click="showReportDetailDialog = false"
+          >
+            <VIcon icon="tabler-x" />
+          </VBtn>
+        </VCardTitle>
+
+        <VDivider />
+
+        <VCardText class="pa-0">
+          <DrillingReportPrintView
+            v-if="selectedReportForDetail"
+            :report-id="selectedReportForDetail.id"
+            :show-actions="true"
+            @close="showReportDetailDialog = false"
+          />
+        </VCardText>
       </VCard>
     </VDialog>
   </div>

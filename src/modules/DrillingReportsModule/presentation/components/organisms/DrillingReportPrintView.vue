@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDrillingReportStore } from '../../stores/drillingReportStore'
 import { formatDate, formatDateTime } from '../../../shared/utils/dateUtils'
@@ -240,10 +240,26 @@ const generateReportQR = async () => {
   qrCodeUrl.value = await generateQRCode(reportUrl)
 }
 
+// Keyboard shortcut para imprimir (Ctrl+P / Cmd+P)
+const handleKeydown = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+    event.preventDefault()
+    handlePrint()
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   loadReport()
   generateReportQR()
+
+  // Agregar listener para Ctrl+P / Cmd+P
+  window.addEventListener('keydown', handleKeydown)
+})
+
+// Cleanup
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // Watch for report changes
@@ -313,43 +329,21 @@ watch(() => report.value, newReport => {
         v-if="showActions"
         class="actions-bar no-print"
       >
-        <VBtn
-          color="primary"
-          variant="outlined"
-          :disabled="isExporting"
-          @click="handlePrint"
-        >
-          <VIcon
-            icon="tabler-printer"
-            class="me-2"
-          />
-          Imprimir
-        </VBtn>
-        <VBtn
-          color="success"
-          variant="outlined"
-          :loading="isExporting"
-          :disabled="isExporting"
-          @click="handleExportPDF"
-        >
-          <VIcon
-            icon="tabler-file-pdf"
-            class="me-2"
-          />
-          Exportar PDF
-        </VBtn>
-        <VBtn
-          color="grey"
-          variant="outlined"
-          :disabled="isExporting"
-          @click="handleClose"
-        >
-          <VIcon
-            icon="tabler-x"
-            class="me-2"
-          />
-          Cerrar
-        </VBtn>
+        <div class="actions-left">
+          <VBtn
+            color="success"
+            variant="flat"
+            :loading="isExporting"
+            :disabled="isExporting"
+            @click="handleExportPDF"
+          >
+            <VIcon
+              icon="tabler-file-download"
+              class="me-2"
+            />
+            Exportar PDF
+          </VBtn>
+        </div>
       </div>
 
       <!-- Printable Document -->
@@ -409,15 +403,19 @@ watch(() => report.value, newReport => {
           </div>
         </div>
 
-        <!-- ROW 1: Secciones Compactas (3 columnas) -->
-        <div class="compact-row">
-          <!-- Antecedentes de Faena -->
-          <div class="section compact-section">
-            <h3>ANTECEDENTES DE FAENA</h3>
-            <div class="info-table">
+        <!-- ROW 1: Antecedentes Consolidados (2 columnas) -->
+        <div class="info-row-dual">
+          <!-- Proyecto, Equipo & Personal -->
+          <div class="section-clean info-section">
+            <h3>PROYECTO, EQUIPO & PERSONAL</h3>
+            <div class="info-grid-compact">
               <div class="info-row">
-                <span class="label">Faena / C. Costo:</span>
-                <span class="value">{{ projectInfo.name }} / {{ projectInfo.costCenter }}</span>
+                <span class="label">Faena:</span>
+                <span class="value">{{ projectInfo.name }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">C. Costo:</span>
+                <span class="value">{{ projectInfo.costCenter }}</span>
               </div>
               <div class="info-row">
                 <span class="label">Lugar:</span>
@@ -432,24 +430,27 @@ watch(() => report.value, newReport => {
                 <span class="value">{{ personnelInfo.dayOperator }}</span>
               </div>
               <div class="info-row">
-                <span class="label">Ayudante:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[0] || '' }}</span>
+                <span class="label">Ayudante 1:</span>
+                <span class="value">{{ personnelInfo.dayHelpers[0] || '-' }}</span>
               </div>
               <div class="info-row">
-                <span class="label">Ayudante:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[1] || '' }}</span>
+                <span class="label">Ayudante 2:</span>
+                <span class="value">{{ personnelInfo.dayHelpers[1] || '-' }}</span>
               </div>
-              <div class="info-row">
+              <div
+                v-if="personnelInfo.dayHelpers[2]"
+                class="info-row"
+              >
                 <span class="label">Otro:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[2] || '' }}</span>
+                <span class="value">{{ personnelInfo.dayHelpers[2] }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Antecedentes del Pozo -->
-          <div class="section compact-section">
-            <h3>ANTECEDENTES DEL POZO</h3>
-            <div class="info-table">
+          <!-- Pozo, Parámetros & Horómetro -->
+          <div class="section-clean info-section">
+            <h3>POZO, PARÁMETROS & HORÓMETRO</h3>
+            <div class="info-grid-compact">
               <div class="info-row">
                 <span class="label">Pozo No.:</span>
                 <span class="value">{{ wellInfo.code }}</span>
@@ -468,23 +469,16 @@ watch(() => report.value, newReport => {
               </div>
               <div class="info-row">
                 <span class="label">Prof. Inicial:</span>
-                <span class="value">{{ wellInfo.initialDepth }}</span>
+                <span class="value">{{ wellInfo.initialDepth }} m</span>
               </div>
               <div class="info-row">
                 <span class="label">Prof. Final:</span>
-                <span class="value">{{ wellInfo.finalDepth }}</span>
+                <span class="value">{{ wellInfo.finalDepth }} m</span>
               </div>
               <div class="info-row">
-                <span class="label">Mts. Perforados:</span>
-                <span class="value">{{ totalMeters }}</span>
+                <span class="label">Mts. Perf.:</span>
+                <span class="value font-bold">{{ totalMeters }} m</span>
               </div>
-            </div>
-          </div>
-
-          <!-- Parámetros -->
-          <div class="section compact-section">
-            <h3>PARAMETROS</h3>
-            <div class="info-table">
               <div class="info-row">
                 <span class="label">Pull Down:</span>
                 <span class="value">{{ parametersInfo.pullDown }}</span>
@@ -494,29 +488,24 @@ watch(() => report.value, newReport => {
                 <span class="value">{{ parametersInfo.rpmPullDown }}</span>
               </div>
               <div class="info-row">
-                <span class="label">HOROMETRO:</span>
-                <span class="value" />
+                <span class="label">Horómetro Inicial:</span>
+                <span class="value">{{ horometerInfo.dayStart }} hrs</span>
               </div>
               <div class="info-row">
-                <span class="label">Inicial:</span>
-                <span class="value">{{ horometerInfo.dayStart }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Final:</span>
-                <span class="value">{{ horometerInfo.dayEnd }}</span>
+                <span class="label">Horómetro Final:</span>
+                <span class="value">{{ horometerInfo.dayEnd }} hrs</span>
               </div>
               <div class="info-row">
                 <span class="label">Total Hrs.:</span>
-                <span class="value">{{ totalHours }}</span>
+                <span class="value font-bold">{{ totalHours }} hrs</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ROW 2: Perforación + Herramientas (2 columnas) -->
-        <div class="main-row">
-          <!-- Tabla de Perforación -->
-          <div class="section wide-section">
+        <!-- ROW 2: Perforación (Full width) -->
+        <div class="full-row">
+          <div class="section full-section">
             <h3>PERFORACION</h3>
             <div class="table-container">
               <table class="data-table">
@@ -546,9 +535,11 @@ watch(() => report.value, newReport => {
               </table>
             </div>
           </div>
+        </div>
 
-          <!-- Herramientas Utilizadas -->
-          <div class="section wide-section">
+        <!-- ROW 3: Herramientas Utilizadas (Full width) -->
+        <div class="full-row">
+          <div class="section full-section">
             <h3>HERRAMIENTAS UTILIZADAS</h3>
             <div class="table-container">
               <table class="data-table">
@@ -582,7 +573,7 @@ watch(() => report.value, newReport => {
           </div>
         </div>
 
-        <!-- ROW 3: Rebaje + Consumos (2 columnas) -->
+        <!-- ROW 4: Rebaje + Consumos (2 columnas) -->
         <div class="secondary-row">
           <!-- Rebaje de Herramientas -->
           <div class="section medium-section">
@@ -646,7 +637,7 @@ watch(() => report.value, newReport => {
           </div>
         </div>
 
-        <!-- ROW 4: Período en Horas (Full width) -->
+        <!-- ROW 5: Período en Horas (Full width) -->
         <div class="full-row">
           <div class="section full-section">
             <h3>PERIODO EN HORAS</h3>
@@ -816,20 +807,22 @@ watch(() => report.value, newReport => {
 
 <style scoped>
 /* ============================================
-   DRILLING REPORT PRINT VIEW - ENTERPRISE GRADE
+   DRILLING REPORT PRINT VIEW - MODERN ENTERPRISE 2025
    Optimizado para impresión en papel carta (8.5" x 11")
-   Tipografía profesional en puntos (pt)
-   WCAG AAA compliance para B/W printing
+   Tipografía profesional mejorada con mejor legibilidad
+   WCAG AAA compliance + Diseño moderno
+   Colores dinámicos usando tema Vuetify (primary/secondary)
    ============================================ */
 
 /* === BASE STYLES === */
 .drilling-report-print-view {
   overflow: auto;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   block-size: 100%;
-  color: #000;
-  font-family: 'Roboto', 'Arial', 'Helvetica', sans-serif;
-  line-height: 1.6;
+  color: #212529;
+  font-family: Inter, Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.75;
 }
 
 /* === LOADING & ERROR STATES === */
@@ -846,51 +839,64 @@ watch(() => report.value, newReport => {
 /* === EXPORT OVERLAY === */
 .export-overlay {
   position: fixed;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  inline-size: 100%;
-  block-size: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  background: rgba(0, 0, 0, 80%);
+  block-size: 100%;
+  inline-size: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
 }
 
 .export-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 40px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 30%);
   gap: 16px;
+  text-align: center;
 }
 
 .export-text {
   margin: 0;
+  color: #1a1a1a;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
 }
 
 .export-subtext {
   margin: 0;
-  font-size: 14px;
   color: #666;
+  font-size: 14px;
 }
 
-/* === ACTIONS BAR === */
+/* === ACTIONS BAR - ESTILO MODAL CONSISTENTE === */
 .actions-bar {
   display: flex;
-  padding: 16px;
-  border-block-end: 1px solid #e0e0e0;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: rgb(var(--v-theme-surface));
+  border-block-end: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   margin-block-end: 20px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding-block: 16px;
+  padding-inline: 24px;
+}
+
+.actions-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* === REPORT CONTENT CONTAINER === */
@@ -903,16 +909,16 @@ watch(() => report.value, newReport => {
 
 /* === PRINT DOCUMENT - LETTER SIZE (8.5" x 11") === */
 .print-document {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-block: 0;
-  margin-inline: auto;
-  padding: 30px; /* Padding más pequeño para más espacio */
   position: relative;
+  padding: 32px; /* Reducido para ahorrar espacio */
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 12%), 0 2px 8px rgba(0, 0, 0, 8%);
 
   /* Letter size: 8.5" x 11" = 816px x 1056px at 96dpi */
-  /* Aumentamos ancho para pantalla, se ajustará en print */
   inline-size: 100%;
+  margin-block: 0;
+  margin-inline: auto;
   max-inline-size: 1100px;
   min-block-size: auto;
 }
@@ -920,29 +926,33 @@ watch(() => report.value, newReport => {
 /* === WATERMARK === */
 .watermark {
   position: fixed;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
+  z-index: 1;
+  color: rgba(220, 53, 69, 8%);
   font-size: 120px;
   font-weight: 900;
-  color: rgba(220, 53, 69, 0.08);
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
   letter-spacing: 20px;
-  white-space: nowrap;
   pointer-events: none;
-  z-index: 1;
+  transform: translate(-50%, -50%) rotate(-45deg);
   user-select: none;
+  white-space: nowrap;
 }
 
-/* === HEADER STYLES - LIMPIO Y PROFESIONAL === */
+/* === HEADER STYLES - MODERNO CON COLOR DINÁMICO === */
 .report-header {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  border-block-end: 2px solid #333; /* Más sutil */
-  margin-block-end: 18px;
-  padding-block-end: 14px;
-  position: relative;
-  z-index: 2;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(135deg, rgba(var(--v-theme-primary), 0.06) 0%, rgba(var(--v-theme-secondary), 0.03) 100%);
+  border-block-end: 3px solid rgb(var(--v-theme-primary));
+  box-shadow: none; /* Sin sombra para ahorrar tinta */
+  margin-block-end: 16px;
+  padding-block: 14px;
+  padding-inline: 16px;
 }
 
 .company-logo {
@@ -950,10 +960,10 @@ watch(() => report.value, newReport => {
 }
 
 .logo-image {
+  filter: contrast(1.1);
   max-block-size: 50px;
   max-inline-size: 130px;
   object-fit: contain;
-  filter: contrast(1.1);
 }
 
 .logo-text {
@@ -961,18 +971,18 @@ watch(() => report.value, newReport => {
 }
 
 .logo-main {
+  color: #000;
   font-size: 28px;
   font-weight: 900;
   line-height: 1;
-  color: #000;
 }
 
 .logo-sub {
+  color: #333;
   font-size: 10px;
   font-weight: 700;
-  margin-block-start: 3px;
   letter-spacing: 1.5px;
-  color: #333;
+  margin-block-start: 3px;
 }
 
 .report-title {
@@ -982,12 +992,13 @@ watch(() => report.value, newReport => {
 
 .report-title h1 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 900;
+  color: rgb(var(--v-theme-primary));
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 8%);
   text-transform: uppercase;
-  color: #000;
-  letter-spacing: 0.8px;
-  line-height: 1.2;
 }
 
 .report-info {
@@ -998,89 +1009,238 @@ watch(() => report.value, newReport => {
 .info-row {
   display: flex;
   justify-content: space-between;
-  margin-block-end: 4px;
-  font-size: 9px;
-  line-height: 1.3;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-block-end: 6px;
+  padding-block: 2px;
+  padding-inline: 0;
 }
 
 .info-row .label {
+  color: rgb(var(--v-theme-primary));
+  font-size: 10px;
   font-weight: 700;
-  margin-inline-end: 6px;
-  color: #000;
+  letter-spacing: 0.3px;
+  margin-inline-end: 8px;
+  text-transform: uppercase;
 }
 
 .info-row .value {
-  color: #333;
-  font-weight: 400;
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /* === NUEVO SISTEMA DE LAYOUT POR FILAS === */
 
-/* ROW 1: 3 Secciones Compactas */
+/* ROW 1: Layout Dual (2 columnas) para Antecedentes Consolidados */
+.info-row-dual {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  margin-block-end: 14px;
+}
+
+.info-section {
+  /* Secciones de información dual */
+}
+
+/* Sección limpia SIN bordes exteriores - Más moderno */
+.section-clean {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.section-clean:hover {
+  box-shadow: none;
+  border: none;
+}
+
+.section-clean h3 {
+  background: linear-gradient(90deg, rgba(var(--v-theme-primary), 0.08) 0%, transparent 100%);
+  border-block-end: 2px solid rgb(var(--v-theme-primary));
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  margin-block: 0 10px;
+  margin-inline: 0;
+  padding: 8px 10px;
+  text-align: start;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-primary));
+  letter-spacing: 0.5px;
+}
+
+/* Grid compacto para info */
+.info-grid-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.info-grid-compact .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: linear-gradient(90deg, rgba(var(--v-theme-secondary), 0.02) 0%, transparent 100%);
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  border-inline-start: 2px solid transparent;
+}
+
+.info-grid-compact .info-row:hover {
+  background: rgba(var(--v-theme-primary), 0.04);
+  border-inline-start-color: rgb(var(--v-theme-primary));
+}
+
+.info-grid-compact .label {
+  font-weight: 700;
+  min-inline-size: 110px;
+  color: rgb(var(--v-theme-primary));
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.info-grid-compact .value {
+  flex: 1;
+  text-align: end;
+  color: #212529;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.font-bold {
+  font-weight: 800 !important;
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
+/* DEPRECATED - Grid dual antiguo */
+.info-grid-dual {
+  display: grid;
+  column-gap: 12px;
+  gap: 4px 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.info-grid-dual .info-row {
+  display: flex;
+  justify-content: space-between;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(var(--v-theme-secondary), 0.02) 0%, transparent 100%);
+  font-size: 10px;
+  grid-column: span 2;
+  line-height: 1.5;
+  padding-block: 4px;
+  padding-inline: 6px;
+  transition: background 0.2s ease;
+}
+
+.info-grid-dual .info-row:hover {
+  background: rgba(var(--v-theme-primary), 0.04);
+}
+
+.info-grid-dual .label {
+  color: rgb(var(--v-theme-primary));
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  min-inline-size: 90px;
+  text-transform: uppercase;
+}
+
+.info-grid-dual .value {
+  flex: 1;
+  color: #212529;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: end;
+}
+
+/* ROW 1 (DEPRECATED): 3 Secciones Compactas - Ya no se usa */
 .compact-row {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   grid-template-columns: 1fr 1fr 1fr;
-  margin-block-end: 14px;
+  margin-block-end: 12px;
 }
 
 .compact-section {
-  /* Secciones compactas de información */
+  /* DEPRECATED - Secciones compactas de información */
 }
 
-/* ROW 2: 2 Tablas Principales */
-.main-row {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr 1fr;
-  margin-block-end: 14px;
+/* ROW 2-3-5: Tablas Full Width (Perforación, Herramientas, Período) */
+.full-row {
+  margin-block-end: 12px;
 }
 
-.wide-section {
-  /* Secciones anchas para tablas importantes */
+.full-section {
+  /* Sección de ancho completo para tablas con muchas columnas */
 }
 
-/* ROW 3: 2 Tablas Secundarias */
+/* ROW 4: 2 Tablas Secundarias (Rebaje + Consumos) */
 .secondary-row {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   grid-template-columns: 1fr 1fr;
-  margin-block-end: 14px;
+  margin-block-end: 12px;
 }
 
 .medium-section {
   /* Secciones medianas */
 }
 
-/* ROW 4: Full Width */
-.full-row {
-  margin-block-end: 14px;
+/* DEPRECATED - Ya no se usa main-row */
+.main-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  margin-block-end: 12px;
 }
 
-.full-section {
-  /* Sección de ancho completo */
+.wide-section {
+  /* Secciones anchas - DEPRECATED */
 }
 
-/* === SECTION STYLES - LIMPIO Y PROFESIONAL === */
+/* === SECTION STYLES - MODERNO CON CARDS === */
 .section {
-  padding: 12px;
-  border: 1px solid #333; /* Bordes más sutiles */
+  border: 1.5px solid rgba(var(--v-theme-primary), 0.2);
+  border-radius: 4px;
   background: white;
+  box-shadow: none; /* Sin sombra para ahorrar tinta */
   break-inside: avoid;
+  padding-block: 12px;
+  padding-inline: 14px;
   page-break-inside: avoid;
+  transition: all 0.2s ease;
+}
+
+.section:hover {
+  border-color: rgba(var(--v-theme-primary), 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 6%);
 }
 
 .section h3 {
-  border-block-end: 1.5px solid #333; /* Más sutil */
-  font-size: 12px; /* MÁS GRANDE */
-  font-weight: 900;
-  margin-block: 0 10px;
-  margin-inline: 0;
-  padding-block-end: 8px;
-  text-align: center;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(var(--v-theme-primary), 0.08) 0%, transparent 100%);
+  border-block-end: 2px solid rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-primary));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  margin-block: -4px 10px;
+  margin-inline: -4px;
+  padding-block: 8px;
+  padding-inline: 10px;
+  text-align: start;
   text-transform: uppercase;
-  color: #000;
-  letter-spacing: 0.5px;
 }
 
 .sub-section {
@@ -1088,136 +1248,168 @@ watch(() => report.value, newReport => {
 }
 
 .sub-section h4 {
+  color: #000;
   font-size: 10pt;
   font-weight: 700;
   margin-block: 0 6pt;
   margin-inline: 0;
   text-transform: uppercase;
-  color: #000;
 }
 
-/* === INFO TABLE STYLES - LETRA GRANDE === */
+/* === INFO TABLE STYLES - MODERNO Y LEGIBLE === */
 .info-table {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .info-table .info-row {
   display: flex;
   justify-content: space-between;
-  padding-block: 4px;
-  padding-inline: 0;
-  font-size: 11px; /* MUCHO MÁS GRANDE */
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(var(--v-theme-secondary), 0.02) 0%, transparent 100%);
+  font-size: 10px;
   line-height: 1.5;
+  padding-block: 5px;
+  padding-inline: 8px;
+  transition: background 0.2s ease;
+}
+
+.info-table .info-row:hover {
+  background: rgba(var(--v-theme-primary), 0.04);
 }
 
 .info-table .label {
+  color: rgb(var(--v-theme-primary));
+  font-size: 9px;
   font-weight: 700;
-  min-inline-size: 100px;
-  color: #000;
-  font-size: 10px; /* MÁS GRANDE */
+  letter-spacing: 0.2px;
+  min-inline-size: 110px;
+  text-transform: uppercase;
 }
 
 .info-table .value {
   flex: 1;
+  color: #212529;
+  font-size: 10px;
+  font-weight: 600;
   text-align: end;
-  color: #1a1a1a;
-  font-weight: 400;
-  font-size: 10px; /* MÁS GRANDE */
 }
 
-/* === DATA TABLE STYLES - LETRA GRANDE Y LIMPIA === */
+/* === DATA TABLE STYLES - MODERNO Y LEGIBLE === */
 .table-container {
-  overflow-x: auto;
+  border-radius: 3px;
   break-inside: avoid;
+  overflow-x: auto;
   page-break-inside: avoid;
 }
 
 .data-table {
-  border-collapse: collapse;
-  font-size: 10px; /* MUCHO MÁS GRANDE */
+  overflow: hidden;
+  border-radius: 3px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 9px;
   inline-size: 100%;
   table-layout: auto;
 }
 
 .data-table th,
 .data-table td {
-  border: 0.5px solid #666; /* Bordes sutiles */
-  padding-block: 6px; /* MÁS padding */
+  border: 1px solid rgba(var(--v-theme-primary), 0.15);
+  padding-block: 6px;
   padding-inline: 8px;
   text-align: center;
   vertical-align: middle;
 }
 
 .data-table th {
-  background-color: #f5f5f5; /* Sutil */
-  font-size: 10px; /* MÁS GRANDE */
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #000;
-  letter-spacing: 0.3px;
+  background: linear-gradient(180deg, rgba(var(--v-theme-primary), 0.1) 0%, rgba(var(--v-theme-primary), 0.06) 100%);
   break-after: avoid;
-  page-break-after: avoid;
+  color: rgb(var(--v-theme-primary));
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
   line-height: 1.4;
+  page-break-after: avoid;
+  text-transform: uppercase;
 }
 
 .data-table td {
-  font-size: 10px; /* MÁS GRANDE */
-  color: #1a1a1a;
+  color: #212529;
+  font-size: 9px;
+  font-weight: 500;
   line-height: 1.5;
 }
 
-/* ZEBRA STRIPING - MÁS SUTIL */
+/* ZEBRA STRIPING - MODERNO */
 .data-table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .data-table tbody tr:nth-child(even) {
-  background-color: #fafafa; /* Más sutil que #f5f5f5 */
+  background-color: rgba(var(--v-theme-secondary), 0.025);
+}
+
+.data-table tbody tr:hover {
+  background-color: rgba(var(--v-theme-primary), 0.04);
+  transition: background-color 0.2s ease;
 }
 
 .data-table .total-row {
-  background-color: #e8e8e8 !important; /* Más claro */
-  font-weight: 900;
-  border-block-start: 1.5px solid #333 !important; /* Más sutil */
+  background: linear-gradient(90deg, rgba(var(--v-theme-primary), 0.12) 0%, rgba(var(--v-theme-secondary), 0.08) 100%) !important;
+  border-block-start: 2px solid rgb(var(--v-theme-primary)) !important;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 800;
 }
 
 /* === NOTE SECTION === */
 .note-section {
-  padding: 10pt;
-  border: 1.5px solid #666;
-  background-color: #fafafa;
-  margin-block-start: 12pt;
+  border: 1.5px solid rgba(var(--v-theme-secondary), 0.2);
+  border-radius: 3px;
+  background: linear-gradient(135deg, rgba(var(--v-theme-secondary), 0.03) 0%, rgba(var(--v-theme-primary), 0.01) 100%);
+  border-inline-start: 3px solid rgb(var(--v-theme-secondary));
+  box-shadow: none; /* Sin sombra para ahorrar tinta */
   break-inside: avoid;
+  margin-block-start: 12px;
+  padding-block: 10px;
+  padding-inline: 12px;
   page-break-inside: avoid;
 }
 
 .note-section p {
   margin: 0;
-  font-size: 8pt;
+  color: #495057;
+  font-size: 9px;
   font-style: italic;
-  color: #333;
-  line-height: 1.5;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.note-section strong {
+  color: rgb(var(--v-theme-secondary));
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .note {
+  color: #000;
   font-size: 8pt;
   font-weight: 700;
   margin-block-start: 6pt;
   text-align: center;
-  color: #000;
 }
 
 /* === SIGNATURES SECTION === */
 .signatures-section {
   display: grid;
-  border-block-start: 1.5px solid #333; /* Más sutil */
-  gap: 16px;
-  grid-template-columns: 1fr 1fr 1fr;
-  margin-block-start: 20px;
-  padding-block-start: 16px;
+  border-block-start: 2px solid rgba(var(--v-theme-primary), 0.2);
   break-inside: avoid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-block-start: 16px;
+  padding-block-start: 14px;
   page-break-inside: avoid;
 }
 
@@ -1226,21 +1418,33 @@ watch(() => report.value, newReport => {
 }
 
 .signature-label {
+  display: inline-block;
+  border-radius: 3px;
+  background: rgba(var(--v-theme-primary), 0.06);
+  color: rgb(var(--v-theme-primary));
   font-size: 9px;
-  font-weight: 900;
-  margin-block-end: 8px;
-  text-transform: uppercase;
-  color: #000;
+  font-weight: 800;
   letter-spacing: 0.5px;
+  margin-block-end: 8px;
+  padding-block: 4px;
+  padding-inline: 8px;
+  text-transform: uppercase;
 }
 
 .signature-space {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #666; /* Más sutil */
-  block-size: 80px;
-  background: white;
+  border: 1.5px dashed rgba(var(--v-theme-primary), 0.25);
+  border-radius: 4px;
+  background: rgba(var(--v-theme-secondary), 0.01);
+  block-size: 70px;
+  transition: all 0.2s ease;
+}
+
+.signature-space:hover {
+  border-color: rgba(var(--v-theme-primary), 0.4);
+  background: rgba(var(--v-theme-primary), 0.03);
 }
 
 .signature-content img {
@@ -1251,45 +1455,53 @@ watch(() => report.value, newReport => {
 
 /* === OBSERVATIONS SECTION === */
 .observations-section {
-  padding: 12px;
-  border: 1px solid #333; /* Más sutil */
-  margin-block-start: 16px;
+  padding: 18px;
+  border: 2px solid rgba(var(--v-theme-primary), 0.15);
+  border-radius: 8px;
   background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 4%);
   break-inside: avoid;
+  margin-block-start: 20px;
   page-break-inside: avoid;
 }
 
 .observations-section h3 {
-  font-size: 11px;
-  font-weight: 900;
-  margin-block: 0 8px;
+  border-block-end: 2px solid rgba(var(--v-theme-primary), 0.2);
+  color: rgb(var(--v-theme-primary));
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin-block: 0 12px;
   margin-inline: 0;
+  padding-block-end: 8px;
   text-transform: uppercase;
-  color: #000;
-  letter-spacing: 0.5px;
 }
 
 .observations-section p {
   margin: 0;
-  font-size: 9px;
-  color: #1a1a1a;
-  line-height: 1.6;
+  color: #212529;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.7;
 }
 
 /* === ENTERPRISE FOOTER === */
 .enterprise-footer {
-  margin-block-start: 20px;
-  padding-block-start: 16px;
-  border-block-start: 1.5px solid #333; /* Más sutil */
+  border-radius: 3px;
+  background: linear-gradient(135deg, rgba(var(--v-theme-secondary), 0.02) 0%, rgba(var(--v-theme-primary), 0.01) 100%);
+  border-block-start: 2px solid rgba(var(--v-theme-primary), 0.2);
   break-inside: avoid;
+  margin-block-start: 16px;
+  padding-block: 12px;
+  padding-inline: 14px;
   page-break-inside: avoid;
 }
 
 .footer-content {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 16pt;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .footer-left {
@@ -1297,25 +1509,35 @@ watch(() => report.value, newReport => {
 }
 
 .footer-title {
-  margin: 0 0 6pt 0;
-  font-size: 11pt;
-  font-weight: 900;
-  color: #000;
+  color: rgb(var(--v-theme-primary));
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  margin-block: 0 6px;
+  margin-inline: 0;
+  text-transform: uppercase;
 }
 
 .footer-disclaimer {
-  margin: 0 0 8pt 0;
-  font-size: 7pt;
-  color: #555;
-  line-height: 1.5;
+  color: #6c757d;
+  font-size: 8px;
   font-style: italic;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-block: 0 8px;
+  margin-inline: 0;
 }
 
 .footer-meta {
   margin: 0;
-  font-size: 7pt;
-  color: #333;
-  line-height: 1.4;
+  color: #495057;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.footer-meta strong {
+  color: rgb(var(--v-theme-primary));
 }
 
 .footer-right {
@@ -1323,22 +1545,31 @@ watch(() => report.value, newReport => {
 }
 
 .qr-section {
+  padding: 8px;
+  border: 1.5px solid rgba(var(--v-theme-primary), 0.15);
+  border-radius: 4px;
+  background: white;
+  box-shadow: none; /* Sin sombra para ahorrar tinta */
   text-align: center;
 }
 
 .qr-code {
-  inline-size: 80px;
-  block-size: 80px;
-  border: 2px solid #000;
-  padding: 4pt;
+  padding: 4px;
+  border: 1.5px solid rgb(var(--v-theme-primary));
+  border-radius: 3px;
   background: white;
+  block-size: 70px;
+  inline-size: 70px;
 }
 
 .qr-label {
-  margin: 4pt 0 0 0;
-  font-size: 7pt;
-  color: #666;
-  font-weight: 600;
+  color: rgb(var(--v-theme-primary));
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin-block: 6px 0;
+  margin-inline: 0;
+  text-transform: uppercase;
 }
 
 /* ============================================
@@ -1359,8 +1590,8 @@ watch(() => report.value, newReport => {
 @media print {
   /* === @PAGE CONFIGURATION - LETTER SIZE === */
   @page {
+    margin: 0.4in; /* Márgenes compactos */
     size: letter portrait; /* 8.5" x 11" */
-    margin: 0.3in; /* Márgenes uniformes */
   }
 
   /* === HIDE SCREEN-ONLY ELEMENTS === */
@@ -1373,8 +1604,8 @@ watch(() => report.value, newReport => {
 
   /* === BASE ADJUSTMENTS === */
   .drilling-report-print-view {
-    background: white;
     overflow: visible;
+    background: white !important;
   }
 
   .report-content {
@@ -1384,29 +1615,226 @@ watch(() => report.value, newReport => {
   }
 
   .print-document {
-    box-shadow: none;
-    inline-size: 100%;
-    padding: 0.2in;
+    padding: 0.25in; /* Más compacto */
+    border-radius: 0;
     margin: 0;
+    box-shadow: none !important;
+    inline-size: 100%;
     max-inline-size: none;
   }
 
-  /* === NUEVO LAYOUT PRINT === */
-  .compact-row {
-    gap: 10px;
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-
-  .main-row,
-  .secondary-row {
+  /* === LAYOUT COMPACTO PARA PRINT === */
+  .info-row-dual {
     gap: 10px;
     grid-template-columns: 1fr 1fr;
+    margin-block-end: 10px;
+  }
+
+  .section-clean h3 {
+    font-size: 9px;
+    padding: 6px 8px;
+    margin-block-end: 8px;
+    background: white !important; /* Sin gradientes para ahorrar tinta */
+  }
+
+  .info-grid-compact {
+    gap: 0px; /* Eliminar gap para impresión compacta */
+  }
+
+  .info-grid-compact .info-row {
+    font-size: 8px;
+    padding: 2px 5px; /* Reducido de 3px 6px */
+    background: white !important; /* Sin gradientes para ahorrar tinta */
+  }
+
+  .info-grid-compact .label,
+  .info-grid-compact .value {
+    font-size: 8px;
+  }
+
+  .info-grid-compact .label {
+    min-inline-size: 90px;
+  }
+
+  /* DEPRECATED */
+  .info-grid-dual {
+    gap: 2px 6px;
+  }
+
+  .info-grid-dual .info-row {
+    font-size: 8px;
+    padding-block: 3px;
+    padding-inline: 5px;
+  }
+
+  .info-grid-dual .label,
+  .info-grid-dual .value {
+    font-size: 8px;
+  }
+
+  .info-grid-dual .label {
+    min-inline-size: 70px;
+  }
+
+  .secondary-row {
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+    margin-block-end: 8px;
+  }
+
+  .full-row {
+    margin-block-end: 8px;
+  }
+
+  /* DEPRECATED */
+  .compact-row {
+    gap: 8px;
+    grid-template-columns: 1fr 1fr 1fr;
+    margin-block-end: 8px;
+  }
+
+  /* === HEADER MÁS COMPACTO === */
+  .report-header {
+    background: white !important; /* Sin gradientes para ahorrar tinta */
+    box-shadow: none !important;
+    margin-block-end: 10px;
+    padding-block: 10px;
+    padding-inline: 12px;
+  }
+
+  /* === SECCIONES COMPACTAS === */
+  .section {
+    border-radius: 0;
+    box-shadow: none !important;
+    margin-block-end: 8px;
+    padding-block: 8px;
+    padding-inline: 10px;
+  }
+
+  .section h3 {
+    font-size: 10px;
+    margin-block: -2px 8px;
+    margin-inline: -2px;
+    padding-block: 6px;
+    padding-inline: 8px;
+  }
+
+  /* === TABLAS COMPACTAS === */
+  .data-table th,
+  .data-table td {
+    font-size: 8px;
+    padding-block: 4px;
+    padding-inline: 6px;
+  }
+
+  .info-table .info-row {
+    gap: 2px;
+    padding-block: 3px;
+    padding-inline: 6px;
+  }
+
+  .info-table .label,
+  .info-table .value {
+    font-size: 8px;
+  }
+
+  /* === FIRMAS COMPACTAS === */
+  .signatures-section {
+    gap: 8px;
+    margin-block-start: 10px;
+    padding-block-start: 10px;
+  }
+
+  .signature-space {
+    block-size: 60px;
+  }
+
+  .signature-label {
+    font-size: 8px;
+    margin-block-end: 6px;
+    padding-block: 3px;
+    padding-inline: 6px;
+  }
+
+  /* === FOOTER COMPACTO === */
+  .enterprise-footer {
+    background: white !important; /* Sin gradientes */
+    margin-block-start: 10px;
+    padding-block: 8px;
+    padding-inline: 10px;
+  }
+
+  .footer-title {
+    font-size: 10px;
+    margin-block-end: 4px;
+  }
+
+  .footer-disclaimer,
+  .footer-meta {
+    font-size: 7px;
+  }
+
+  .qr-code {
+    block-size: 60px;
+    inline-size: 60px;
+  }
+
+  .qr-label {
+    font-size: 6px;
+  }
+
+  /* === NOTE SECTION COMPACTO === */
+  .note-section {
+    background: white !important; /* Sin gradientes */
+    margin-block-start: 8px;
+    padding-block: 8px;
+    padding-inline: 10px;
+  }
+
+  .note-section p {
+    font-size: 8px;
+  }
+
+  /* === OBSERVATIONS COMPACTO === */
+  .observations-section {
+    margin-block-start: 8px;
+    padding-block: 8px;
+    padding-inline: 10px;
+  }
+
+  .observations-section h3 {
+    font-size: 10px;
+    margin-block-end: 6px;
+    padding-block-end: 4px;
+  }
+
+  .observations-section p {
+    font-size: 8px;
   }
 
   /* === TYPOGRAPHY OPTIMIZATION === */
   body {
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* === REMOVE INTERACTIVE EFFECTS === */
+  .section:hover,
+  .info-table .info-row:hover,
+  .data-table tbody tr:hover,
+  .signature-space:hover {
+    border-color: inherit !important;
+    background: inherit !important;
+    box-shadow: none !important;
+  }
+
+  /* === GRADIENTES MÁS SUTILES PARA PRINT === */
+  .report-header,
+  .section h3,
+  .data-table th,
+  .note-section,
+  .enterprise-footer {
+    background: white !important; /* Eliminar gradientes para tinta */
   }
 
   /* === LOGO ADJUSTMENTS === */
@@ -1459,33 +1887,43 @@ watch(() => report.value, newReport => {
     page-break-inside: avoid;
   }
 
-  /* === COLOR PRESERVATION - MÁS SUTIL === */
+  /* === COLOR PRESERVATION - MANTENER TEMA === */
   .data-table tbody tr:nth-child(even) {
-    background-color: #fafafa !important; /* Más sutil */
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .data-table th {
-    background-color: #f0f0f0 !important; /* Más claro */
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .data-table .total-row {
-    background-color: #e8e8e8 !important; /* Más claro */
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* === BORDES MÁS SUTILES EN PRINT === */
+  /* === MANTENER COLORES DE MARCA EN PRINT === */
+  .section,
+  .report-header,
+  .section h3,
+  .info-table .label,
+  .report-title h1,
+  .signature-label,
+  .footer-title,
+  .note-section strong {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* === SIMPLIFICAR BORDES PARA PRINT === */
   .section {
-    border-color: #666 !important;
+    border-width: 1.5px !important;
+    box-shadow: none !important;
   }
 
-  .data-table th,
-  .data-table td {
-    border-color: #999 !important;
+  .data-table {
+    border-radius: 0 !important;
   }
 
   /* === PAGE BREAKS === */
@@ -1500,15 +1938,21 @@ watch(() => report.value, newReport => {
   }
 
   /* === ORPHANS & WIDOWS === */
-  p, h1, h2, h3, h4, h5, h6 {
+  p,
+ h1,
+ h2,
+ h3,
+ h4,
+ h5,
+ h6 {
     orphans: 3;
     widows: 3;
   }
 
   /* === QR CODE & FOOTER ADJUSTMENTS === */
   .qr-code {
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 
@@ -1518,8 +1962,8 @@ watch(() => report.value, newReport => {
 
 @media (max-width: 1024px) {
   .print-document {
-    inline-size: 100%;
     padding: 20px;
+    inline-size: 100%;
   }
 
   .report-grid {
