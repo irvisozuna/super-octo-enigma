@@ -1,0 +1,6 @@
+export { default as WidgetContainer } from './WidgetContainer.vue'
+export { default as WidgetHeader } from './WidgetHeader.vue'
+export { default as StatWidget } from './StatWidget.vue'
+export { default as ChartWidget } from './ChartWidget.vue'
+export { default as TableWidget } from './TableWidget.vue'
+export { default as MapWidget } from './MapWidget.vue'

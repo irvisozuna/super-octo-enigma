@@ -38,6 +38,20 @@ const DynamicReportsMenu: VerticalNavItems = [
         action: 'read',
         subject: 'executions',
       },
+      {
+        title: 'Dashboards',
+        icon: { icon: 'tabler-layout-dashboard' },
+        to: 'dashboards',
+        action: 'read',
+        subject: 'dashboards',
+      },
+      {
+        title: 'Widgets',
+        icon: { icon: 'tabler-widget' },
+        to: 'widgets',
+        action: 'read',
+        subject: 'widgets',
+      },
     ],
   },
 

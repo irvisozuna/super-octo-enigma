@@ -131,7 +131,7 @@ onMounted(() => {
           color="primary"
           @click="goToWizard"
         >
-          { ('data-source.add data-source') }
+          {{ t('data-source.add data-source') }}
         </VBtn>
 
         <!-- Botones para acciones con seleccionados -->
@@ -140,7 +140,7 @@ onMounted(() => {
           color="error"
           @click="deleteSelected"
         >
-          { ('delete selected') }
+          {{ t('delete selected') }}
         </VBtn>
       </div>
     </VCardText>

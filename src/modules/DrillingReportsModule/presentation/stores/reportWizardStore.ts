@@ -242,7 +242,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     const defaultShift = formData.value.shift === 'mixed' ? 'day' : formData.value.shift
 
     formData.value.activities.push({
-      activity_type: activity?.activity_type || 'drilling_core',
+      activity_type: activity?.activity_type || 'drilling',
       shift: activity?.shift || defaultShift,
       hours: activity?.hours || 1,
       start_time: activity?.start_time || '',

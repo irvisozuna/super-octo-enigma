@@ -181,8 +181,35 @@ onMounted(async () => {
     if (item) {
       let wizardData = null
 
-      // Si existe metadata.sqlBuilder, úsalo como base
-      if (item.metadata && item.metadata.sqlBuilder) {
+      // Si existe base_query, úsalo como base principal
+      if (item.base_query) {
+        wizardData = {
+          connection_id: item.connection_id,
+          connection_name: item.connection_name,
+          name: item.name,
+          type: item.type,
+          description: item.description || '',
+          custom_sql: item.custom_sql || '',
+          table: item.base_query.table || '',
+          tableColumns: item.base_query.tableColumns || [],
+          procedure: item.base_query.procedure || '',
+          procedureParams: item.base_query.procedureParams || [],
+          procedureColumns: item.base_query.procedureColumns || [],
+          joins: item.base_query.joins || [],
+          joinColumns: item.base_query.joinColumns || {},
+          selectedFields: item.base_query.selectedFields || [],
+          fieldAliases: item.base_query.fieldAliases || [],
+          filters: item.base_query.filters || [],
+          groupBy: item.base_query.groupBy || [],
+          sorting: item.base_query.sorting || [],
+          pagination: item.base_query.pagination || { enabled: false, pageSize: 50 },
+          cacheConfig: item.base_query.cacheConfig || { enabled: false, ttl: 300 },
+          isActive: item.is_active !== undefined ? item.is_active : true,
+          generatedSql: item.sql_to_execute || item.custom_sql || '',
+        }
+      }
+      // Si existe metadata.sqlBuilder, úsalo como alternativa
+      else if (item.metadata && item.metadata.sqlBuilder) {
         wizardData = { ...item.metadata.sqlBuilder }
         wizardData.connection_id = item.connection_id
         wizardData.connection_name = item.connection_name
