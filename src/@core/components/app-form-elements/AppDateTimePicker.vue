@@ -3,7 +3,7 @@ import FlatPickr from 'vue-flatpickr-component'
 import { useTheme } from 'vuetify'
 
 // @ts-expect-error There won't be declaration file for it
-import { VField, filterFieldProps, makeVFieldProps } from 'vuetify/lib/components/VField/VField'
+import { VField, makeVFieldProps } from 'vuetify/lib/components/VField/VField'
 
 // @ts-expect-error There won't be declaration file for it
 import { VInput, makeVInputProps } from 'vuetify/lib/components/VInput/VInput'
@@ -54,6 +54,11 @@ interface Emit {
 
 const configStore = useConfigStore()
 const attrs = useAttrs()
+
+// Helper function to filter VField props (similar to VInput.filterProps)
+const filterFieldProps = (props: any) => {
+  return VField.filterProps ? VField.filterProps(props) : props
+}
 
 const [rootAttrs, compAttrs] = filterInputAttrs(attrs)
 const inputProps = ref(VInput.filterProps(props))
