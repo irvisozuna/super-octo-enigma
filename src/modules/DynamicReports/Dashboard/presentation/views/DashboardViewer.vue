@@ -3,8 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDashboard } from '../composables/useDashboard'
 import { useDashboardTheme } from '../composables/useDashboardTheme'
-import { StatWidget, ChartWidget, TableWidget, MapWidget } from '../../Widget/presentation/components'
-import { WidgetTypeEnum } from '../../Widget/domain/types/WidgetTypeEnum'
+import { StatWidget, ChartWidget, TableWidget, MapWidget } from '../../../Widget/presentation/components'
+import { WidgetTypeEnum } from '../../../Widget/domain/enums/WidgetTypeEnum'
 
 const route = useRoute()
 const router = useRouter()

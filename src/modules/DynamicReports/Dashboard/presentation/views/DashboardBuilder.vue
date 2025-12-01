@@ -4,9 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDashboard } from '../composables/useDashboard'
 import { useDashboardLayout } from '../composables/useDashboardLayout'
 import { useDashboardTheme } from '../composables/useDashboardTheme'
-import { useWidget } from '../../Widget/presentation/composables/useWidget'
-import { WidgetTypeEnum } from '../../Widget/domain/types/WidgetTypeEnum'
-import type { WidgetInstanceConfig } from '../../Widget/domain/types/WidgetTypes'
+import { useWidget } from '../../../Widget/presentation/composables/useWidget'
+import { WidgetTypeEnum } from '../../../Widget/domain/enums/WidgetTypeEnum'
+import type { WidgetInstanceConfig } from '../../../Widget/domain/types/WidgetTypes'
 
 const route = useRoute()
 const router = useRouter()
