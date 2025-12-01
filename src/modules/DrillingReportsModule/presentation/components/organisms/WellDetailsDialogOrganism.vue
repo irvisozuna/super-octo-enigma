@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import WellProgressVisualizationMolecule from '../molecules/WellProgressVisualizationMolecule.vue'
+import { formatWellDiameter } from '../../../shared/utils/WellUtils'
 
 interface Well {
   id: string
@@ -260,7 +261,7 @@ const close = () => {
                 Diámetro
               </p>
               <p class="text-h6 font-weight-medium">
-                {{ well.hole_diameter_inches }}"
+                {{ formatWellDiameter(well.hole_diameter_inches) }}
               </p>
             </div>
           </VCol>

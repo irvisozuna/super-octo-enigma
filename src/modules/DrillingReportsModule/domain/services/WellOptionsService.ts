@@ -1,4 +1,4 @@
-import { WELL_STATUS, WELL_TYPES } from '../../shared/constants/WellConstants'
+import { WELL_DIAMETER_OPTIONS, WELL_STATUS, WELL_TYPES } from '../../shared/constants/WellConstants'
 
 /**
  * Servicio de dominio para opciones de pozos
@@ -26,12 +26,23 @@ export class WellOptionsService {
   }
 
   /**
+   * Obtiene las opciones de diámetro de pozo para formularios
+   */
+  static getHoleDiameterOptions() {
+    return WELL_DIAMETER_OPTIONS.map(option => ({
+      title: option.label,
+      value: option.code,
+    }))
+  }
+
+  /**
    * Obtiene todas las opciones de pozo para formularios
    */
   static getAllOptions() {
     return {
       status: this.getStatusOptions(),
       drillingTypes: this.getDrillingTypeOptions(),
+      holeDiameter: this.getHoleDiameterOptions(),
     }
   }
 }

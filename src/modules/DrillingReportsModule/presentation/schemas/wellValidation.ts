@@ -1,4 +1,5 @@
 import * as yup from 'yup'
+import { getDiameterInchesFromCode } from '../../shared/utils/WellUtils'
 
 /**
  * Schema de validación para el formulario de pozos
@@ -46,10 +47,34 @@ export const wellValidationSchema = yup.object({
     .max(50000, 'La profundidad no puede exceder 50,000 metros'),
 
   hole_diameter_inches: yup
-    .number()
+    .mixed<number | string>()
     .required('Este campo es requerido')
-    .min(0.1, 'El diámetro debe ser mayor a 0.1 pulgadas')
-    .max(100, 'El diámetro no puede exceder 100 pulgadas'),
+    .test('is-valid-diameter', 'El diámetro debe ser válido', function (value) {
+      if (!value)
+        return false
+
+      // If it's already a number, validate it
+      if (typeof value === 'number')
+        return value >= 0.1 && value <= 100
+
+      // If it's a string (code), try to convert it
+      if (typeof value === 'string') {
+        const inches = getDiameterInchesFromCode(value)
+        if (inches !== null)
+          return inches >= 0.1 && inches <= 100
+      }
+
+      return false
+    })
+    .transform((value, originalValue) => {
+      // If it's a string (code), convert to number
+      if (typeof originalValue === 'string') {
+        const inches = getDiameterInchesFromCode(originalValue)
+        return inches !== null ? inches : originalValue
+      }
+      // If it's already a number, return as is
+      return value
+    }) as yup.NumberSchema<number>,
 
   current_depth_meters: yup
     .number()

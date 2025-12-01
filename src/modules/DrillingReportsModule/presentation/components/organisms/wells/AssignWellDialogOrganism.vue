@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import * as yup from 'yup'
-import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
+import { getDiameterCodeFromInches, getDiameterInchesFromCode } from '../../../../shared/utils/WellUtils'
 import { validateWellData, wellValidationSchema } from '../../../schemas'
 import { useWellOptions } from '../../../composables/useWellOptions'
 import { useNotification } from '@/helpers/notificationHelper'
@@ -46,7 +46,7 @@ const isEditable = computed(() => {
 // Composables
 const { showSuccess, showError } = useNotification()
 const { translateError } = useErrorTranslation()
-const { statusOptions, drillingTypeOptions } = useWellOptions()
+const { statusOptions, drillingTypeOptions, holeDiameterOptions } = useWellOptions()
 
 const localDialog = computed({
   get: () => props.modelValue,
@@ -62,7 +62,7 @@ const formData = ref({
     longitude: null as number | null,
   },
   planned_depth_meters: null as number | null,
-  hole_diameter_inches: null as number | null,
+  hole_diameter_code: null as string | null,
   current_depth_meters: 0,
   status: 'planned',
   drilling_type: null as string | null,
@@ -103,10 +103,15 @@ const rules = {
   wellName: createVuetifyRule(wellValidationSchema.fields.well_name),
   wellCode: createVuetifyRule(wellValidationSchema.fields.well_code),
   location: createVuetifyRule(wellValidationSchema.fields.location),
-  latitude: createVuetifyRule(wellValidationSchema.fields.surface_coordinates.fields.latitude),
-  longitude: createVuetifyRule(wellValidationSchema.fields.surface_coordinates.fields.longitude),
+  latitude: createVuetifyRule((wellValidationSchema.fields.surface_coordinates as any).fields.latitude),
+  longitude: createVuetifyRule((wellValidationSchema.fields.surface_coordinates as any).fields.longitude),
   plannedDepth: createVuetifyRule(wellValidationSchema.fields.planned_depth_meters),
-  holeDiameter: createVuetifyRule(wellValidationSchema.fields.hole_diameter_inches),
+  holeDiameter: (v: any) => {
+    if (!v)
+      return 'Este campo es requerido'
+
+    return true
+  },
   currentDepth: createVuetifyRule(wellValidationSchema.fields.current_depth_meters),
   status: createVuetifyRule(wellValidationSchema.fields.status),
   drillingType: createVuetifyRule(wellValidationSchema.fields.drilling_type),
@@ -118,6 +123,10 @@ const rules = {
 // Load well data when editing
 const loadWellData = () => {
   if (props.well) {
+    // Convert inches to code if available
+    const diameterInches = props.well.holeDiameterInches || null
+    const diameterCode = diameterInches ? getDiameterCodeFromInches(diameterInches) : null
+
     formData.value = {
       well_name: props.well.wellName || '',
       well_code: props.well.wellCode || '',
@@ -127,7 +136,7 @@ const loadWellData = () => {
         longitude: props.well.surfaceCoordinates?.longitude || null,
       },
       planned_depth_meters: props.well.plannedDepthMeters || null,
-      hole_diameter_inches: props.well.holeDiameterInches || null,
+      hole_diameter_code: diameterCode,
       current_depth_meters: props.well.currentDepthMeters || 0,
       status: props.well.status || 'planned',
       drilling_type: props.well.drillingType || null,
@@ -144,10 +153,25 @@ const handleSubmit = async () => {
     return
 
   try {
+    // Convert diameter code to inches before sending to backend
+    const diameterInches = formData.value.hole_diameter_code
+      ? getDiameterInchesFromCode(formData.value.hole_diameter_code)
+      : null
+
+    if (!diameterInches) {
+      showError('Por favor seleccione un diámetro válido', 'Error de validación')
+
+      return
+    }
+
     const payload = {
       ...formData.value,
+      hole_diameter_inches: diameterInches,
       project_id: props.projectId,
     }
+
+    // Remove hole_diameter_code from payload as backend expects hole_diameter_inches
+    delete (payload as any).hole_diameter_code
 
     // Validate with Yup using helper function
     const validationResult = await validateWellData(payload)
@@ -391,14 +415,11 @@ watch(() => props.well, () => {
               cols="12"
               md="6"
             >
-              <VTextField
-                v-model.number="formData.hole_diameter_inches"
+              <VSelect
+                v-model="formData.hole_diameter_code"
                 label="Diámetro del Hoyo *"
-                type="number"
-                step="0.125"
-                min="0"
+                :items="holeDiameterOptions"
                 prepend-inner-icon="tabler-circle"
-                suffix="in"
                 :rules="[rules.holeDiameter]"
                 :disabled="isEditing && !isEditable"
                 required

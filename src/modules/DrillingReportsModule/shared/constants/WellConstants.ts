@@ -32,6 +32,16 @@ export const WELL_DIAMETER_CATEGORIES = [
   { min: 20, max: Number.POSITIVE_INFINITY, label: 'Muy Grande (>20")', color: '#EF4444' },
 ]
 
+export const WELL_DIAMETER_OPTIONS = [
+  { code: 'BQ', inches: 2.36, label: 'BQ (2.36")' },
+  { code: 'NQ', inches: 2.98, label: 'NQ (2.98")' },
+  { code: 'NQ3', inches: 2.98, label: 'NQ3 (2.98")' },
+  { code: 'HQ', inches: 3.78, label: 'HQ (3.78")' },
+  { code: 'HQ3', inches: 3.78, label: 'HQ3 (3.78")' },
+  { code: 'PQ', inches: 4.83, label: 'PQ (4.83")' },
+  { code: 'PQ3', inches: 4.83, label: 'PQ3 (4.83")' },
+]
+
 export const WELL_PHASES = [
   { value: 'planning', label: 'Planificación', icon: '📋', description: 'Fase de planificación del pozo' },
   { value: 'drilling', label: 'Perforación', icon: '⚡', description: 'Fase de perforación activa' },

@@ -10,11 +10,14 @@ export function useWellOptions() {
 
   const drillingTypeOptions = computed(() => WellOptionsService.getDrillingTypeOptions())
 
+  const holeDiameterOptions = computed(() => WellOptionsService.getHoleDiameterOptions())
+
   const allOptions = computed(() => WellOptionsService.getAllOptions())
 
   return {
     statusOptions,
     drillingTypeOptions,
+    holeDiameterOptions,
     allOptions,
   }
 }

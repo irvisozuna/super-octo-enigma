@@ -1,5 +1,5 @@
 import type { Well } from '../../domain/entities/WellEntity'
-import { WELL_ENVIRONMENTAL_CONDITIONS, WELL_GEOLOGY_TYPES, WELL_METRICS, WELL_PHASES, WELL_STATUS, WELL_TYPES } from '../constants/WellConstants'
+import { WELL_DIAMETER_OPTIONS, WELL_ENVIRONMENTAL_CONDITIONS, WELL_GEOLOGY_TYPES, WELL_METRICS, WELL_PHASES, WELL_STATUS, WELL_TYPES } from '../constants/WellConstants'
 
 export function getWellStatusLabel(status: string): string {
   return WELL_STATUS.find(s => s.value === status)?.label || status
@@ -111,8 +111,69 @@ export function formatWellDepth(depth: number, unit = 'm'): string {
   return `${depth.toLocaleString()} ${unit}`
 }
 
-export function formatWellDiameter(diameter: number, unit = 'in'): string {
-  return `${diameter.toFixed(1)} ${unit}`
+/**
+ * Obtiene el código de diámetro desde un valor en pulgadas
+ * @param inches - Valor en pulgadas
+ * @returns Código del diámetro o null si no coincide con ninguna opción
+ */
+export function getDiameterCodeFromInches(inches: number | null | undefined): string | null {
+  if (inches === null || inches === undefined)
+    return null
+
+  // Buscar la opción que coincida con el valor (con tolerancia de 0.01 para errores de redondeo)
+  const option = WELL_DIAMETER_OPTIONS.find(opt => Math.abs(opt.inches - inches) < 0.01)
+
+  return option?.code || null
+}
+
+/**
+ * Obtiene el valor en pulgadas desde un código de diámetro
+ * @param code - Código del diámetro (BQ, NQ, etc.)
+ * @returns Valor en pulgadas o null si el código no existe
+ */
+export function getDiameterInchesFromCode(code: string | null | undefined): number | null {
+  if (!code)
+    return null
+
+  const option = WELL_DIAMETER_OPTIONS.find(opt => opt.code === code)
+
+  return option?.inches || null
+}
+
+/**
+ * Formatea el diámetro mostrando el código y el valor en pulgadas si hay código conocido,
+ * o solo el valor numérico si no hay código
+ * @param diameter - Valor en pulgadas o código del diámetro
+ * @param unit - Unidad de medida (default: 'in')
+ * @returns String formateado (ej: "BQ (2.36")" o "2.36 in")
+ */
+export function formatWellDiameter(diameter: number | string | null | undefined, unit = 'in'): string {
+  if (diameter === null || diameter === undefined)
+    return '-'
+
+  // Si es un string, podría ser un código
+  if (typeof diameter === 'string') {
+    const inches = getDiameterInchesFromCode(diameter)
+    if (inches !== null) {
+      const option = WELL_DIAMETER_OPTIONS.find(opt => opt.code === diameter)
+      return option?.label || `${diameter} (${inches.toFixed(2)}${unit})`
+    }
+    // Si no es un código válido, tratar como número
+    const numValue = parseFloat(diameter)
+    if (!isNaN(numValue))
+      return `${numValue.toFixed(2)} ${unit}`
+    return '-'
+  }
+
+  // Si es un número, buscar si corresponde a un código conocido
+  const code = getDiameterCodeFromInches(diameter)
+  if (code) {
+    const option = WELL_DIAMETER_OPTIONS.find(opt => opt.code === code)
+    return option?.label || `${code} (${diameter.toFixed(2)}${unit})`
+  }
+
+  // Si no hay código, mostrar solo el número
+  return `${diameter.toFixed(2)} ${unit}`
 }
 
 export function formatWellCost(cost: number, currency = 'USD'): string {

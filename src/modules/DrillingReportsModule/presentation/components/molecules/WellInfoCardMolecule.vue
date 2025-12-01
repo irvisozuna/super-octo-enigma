@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { Well } from '../../../domain/entities/WellEntity'
 import ProjectProgressBarAtom from '../atoms/ProjectProgressBarAtom.vue'
+import { formatWellDiameter } from '../../../shared/utils/WellUtils'
 
 export interface WellInfoCardProps {
   well?: Well | null
@@ -135,7 +136,7 @@ const canShowActions = computed(() => {
                   class="text-medium-emphasis"
                 />
                 <span class="text-caption text-medium-emphasis">Diámetro</span>
-                <span class="text-body-2 font-weight-medium">{{ well.diameter }}"</span>
+                <span class="text-body-2 font-weight-medium">{{ formatWellDiameter(well.diameter) }}</span>
               </div>
             </div>
 

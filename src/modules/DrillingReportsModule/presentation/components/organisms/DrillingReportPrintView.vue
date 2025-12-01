@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDrillingReportStore } from '../../stores/drillingReportStore'
 import { formatDate, formatDateTime } from '../../../shared/utils/dateUtils'
+import { formatWellDiameter } from '../../../shared/utils/WellUtils'
 import { usePrintReport } from '../../composables/usePrintReport'
 import { useTenantConfig } from '@/composables/useTenantConfig'
 
@@ -140,16 +141,19 @@ const projectInfo = computed(() => ({
   costCenter: report.value?.project?.cost_center || '',
 }))
 
-const wellInfo = computed(() => ({
-  code: report.value?.well?.code || '',
-  name: report.value?.well?.name || '',
-  sector: report.value?.well?.sector || '',
-  diameter: report.value?.well?.diameter || '',
-  inclination: report.value?.well?.inclination || '',
-  initialDepth: report.value?.well?.initial_depth || 0,
-  finalDepth: report.value?.well?.final_depth || 0,
-  targetDepth: report.value?.well?.target_depth || 0,
-}))
+const wellInfo = computed(() => {
+  const diameter = report.value?.well?.diameter
+  return {
+    code: report.value?.well?.code || '',
+    name: report.value?.well?.name || '',
+    sector: report.value?.well?.sector || '',
+    diameter: diameter ? formatWellDiameter(diameter) : '',
+    inclination: report.value?.well?.inclination || '',
+    initialDepth: report.value?.well?.initial_depth || 0,
+    finalDepth: report.value?.well?.final_depth || 0,
+    targetDepth: report.value?.well?.target_depth || 0,
+  }
+})
 
 const equipmentInfo = computed(() => ({
   code: report.value?.equipment?.code || '',

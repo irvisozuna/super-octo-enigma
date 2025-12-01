@@ -5,6 +5,7 @@ import { useWellsStore } from '../stores/wellsStore'
 import { useWellsPermissions } from '../composables/useWellsPermissions'
 import { useProjectsStore } from '../stores/projectsStore'
 import WellForm from '../components/WellForm.vue'
+import { formatWellDiameter } from '../../shared/utils/WellUtils'
 
 const { t } = useI18n()
 const wellsStore = useWellsStore()
@@ -264,7 +265,7 @@ onMounted(() => {
           </template>
 
           <template #item.diameter="{ item }">
-            {{ item.diameter ? `${item.diameter} in` : '-' }}
+            {{ item.diameter ? formatWellDiameter(item.diameter) : '-' }}
           </template>
 
           <template #item.actions="{ item }">
