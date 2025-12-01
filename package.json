@@ -67,6 +67,7 @@
     "swiper": "11.1.15",
     "ufo": "1.5.4",
     "unplugin-vue-define-options": "1.5.3",
+    "uuid": "^10.0.0",
     "v-phone-input": "^4.4.0",
     "vee-validate": "^4.15.0",
     "vue": "3.5.13",

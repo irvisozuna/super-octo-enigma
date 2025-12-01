@@ -97,16 +97,6 @@ export class DrillingReportApiService {
   }
 
   /**
-   * Add an activity to a report
-   */
-  static async addActivity(reportId: string, activity: Omit<Activity, 'id'>): Promise<{ data: Activity }> {
-    return await rawApi(`${this.baseUrl}/${reportId}/add-activity`, {
-      method: 'POST',
-      body: activity,
-    })
-  }
-
-  /**
    * Update an activity
    */
   static async updateActivity(reportId: string, activityId: string, activity: Partial<Activity>): Promise<{ data: Activity }> {
@@ -270,24 +260,6 @@ export class DrillingReportApiService {
   }
 
   /**
-   * Get employees for dropdown
-   */
-  static async getEmployees(params: any = {}): Promise<any> {
-    try {
-      const response = await rawApi('/employees', {
-        method: 'GET',
-        params,
-      })
-
-      return response.data
-    }
-    catch (error) {
-      console.error('Error fetching employees:', error)
-      throw error
-    }
-  }
-
-  /**
    * Get equipment for dropdown
    * Note: Equipment is managed through equipment_usage within wells
    * This endpoint may not exist in the API - using tools as alternative
@@ -345,24 +317,6 @@ export class DrillingReportApiService {
     }
     catch (error) {
       console.error('❌ Error fetching project equipment:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Get tools for dropdown
-   */
-  static async getTools(params: any = {}): Promise<any> {
-    try {
-      const response = await rawApi('/drilling/tools', {
-        method: 'GET',
-        params,
-      })
-
-      return response.data
-    }
-    catch (error) {
-      console.error('Error fetching tools:', error)
       throw error
     }
   }
