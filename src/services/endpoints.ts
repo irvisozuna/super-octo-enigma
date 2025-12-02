@@ -6,6 +6,7 @@ export const ENDPOINTS = {
   CATEGORIES: '/categories',
   TEMPLATES: '/templates',
   PAYMENTMANDATES: '/payment_mandates',
+  READINGS: '/readings',
 
   // Transport Module
   TRANSPORT_FINES: '/transport/fines',
