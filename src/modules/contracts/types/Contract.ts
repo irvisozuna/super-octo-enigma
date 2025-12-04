@@ -1,5 +1,6 @@
 // Tipos base del contrato
 export interface Contract {
+  id: string
   contratid: string
   account: string
   nameuser: string
@@ -13,7 +14,7 @@ export interface Contract {
   debt_months: string
 }
 
-// Detalle completo del contrato (endpoint /contracts/{id})
+// Detalle completo del contrato (endpoint /contracts/details/{id})
 export interface ContractDetail extends Contract {
   rate_type: string
   rate_type_id: string
@@ -38,6 +39,8 @@ export interface ContractDetail extends Contract {
   trunks: number
   round_charge: string
   lecture: ContractLecture
+  entity?: string
+  route?: string
 }
 
 // Información de lectura del contrato

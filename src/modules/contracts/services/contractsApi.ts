@@ -1,4 +1,4 @@
-import type { Contract, ContractDebtSummary, ContractDetail, ContractValidation } from '../types/Contract'
+import type { ContractDetail, ContractValidation } from '../types/Contract'
 import type { CatalogResponse, ContractsFilters, ContractsResponse } from '../types/ContractResponses'
 import { ApiService } from '@/services/apiService'
 
@@ -19,42 +19,24 @@ export const ContractsApi = {
 
   /**
    * ENDPOINT 2: Obtener detalle completo de un contrato
-   * GET /api/contracts/{contratid}
+   * GET /api/contracts/details/{id}
    */
-  async getContractById(contratid: string): Promise<ContractDetail> {
+  async getContractDetails(id: string): Promise<ContractDetail> {
     try {
-      const response = await ApiService.get(`/contracts/${contratid}`)
+      const response = await ApiService.get(`/contracts/details/${id}`)
 
-      console.log('Raw API response for contract detail:', response)
+      console.log('Raw API response for contract details:', response)
 
       return response.data || response
     }
     catch (error) {
-      console.error(`Error fetching contract ${contratid}:`, error)
+      console.error(`Error fetching contract details for id ${id}:`, error)
       throw error
     }
   },
 
   /**
-   * ENDPOINT 3: Obtener resumen de deuda de un contrato
-   * GET /api/contracts/{contratid}/debt-summary
-   */
-  async getDebtSummary(contratid: string): Promise<ContractDebtSummary> {
-    try {
-      const response = await ApiService.get(`/contracts/${contratid}/debt-summary`)
-
-      console.log('Raw API response for debt summary:', response)
-
-      return response.data || response
-    }
-    catch (error) {
-      console.error(`Error fetching debt summary for contract ${contratid}:`, error)
-      throw error
-    }
-  },
-
-  /**
-   * ENDPOINT 4: Validar existencia de un contrato
+   * ENDPOINT 3: Validar existencia de un contrato
    * GET /api/contracts/validate?account={account} o ?contratid={contratid}
    */
   async validateContract(params: { account?: string; contratid?: string }): Promise<ContractValidation> {

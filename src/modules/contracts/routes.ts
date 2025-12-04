@@ -12,6 +12,15 @@ const contractsRoutes: RouteRecordRaw[] = [
       subject: 'all',
     },
   },
+  {
+    path: '/contracts/:id',
+    name: 'contract-detail',
+    component: () => import('./views/ContractDetailView.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'all',
+    },
+  },
 ]
 
 export default contractsRoutes

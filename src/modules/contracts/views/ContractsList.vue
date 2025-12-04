@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ContractsApi } from '../services/contractsApi'
 import { useContractsHelpers } from '../composables/useContractsHelpers'
 import ContractsFilters from '../components/ContractsFilters.vue'
-import ContractDetailModal from '../components/ContractDetailModal.vue'
 import type { Contract } from '../types/Contract'
+
+const router = useRouter()
 
 // Composables
 const { formatCurrency, getStatusColor } = useContractsHelpers()
@@ -23,9 +25,9 @@ const page = ref(1)
 const itemsPerPage = ref(15)
 const totalContracts = ref(0)
 
-// Modal state
-const showDetailModal = ref(false)
-const selectedContractId = ref<string | null>(null)
+const navigateToDetail = (id: string) => {
+  router.push({ name: 'contract-detail', params: { id } })
+}
 
 // Table headers
 const headers = [
@@ -38,12 +40,6 @@ const headers = [
   { title: 'ESTADO', key: 'status', sortable: false, align: 'center', width: '120px' },
   { title: 'ACCIONES', key: 'actions', sortable: false, align: 'center', width: '100px' },
 ]
-
-// Methods
-const openDetailModal = (contratid: string) => {
-  selectedContractId.value = contratid
-  showDetailModal.value = true
-}
 
 // Methods
 const fetchContracts = async () => {
@@ -200,13 +196,87 @@ onMounted(() => {
 
         <!-- ACCIONES -->
         <template #item.actions="{ item }">
-          <VBtn
-            icon="tabler-eye"
-            size="small"
-            variant="text"
-            color="primary"
-            @click="openDetailModal(item.contratid)"
-          />
+          <VMenu>
+            <template #activator="{ props }">
+              <VBtn
+                v-bind="props"
+                icon="tabler-dots-vertical"
+                variant="text"
+                size="small"
+                color="medium-emphasis"
+              />
+            </template>
+
+            <VList density="compact">
+              <!-- Opción: Detalle -->
+              <VListItem
+                value="detail"
+                @click="navigateToDetail(item.id)"
+              >
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-eye"
+                    size="20"
+                    class="me-2"
+                    color="primary"
+                  />
+                </template>
+                <VListItemTitle>Detalle</VListItemTitle>
+              </VListItem>
+
+              <!-- Opción: Sincronizar -->
+              <VListItem
+                value="sync"
+                @click="console.log('Sincronizar contrato:', item.contratid)"
+              >
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-refresh"
+                    size="20"
+                    class="me-2"
+                    color="info"
+                  />
+                </template>
+                <VListItemTitle>Sincronizar</VListItemTitle>
+              </VListItem>
+
+              <!-- Opción: Editar -->
+              <VListItem
+                value="edit"
+                @click="console.log('Editar contrato:', item.contratid)"
+              >
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-pencil"
+                    size="20"
+                    class="me-2"
+                    color="warning"
+                  />
+                </template>
+                <VListItemTitle>Editar</VListItemTitle>
+              </VListItem>
+
+              <VDivider class="my-1" />
+
+              <!-- Opción: Eliminar -->
+              <VListItem
+                value="delete"
+                @click="console.log('Eliminar contrato:', item.contratid)"
+              >
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-trash"
+                    size="20"
+                    class="me-2"
+                    color="error"
+                  />
+                </template>
+                <VListItemTitle class="text-error">
+                  Eliminar
+                </VListItemTitle>
+              </VListItem>
+            </VList>
+          </VMenu>
         </template>
 
         <!-- Bottom: Pagination -->
@@ -225,12 +295,6 @@ onMounted(() => {
         </template>
       </VDataTable>
     </VCard>
-
-    <!-- Modal de Detalle del Contrato -->
-    <ContractDetailModal
-      v-model="showDetailModal"
-      :contratid="selectedContractId"
-    />
   </div>
 </template>
 
