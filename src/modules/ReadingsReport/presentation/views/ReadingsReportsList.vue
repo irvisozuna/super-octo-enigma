@@ -3,15 +3,13 @@
 import debounce from 'lodash/debounce'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-
-// Componentes internos
-import ReadinsReportListFilter from '../components/ReadinsReportFilter.vue'
+import ReadingsReportFilter from '../components/ReadinsReportFilter.vue'
 import ReadingsReportTable from '../components/ReadingsReportTable.vue'
-import type { newOptions } from '@/types/types'
-import { useReadingsReportStore } from '@/modules/ReadingsReport/stores/ReadingsReportStore'
-import { READINGS_REPORT_HEADERS } from '@/modules/ReadingsReport/config/readingsReport.config'
+import { READINGS_REPORT_HEADERS } from '../../config/readingsReport.config'
+import { useReadingsReportStore } from '../stores/ReadingsReportStore'
 import { useAppManager } from '@/composables/useAppManager'
 import { rawApi } from '@/services/api'
+import { ENDPOINTS } from '@/services/endpoints'
 
 // Props para personalizar el título y descripción
 const props = defineProps({
@@ -82,14 +80,14 @@ const menuOptions = [
 
 async function fetchPeriodConsumption(periodId: number) {
   try {
-    const response = await rawApi('/readings/report/period-consumption', {
+    const response = await rawApi(ENDPOINTS.READINGS_PERIOD_CONSUMPTION || '/readings/report/period-consumption', {
       method: 'GET',
       params: {
         period_id: periodId,
       },
     })
 
-    const totalContracts = Number(response?.total_contracts ?? 0)
+    const totalContracts = Number(response?.total_downloaded ?? 0)
     const totalReadings = Number(response?.total_readings ?? 0)
     const totalConsumption = Number(response?.total_consumption ?? 0)
 

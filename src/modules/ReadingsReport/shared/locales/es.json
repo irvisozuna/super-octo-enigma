@@ -5,5 +5,8 @@
     "description": "Descripción",
     "actions": "Acciones",
     "is_default": "Por defecto",
-    "is_active": "Activa"
+    "is_active": "Activa",
+    "status_pending": "Pendiente",
+    "status_downloaded": "Descargada",
+    "status_completed": "Completada"
 }

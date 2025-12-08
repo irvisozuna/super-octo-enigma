@@ -13,10 +13,21 @@ export interface TagStyle {
  * Colores por ESTADO de lectura
  */
 export const STATUS_STYLES: Record<string, TagStyle> = {
-  pending: { color: 'warning', variant: 'tonal', icon: 'tabler-clock' },
-  validated: { color: 'success', variant: 'tonal', icon: 'tabler-check' },
-  billed: { color: 'primary', variant: 'tonal', icon: 'tabler-receipt-2' },
-  error: { color: 'error', variant: 'tonal', icon: 'tabler-alert-triangle' },
+  pending: { color: '#f59e0b', textColor: '#fff', variant: 'tonal', icon: 'tabler-clock' },
+  validated: { color: '#16a34a', textColor: '#fff', variant: 'tonal', icon: 'tabler-check' },
+  billed: { color: '#2563eb', textColor: '#fff', variant: 'tonal', icon: 'tabler-receipt-2' },
+  error: { color: '#ef4444', textColor: '#fff', variant: 'tonal', icon: 'tabler-alert-triangle' },
+  downloaded: { color: '#2563eb', textColor: '#fff', variant: 'tonal', icon: 'tabler-download' },
+  completed: { color: '#16a34a', textColor: '#fff', variant: 'tonal', icon: 'tabler-check' },
+}
+
+/**
+ * Colores por ESTADO de ruta (avance)
+ */
+export const ROUTE_STATUS_STYLES: Record<string, TagStyle> = {
+  pending: { color: '#f59e0b', textColor: '#fff', variant: 'tonal', icon: 'tabler-clock' },
+  downloaded: { color: '#2563eb', textColor: '#fff', variant: 'tonal', icon: 'tabler-download' },
+  completed: { color: '#16a34a', textColor: '#fff', variant: 'tonal', icon: 'tabler-check' },
 }
 
 /**
@@ -48,7 +59,16 @@ export function getStatusStyle(status?: string | null): TagStyle {
   if (!status)
     return DEFAULT_TAG_STYLE
 
-  return STATUS_STYLES[status] ?? DEFAULT_TAG_STYLE
+  const key = String(status).toLowerCase()
+  return STATUS_STYLES[key] ?? DEFAULT_TAG_STYLE
+}
+
+export function getRouteStatusStyle(status?: string | null): TagStyle {
+  if (!status)
+    return DEFAULT_TAG_STYLE
+
+  const key = String(status).toLowerCase()
+  return ROUTE_STATUS_STYLES[key] ?? DEFAULT_TAG_STYLE
 }
 
 export function getContractTypeStyle(typeName?: string | null): TagStyle {

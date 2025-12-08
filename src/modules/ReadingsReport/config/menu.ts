@@ -24,8 +24,7 @@ const ReadingsReportsMenu: VerticalNavItems = [
       {
         title: 'Rutas',
         icon: { icon: 'tabler-route' },
-
-        // to: { name: 'ReadingsReportsRoutes' }, // crea esta ruta si no existe
+        to: { name: 'ReadingsReportsRoutesDownloaded' },
         action: 'read',
         subject: 'readings',
       },

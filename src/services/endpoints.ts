@@ -7,6 +7,9 @@ export const ENDPOINTS = {
   TEMPLATES: '/templates',
   PAYMENTMANDATES: '/payment_mandates',
   READINGS: '/readings',
+  READINGS_ADVANCE: '/routes-progress',
+  READINGS_PERIOD_CONSUMPTION: '/readings/report/period-consumption',
+  ROUTES: '/routes',
 
   // Transport Module
   TRANSPORT_FINES: '/transport/fines',
