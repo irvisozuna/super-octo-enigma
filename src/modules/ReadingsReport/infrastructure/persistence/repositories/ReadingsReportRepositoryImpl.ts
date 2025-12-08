@@ -1,6 +1,7 @@
+import type { Period } from '../../../domain/value-objects/Period'
 import type { ReadingsReportAdvanceResult, ReadingsReportListResult, ReadingsReportQuery, ReadingsReportRepository } from '../../../domain/repositories/ReadingsReportRepository'
 import type { ReadingsReportEntity } from '../../../domain/entities/ReadingsReportEntity'
-import { exportReadingsReport, fetchReadingsReportAdvance, fetchReadingsReportList, fetchRoutesProgress } from '../../api/ReadingsReportApi'
+import { exportReadingsReport, fetchActivePeriod, fetchReadingsReportAdvance, fetchReadingsReportList, fetchRoutesProgress } from '../../api/ReadingsReportApi'
 
 export class ReadingsReportRepositoryImpl implements ReadingsReportRepository {
   async findAll(params: ReadingsReportQuery): Promise<ReadingsReportListResult> {
@@ -51,6 +52,10 @@ export class ReadingsReportRepositoryImpl implements ReadingsReportRepository {
         last_page: response.meta?.last_page,
       },
     }
+  }
+
+  async findActivePeriod(): Promise<Period | null> {
+    return fetchActivePeriod()
   }
 
   async export(format: 'excel' | 'pdf', params: ReadingsReportQuery): Promise<Blob> {

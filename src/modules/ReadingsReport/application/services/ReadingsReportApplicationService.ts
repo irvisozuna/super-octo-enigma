@@ -1,5 +1,6 @@
 import type { ReadingsReportAdvanceResult } from '../../domain/value-objects/ReadingsReportAdvance'
 import type { ReadingsReportEntity } from '../../domain/entities/ReadingsReportEntity'
+import type { Period } from '../../domain/value-objects/Period'
 import type { ReadingsReportFilters } from '../../domain/value-objects/ReadingsReportFilters'
 import type { ReadingsReportListResult, ReadingsReportRepository } from '../../domain/repositories/ReadingsReportRepository'
 
@@ -70,5 +71,9 @@ export class ReadingsReportApplicationService {
       sortDesc,
       ...filters,
     })
+  }
+
+  async getActivePeriod(): Promise<Period | null> {
+    return this.repository.findActivePeriod()
   }
 }

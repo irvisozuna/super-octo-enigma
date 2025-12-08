@@ -6,7 +6,6 @@ import ReadingsReportFilter from '../components/ReadinsReportFilter.vue'
 import ReadingsReportTable from '../components/ReadingsReportTable.vue'
 import { useReadingsReportStore } from '../stores/ReadingsReportStore'
 import { ROUTE_STATUS_STYLES } from '../../config/readingsReport.config'
-import { rawApi } from '@/services/api'
 import type { newOptions } from '@/types/types'
 import { useAppManager } from '@/composables/useAppManager'
 
@@ -16,7 +15,7 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
-const { openDialog, navigateTo } = useAppManager()
+const { navigateTo } = useAppManager()
 const ReadingsReportstore = useReadingsReportStore()
 
 const fallbackCards = [
@@ -131,27 +130,24 @@ function exportItems(type: string) {
   ReadingsReportstore.exportItems(type as 'excel' | 'pdf')
 }
 
-async function ensureActivePeriod() {
-  if (ReadingsReportstore.filters.period_id)
-    return
+function deleteSelected() {
+  console.log('Eliminar seleccionados', ReadingsReportstore.selectedItems)
+}
 
-  try {
-    const res = await rawApi('/periods', {
-      method: 'GET',
-      params: { per_page: 1, sort_by: 'id', sort_desc: 1, status: 'open' },
-    })
+function openViewDialog(item: any) {
+  navigateTo(`/templates/${item.id}`)
+}
 
-    const period = res?.data?.[0]
-    if (period?.id)
-      ReadingsReportstore.filters.period_id = period.id
-  }
-  catch (error) {
-    console.warn('No se pudo obtener el periodo activo', error)
-  }
+function openEditDialog(item: any) {
+  console.log('Editar', item)
+}
+
+function openDeleteDialog(item: any) {
+  console.log('Eliminar item', item)
 }
 
 onMounted(async () => {
-  await ensureActivePeriod()
+  await ReadingsReportstore.ensureActivePeriod()
   ReadingsReportstore.fetchAdvance()
   ReadingsReportstore.fetchRoutesProgress()
 })

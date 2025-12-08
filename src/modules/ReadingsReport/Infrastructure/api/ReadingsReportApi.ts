@@ -1,4 +1,5 @@
 import type { ReadingsReportAdvanceCard, ReadingsReportAdvanceGlobal, ReadingsReportAdvanceResult } from '../../domain/value-objects/ReadingsReportAdvance'
+import type { Period } from '../../domain/value-objects/Period'
 import type { ReadingsReport } from '../../shared/types/ReadingsReport'
 import { rawApi } from '@/services/api'
 import { ENDPOINTS } from '@/services/endpoints'
@@ -68,6 +69,17 @@ export interface RoutesListResponse {
     per_page?: number
     total?: number
   }
+}
+
+export async function fetchActivePeriod(): Promise<Period | null> {
+  const response = await rawApi('/periods', {
+    method: 'GET',
+    params: { per_page: 1, sort_by: 'id', sort_desc: 1, status: 'open' },
+  })
+
+  const period = response?.data?.[0]
+
+  return period ?? null
 }
 
 export async function fetchReadingsReportList(

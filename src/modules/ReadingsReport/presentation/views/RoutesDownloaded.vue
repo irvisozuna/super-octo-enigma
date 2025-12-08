@@ -4,7 +4,7 @@ import debounce from 'lodash/debounce'
 import { useI18n } from 'vue-i18n'
 import { fetchRoutesList } from '../../infrastructure/api/ReadingsReportApi'
 import { getRouteStatusStyle } from '../../config/readingsReport.config'
-import { rawApi } from '@/services/api'
+import { useReadingsReportStore } from '../stores/ReadingsReportStore'
 
 const { t } = useI18n()
 
@@ -14,6 +14,7 @@ const page = ref(1)
 const itemsPerPage = ref(15)
 const isLoading = ref(false)
 const periodId = ref<number | null>(null)
+const readingsReportStore = useReadingsReportStore()
 
 const headers = [
   { title: 'Ruta', key: 'name' },
@@ -34,21 +35,9 @@ function formatDate(val: string | null | undefined) {
 }
 
 async function ensureActivePeriod() {
-  if (periodId.value)
-    return
-  try {
-    const res = await rawApi('/periods', {
-      method: 'GET',
-      params: { per_page: 1, sort_by: 'id', sort_desc: 1, status: 'open' },
-    })
-
-    const period = res?.data?.[0]
-    if (period?.id)
-      periodId.value = period.id
-  }
-  catch (err) {
-    console.warn('No se pudo obtener el periodo activo', err)
-  }
+  const activePeriodId = await readingsReportStore.ensureActivePeriod()
+  if (activePeriodId)
+    periodId.value = activePeriodId
 }
 
 const fetchRoutes = debounce(async () => {

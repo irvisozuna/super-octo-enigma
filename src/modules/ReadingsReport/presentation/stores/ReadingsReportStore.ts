@@ -119,5 +119,17 @@ export const useReadingsReportStore = defineStore('readingsReport', {
       a.click()
       URL.revokeObjectURL(url)
     },
+
+    async ensureActivePeriod() {
+      if (this.filters.period_id)
+        return this.filters.period_id
+
+      const period = await service.getActivePeriod()
+
+      if (period?.id)
+        this.filters.period_id = period.id
+
+      return this.filters.period_id
+    },
   },
 })

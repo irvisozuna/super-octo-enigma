@@ -1,6 +1,7 @@
 import type { ReadingsReportAdvanceResult } from '../value-objects/ReadingsReportAdvance'
 import type { ReadingsReportEntity } from '../entities/ReadingsReportEntity'
 import type { ReadingsReportFilters } from '../value-objects/ReadingsReportFilters'
+import type { Period } from '../value-objects/Period'
 
 export interface ReadingsReportQuery extends ReadingsReportFilters {
   page?: number
@@ -23,5 +24,6 @@ export interface ReadingsReportRepository {
   findAll(params: ReadingsReportQuery): Promise<ReadingsReportListResult>
   findRoutesProgress(params: ReadingsReportQuery): Promise<ReadingsReportListResult>
   findAdvance(params: ReadingsReportQuery): Promise<ReadingsReportAdvanceResult>
+  findActivePeriod(): Promise<Period | null>
   export(format: 'excel' | 'pdf', params: ReadingsReportQuery): Promise<Blob>
 }
