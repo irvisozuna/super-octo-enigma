@@ -1,5 +1,3 @@
-import type { WidgetTypeEnum } from '../enums/WidgetTypeEnum'
-
 // Re-export WidgetTypeEnum for convenience
 export { WidgetTypeEnum } from '../enums/WidgetTypeEnum'
 
@@ -37,6 +35,7 @@ export interface SortConfig {
  * Configuración de visualización del widget
  */
 export interface DisplayConfig {
+
   // Para STAT widgets
   stat?: StatDisplayConfig
 

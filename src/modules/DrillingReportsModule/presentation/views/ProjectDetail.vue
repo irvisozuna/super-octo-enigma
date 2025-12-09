@@ -51,8 +51,6 @@ import DrillingReportPrintView from '../components/organisms/DrillingReportPrint
 import WellInfoCardMolecule from '../components/molecules/WellInfoCardMolecule.vue'
 import PersonnelCardMolecule from '../components/molecules/PersonnelCardMolecule.vue'
 import BudgetCardMolecule from '../components/molecules/BudgetCardMolecule.vue'
-import ProjectProgressBarAtom from '../components/atoms/ProjectProgressBarAtom.vue'
-import ProjectStatusBadgeAtom from '../components/atoms/ProjectStatusBadgeAtom.vue'
 
 // Tabs adicionales existentes
 import ProjectDocumentsTabOrganism from '../components/organisms/ProjectDocumentsTabOrganism.vue'
@@ -91,6 +89,7 @@ const {
   isCancelled,
   isSuspended,
   statistics,
+  projectStatistics,
   projectInfo,
   refreshProject,
   updateProject,
@@ -1017,8 +1016,8 @@ onMounted(() => {
         <template #tab-statistics>
           <ProjectStatisticsTabOrganism
             v-if="activeTab === 'statistics' && project"
-            :project="project"
             :statistics="statistics"
+            :project-statistics="projectStatistics"
             :loading="tabLoadingStates.statistics"
           />
         </template>

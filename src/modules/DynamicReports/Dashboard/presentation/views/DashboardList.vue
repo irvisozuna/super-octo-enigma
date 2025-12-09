@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDashboard } from '../composables/useDashboard'
 
@@ -33,6 +33,7 @@ const filteredItems = computed(() => {
 
   if (search.value) {
     const searchLower = search.value.toLowerCase()
+
     filtered = filtered.filter(item =>
       item.props.name.toLowerCase().includes(searchLower)
       || item.props.description?.toLowerCase().includes(searchLower),

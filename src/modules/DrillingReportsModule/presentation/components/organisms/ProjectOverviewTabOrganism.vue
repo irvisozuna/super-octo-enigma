@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import BudgetCardMolecule from '../molecules/BudgetCardMolecule.vue'
 import { formatDate } from '../../../shared/utils/dateUtils'
 
 export interface ProjectStatistics {

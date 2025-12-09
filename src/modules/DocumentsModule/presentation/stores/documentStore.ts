@@ -15,12 +15,9 @@ import type {
   DocumentEntity,
   DocumentFilter,
   DocumentSearchCriteria,
-  DocumentStatistics,
-  MetadataTemplate,
   UpdateDocumentRequest,
   UpdateShareLinkRequest,
 } from '../../domain/entities/DocumentEntity'
-import type { PaginatedResponse } from '../../shared/types'
 
 export const useDocumentStore = defineStore('document', () => {
   // State

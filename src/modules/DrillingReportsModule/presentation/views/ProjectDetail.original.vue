@@ -17,7 +17,6 @@ import ProjectStatusBadgeAtom from '../components/atoms/ProjectStatusBadgeAtom.v
 import ProjectStatusActionsMolecule from '../components/molecules/ProjectStatusActionsMolecule.vue'
 import WellInfoCardMolecule from '../components/molecules/WellInfoCardMolecule.vue'
 import PersonnelCardMolecule from '../components/molecules/PersonnelCardMolecule.vue'
-import BudgetCardMolecule from '../components/molecules/BudgetCardMolecule.vue'
 import ProjectOverviewTabOrganism from '../components/organisms/ProjectOverviewTabOrganism.vue'
 import ProjectDocumentsTabOrganism from '../components/organisms/ProjectDocumentsTabOrganism.vue'
 import ProjectReportsTabOrganism from '../components/organisms/ProjectReportsTabOrganism.vue'
@@ -40,7 +39,6 @@ import AssignWellDialogOrganism from '../components/organisms/AssignWellDialogOr
 import AssignEquipmentDialogOrganism from '../components/organisms/AssignEquipmentDialogOrganism.vue'
 import UnassignEquipmentDialogOrganism from '../components/organisms/UnassignEquipmentDialogOrganism.vue'
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
-import { formatDate } from '@/modules/DrillingReportsModule/shared/utils/dateUtils'
 
 const route = useRoute()
 const router = useRouter()

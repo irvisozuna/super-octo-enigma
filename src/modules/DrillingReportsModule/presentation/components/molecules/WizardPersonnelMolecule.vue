@@ -56,7 +56,7 @@ const isPersonnelStepValid = computed(() => {
       isValid = false
 
     // Validate horometer logic
-    if (formData.value.horometer_start_day && formData.value.horometer_end_day && formData.value.horometer_start_day >= formData.value.horometer_end_day)
+    if (formData.value.horometer_start_day && formData.value.horometer_end_day && formData.value.horometer_start_day > formData.value.horometer_end_day)
       isValid = false
   }
 
@@ -70,7 +70,7 @@ const isPersonnelStepValid = computed(() => {
       isValid = false
 
     // Validate horometer logic
-    if (formData.value.horometer_start_night && formData.value.horometer_end_night && formData.value.horometer_start_night >= formData.value.horometer_end_night)
+    if (formData.value.horometer_start_night && formData.value.horometer_end_night && formData.value.horometer_start_night > formData.value.horometer_end_night)
       isValid = false
   }
 
@@ -181,7 +181,7 @@ defineExpose({
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_end_day) return true
-                    return v < formData.horometer_end_day || 'El horómetro inicio debe ser menor al horómetro fin'
+                    return v <= formData.horometer_end_day || 'El horómetro inicio debe ser menor o igual al horómetro fin'
                   },
                 ] : []"
                 class="mb-3"
@@ -200,7 +200,7 @@ defineExpose({
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_start_day) return true
-                    return v > formData.horometer_start_day || 'El horómetro fin debe ser mayor al horómetro inicio'
+                    return v >= formData.horometer_start_day || 'El horómetro fin debe ser mayor o igual al horómetro inicio'
                   },
                 ] : []"
                 @update:model-value="(v) => updateField('horometer_end_day', Number(v))"
@@ -258,7 +258,7 @@ defineExpose({
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_end_night) return true
-                    return v < formData.horometer_end_night || 'El horómetro inicio debe ser menor al horómetro fin'
+                    return v <= formData.horometer_end_night || 'El horómetro inicio debe ser menor o igual al horómetro fin'
                   },
                 ] : []"
                 class="mb-3"
@@ -277,7 +277,7 @@ defineExpose({
                   rules.positiveNumber,
                   (v) => {
                     if (!v || !formData.horometer_start_night) return true
-                    return v > formData.horometer_start_night || 'El horómetro fin debe ser mayor al horómetro inicio'
+                    return v >= formData.horometer_start_night || 'El horómetro fin debe ser mayor o igual al horómetro inicio'
                   },
                 ] : []"
                 @update:model-value="(v) => updateField('horometer_end_night', Number(v))"

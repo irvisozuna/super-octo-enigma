@@ -20,9 +20,8 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       const response = await this.apiService.getById(id)
       const dashboard = DashboardMapper.toDomain(response)
 
-      if (!dashboard) {
+      if (!dashboard)
         return Result.fail<Dashboard>('Dashboard not found')
-      }
 
       return Result.ok<Dashboard>(dashboard)
     }
@@ -36,9 +35,8 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       const response = await this.apiService.getBySlug(slug)
       const dashboard = DashboardMapper.toDomain(response)
 
-      if (!dashboard) {
+      if (!dashboard)
         return Result.fail<Dashboard>('Dashboard not found')
-      }
 
       return Result.ok<Dashboard>(dashboard)
     }
@@ -147,9 +145,8 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       const response = await this.apiService.create(dto)
       const savedDashboard = DashboardMapper.toDomain(response.data)
 
-      if (!savedDashboard) {
+      if (!savedDashboard)
         return Result.fail<Dashboard>('Failed to create dashboard')
-      }
 
       return Result.ok<Dashboard>(savedDashboard)
     }
@@ -164,9 +161,8 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       const response = await this.apiService.update(dashboard.id, dto)
       const updatedDashboard = DashboardMapper.toDomain(response.data)
 
-      if (!updatedDashboard) {
+      if (!updatedDashboard)
         return Result.fail<Dashboard>('Failed to update dashboard')
-      }
 
       return Result.ok<Dashboard>(updatedDashboard)
     }
@@ -178,6 +174,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
   async delete(id: string): Promise<Result<void>> {
     try {
       await this.apiService.delete(id)
+
       return Result.ok<void>()
     }
     catch (error) {
@@ -188,6 +185,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
   async exists(id: string): Promise<boolean> {
     try {
       const result = await this.findById(id)
+
       return result.isSuccess
     }
     catch (error) {
@@ -198,6 +196,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
   async slugExists(slug: string): Promise<boolean> {
     try {
       const result = await this.findBySlug(slug)
+
       return result.isSuccess
     }
     catch (error) {
@@ -208,9 +207,9 @@ export class DashboardRepositoryImpl implements DashboardRepository {
   async count(): Promise<number> {
     try {
       const result = await this.findAll()
-      if (result.isSuccess) {
+      if (result.isSuccess)
         return result.getValue().length
-      }
+
       return 0
     }
     catch (error) {
@@ -221,9 +220,9 @@ export class DashboardRepositoryImpl implements DashboardRepository {
   async countByCategory(categoryId: string): Promise<number> {
     try {
       const result = await this.findByCategory(categoryId)
-      if (result.isSuccess) {
+      if (result.isSuccess)
         return result.getValue().length
-      }
+
       return 0
     }
     catch (error) {

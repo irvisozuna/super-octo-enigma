@@ -8,7 +8,6 @@
 import type { EmployeeRepository } from '../../domain/repositories/EmployeeRepository'
 import type { CreateEmployeeRequest, EmployeeEntity, UpdateEmployeeRequest } from '../../domain/entities/EmployeeEntity'
 import { EmployeeDomain } from '../../domain/entities/EmployeeEntity'
-import { EmployeeMapper } from '../mappers/EmployeeMapper'
 import type { INotificationService } from '../../shared/contracts/INotificationService'
 import type { EmployeeFilter, PaginatedResponse } from '../../shared/types'
 

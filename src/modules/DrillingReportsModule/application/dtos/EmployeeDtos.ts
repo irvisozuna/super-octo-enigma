@@ -1,5 +1,3 @@
-import { Employee, EmployeeCreateRequest, EmployeeListResponse, EmployeeUpdateRequest } from '../../domain/entities/EmployeeEntity'
-
 export interface EmployeeDto {
   id: string
   employee_number: string

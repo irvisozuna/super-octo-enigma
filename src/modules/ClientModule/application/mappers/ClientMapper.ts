@@ -13,11 +13,7 @@ import type {
 } from '../../domain/entities/ClientEntity'
 
 import type {
-  ClientContactCreateDto,
-  ClientContactDto,
-  ClientContactUpdateDto,
   ClientCreateDto,
-  ClientDetailDto,
   ClientListDto,
   ClientStatusHistoryDto,
   ClientUpdateDto,

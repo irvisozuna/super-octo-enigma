@@ -3,7 +3,7 @@
  * Usa el sistema base reutilizable
  */
 
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { ClientCacheServiceV2 } from '../services/ClientCacheServiceV2'
 import type { ClientEntity } from '../../../domain/entities/ClientEntity'
 import { useBaseCache } from '@/@core/cache/composables/useBaseCache'

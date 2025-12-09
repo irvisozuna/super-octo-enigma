@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { useWidgetStore } from '../widgetStore'
 import { WidgetTypeEnum } from '../../../domain/types'
 import type { WidgetCreateDto } from '../../../application/dtos/WidgetDtos'

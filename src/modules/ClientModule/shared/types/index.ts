@@ -2,7 +2,7 @@
  * Shared types for Client Module
  */
 
-import type { BusinessType, CFDIUse, ClientStatus, PaymentTerms, TaxRegime } from '../../domain/entities/ClientEntity'
+import type { BusinessType, ClientStatus, PaymentTerms } from '../../domain/entities/ClientEntity'
 
 /**
  * Paginated Response

@@ -6,6 +6,7 @@ import type { Result } from '../../../../shared/domain/base/Result'
  * Define las operaciones de persistencia para dashboards
  */
 export interface DashboardRepository {
+
   /**
    * Busca un dashboard por su ID
    */

@@ -6,7 +6,7 @@
 
 import { computed } from 'vue'
 import { useAbility } from '@casl/vue'
-import { DRILLING_REPORTS_PERMISSIONS, DRILLING_REPORTS_PERMISSION_GROUPS } from '../../config/permissions'
+import { DRILLING_REPORTS_PERMISSION_GROUPS } from '../../config/permissions'
 
 export function useDrillingReportPermissions() {
   const { can: canAbility } = useAbility()

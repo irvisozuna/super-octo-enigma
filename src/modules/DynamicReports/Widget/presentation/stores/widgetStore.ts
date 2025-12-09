@@ -4,7 +4,7 @@ import { WidgetApiService } from '../../infrastructure/api/services/WidgetApiSer
 import { WidgetMapper } from '../../application/mappers/WidgetMapper'
 import { WidgetRepositoryImpl } from '../../infrastructure/persistence/repositories/WidgetRepositoryImpl'
 import type { Widget } from '../../domain/entities/Widget'
-import type { WidgetListFiltersDto, WidgetCreateDto, WidgetUpdateDto } from '../../application/dtos/WidgetDtos'
+import type { WidgetCreateDto, WidgetListFiltersDto, WidgetUpdateDto } from '../../application/dtos/WidgetDtos'
 import { WidgetFactory } from '../../domain/factories/WidgetFactory'
 import type { WidgetTypeEnum } from '../../domain/enums/WidgetTypeEnum'
 
@@ -58,6 +58,7 @@ export const useWidgetStore = defineStore('widget', () => {
 
       if (result.isSuccess) {
         const data = result.getValue()
+
         items.value = data.widgets
         total.value = data.total
         totalPages.value = data.totalPages
@@ -84,12 +85,11 @@ export const useWidgetStore = defineStore('widget', () => {
     try {
       const result = await repository.findAll()
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         items.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch all widgets'
@@ -109,12 +109,11 @@ export const useWidgetStore = defineStore('widget', () => {
     try {
       const result = await repository.findById(id)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         currentItem.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch widget'
@@ -134,12 +133,11 @@ export const useWidgetStore = defineStore('widget', () => {
     try {
       const result = await repository.findByDataSource(dataSourceId)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         items.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch widgets by data source'
@@ -159,12 +157,11 @@ export const useWidgetStore = defineStore('widget', () => {
     try {
       const result = await repository.findByType(type)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         items.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch widgets by type'
@@ -233,13 +230,11 @@ export const useWidgetStore = defineStore('widget', () => {
 
       if (widget) {
         const index = items.value.findIndex(item => item.id === id)
-        if (index !== -1) {
+        if (index !== -1)
           items.value[index] = widget
-        }
 
-        if (currentItem.value?.id === id) {
+        if (currentItem.value?.id === id)
           currentItem.value = widget
-        }
       }
 
       await fetchList()
@@ -267,9 +262,8 @@ export const useWidgetStore = defineStore('widget', () => {
 
       items.value = items.value.filter(item => item.id !== id)
 
-      if (currentItem.value?.id === id) {
+      if (currentItem.value?.id === id)
         currentItem.value = null
-      }
 
       await fetchList()
     }
@@ -293,9 +287,8 @@ export const useWidgetStore = defineStore('widget', () => {
       const response = await apiService.clone(id, newName)
       const widget = WidgetMapper.toDomain(response.data)
 
-      if (widget) {
+      if (widget)
         items.value.unshift(widget)
-      }
 
       await fetchList()
 
@@ -323,13 +316,11 @@ export const useWidgetStore = defineStore('widget', () => {
 
       if (widget) {
         const index = items.value.findIndex(item => item.id === id)
-        if (index !== -1) {
+        if (index !== -1)
           items.value[index] = widget
-        }
 
-        if (currentItem.value?.id === id) {
+        if (currentItem.value?.id === id)
           currentItem.value = widget
-        }
       }
 
       return response.data
@@ -351,8 +342,7 @@ export const useWidgetStore = defineStore('widget', () => {
     error.value = null
 
     try {
-      const response = await apiService.executeQuery(id, params)
-      return response
+      return await apiService.executeQuery(id, params)
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to execute widget query'
@@ -371,8 +361,7 @@ export const useWidgetStore = defineStore('widget', () => {
     error.value = null
 
     try {
-      const response = await apiService.refresh(id)
-      return response
+      return await apiService.refresh(id)
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to refresh widget'

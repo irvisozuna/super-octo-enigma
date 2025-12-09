@@ -14,6 +14,21 @@ export function useTenantTheme() {
     if (!tenantStore.data?.theme)
       return
 
+    // Verificar que Vuetify esté inicializado
+    if (!vuetifyTheme || !vuetifyTheme.themes || !vuetifyTheme.themes.value) {
+      console.warn('⚠️ Vuetify theme not initialized yet, skipping color application')
+
+      return
+    }
+
+    // Verificar que el tema actual exista
+    const currentThemeName = vuetifyTheme.name?.value
+    if (!currentThemeName || !vuetifyTheme.themes.value[currentThemeName]) {
+      console.warn('⚠️ Current Vuetify theme not found:', currentThemeName)
+
+      return
+    }
+
     const { primary, secondary, dark } = tenantStore.data.theme
 
     const normalizeHex = (value?: string) => {
@@ -29,13 +44,15 @@ export function useTenantTheme() {
     const normalizedPrimary = normalizeHex(primary)
     const normalizedSecondary = normalizeHex(secondary)
 
+    const currentTheme = vuetifyTheme.themes.value[currentThemeName]
+
     // Actualizar colores primarios
-    if (normalizedPrimary) {
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.primary = normalizedPrimary
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['primary-darken-1'] = normalizedPrimary
+    if (normalizedPrimary && currentTheme.colors) {
+      currentTheme.colors.primary = normalizedPrimary
+      currentTheme.colors['primary-darken-1'] = normalizedPrimary
 
       // Guardar en localStorage y cookies para persistencia
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, normalizedPrimary)
+      localStorage.setItem(`${currentThemeName}ThemePrimaryColor`, normalizedPrimary)
       cookieRef<string | null>('lightThemePrimaryColor', null).value = normalizedPrimary
       cookieRef<string | null>('lightThemePrimaryDarkenColor', null).value = normalizedPrimary
       cookieRef<string | null>('darkThemePrimaryColor', null).value = normalizedPrimary
@@ -43,9 +60,9 @@ export function useTenantTheme() {
     }
 
     // Actualizar colores secundarios
-    if (normalizedSecondary) {
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors.secondary = normalizedSecondary
-      vuetifyTheme.themes.value[vuetifyTheme.name.value].colors['secondary-darken-1'] = normalizedSecondary
+    if (normalizedSecondary && currentTheme.colors) {
+      currentTheme.colors.secondary = normalizedSecondary
+      currentTheme.colors['secondary-darken-1'] = normalizedSecondary
 
       cookieRef<string | null>('lightThemeSecondaryColor', null).value = normalizedSecondary
       cookieRef<string | null>('lightThemeSecondaryDarkenColor', null).value = normalizedSecondary
@@ -54,7 +71,7 @@ export function useTenantTheme() {
     }
 
     // Aplicar modo oscuro - respetar la preferencia del usuario si no está forzada por el tenant
-    if (dark !== undefined) {
+    if (dark !== undefined && vuetifyTheme.name) {
       const themeName = dark ? 'dark' : 'light'
 
       // Solo cambiar el tema si el tenant lo especifica explícitamente
@@ -164,6 +181,13 @@ export function useTenantTheme() {
     if (!tenantStore.data?.theme)
       return
 
+    // Verificar que Vuetify esté inicializado
+    if (!vuetifyTheme || !vuetifyTheme.name || !vuetifyTheme.name.value) {
+      console.warn('⚠️ Vuetify theme name not initialized, skipping sync')
+
+      return
+    }
+
     const { primary, secondary } = tenantStore.data.theme
 
     const normalizeHex = (value?: string) => {
@@ -179,11 +203,13 @@ export function useTenantTheme() {
     const normalizedPrimary = normalizeHex(primary)
     const normalizedSecondary = normalizeHex(secondary)
 
+    const currentThemeName = vuetifyTheme.name.value
+
     // Actualizar el store de configuración para que sea consistente
     if (normalizedPrimary) {
       // Guardar en localStorage usando el mismo patrón que config.ts
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryColor`, normalizedPrimary)
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemePrimaryDarkenColor`, normalizedPrimary)
+      localStorage.setItem(`${currentThemeName}ThemePrimaryColor`, normalizedPrimary)
+      localStorage.setItem(`${currentThemeName}ThemePrimaryDarkenColor`, normalizedPrimary)
 
       cookieRef<string | null>('lightThemePrimaryColor', null).value = normalizedPrimary
       cookieRef<string | null>('lightThemePrimaryDarkenColor', null).value = normalizedPrimary
@@ -192,7 +218,7 @@ export function useTenantTheme() {
     }
 
     if (normalizedSecondary) {
-      localStorage.setItem(`${vuetifyTheme.name.value}ThemeSecondaryColor`, normalizedSecondary)
+      localStorage.setItem(`${currentThemeName}ThemeSecondaryColor`, normalizedSecondary)
 
       cookieRef<string | null>('lightThemeSecondaryColor', null).value = normalizedSecondary
       cookieRef<string | null>('lightThemeSecondaryDarkenColor', null).value = normalizedSecondary
@@ -205,10 +231,29 @@ export function useTenantTheme() {
   watch(
     () => tenantStore.data,
     () => {
-      if (tenantStore.data) {
-        applyBranding()
-        syncWithConfigStore()
+      // Verificar que tenemos datos del tenant y Vuetify está listo
+      if (!tenantStore.data) {
+        console.log('⏭️ Skipping theme application: no tenant data')
+
+        return
       }
+
+      if (!vuetifyTheme || !vuetifyTheme.themes || !vuetifyTheme.themes.value) {
+        console.log('⏭️ Skipping theme application: Vuetify not ready')
+
+        return
+      }
+
+      const currentThemeName = vuetifyTheme.name?.value
+      if (!currentThemeName || !vuetifyTheme.themes.value[currentThemeName]) {
+        console.log('⏭️ Skipping theme application: current theme not found')
+
+        return
+      }
+
+      console.log('🎨 Applying tenant branding and theme')
+      applyBranding()
+      syncWithConfigStore()
     },
     { immediate: true, deep: true },
   )
@@ -217,8 +262,20 @@ export function useTenantTheme() {
   watch(
     () => vuetifyTheme.name.value,
     () => {
-      if (tenantStore.data?.theme)
-        syncWithConfigStore()
+      if (!tenantStore.data?.theme) {
+        console.log('⏭️ Skipping theme sync: no tenant theme data')
+
+        return
+      }
+
+      if (!vuetifyTheme.themes || !vuetifyTheme.themes.value) {
+        console.log('⏭️ Skipping theme sync: Vuetify themes not available')
+
+        return
+      }
+
+      console.log('🔄 Syncing theme after Vuetify theme change')
+      syncWithConfigStore()
     },
   )
 

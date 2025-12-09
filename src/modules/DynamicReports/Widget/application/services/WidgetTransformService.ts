@@ -13,9 +13,8 @@ export class WidgetTransformService {
   ): WidgetData {
     let transformedData = { ...data }
 
-    for (const transformation of transformations) {
+    for (const transformation of transformations)
       transformedData = this.applyTransformation(transformedData, transformation)
-    }
 
     return transformedData
   }
@@ -61,7 +60,7 @@ export class WidgetTransformService {
     if (!field || !transform)
       return data
 
-    const transformedRows = data.rows.map((row) => {
+    const transformedRows = data.rows.map(row => {
       try {
         // Evaluar transformación (simple)
         // Por seguridad, solo permitir operaciones matemáticas básicas
@@ -75,6 +74,7 @@ export class WidgetTransformService {
       }
       catch (error) {
         console.error('Error in map transformation:', error)
+
         return row
       }
     })
@@ -94,12 +94,13 @@ export class WidgetTransformService {
     if (!condition)
       return data
 
-    const filteredRows = data.rows.filter((row) => {
+    const filteredRows = data.rows.filter(row => {
       try {
         return this.evaluateCondition(row, condition)
       }
       catch (error) {
         console.error('Error in filter transformation:', error)
+
         return true
       }
     })
@@ -171,6 +172,7 @@ export class WidgetTransformService {
         return 0
 
       const comparison = aVal < bVal ? -1 : 1
+
       return direction === 'ASC' ? comparison : -comparison
     })
 
@@ -192,11 +194,11 @@ export class WidgetTransformService {
     const groups: Record<string, any[]> = {}
 
     // Agrupar registros
-    data.rows.forEach((row) => {
+    data.rows.forEach(row => {
       const key = row[field]
-      if (!groups[key]) {
+      if (!groups[key])
         groups[key] = []
-      }
+
       groups[key].push(row)
     })
 
@@ -300,6 +302,7 @@ export class WidgetTransformService {
       // Solo permitir operaciones matemáticas básicas
       if (!/^[\d\s+\-*/().]+$/.test(expression)) {
         console.warn('Invalid transform expression:', expression)
+
         return value
       }
 
@@ -309,6 +312,7 @@ export class WidgetTransformService {
     }
     catch (error) {
       console.error('Error evaluating transform:', error)
+
       return value
     }
   }
@@ -325,12 +329,14 @@ export class WidgetTransformService {
       let expression = condition
       for (const field in context) {
         const regex = new RegExp(`\\b${field}\\b`, 'g')
+
         expression = expression.replace(regex, `context.${field}`)
       }
 
       // Solo permitir comparaciones básicas
-      if (!/^[a-zA-Z0-9\s._<>=!&|()'"]+$/.test(expression)) {
+      if (!/^[\w\s.<>=!&|()'"]+$/.test(expression)) {
         console.warn('Invalid condition expression:', expression)
+
         return true
       }
 
@@ -340,6 +346,7 @@ export class WidgetTransformService {
     }
     catch (error) {
       console.error('Error evaluating condition:', error)
+
       return true
     }
   }
@@ -374,9 +381,8 @@ export class WidgetTransformService {
   }
 
   private formatForStatWidget(data: WidgetData, config: any): any {
-    if (!data.rows || data.rows.length === 0) {
+    if (!data.rows || data.rows.length === 0)
       return { value: 0, trend: 0 }
-    }
 
     const row = data.rows[0]
     const value = row[config.value_field] || 0
@@ -388,9 +394,8 @@ export class WidgetTransformService {
   private formatForChartWidget(data: WidgetData, config: any): any {
     const { x_axis_field, y_axis_field } = config
 
-    if (!data.rows || data.rows.length === 0) {
+    if (!data.rows || data.rows.length === 0)
       return { categories: [], series: [] }
-    }
 
     const categories = data.rows.map(row => row[x_axis_field])
     const values = data.rows.map(row => row[y_axis_field])
@@ -409,9 +414,8 @@ export class WidgetTransformService {
   private formatForPieChartWidget(data: WidgetData, config: any): any {
     const { x_axis_field, y_axis_field } = config
 
-    if (!data.rows || data.rows.length === 0) {
+    if (!data.rows || data.rows.length === 0)
       return { labels: [], series: [] }
-    }
 
     const labels = data.rows.map(row => row[x_axis_field])
     const values = data.rows.map(row => row[y_axis_field])

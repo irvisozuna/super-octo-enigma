@@ -249,6 +249,7 @@ export class Dashboard extends AggregateRoot<DashboardProps> {
       return Result.fail<void>('Widget not found in dashboard')
 
     const removedWidget = this.props.widgets[widgetIndex]
+
     this.props.widgets.splice(widgetIndex, 1)
     this.props.updatedAt = new Date()
     this.addDomainEvent(new WidgetRemoved(this, removedWidget))
@@ -330,7 +331,7 @@ export class Dashboard extends AggregateRoot<DashboardProps> {
 
   // Helper methods
   private checkPositionOverlap(newPosition: WidgetInstanceConfig['position']): boolean {
-    return this.props.widgets.some((widget) => {
+    return this.props.widgets.some(widget => {
       const pos = widget.position
 
       // Check if rectangles overlap

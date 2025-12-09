@@ -3,8 +3,8 @@
  * Proporciona funcionalidad común de cache para todos los módulos
  */
 
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { CachePriority, type CacheState, SyncStatus } from '../types/cache.types'
+import { computed, onMounted, ref } from 'vue'
+import { type CacheState } from '../types/cache.types'
 
 export interface BaseCacheComposable {
 

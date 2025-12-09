@@ -1,6 +1,5 @@
 import type { EquipmentRepository } from '../../domain/repositories/EquipmentRepository'
 import type { EquipmentCreateRequest, EquipmentUpdateRequest } from '../../domain/entities/EquipmentEntity'
-import { Equipment, EquipmentListResponse } from '../../domain/entities/EquipmentEntity'
 import type { EquipmentCreateDto, EquipmentDto, EquipmentListDto, EquipmentUpdateDto } from '../dtos/EquipmentDtos'
 import { EquipmentMapper } from '../mappers/EquipmentMapper'
 

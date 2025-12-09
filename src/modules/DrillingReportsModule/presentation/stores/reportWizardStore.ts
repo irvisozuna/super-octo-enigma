@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
-import type { ComputedRef, Ref } from 'vue'
+import { computed, ref } from 'vue'
+import type { Ref } from 'vue'
 
 interface PersonnelData {
   operator_day_id: string | null
@@ -140,9 +140,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
   // Validation for tools step
   const isToolsStepValid = computed(() => {
-    // Must have at least one tool
+    // Tools are optional - if no tools added, step is valid
     if (formData.value.tool_assignments.length === 0)
-      return false
+      return true
 
     // All tools must have required fields
     return formData.value.tool_assignments.every(tool =>

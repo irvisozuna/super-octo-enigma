@@ -11,6 +11,10 @@ export interface Well {
     latitude: number
     longitude: number
   }
+  orientation?: {
+    azimuth: number
+    inclination: number
+  }
   status: 'planned' | 'drilling' | 'completed' | 'abandoned'
   start_date?: string
   completion_date?: string
@@ -28,6 +32,8 @@ export interface WellCreateRequest {
     latitude: number
     longitude: number
   }
+  azimuth: number
+  inclination: number
   start_date?: string
 }
 
@@ -41,6 +47,8 @@ export interface WellUpdateRequest {
     latitude: number
     longitude: number
   }
+  azimuth?: number
+  inclination?: number
   status?: 'planned' | 'drilling' | 'completed' | 'abandoned'
   start_date?: string
   completion_date?: string

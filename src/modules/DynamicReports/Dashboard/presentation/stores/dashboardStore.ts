@@ -5,8 +5,8 @@ import { DashboardMapper } from '../../application/mappers/DashboardMapper'
 import { DashboardRepositoryImpl } from '../../infrastructure/persistence/repositories/DashboardRepositoryImpl'
 import type { Dashboard } from '../../domain/entities/Dashboard'
 import type {
-  DashboardListFiltersDto,
   DashboardCreateDto,
+  DashboardListFiltersDto,
   DashboardUpdateDto,
 } from '../../application/dtos/DashboardDtos'
 import type { WidgetInstanceConfig } from '../../../Widget/domain/types/WidgetTypes'
@@ -68,6 +68,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       if (result.isSuccess) {
         const data = result.getValue()
+
         items.value = data.dashboards
         total.value = data.total
         totalPages.value = data.totalPages
@@ -94,12 +95,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findAll()
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         items.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch all dashboards'
@@ -147,12 +147,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findBySlug(slug)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         currentItem.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch dashboard by slug'
@@ -172,12 +171,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findFavorites()
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         favorites.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch favorite dashboards'
@@ -197,12 +195,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findRecent(limit)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         recent.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch recent dashboards'
@@ -222,12 +219,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findShared()
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         shared.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch shared dashboards'
@@ -247,12 +243,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const result = await repository.findByCategory(categoryId)
 
-      if (result.isSuccess) {
+      if (result.isSuccess)
         items.value = result.getValue()
-      }
-      else {
+
+      else
         error.value = result.error
-      }
     }
     catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch dashboards by category'
@@ -304,13 +299,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       if (dashboard) {
         const index = items.value.findIndex(item => item.id === id)
-        if (index !== -1) {
+        if (index !== -1)
           items.value[index] = dashboard
-        }
 
-        if (currentItem.value?.id === id) {
+        if (currentItem.value?.id === id)
           currentItem.value = dashboard
-        }
       }
 
       await fetchList()
@@ -338,9 +331,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       items.value = items.value.filter(item => item.id !== id)
 
-      if (currentItem.value?.id === id) {
+      if (currentItem.value?.id === id)
         currentItem.value = null
-      }
 
       await fetchList()
     }
@@ -369,9 +361,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       const dashboard = DashboardMapper.toDomain(response.data)
 
-      if (dashboard) {
+      if (dashboard)
         items.value.unshift(dashboard)
-      }
 
       await fetchList()
 
@@ -399,13 +390,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       if (dashboard) {
         const index = items.value.findIndex(item => item.id === id)
-        if (index !== -1) {
+        if (index !== -1)
           items.value[index] = dashboard
-        }
 
-        if (currentItem.value?.id === id) {
+        if (currentItem.value?.id === id)
           currentItem.value = dashboard
-        }
 
         // Actualizar lista de favoritos
         await fetchFavorites()
@@ -437,9 +426,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       const dashboard = DashboardMapper.toDomain(response.data)
 
-      if (dashboard && currentItem.value?.id === dashboardId) {
+      if (dashboard && currentItem.value?.id === dashboardId)
         currentItem.value = dashboard
-      }
 
       return response.data
     }
@@ -467,9 +455,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       const dashboard = DashboardMapper.toDomain(response.data)
 
-      if (dashboard && currentItem.value?.id === dashboardId) {
+      if (dashboard && currentItem.value?.id === dashboardId)
         currentItem.value = dashboard
-      }
 
       return response.data
     }
@@ -497,9 +484,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       const dashboard = DashboardMapper.toDomain(response.data)
 
-      if (dashboard && currentItem.value?.id === dashboardId) {
+      if (dashboard && currentItem.value?.id === dashboardId)
         currentItem.value = dashboard
-      }
 
       return response.data
     }
@@ -527,9 +513,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       const dashboard = DashboardMapper.toDomain(response.data)
 
-      if (dashboard && currentItem.value?.id === dashboardId) {
+      if (dashboard && currentItem.value?.id === dashboardId)
         currentItem.value = dashboard
-      }
 
       return response.data
     }

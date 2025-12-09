@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { Dashboard } from '../Dashboard'
-import { DashboardId } from '../../value-objects/DashboardId'
 import type { DashboardProps, WidgetInstanceConfig } from '../../types/DashboardTypes'
 
 describe('Dashboard Entity', () => {
@@ -301,6 +300,7 @@ describe('Dashboard Entity', () => {
       expect(result.isSuccess).toBe(true)
 
       const cloned = result.getValue()!
+
       expect(cloned.props.name).toBe('Cloned Dashboard')
       expect(cloned.props.widgets).toHaveLength(1)
       expect(cloned.id).not.toEqual(original.id)

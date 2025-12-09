@@ -120,6 +120,8 @@ export class TenantBootstrapService {
   private async resolveTenantFromAPI(host: string, tenant?: string): Promise<TenantData> {
     const apiUrl = `${this.config.apiBaseUrl}/auth/tenant`
 
+    console.log('🌐 Fetching tenant from API:', { apiUrl, host, tenant })
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -133,14 +135,48 @@ export class TenantBootstrapService {
       }),
     })
 
-    if (!response.ok)
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to read error response')
+
+      console.error('❌ Tenant API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      })
       throw new Error(`Failed to resolve tenant: ${response.status} ${response.statusText}`)
+    }
 
     const data = await response.json()
 
-    // Validar estructura de datos
-    if (!data.companyId || !data.slug)
-      throw new Error('Invalid tenant data structure')
+    console.log('📦 Received tenant data from API:', {
+      hasCompanyId: !!data.companyId,
+      hasSlug: !!data.slug,
+      hasTheme: !!data.theme,
+      keys: Object.keys(data),
+    })
+
+    // Validar estructura de datos con mensajes detallados
+    if (!data) {
+      console.error('❌ API returned null or undefined data')
+      throw new Error('Invalid tenant data structure: API returned empty response')
+    }
+
+    if (!data.companyId) {
+      console.error('❌ Missing companyId in tenant data:', data)
+      throw new Error('Invalid tenant data structure: missing companyId field')
+    }
+
+    if (!data.slug) {
+      console.error('❌ Missing slug in tenant data:', data)
+      throw new Error('Invalid tenant data structure: missing slug field')
+    }
+
+    // Advertir si faltan campos opcionales importantes
+    if (!data.theme)
+      console.warn('⚠️ Missing theme in tenant data, will use defaults')
+
+    if (!data.name)
+      console.warn('⚠️ Missing name in tenant data')
 
     return data as TenantData
   }
@@ -205,7 +241,12 @@ export class TenantBootstrapService {
           companyId: 'fallback',
           slug: this.config.fallbackOrganization,
           name: 'Default Organization',
-          assets: {},
+          assets: {
+            logo: undefined,
+            menu: undefined,
+            favicon: undefined,
+            loading: undefined,
+          },
           theme: {
             primary: '#7367F0',
             secondary: '#8C9EFF',
@@ -217,6 +258,13 @@ export class TenantBootstrapService {
           },
           version: '1.0.0',
         }
+
+        console.log('📋 Applying fallback tenant data:', {
+          companyId: fallbackData.companyId,
+          slug: fallbackData.slug,
+          hasTheme: !!fallbackData.theme,
+          theme: fallbackData.theme,
+        })
 
         this.tenantStore.setTenantData(fallbackData)
         this.applyBranding(fallbackData)

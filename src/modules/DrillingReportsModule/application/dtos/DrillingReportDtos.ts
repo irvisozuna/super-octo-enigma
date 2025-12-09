@@ -7,7 +7,6 @@
 import type {
   ActivityEntity,
   ConsumptionEntity,
-  DrillingReportEntity,
   EquipmentEntity,
   PersonnelEntity,
   ProjectEntity,

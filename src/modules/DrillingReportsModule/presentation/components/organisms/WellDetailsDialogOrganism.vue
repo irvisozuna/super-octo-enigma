@@ -27,6 +27,10 @@ interface Well {
   hole_diameter_inches: number
   purpose?: string | null
   well_type: string
+  orientation?: {
+    azimuth: number
+    inclination: number
+  }
   dates: {
     spud_date: string
     completion_date?: string | null
@@ -282,6 +286,30 @@ const close = () => {
               </p>
               <p class="text-body-2">
                 {{ well.surface_coordinates?.latitude?.toFixed(6) || 'N/A' }}, {{ well.surface_coordinates?.longitude?.toFixed(6) || 'N/A' }}
+              </p>
+            </div>
+          </VCol>
+
+          <!-- Orientation -->
+          <VCol
+            v-if="well.orientation"
+            cols="12"
+            sm="6"
+          >
+            <div class="detail-block">
+              <p class="text-caption text-medium-emphasis mb-1">
+                <VIcon
+                  icon="tabler-compass"
+                  size="16"
+                  class="me-1"
+                />
+                Orientación
+              </p>
+              <p class="text-body-2">
+                Azimut: {{ well.orientation.azimuth?.toFixed(2) ?? 'N/A' }}°
+              </p>
+              <p class="text-body-2">
+                Inclinación: {{ well.orientation.inclination?.toFixed(2) ?? 'N/A' }}°
               </p>
             </div>
           </VCol>

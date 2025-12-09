@@ -45,16 +45,14 @@ export class DashboardTransformer {
     const prepared = { ...data }
 
     // Remover campos undefined
-    Object.keys(prepared).forEach((key) => {
-      if (prepared[key] === undefined) {
+    Object.keys(prepared).forEach(key => {
+      if (prepared[key] === undefined)
         delete prepared[key]
-      }
     })
 
     // Asegurar que widgets sea un array
-    if (prepared.widgets && !Array.isArray(prepared.widgets)) {
+    if (prepared.widgets && !Array.isArray(prepared.widgets))
       prepared.widgets = []
-    }
 
     return prepared
   }
@@ -63,7 +61,7 @@ export class DashboardTransformer {
    * Transforma widgets del dashboard para el API
    */
   static prepareWidgetsForApi(widgets: any[]): any[] {
-    return widgets.map((widget) => {
+    return widgets.map(widget => {
       return {
         id: widget.id,
         widget_id: widget.widget_id,

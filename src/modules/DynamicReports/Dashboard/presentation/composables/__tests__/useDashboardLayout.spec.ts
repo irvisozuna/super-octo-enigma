@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useDashboardLayout } from '../useDashboardLayout'
 import type { WidgetInstanceConfig } from '../../../domain/types/DashboardTypes'
 
@@ -151,6 +151,7 @@ describe('useDashboardLayout', () => {
       layout.updateWidgetPosition('w-1', { x: 4, y: 2, w: 6, h: 4 })
 
       const widget = layout.gridItems.value.find(w => w.id === 'w-1')
+
       expect(widget?.position).toEqual({ x: 4, y: 2, w: 6, h: 4 })
       expect(layout.hasChanges.value).toBe(true)
     })
@@ -262,6 +263,7 @@ describe('useDashboardLayout', () => {
       layout.compactLayout()
 
       const widget = layout.gridItems.value.find(w => w.id === 'w-1')
+
       expect(widget?.position.y).toBe(0)
     })
   })

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { formatDate } from '../../../shared/utils/dateUtils'
 
 export interface ProjectHistoryTabProps {

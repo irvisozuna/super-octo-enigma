@@ -1,7 +1,6 @@
-import { ref, computed, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWidgetStore } from '../stores/widgetStore'
-import type { Widget } from '../../domain/entities/Widget'
 import type { WidgetData } from '../../domain/types/WidgetTypes'
 
 /**
@@ -22,10 +21,12 @@ export function useWidgetData(widgetId: string) {
   async function executeQuery(params?: any) {
     try {
       const result = await widgetStore.executeQuery(widgetId, params)
+
       widgetData.value = result.data
       cached.value = result.cached || false
       executionTime.value = result.executionTime || 0
       lastRefresh.value = new Date()
+
       return result.data
     }
     catch (err) {
@@ -40,10 +41,12 @@ export function useWidgetData(widgetId: string) {
   async function executeWithCache() {
     try {
       const result = await widgetStore.executeWidgetWithCache(widgetId)
+
       widgetData.value = result.data
       cached.value = result.cached
       executionTime.value = result.executionTime
       lastRefresh.value = new Date()
+
       return result
     }
     catch (err) {
@@ -64,6 +67,7 @@ export function useWidgetData(widgetId: string) {
       widgetData.value = result.data
       cached.value = false
       lastRefresh.value = new Date()
+
       return result.data
     }
     catch (err) {
@@ -114,9 +118,11 @@ export function useWidgetData(widgetId: string) {
 
   // Computed
   const hasData = computed(() => widgetData.value !== null)
+
   const isEmpty = computed(() => {
     if (!widgetData.value)
       return true
+
     return widgetData.value.rows.length === 0
   })
 
@@ -124,6 +130,7 @@ export function useWidgetData(widgetId: string) {
   const columns = computed(() => widgetData.value?.columns || [])
 
   const isCached = computed(() => cached.value)
+
   const isStale = computed(() => {
     if (!lastRefresh.value)
       return true

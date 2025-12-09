@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDashboard } from '../composables/useDashboard'
 import { useDashboardLayout } from '../composables/useDashboardLayout'
@@ -76,8 +76,9 @@ const selectedWidgetId = ref<string | null>(null)
 const isEditMode = computed(() => !!route.params.id && route.params.id !== 'new')
 
 const widgetTypes = computed(() => {
-  return Object.values(WidgetTypeEnum).map((type) => {
+  return Object.values(WidgetTypeEnum).map(type => {
     const metadata = getWidgetTypeMetadata(type)
+
     return {
       value: type,
       title: metadata.name,
@@ -176,9 +177,8 @@ async function handleAddWidget() {
 }
 
 function handleRemoveWidget(widgetInstanceId: string) {
-  if (confirm('¿Estás seguro de eliminar este widget?')) {
+  if (confirm('¿Estás seguro de eliminar este widget?'))
     removeWidget(widgetInstanceId)
-  }
 }
 
 function handleWidgetClick(widgetInstanceId: string) {
@@ -222,9 +222,8 @@ async function handleSave() {
         },
       })
 
-      if (result) {
+      if (result)
         router.push(`/dashboards/builder/${result.id}`)
-      }
     }
 
     resetChanges()
@@ -249,6 +248,7 @@ function handleCancel() {
 function handlePreview() {
   if (dashboard.value) {
     const url = router.resolve(`/dashboards/${dashboard.value.id.toString()}`).href
+
     window.open(url, '_blank')
   }
 }

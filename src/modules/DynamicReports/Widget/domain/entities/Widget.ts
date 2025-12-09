@@ -8,9 +8,9 @@ import { WidgetUpdated } from '../events/WidgetUpdated'
 import { WidgetDeleted } from '../events/WidgetDeleted'
 import type { WidgetTypeEnum } from '../enums/WidgetTypeEnum'
 import type {
+  DataTransformation,
   DisplayConfig,
   QueryConfig,
-  DataTransformation,
   WidgetFilter,
 } from '../types/WidgetTypes'
 

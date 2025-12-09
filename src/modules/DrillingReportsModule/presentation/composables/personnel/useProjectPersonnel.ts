@@ -1,7 +1,7 @@
-import { computed, readonly } from 'vue'
+import { computed } from 'vue'
 import { useProjectDetailStore } from '../../stores/projectDetailStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
-import { useLoadingState, useSimpleLoading } from '@/composables/useLoadingState'
+import { useSimpleLoading } from '@/composables/useLoadingState'
 
 /**
  * Composable para gestionar el personal del proyecto

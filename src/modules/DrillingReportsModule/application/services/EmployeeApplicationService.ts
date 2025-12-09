@@ -1,6 +1,5 @@
 import type { EmployeeRepository } from '../../domain/repositories/EmployeeRepository'
 import type { EmployeeCreateRequest, EmployeeUpdateRequest } from '../../domain/entities/EmployeeEntity'
-import { Employee, EmployeeListResponse } from '../../domain/entities/EmployeeEntity'
 import type { EmployeeCreateDto, EmployeeDto, EmployeeListDto, EmployeeUpdateDto } from '../dtos/EmployeeDtos'
 import { EmployeeMapper } from '../mappers/EmployeeMapper'
 

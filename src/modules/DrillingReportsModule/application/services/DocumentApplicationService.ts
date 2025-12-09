@@ -1,6 +1,5 @@
 import type { DocumentRepository } from '../../domain/repositories/DocumentRepository'
 import type { DocumentCreateRequest, DocumentUpdateRequest } from '../../domain/entities/DocumentEntity'
-import { Document, DocumentListResponse, DocumentUploadResponse } from '../../domain/entities/DocumentEntity'
 import type { DocumentCreateDto, DocumentDto, DocumentListDto, DocumentUpdateDto, DocumentUploadDto } from '../dtos/DocumentDtos'
 import { DocumentMapper } from '../mappers/DocumentMapper'
 

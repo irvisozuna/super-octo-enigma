@@ -4,7 +4,7 @@
  * Reusable composition function for client operations
  */
 
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useClientStore } from '../stores/clientStore'
 import { ClientDomain } from '../../domain/entities/ClientEntity'

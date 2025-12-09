@@ -1,6 +1,5 @@
 import type { ToolRepository } from '../../domain/repositories/ToolRepository'
 import type { ToolCreateRequest, ToolUpdateRequest } from '../../domain/entities/ToolEntity'
-import { Tool, ToolListResponse } from '../../domain/entities/ToolEntity'
 import type { ToolCreateDto, ToolDto, ToolListDto, ToolUpdateDto } from '../dtos/ToolDtos'
 import { ToolMapper } from '../mappers/ToolMapper'
 

@@ -208,6 +208,7 @@ onMounted(async () => {
           generatedSql: item.sql_to_execute || item.custom_sql || '',
         }
       }
+
       // Si existe metadata.sqlBuilder, úsalo como alternativa
       else if (item.metadata && item.metadata.sqlBuilder) {
         wizardData = { ...item.metadata.sqlBuilder }

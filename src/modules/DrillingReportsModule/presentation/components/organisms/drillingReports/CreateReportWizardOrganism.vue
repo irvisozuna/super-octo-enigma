@@ -3,7 +3,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReportWizardStore } from '../../../stores/reportWizardStore'
 import { useProjectDetailStore } from '../../../stores/projectDetailStore'
-import { DrillingReportApiService } from '../../../../infrastructure/api/services/DrillingReportApiService'
 import { REPORT_WIZARD_STEPS } from '../../../../shared/constants'
 
 // Import Molecules

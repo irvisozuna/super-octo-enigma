@@ -45,10 +45,9 @@ export class WidgetTransformer {
     const prepared = { ...data }
 
     // Remover campos undefined
-    Object.keys(prepared).forEach((key) => {
-      if (prepared[key] === undefined) {
+    Object.keys(prepared).forEach(key => {
+      if (prepared[key] === undefined)
         delete prepared[key]
-      }
     })
 
     return prepared

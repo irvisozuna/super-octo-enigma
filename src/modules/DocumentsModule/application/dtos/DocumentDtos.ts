@@ -5,22 +5,10 @@
  */
 
 import type {
-  CreateDocumentRequest,
-  CreateShareLinkRequest,
   DocumentAccessLevel,
-  DocumentAccessLogEntity,
   DocumentCategory,
-  DocumentEntity,
-  DocumentFilter,
-  DocumentSearchCriteria,
-  DocumentShareLinkEntity,
-  DocumentStatistics,
   DocumentStatus,
   DocumentType,
-  DocumentVersionEntity,
-  MetadataTemplate,
-  UpdateDocumentRequest,
-  UpdateShareLinkRequest,
 } from '../../domain/entities/DocumentEntity'
 
 // Base DTOs

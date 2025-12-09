@@ -156,12 +156,15 @@ export function formatWellDiameter(diameter: number | string | null | undefined,
     const inches = getDiameterInchesFromCode(diameter)
     if (inches !== null) {
       const option = WELL_DIAMETER_OPTIONS.find(opt => opt.code === diameter)
+
       return option?.label || `${diameter} (${inches.toFixed(2)}${unit})`
     }
+
     // Si no es un código válido, tratar como número
-    const numValue = parseFloat(diameter)
+    const numValue = Number.parseFloat(diameter)
     if (!isNaN(numValue))
       return `${numValue.toFixed(2)} ${unit}`
+
     return '-'
   }
 
@@ -169,6 +172,7 @@ export function formatWellDiameter(diameter: number | string | null | undefined,
   const code = getDiameterCodeFromInches(diameter)
   if (code) {
     const option = WELL_DIAMETER_OPTIONS.find(opt => opt.code === code)
+
     return option?.label || `${code} (${diameter.toFixed(2)}${unit})`
   }
 

@@ -2,7 +2,7 @@
  * Menu Validator - Detecta errores comunes en configuración de menús
  */
 
-import type { NavGroup, NavLink, VerticalNavItems } from '@/@layouts/types'
+import type { VerticalNavItems } from '@/@layouts/types'
 
 interface ValidationError {
   path: string

@@ -69,6 +69,8 @@ const formData = ref({
   spud_date: '',
   expected_end_date: '',
   notes: '',
+  azimuth: null as number | null,
+  inclination: null as number | null,
 })
 
 // Options are now provided by the composable
@@ -118,6 +120,8 @@ const rules = {
   spudDate: createVuetifyRule(wellValidationSchema.fields.spud_date),
   expectedEndDate: createVuetifyRule(wellValidationSchema.fields.expected_end_date),
   notes: createVuetifyRule(wellValidationSchema.fields.notes),
+  azimuth: createVuetifyRule(wellValidationSchema.fields.azimuth),
+  inclination: createVuetifyRule(wellValidationSchema.fields.inclination),
 }
 
 // Load well data when editing
@@ -143,6 +147,8 @@ const loadWellData = () => {
       spud_date: props.well.spudDate || '',
       expected_end_date: props.well.expectedEndDate || '',
       notes: props.well.notes || '',
+      azimuth: props.well.orientation?.azimuth ?? null,
+      inclination: props.well.orientation?.inclination ?? null,
     }
   }
 }
@@ -387,6 +393,46 @@ watch(() => props.well, () => {
                 :rules="[rules.longitude]"
                 :disabled="isEditing && !isEditable"
                 placeholder="-180 a 180"
+                required
+              />
+            </VCol>
+
+            <!-- Azimuth -->
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model.number="formData.azimuth"
+                label="Azimut (°) *"
+                type="number"
+                step="0.01"
+                min="0"
+                max="360"
+                prepend-inner-icon="tabler-compass"
+                :rules="[rules.azimuth]"
+                :disabled="isEditing && !isEditable"
+                placeholder="0 a 360°"
+                required
+              />
+            </VCol>
+
+            <!-- Inclination -->
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model.number="formData.inclination"
+                label="Inclinación (°) *"
+                type="number"
+                step="0.01"
+                min="-90"
+                max="90"
+                prepend-inner-icon="tabler-angle"
+                :rules="[rules.inclination]"
+                :disabled="isEditing && !isEditable"
+                placeholder="-90 a 90°"
                 required
               />
             </VCol>

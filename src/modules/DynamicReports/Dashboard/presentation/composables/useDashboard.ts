@@ -3,8 +3,8 @@ import { storeToRefs } from 'pinia'
 import { useDashboardStore } from '../stores/dashboardStore'
 import type {
   DashboardCreateDto,
-  DashboardUpdateDto,
   DashboardListFiltersDto,
+  DashboardUpdateDto,
 } from '../../application/dtos/DashboardDtos'
 import type { WidgetInstanceConfig } from '../../../Widget/domain/types/WidgetTypes'
 import type { DashboardGlobalFilter } from '../../domain/types/DashboardTypes'
@@ -37,9 +37,9 @@ export function useDashboard() {
    * Obtiene lista de dashboards con filtros
    */
   async function fetchDashboards(customFilters?: DashboardListFiltersDto) {
-    if (customFilters) {
+    if (customFilters)
       dashboardStore.setFilters(customFilters)
-    }
+
     await dashboardStore.fetchList()
   }
 
@@ -55,6 +55,7 @@ export function useDashboard() {
    */
   async function fetchDashboard(id: string) {
     await dashboardStore.fetchById(id)
+
     return currentItem.value
   }
 
@@ -63,6 +64,7 @@ export function useDashboard() {
    */
   async function fetchDashboardBySlug(slug: string) {
     await dashboardStore.fetchBySlug(slug)
+
     return currentItem.value
   }
 
@@ -71,6 +73,7 @@ export function useDashboard() {
    */
   async function fetchFavorites() {
     await dashboardStore.fetchFavorites()
+
     return favorites.value
   }
 
@@ -79,6 +82,7 @@ export function useDashboard() {
    */
   async function fetchRecent(limit = 10) {
     await dashboardStore.fetchRecent(limit)
+
     return recent.value
   }
 
@@ -87,6 +91,7 @@ export function useDashboard() {
    */
   async function fetchShared() {
     await dashboardStore.fetchShared()
+
     return shared.value
   }
 

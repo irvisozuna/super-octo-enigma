@@ -1,5 +1,3 @@
-import { Equipment, EquipmentCreateRequest, EquipmentListResponse, EquipmentUpdateRequest } from '../../domain/entities/EquipmentEntity'
-
 export interface EquipmentDto {
   id: string
   name: string

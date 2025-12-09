@@ -1,6 +1,5 @@
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useWidgetData } from './useWidgetData'
-import type { Widget } from '../../domain/entities/Widget'
 
 export interface WidgetRefreshOptions {
   autoRefresh?: boolean
@@ -65,6 +64,7 @@ export function useWidgetRefresh(
     if (!interval)
       return
     const next = new Date()
+
     next.setSeconds(next.getSeconds() + interval)
     nextRefresh.value = next
   }
@@ -74,29 +74,25 @@ export function useWidgetRefresh(
    */
   async function manualRefresh(force = true) {
     await widgetData.refresh(force)
-    if (isAutoRefreshing.value) {
+    if (isAutoRefreshing.value)
       updateNextRefresh()
-    }
   }
 
   /**
    * Handler para focus
    */
   function handleFocus() {
-    if (refreshOnFocus && !document.hidden) {
+    if (refreshOnFocus && !document.hidden)
       widgetData.refresh(false)
-    }
   }
 
   // Lifecycle
   onMounted(() => {
-    if (refreshOnMount) {
+    if (refreshOnMount)
       widgetData.executeWithCache()
-    }
 
-    if (autoRefresh) {
+    if (autoRefresh)
       startAutoRefresh()
-    }
 
     if (refreshOnFocus) {
       document.addEventListener('visibilitychange', handleFocus)

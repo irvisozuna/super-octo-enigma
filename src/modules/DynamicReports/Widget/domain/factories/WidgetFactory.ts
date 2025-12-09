@@ -18,9 +18,8 @@ export class WidgetFactory {
   ): Result<Widget> {
     const metadata = WidgetTypeMetadata[type]
 
-    if (!metadata) {
+    if (!metadata)
       return Result.fail<Widget>(`Unknown widget type: ${type}`)
-    }
 
     const widgetProps: WidgetProps = {
       ...props,
@@ -312,6 +311,7 @@ export class WidgetFactory {
    */
   public static getDefaultSize(type: WidgetTypeEnum): { w: number; h: number } {
     const metadata = WidgetTypeMetadata[type]
+
     return metadata ? metadata.defaultSize : { w: 4, h: 4 }
   }
 
@@ -320,6 +320,7 @@ export class WidgetFactory {
    */
   public static getMinSize(type: WidgetTypeEnum): { w: number; h: number } {
     const metadata = WidgetTypeMetadata[type]
+
     return metadata ? metadata.minSize : { w: 2, h: 2 }
   }
 
@@ -341,14 +342,12 @@ export class WidgetFactory {
       WidgetTypeEnum.CHART_SCATTER,
     ]
 
-    if (chartTypes.includes(fromType) && chartTypes.includes(toType)) {
+    if (chartTypes.includes(fromType) && chartTypes.includes(toType))
       return true
-    }
 
     // Same type
-    if (fromType === toType) {
+    if (fromType === toType)
       return true
-    }
 
     return false
   }

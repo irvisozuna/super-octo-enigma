@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDocumentStore } from '../stores/documentStore'
-import type { DocumentEntity, UpdateDocumentRequest } from '../../domain/entities/DocumentEntity'
+import type { UpdateDocumentRequest } from '../../domain/entities/DocumentEntity'
 
 // Composables
 const { t } = useI18n()

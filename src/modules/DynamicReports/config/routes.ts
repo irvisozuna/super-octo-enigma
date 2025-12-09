@@ -113,8 +113,10 @@ const DynamicReportsRoutes: RouteRecordRaw[] = [
       subject: 'executions',
     },
   },
+
   // Widget Routes
   ...WidgetRoutes,
+
   // Dashboard Routes
   ...DashboardRoutes,
 ]

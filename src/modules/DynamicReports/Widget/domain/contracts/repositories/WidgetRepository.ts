@@ -6,6 +6,7 @@ import type { Result } from '../../../../shared/domain/base/Result'
  * Define las operaciones de persistencia para widgets
  */
 export interface WidgetRepository {
+
   /**
    * Busca un widget por su ID
    */

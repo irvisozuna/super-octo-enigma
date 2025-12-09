@@ -3,7 +3,6 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import * as yup from 'yup'
 import { type CreateEquipmentDto, type UpdateEquipmentDto, useEquipmentStore } from '../stores/equipmentStore'
 import {
-  equipmentUpdateValidationSchema,
   equipmentValidationSchema,
   validateEquipmentData,
 } from '../schemas'

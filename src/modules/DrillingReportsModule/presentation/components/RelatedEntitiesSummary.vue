@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useProjects } from '../composables/useProjects'
 import { useWells } from '../composables/useWells'
 import { useTools } from '../composables/useTools'

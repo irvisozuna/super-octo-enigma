@@ -1,5 +1,3 @@
-import { Well, WellCreateRequest, WellListResponse, WellUpdateRequest } from '../../domain/entities/WellEntity'
-
 export interface WellDto {
   id: string
   name: string
@@ -12,6 +10,10 @@ export interface WellDto {
   coordinates: {
     latitude: number
     longitude: number
+  }
+  orientation?: {
+    azimuth: number
+    inclination: number
   }
   status: 'planned' | 'drilling' | 'completed' | 'abandoned'
   start_date?: string
@@ -30,6 +32,8 @@ export interface WellCreateDto {
     latitude: number
     longitude: number
   }
+  azimuth: number
+  inclination: number
   start_date?: string
 }
 
@@ -43,6 +47,8 @@ export interface WellUpdateDto {
     latitude: number
     longitude: number
   }
+  azimuth?: number
+  inclination?: number
   status?: 'planned' | 'drilling' | 'completed' | 'abandoned'
   start_date?: string
   completion_date?: string

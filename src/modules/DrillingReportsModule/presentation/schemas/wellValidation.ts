@@ -49,7 +49,7 @@ export const wellValidationSchema = yup.object({
   hole_diameter_inches: yup
     .mixed<number | string>()
     .required('Este campo es requerido')
-    .test('is-valid-diameter', 'El diámetro debe ser válido', function (value) {
+    .test('is-valid-diameter', 'El diámetro debe ser válido', value => {
       if (!value)
         return false
 
@@ -70,8 +70,10 @@ export const wellValidationSchema = yup.object({
       // If it's a string (code), convert to number
       if (typeof originalValue === 'string') {
         const inches = getDiameterInchesFromCode(originalValue)
+
         return inches !== null ? inches : originalValue
       }
+
       // If it's already a number, return as is
       return value
     }) as yup.NumberSchema<number>,
@@ -135,6 +137,18 @@ export const wellValidationSchema = yup.object({
     .required('El ID del proyecto es requerido')
     .trim()
     .min(1, 'El ID del proyecto no puede estar vacío'),
+
+  azimuth: yup
+    .number()
+    .required('Este campo es obligatorio')
+    .min(0, 'El valor de azimut debe estar entre 0 y 360 grados')
+    .max(360, 'El valor de azimut debe estar entre 0 y 360 grados'),
+
+  inclination: yup
+    .number()
+    .required('Este campo es obligatorio')
+    .min(-90, 'El valor de inclinación debe estar entre -90 y 90 grados')
+    .max(90, 'El valor de inclinación debe estar entre -90 y 90 grados'),
 })
 
 /**

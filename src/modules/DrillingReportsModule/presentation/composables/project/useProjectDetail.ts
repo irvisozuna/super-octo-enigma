@@ -46,7 +46,7 @@ export function useProjectDetail(projectId: MaybeRef<string>) {
   const isCancelled = computed(() => store.isCancelled)
   const isSuspended = computed(() => store.isSuspended)
 
-  // Estadísticas del proyecto
+  // Estadísticas del proyecto (resumen básico)
   const statistics = computed(() => ({
     reports: project.value?.statistics?.reports_count || 0,
     equipment: project.value?.statistics?.equipment_count || 0,
@@ -57,6 +57,9 @@ export function useProjectDetail(projectId: MaybeRef<string>) {
     budget: project.value?.budget?.total || 0,
     budgetUsage: project.value?.budget?.usage_percentage || 0,
   }))
+
+  // Estadísticas completas del proyecto (desde el endpoint /statistic)
+  const projectStatistics = computed(() => store.tabDataCache?.statistics || null)
 
   // Información del proyecto formateada
   const projectInfo = computed(() => ({
@@ -195,6 +198,7 @@ export function useProjectDetail(projectId: MaybeRef<string>) {
     isCancelled,
     isSuspended,
     statistics,
+    projectStatistics,
     projectInfo,
 
     // Actions

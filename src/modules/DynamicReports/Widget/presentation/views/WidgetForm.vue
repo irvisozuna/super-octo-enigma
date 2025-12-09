@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWidget } from '../composables/useWidget'
 import { WidgetTypeEnum } from '../../domain/types'
@@ -57,12 +57,14 @@ const widgetTypes = [
 
 const groupedWidgetTypes = computed(() => {
   const groups: Record<string, typeof widgetTypes> = {}
-  widgetTypes.forEach((type) => {
-    if (!groups[type.category]) {
+
+  widgetTypes.forEach(type => {
+    if (!groups[type.category])
       groups[type.category] = []
-    }
+
     groups[type.category].push(type)
   })
+
   return groups
 })
 
@@ -94,7 +96,7 @@ onMounted(async () => {
 })
 
 // Watch type changes to set default display config
-watch(() => form.value.type, (newType) => {
+watch(() => form.value.type, newType => {
   form.value.displayConfig = getDefaultDisplayConfig(newType)
 })
 
@@ -191,12 +193,11 @@ async function handleSave() {
       filters: [],
     }
 
-    if (isEditMode.value && currentItem.value) {
+    if (isEditMode.value && currentItem.value)
       await updateWidget(currentItem.value.id.toString(), data)
-    }
-    else {
+
+    else
       await createWidget(data)
-    }
 
     router.push('/widgets')
   }

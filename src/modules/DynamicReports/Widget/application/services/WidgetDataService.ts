@@ -79,6 +79,7 @@ export class WidgetDataService {
       const cachedData = this.getCachedData(cacheKey, widget.cache_ttl)
       if (cachedData) {
         const executionTime = performance.now() - startTime
+
         return {
           data: cachedData,
           cached: true,
@@ -91,9 +92,8 @@ export class WidgetDataService {
     const data = await this.executeWidgetQuery(widget, additionalFilters)
 
     // Cachear resultado si está habilitado
-    if (widget.cache_enabled) {
+    if (widget.cache_enabled)
       this.setCachedData(cacheKey, data)
-    }
 
     const executionTime = performance.now() - startTime
 
@@ -130,6 +130,7 @@ export class WidgetDataService {
     additionalFilters?: WidgetFilter[],
   ): Promise<{ data: WidgetData; pagination: any }> {
     const offset = (page - 1) * pageSize
+
     const data = await this.executeWidgetQuery(
       widget,
       additionalFilters,
@@ -159,9 +160,8 @@ export class WidgetDataService {
 
       // Validar campos de query_config
       for (const field of widget.query_config.fields) {
-        if (!availableFields.includes(field)) {
+        if (!availableFields.includes(field))
           errors.push(`Field '${field}' not found in DataSource`)
-        }
       }
 
       // Validar campos de display_config según el tipo de widget
@@ -184,6 +184,7 @@ export class WidgetDataService {
 
   private generateCacheKey(widget: Widget, filters?: WidgetFilter[]): string {
     const filterKey = filters ? JSON.stringify(filters) : ''
+
     return `widget_${widget.id}_${filterKey}`
   }
 
@@ -199,6 +200,7 @@ export class WidgetDataService {
       // Verificar si el cache expiró
       if (now - timestamp > ttl * 1000) {
         localStorage.removeItem(key)
+
         return null
       }
 
@@ -206,6 +208,7 @@ export class WidgetDataService {
     }
     catch (error) {
       console.error('Error reading cache:', error)
+
       return null
     }
   }
@@ -216,6 +219,7 @@ export class WidgetDataService {
         data,
         timestamp: Date.now(),
       }
+
       localStorage.setItem(key, JSON.stringify(cacheEntry))
     }
     catch (error) {
@@ -239,9 +243,8 @@ export class WidgetDataService {
     try {
       const keys = Object.keys(localStorage)
       for (const key of keys) {
-        if (key.startsWith('widget_')) {
+        if (key.startsWith('widget_'))
           localStorage.removeItem(key)
-        }
       }
     }
     catch (error) {

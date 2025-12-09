@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { WidgetFactory } from '../WidgetFactory'
 import { WidgetTypeEnum } from '../../../domain/types'
 
@@ -13,6 +13,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.type).toBe(WidgetTypeEnum.STAT)
       expect(widget.props.name).toBe('Sales Total')
       expect(widget.props.displayConfig).toHaveProperty('valueField')
@@ -28,6 +29,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.type).toBe(WidgetTypeEnum.CHART_LINE)
       expect(widget.props.displayConfig).toHaveProperty('xAxisField')
       expect(widget.props.displayConfig).toHaveProperty('yAxisField')
@@ -43,6 +45,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.type).toBe(WidgetTypeEnum.TABLE)
       expect(widget.props.displayConfig).toHaveProperty('visibleColumns')
       expect(widget.props.displayConfig).toHaveProperty('sortable')
@@ -58,6 +61,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.type).toBe(WidgetTypeEnum.MAP)
       expect(widget.props.displayConfig).toHaveProperty('latitudeField')
       expect(widget.props.displayConfig).toHaveProperty('longitudeField')
@@ -78,6 +82,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.displayConfig.valueField).toBe('customField')
       expect(widget.props.displayConfig.format).toBe('currency')
       expect(widget.props.displayConfig.decimals).toBe(3)
@@ -92,6 +97,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.icon).toBe('tabler-chart-pie')
     })
 
@@ -105,6 +111,7 @@ describe('WidgetFactory', () => {
       expect(result.isSuccess).toBe(true)
 
       const widget = result.getValue()!
+
       expect(widget.props.icon).toBe('tabler-custom-icon')
     })
 

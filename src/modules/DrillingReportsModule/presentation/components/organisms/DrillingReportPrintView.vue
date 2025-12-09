@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDrillingReportStore } from '../../stores/drillingReportStore'
-import { formatDate, formatDateTime } from '../../../shared/utils/dateUtils'
+import { ACTIVITY_TYPES } from '../../../shared/constants/ProjectConstants'
+import { formatDate } from '../../../shared/utils/dateUtils'
 import { formatWellDiameter } from '../../../shared/utils/WellUtils'
 import { usePrintReport } from '../../composables/usePrintReport'
 import { useTenantConfig } from '@/composables/useTenantConfig'
@@ -56,19 +57,9 @@ const getToolTypeLabel = (type: string) => {
 
 // Helper function to get activity type translation
 const getActivityTypeLabel = (type: string) => {
-  const activityTypeMap: Record<string, string> = {
-    drilling_core: t('DrillingReportsModule.tools.activityTypes.drilling_core'),
-    drilling: t('DrillingReportsModule.tools.activityTypes.drilling'),
-    maintenance: t('DrillingReportsModule.tools.activityTypes.maintenance'),
-    tool_change: t('DrillingReportsModule.tools.activityTypes.tool_change'),
-    break: t('DrillingReportsModule.tools.activityTypes.break'),
-    meal: t('DrillingReportsModule.tools.activityTypes.meal'),
-    conditioning: t('DrillingReportsModule.tools.activityTypes.conditioning'),
-    pulling_tools: t('DrillingReportsModule.tools.activityTypes.pulling_tools'),
-    inserting_tools: t('DrillingReportsModule.tools.activityTypes.inserting_tools'),
-  }
+  const activity = ACTIVITY_TYPES.find(a => a.value === type)
 
-  return activityTypeMap[type] || type
+  return activity?.title || type
 }
 
 // Helper function to get wear level translation
@@ -143,6 +134,7 @@ const projectInfo = computed(() => ({
 
 const wellInfo = computed(() => {
   const diameter = report.value?.well?.diameter
+
   return {
     code: report.value?.well?.code || '',
     name: report.value?.well?.name || '',

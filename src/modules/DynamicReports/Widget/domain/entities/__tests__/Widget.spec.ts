@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { Widget } from '../Widget'
-import { WidgetId } from '../../value-objects/WidgetId'
 import { WidgetTypeEnum } from '../../types'
 import type { WidgetProps } from '../../types/WidgetTypes'
 

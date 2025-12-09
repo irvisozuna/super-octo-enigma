@@ -1,5 +1,5 @@
 import { Widget } from '../../domain/entities/Widget'
-import type { WidgetResponseDto, WidgetListDto, WidgetCreateDto, WidgetUpdateDto } from '../dtos/WidgetDtos'
+import type { WidgetCreateDto, WidgetListDto, WidgetResponseDto, WidgetUpdateDto } from '../dtos/WidgetDtos'
 import { UniqueEntityID } from '../../../shared/domain/base/UniqueEntityID'
 
 export class WidgetMapper {

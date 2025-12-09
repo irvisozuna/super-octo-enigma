@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWidget } from '../composables/useWidget'
 import { WidgetTypeEnum } from '../../domain/types'
@@ -37,15 +37,15 @@ const filteredItems = computed(() => {
 
   if (search.value) {
     const searchLower = search.value.toLowerCase()
+
     filtered = filtered.filter(item =>
       item.props.name.toLowerCase().includes(searchLower)
       || item.props.description?.toLowerCase().includes(searchLower),
     )
   }
 
-  if (selectedType.value) {
+  if (selectedType.value)
     filtered = filtered.filter(item => item.props.type === selectedType.value)
-  }
 
   return filtered
 })
@@ -74,6 +74,7 @@ function getWidgetTypeName(type: WidgetTypeEnum): string {
     [WidgetTypeEnum.SANKEY]: 'Sankey',
     [WidgetTypeEnum.TREEMAP]: 'Treemap',
   }
+
   return names[type] || type
 }
 
@@ -97,6 +98,7 @@ function getWidgetIcon(type: WidgetTypeEnum): string {
     [WidgetTypeEnum.SANKEY]: 'tabler-route',
     [WidgetTypeEnum.TREEMAP]: 'tabler-hierarchy',
   }
+
   return icons[type] || 'tabler-widget'
 }
 

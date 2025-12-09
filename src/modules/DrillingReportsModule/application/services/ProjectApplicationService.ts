@@ -1,6 +1,5 @@
 import type { ProjectRepository } from '../../domain/repositories/ProjectRepository'
 import type { ProjectCreateRequest, ProjectUpdateRequest } from '../../domain/entities/ProjectEntity'
-import { Project, ProjectListResponse } from '../../domain/entities/ProjectEntity'
 import type { ProjectCreateDto, ProjectDto, ProjectListDto, ProjectUpdateDto } from '../dtos/ProjectDtos'
 import { ProjectMapper } from '../mappers/ProjectMapper'
 

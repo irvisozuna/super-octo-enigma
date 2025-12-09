@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useWidgetRefresh } from '../composables/useWidgetRefresh'
@@ -44,6 +44,7 @@ const displayConfig = computed(() => props.widget.widget?.props.displayConfig)
 onMounted(() => {
   if (!props.accessToken) {
     console.error('Mapbox access token is required')
+
     return
   }
 
@@ -58,13 +59,11 @@ onMounted(() => {
     })
 
     // Agregar controles
-    if (displayConfig.value?.showControls !== false) {
+    if (displayConfig.value?.showControls !== false)
       map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    }
 
-    if (displayConfig.value?.showFullscreen) {
+    if (displayConfig.value?.showFullscreen)
       map.addControl(new mapboxgl.FullscreenControl(), 'top-right')
-    }
 
     // Cargar markers cuando el mapa esté listo
     map.on('load', () => {
@@ -82,9 +81,8 @@ onUnmounted(() => {
 
 // Watch para actualizar markers cuando cambien los datos
 watch(widgetData, () => {
-  if (map) {
+  if (map)
     updateMarkers()
-  }
 })
 
 function updateMarkers() {
@@ -102,7 +100,7 @@ function updateMarkers() {
   const colorField = config?.colorField
 
   // Agregar nuevos markers
-  widgetData.value.rows.forEach((row) => {
+  widgetData.value.rows.forEach(row => {
     const lat = Number(row[latField])
     const lng = Number(row[lngField])
 
@@ -111,6 +109,7 @@ function updateMarkers() {
 
       // Crear elemento del marker
       const el = document.createElement('div')
+
       el.className = 'custom-marker'
       el.style.backgroundColor = color
       el.style.width = '20px'
@@ -130,6 +129,7 @@ function updateMarkers() {
             ${config?.descriptionField ? `<p style="margin: 4px 0 0;">${row[config.descriptionField]}</p>` : ''}
           </div>
         `
+
         marker.setPopup(new mapboxgl.Popup().setHTML(popupContent))
       }
 
@@ -141,6 +141,7 @@ function updateMarkers() {
   // Ajustar bounds si hay markers
   if (markers.length > 0 && config?.fitBounds) {
     const bounds = new mapboxgl.LngLatBounds()
+
     markers.forEach(marker => bounds.extend(marker.getLngLat()))
     map!.fitBounds(bounds, { padding: 50 })
   }

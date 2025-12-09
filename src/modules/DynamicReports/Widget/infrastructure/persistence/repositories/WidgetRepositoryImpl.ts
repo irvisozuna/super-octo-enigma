@@ -20,9 +20,8 @@ export class WidgetRepositoryImpl implements WidgetRepository {
       const response = await this.apiService.getById(id)
       const widget = WidgetMapper.toDomain(response)
 
-      if (!widget) {
+      if (!widget)
         return Result.fail<Widget>('Widget not found')
-      }
 
       return Result.ok<Widget>(widget)
     }
@@ -95,9 +94,8 @@ export class WidgetRepositoryImpl implements WidgetRepository {
       const response = await this.apiService.create(dto)
       const savedWidget = WidgetMapper.toDomain(response.data)
 
-      if (!savedWidget) {
+      if (!savedWidget)
         return Result.fail<Widget>('Failed to create widget')
-      }
 
       return Result.ok<Widget>(savedWidget)
     }
@@ -112,9 +110,8 @@ export class WidgetRepositoryImpl implements WidgetRepository {
       const response = await this.apiService.update(widget.id, dto)
       const updatedWidget = WidgetMapper.toDomain(response.data)
 
-      if (!updatedWidget) {
+      if (!updatedWidget)
         return Result.fail<Widget>('Failed to update widget')
-      }
 
       return Result.ok<Widget>(updatedWidget)
     }
@@ -126,6 +123,7 @@ export class WidgetRepositoryImpl implements WidgetRepository {
   async delete(id: string): Promise<Result<void>> {
     try {
       await this.apiService.delete(id)
+
       return Result.ok<void>()
     }
     catch (error) {
@@ -136,6 +134,7 @@ export class WidgetRepositoryImpl implements WidgetRepository {
   async exists(id: string): Promise<boolean> {
     try {
       const result = await this.findById(id)
+
       return result.isSuccess
     }
     catch (error) {
@@ -146,9 +145,9 @@ export class WidgetRepositoryImpl implements WidgetRepository {
   async count(): Promise<number> {
     try {
       const result = await this.findAll()
-      if (result.isSuccess) {
+      if (result.isSuccess)
         return result.getValue().length
-      }
+
       return 0
     }
     catch (error) {
@@ -159,9 +158,9 @@ export class WidgetRepositoryImpl implements WidgetRepository {
   async countByDataSource(dataSourceId: string): Promise<number> {
     try {
       const result = await this.findByDataSource(dataSourceId)
-      if (result.isSuccess) {
+      if (result.isSuccess)
         return result.getValue().length
-      }
+
       return 0
     }
     catch (error) {

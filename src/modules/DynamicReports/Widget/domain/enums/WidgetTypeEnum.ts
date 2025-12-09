@@ -3,6 +3,7 @@
  * Define todos los tipos de visualización soportados
  */
 export enum WidgetTypeEnum {
+
   // Widgets de métricas
   STAT = 'stat',
 

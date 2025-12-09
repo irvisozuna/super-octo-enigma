@@ -1,5 +1,5 @@
 import { Dashboard } from '../../domain/entities/Dashboard'
-import type { DashboardResponseDto, DashboardListDto, DashboardCreateDto, DashboardUpdateDto } from '../dtos/DashboardDtos'
+import type { DashboardCreateDto, DashboardListDto, DashboardResponseDto, DashboardUpdateDto } from '../dtos/DashboardDtos'
 import { UniqueEntityID } from '../../../shared/domain/base/UniqueEntityID'
 
 export class DashboardMapper {

@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { DOCUMENT_ACCESS_LEVELS, DOCUMENT_TYPES } from '../../shared/constants/DocumentConstants'
-import { documentUploadSchema } from '../../shared/validations/DocumentValidations'
 
 interface Props {
   modelValue: boolean

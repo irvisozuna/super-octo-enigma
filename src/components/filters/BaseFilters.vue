@@ -1,6 +1,4 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { computed } from 'vue'
-import type { PropType } from 'vue'
 
 /**
  * BaseFilters - Componente genérico reutilizable para filtros

@@ -313,6 +313,12 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
           historySummary.value = historyResponse?.summary || null
           data = { history: statusHistory.value, summary: historySummary.value }
           break
+
+        case 'statistics':
+          const statisticsResponse = await DrillingReportApiService.getProjectStatistics(projectId)
+
+          data = statisticsResponse?.data || null
+          break
       }
 
       tabDataCache[tab] = data

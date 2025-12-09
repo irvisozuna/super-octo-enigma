@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { DashboardTheme } from '../../domain/types/DashboardTypes'
 
 export interface ThemeColors {
@@ -85,14 +85,12 @@ export function useDashboardTheme(initialTheme?: DashboardTheme) {
 
     // Actualizar colores base según el modo
     if (mode === 'dark') {
-      if (!theme.value.backgroundColor || theme.value.backgroundColor === DEFAULT_LIGHT_THEME.background) {
+      if (!theme.value.backgroundColor || theme.value.backgroundColor === DEFAULT_LIGHT_THEME.background)
         theme.value.backgroundColor = DEFAULT_DARK_THEME.background
-      }
     }
     else {
-      if (!theme.value.backgroundColor || theme.value.backgroundColor === DEFAULT_DARK_THEME.background) {
+      if (!theme.value.backgroundColor || theme.value.backgroundColor === DEFAULT_DARK_THEME.background)
         theme.value.backgroundColor = DEFAULT_LIGHT_THEME.background
-      }
     }
   }
 
@@ -194,9 +192,8 @@ export function useDashboardTheme(initialTheme?: DashboardTheme) {
 
     let css = `:root {\n  ${vars}\n}`
 
-    if (theme.value.customCss) {
+    if (theme.value.customCss)
       css += `\n\n${theme.value.customCss}`
-    }
 
     return css
   })
@@ -220,6 +217,7 @@ export function useDashboardTheme(initialTheme?: DashboardTheme) {
    */
   function applyTheme() {
     const root = document.documentElement
+
     Object.entries(cssVariables.value).forEach(([key, value]) => {
       root.style.setProperty(key, String(value))
     })
@@ -230,7 +228,8 @@ export function useDashboardTheme(initialTheme?: DashboardTheme) {
    */
   function removeTheme() {
     const root = document.documentElement
-    Object.keys(cssVariables.value).forEach((key) => {
+
+    Object.keys(cssVariables.value).forEach(key => {
       root.style.removeProperty(key)
     })
   }

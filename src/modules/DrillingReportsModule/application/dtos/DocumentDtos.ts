@@ -1,5 +1,3 @@
-import { Document, DocumentCreateRequest, DocumentListResponse, DocumentUpdateRequest, DocumentUploadResponse } from '../../domain/entities/DocumentEntity'
-
 export interface DocumentDto {
   id: string
   name: string

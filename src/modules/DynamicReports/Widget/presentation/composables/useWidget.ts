@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWidgetStore } from '../stores/widgetStore'
-import type { WidgetCreateDto, WidgetUpdateDto, WidgetListFiltersDto } from '../../application/dtos/WidgetDtos'
+import type { WidgetCreateDto, WidgetListFiltersDto, WidgetUpdateDto } from '../../application/dtos/WidgetDtos'
 import type { WidgetTypeEnum } from '../../domain/types'
 
 /**
@@ -28,9 +28,9 @@ export function useWidget() {
    * Obtiene lista de widgets con filtros
    */
   async function fetchWidgets(customFilters?: WidgetListFiltersDto) {
-    if (customFilters) {
+    if (customFilters)
       widgetStore.setFilters(customFilters)
-    }
+
     await widgetStore.fetchList()
   }
 
@@ -46,6 +46,7 @@ export function useWidget() {
    */
   async function fetchWidget(id: string) {
     await widgetStore.fetchById(id)
+
     return currentItem.value
   }
 

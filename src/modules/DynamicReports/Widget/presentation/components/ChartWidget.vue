@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
+import type { ApexOptions } from 'apexcharts'
 import { useWidgetRefresh } from '../composables/useWidgetRefresh'
 import type { WidgetInstanceConfig } from '../../domain/types/WidgetTypes'
-import type { ApexOptions } from 'apexcharts'
 
 interface Props {
   widget: WidgetInstanceConfig
@@ -64,9 +64,8 @@ const series = computed(() => {
   const rows = widgetData.value.rows
 
   // Para pie/donut
-  if (chartType.value === 'pie' || chartType.value === 'donut') {
+  if (chartType.value === 'pie' || chartType.value === 'donut')
     return rows.map(row => Number(row[config?.yAxisField || widgetData.value.columns[1]]))
-  }
 
   // Para otros tipos
   const seriesField = config?.seriesField
@@ -76,10 +75,11 @@ const series = computed(() => {
     // Agrupar por serie
     const grouped = rows.reduce((acc, row) => {
       const seriesName = row[seriesField]
-      if (!acc[seriesName]) {
+      if (!acc[seriesName])
         acc[seriesName] = []
-      }
+
       acc[seriesName].push(Number(row[yField]))
+
       return acc
     }, {} as Record<string, number[]>)
 

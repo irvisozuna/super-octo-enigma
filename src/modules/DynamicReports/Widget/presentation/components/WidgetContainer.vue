@@ -68,9 +68,8 @@ function handleClone() {
 
 function toggleFullscreen() {
   isFullscreen.value = !isFullscreen.value
-  if (isFullscreen.value) {
+  if (isFullscreen.value)
     emit('fullscreen')
-  }
 }
 
 function handleSelect() {

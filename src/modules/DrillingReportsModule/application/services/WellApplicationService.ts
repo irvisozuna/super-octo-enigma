@@ -1,6 +1,5 @@
 import type { WellRepository } from '../../domain/repositories/WellRepository'
 import type { WellCreateRequest, WellUpdateRequest } from '../../domain/entities/WellEntity'
-import { Well, WellListResponse } from '../../domain/entities/WellEntity'
 import type { WellCreateDto, WellDto, WellListDto, WellUpdateDto } from '../dtos/WellDtos'
 import { WellMapper } from '../mappers/WellMapper'
 

@@ -3,7 +3,7 @@
  * Implementa lógica común de cache para todos los módulos
  */
 
-import { type BaseCacheData, type CacheModuleConfig, CachePriority, SyncStatus } from '../types/cache.types'
+import { type CacheModuleConfig, CachePriority, SyncStatus } from '../types/cache.types'
 import type { BaseIndexedDBService } from './BaseIndexedDBService'
 
 export abstract class BaseCacheService<TEntity = any> {

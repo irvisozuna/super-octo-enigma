@@ -13,13 +13,11 @@ import type {
   DocumentFilter,
   DocumentSearchCriteria,
   DocumentStatistics,
-  MetadataTemplate,
   UpdateDocumentRequest,
   UpdateShareLinkRequest,
 } from '../../domain/entities/DocumentEntity'
 import { DocumentDomain } from '../../domain/entities/DocumentEntity'
 import { DocumentMetadata } from '../../domain/value-objects/DocumentMetadata'
-import { DocumentMapper } from '../mappers/DocumentMapper'
 import type { INotificationService } from '../../shared/contracts/INotificationService'
 import type { PaginatedResponse } from '../../shared/types'
 

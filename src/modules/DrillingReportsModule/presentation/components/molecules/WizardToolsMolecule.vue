@@ -347,7 +347,7 @@ const endDepthRule = (tool: any) => {
             class="text-medium-emphasis mb-4"
           />
           <p class="text-body-2 text-medium-emphasis mb-4">
-            No hay herramientas registradas. Debe agregar al menos una herramienta para continuar.
+            No hay herramientas registradas. Puede continuar sin agregar herramientas si no aplica.
           </p>
           <VBtn
             color="warning"

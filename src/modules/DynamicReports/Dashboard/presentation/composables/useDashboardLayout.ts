@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { computed, ref } from 'vue'
 import type { WidgetInstanceConfig, WidgetPosition } from '../../../Widget/domain/types/WidgetTypes'
 
 export interface GridItem {
@@ -83,9 +83,8 @@ export function useDashboardLayout(
       gridItems.value.splice(index, 1)
       hasChanges.value = true
 
-      if (selectedWidget.value === widgetInstanceId) {
+      if (selectedWidget.value === widgetInstanceId)
         selectedWidget.value = null
-      }
     }
   }
 
@@ -120,9 +119,8 @@ export function useDashboardLayout(
     for (const item of gridItems.value) {
       for (let y = item.position.y; y < item.position.y + item.position.h; y++) {
         for (let x = item.position.x; x < item.position.x + item.position.w; x++) {
-          if (y < maxRows && x < columns) {
+          if (y < maxRows && x < columns)
             occupied[y][x] = true
-          }
         }
       }
     }
@@ -130,9 +128,8 @@ export function useDashboardLayout(
     // Buscar espacio disponible
     for (let y = 0; y < maxRows; y++) {
       for (let x = 0; x <= columns - width; x++) {
-        if (isSpaceAvailable(occupied, x, y, width, height)) {
+        if (isSpaceAvailable(occupied, x, y, width, height))
           return { x, y, w: width, h: height }
-        }
       }
     }
 
@@ -161,6 +158,7 @@ export function useDashboardLayout(
           return false
       }
     }
+
     return true
   }
 
@@ -181,7 +179,7 @@ export function useDashboardLayout(
    * Detecta colisiones entre widgets
    */
   function detectCollision(position: WidgetPosition, excludeId?: string): boolean {
-    return gridItems.value.some((item) => {
+    return gridItems.value.some(item => {
       if (excludeId && item.id === excludeId)
         return false
 
@@ -241,6 +239,7 @@ export function useDashboardLayout(
   // Computed
   const widgetCount = computed(() => gridItems.value.length)
   const isEmpty = computed(() => gridItems.value.length === 0)
+
   const selectedItem = computed(() =>
     gridItems.value.find(item => item.id === selectedWidget.value) || null,
   )
@@ -250,13 +249,13 @@ export function useDashboardLayout(
       return rowHeight
 
     const maxY = Math.max(...gridItems.value.map(item => item.position.y + item.position.h))
+
     return maxY * rowHeight + (maxY - 1) * margin + 2 * containerPadding
   })
 
   // Initialize
-  if (initialWidgets.length > 0) {
+  if (initialWidgets.length > 0)
     initializeGrid(initialWidgets)
-  }
 
   return {
     // State

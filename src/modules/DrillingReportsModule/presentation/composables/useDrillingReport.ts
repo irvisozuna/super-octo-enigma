@@ -4,7 +4,7 @@
  * Main composable for drilling report functionality
  */
 
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useDrillingReportStore } from '../stores/drillingReportStore'
 import type { Activity, Consumption, CreateReportDto, DrillingReport, Signature, ToolAssignment, UpdateReportDto } from '../../domain/entities/DrillingReportEntity'
 import { useDrillingReportPermissions } from './useDrillingReportPermissions'

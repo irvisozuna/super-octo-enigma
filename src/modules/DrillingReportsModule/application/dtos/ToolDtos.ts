@@ -1,5 +1,3 @@
-import { Tool, ToolCreateRequest, ToolListResponse, ToolUpdateRequest } from '../../domain/entities/ToolEntity'
-
 export interface ToolDto {
   id: string
   name: string

@@ -62,6 +62,7 @@ const items = computed(() => {
 const paginatedItems = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
+
   return items.value.slice(start, end)
 })
 

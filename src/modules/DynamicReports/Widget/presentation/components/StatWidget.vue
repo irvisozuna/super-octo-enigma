@@ -52,6 +52,7 @@ const compareValue = computed(() => {
     return null
 
   const firstRow = widgetData.value.rows[0]
+
   return firstRow[displayConfig.value.compareField] || null
 })
 
@@ -67,6 +68,7 @@ const trend = computed(() => {
     return null
 
   const change = ((current - previous) / previous) * 100
+
   return {
     value: change,
     isPositive: change > 0,

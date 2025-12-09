@@ -19,7 +19,6 @@ import type {
 } from '../../domain/repositories/DrillingReportRepository'
 import type { DrillingReportEntity } from '../../domain/entities/DrillingReportEntity'
 import { DrillingReportDomain } from '../../domain/entities/DrillingReportEntity'
-import { DrillingReportMapper } from '../mappers/DrillingReportMapper'
 
 export class DrillingReportApplicationService {
   constructor(private repository: DrillingReportRepository) {}
