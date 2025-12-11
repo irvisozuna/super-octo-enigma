@@ -81,18 +81,8 @@ const updateActivity = (index: number, field: string, value: any) => {
   if (field === 'start_time' || field === 'end_time') {
     const activity = formData.value.activities[index]
     if (activity?.start_time && activity?.end_time) {
-      // Validate that end time is not before start time
-      const start = new Date(`2000-01-01T${activity.start_time}`)
-      const end = new Date(`2000-01-01T${activity.end_time}`)
-
-      if (end < start) {
-        // If end time is before start time, don't calculate hours
-        wizardStore.updateActivity(index, { hours: 0 })
-
-        return
-      }
-
-      const calculatedHours = calculateHoursFromTimes(activity.start_time, activity.end_time)
+      // Calcular horas considerando el turno (para manejar cruce de medianoche en turnos nocturnos)
+      const calculatedHours = calculateHoursFromTimes(activity.start_time, activity.end_time, activity.shift)
 
       wizardStore.updateActivity(index, { hours: calculatedHours })
     }
@@ -175,16 +165,23 @@ const getSuggestedEndTime = (index: number) => {
 }
 
 // Calculate hours based on start and end time
-const calculateHoursFromTimes = (startTime: string, endTime: string) => {
+const calculateHoursFromTimes = (startTime: string, endTime: string, shift?: string) => {
   if (!startTime || !endTime)
     return 0
 
   const start = new Date(`2000-01-01T${startTime}`)
-  const end = new Date(`2000-01-01T${endTime}`)
+  let end = new Date(`2000-01-01T${endTime}`)
 
-  // Validate that end time is not before start time
-  if (end < start)
-    return 0 // Return 0 if end time is before start time
+  // Si es turno nocturno y end < start, significa que cruza medianoche
+  // Ejemplo: 19:00 (7 PM) a 07:00 (7 AM del día siguiente) = 12 horas
+  if (shift === 'night' && end < start) {
+    // Sumar 24 horas (1 día) a la hora de fin
+    end = new Date(end.getTime() + (24 * 60 * 60 * 1000))
+  }
+  else if (end < start) {
+    // Para turnos diurnos o mixtos, si end < start es inválido
+    return 0
+  }
 
   const diffMs = end.getTime() - start.getTime()
   const diffHours = diffMs / (1000 * 60 * 60)
@@ -196,12 +193,13 @@ const calculateHoursFromTimes = (startTime: string, endTime: string) => {
 const setSuggestedTimes = (index: number) => {
   const suggestedStart = getSuggestedStartTime(index)
   const suggestedEnd = getSuggestedEndTime(index)
+  const activity = formData.value.activities[index]
 
   updateActivity(index, 'start_time', suggestedStart)
   updateActivity(index, 'end_time', suggestedEnd)
 
-  // Calculate hours automatically
-  const calculatedHours = calculateHoursFromTimes(suggestedStart, suggestedEnd)
+  // Calculate hours automatically, considerando el turno
+  const calculatedHours = calculateHoursFromTimes(suggestedStart, suggestedEnd, activity?.shift)
 
   wizardStore.updateActivity(index, { hours: calculatedHours })
 }
@@ -390,13 +388,15 @@ const calculateHorometer = () => {
                     :model-value="activity.end_time"
                     label="Hora Fin"
                     type="time"
-                    :min="activity.start_time || '00:00'"
                     prepend-inner-icon="tabler-clock-stop"
                     :hint="`Sugerido: ${getSuggestedEndTime(index)}`"
                     persistent-hint
                     :rules="[
                       (v) => {
                         if (!v || !activity.start_time) return true
+                        // Para turnos nocturnos, permitir que end < start (cruza medianoche)
+                        if (activity.shift === 'night') return true
+                        // Para turnos diurnos o mixtos, requerir end > start
                         const start = new Date(`2000-01-01T${activity.start_time}`)
                         const end = new Date(`2000-01-01T${v}`)
                         return end > start || 'La hora fin debe ser mayor a la hora inicio'

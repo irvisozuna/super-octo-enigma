@@ -81,6 +81,12 @@ const rules = {
     if (!value || !formData.value.start_time)
       return true
 
+    // Para turnos nocturnos, permitir que end < start (cruza medianoche)
+    // Ej: 19:00 (7 PM) a 07:00 (7 AM del día siguiente)
+    if (formData.value.shift === 'night')
+      return true
+
+    // Para turnos diurnos o mixtos, requerir que end > start
     return value > formData.value.start_time || 'La hora de fin debe ser después de la hora de inicio'
   },
   description: (value: any) => {

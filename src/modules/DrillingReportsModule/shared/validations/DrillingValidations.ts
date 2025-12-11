@@ -215,10 +215,16 @@ export const addActivitySchema = yup.object({
     .matches(/^([01]?\d|2[0-3]):[0-5]\d$/, 'Formato de hora inválido (HH:mm)')
     .nullable()
     .test('is-after-start', 'La hora de fin debe ser después de la hora de inicio', function (endTime) {
-      const { start_time } = this.parent
+      const { start_time, shift } = this.parent
       if (!start_time || !endTime)
         return true
 
+      // Para turnos nocturnos, permitir que end_time < start_time (cruza medianoche)
+      // Ej: 19:00 (7 PM) a 07:00 (7 AM del día siguiente)
+      if (shift === 'night')
+        return true
+
+      // Para turnos diurnos o mixtos, requerir que end_time > start_time
       return endTime > start_time
     }),
 

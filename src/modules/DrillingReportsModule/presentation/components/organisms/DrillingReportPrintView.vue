@@ -449,7 +449,7 @@ watch(() => report.value, newReport => {
             <div class="info-grid-compact">
               <div class="info-row">
                 <span class="label">Pozo No.:</span>
-                <span class="value">{{ wellInfo.code }}</span>
+                <span class="value">{{ wellInfo.name }}</span>
               </div>
               <div class="info-row">
                 <span class="label">Sector:</span>
@@ -1045,31 +1045,32 @@ watch(() => report.value, newReport => {
 .section-clean {
   padding: 0;
   border: none;
-  background: transparent;
   border-radius: 0;
+  background: transparent;
   box-shadow: none;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .section-clean:hover {
-  box-shadow: none;
   border: none;
+  box-shadow: none;
 }
 
 .section-clean h3 {
+  border-radius: 3px;
   background: linear-gradient(90deg, rgba(var(--v-theme-primary), 0.08) 0%, transparent 100%);
   border-block-end: 2px solid rgb(var(--v-theme-primary));
-  border-radius: 3px;
+  color: rgb(var(--v-theme-primary));
   font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.5px;
   margin-block: 0 10px;
   margin-inline: 0;
-  padding: 8px 10px;
+  padding-block: 8px;
+  padding-inline: 10px;
   text-align: start;
   text-transform: uppercase;
-  color: rgb(var(--v-theme-primary));
-  letter-spacing: 0.5px;
 }
 
 /* Grid compacto para info */
@@ -1082,13 +1083,14 @@ watch(() => report.value, newReport => {
 .info-grid-compact .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 5px 8px;
-  background: linear-gradient(90deg, rgba(var(--v-theme-secondary), 0.02) 0%, transparent 100%);
   border-radius: 3px;
+  background: linear-gradient(90deg, rgba(var(--v-theme-secondary), 0.02) 0%, transparent 100%);
+  border-inline-start: 2px solid transparent;
   font-size: 10px;
   line-height: 1.5;
+  padding-block: 5px;
+  padding-inline: 8px;
   transition: all 0.2s ease;
-  border-inline-start: 2px solid transparent;
 }
 
 .info-grid-compact .info-row:hover {
@@ -1097,25 +1099,25 @@ watch(() => report.value, newReport => {
 }
 
 .info-grid-compact .label {
-  font-weight: 700;
-  min-inline-size: 110px;
   color: rgb(var(--v-theme-primary));
   font-size: 9px;
-  text-transform: uppercase;
+  font-weight: 700;
   letter-spacing: 0.2px;
+  min-inline-size: 110px;
+  text-transform: uppercase;
 }
 
 .info-grid-compact .value {
   flex: 1;
-  text-align: end;
   color: #212529;
-  font-weight: 600;
   font-size: 10px;
+  font-weight: 600;
+  text-align: end;
 }
 
 .font-bold {
-  font-weight: 800 !important;
   color: rgb(var(--v-theme-primary)) !important;
+  font-weight: 800 !important;
 }
 
 /* DEPRECATED - Grid dual antiguo */
@@ -1627,20 +1629,22 @@ watch(() => report.value, newReport => {
   }
 
   .section-clean h3 {
-    font-size: 9px;
-    padding: 6px 8px;
-    margin-block-end: 8px;
     background: white !important; /* Sin gradientes para ahorrar tinta */
+    font-size: 9px;
+    margin-block-end: 8px;
+    padding-block: 6px;
+    padding-inline: 8px;
   }
 
   .info-grid-compact {
-    gap: 0px; /* Eliminar gap para impresión compacta */
+    gap: 0; /* Eliminar gap para impresión compacta */
   }
 
   .info-grid-compact .info-row {
-    font-size: 8px;
-    padding: 2px 5px; /* Reducido de 3px 6px */
     background: white !important; /* Sin gradientes para ahorrar tinta */
+    font-size: 8px;
+    padding-block: 2px;
+    padding-inline: 5px; /* Reducido de 3px 6px */
   }
 
   .info-grid-compact .label,
@@ -1935,12 +1939,12 @@ watch(() => report.value, newReport => {
 
   /* === ORPHANS & WIDOWS === */
   p,
- h1,
- h2,
- h3,
- h4,
- h5,
- h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     orphans: 3;
     widows: 3;
   }
