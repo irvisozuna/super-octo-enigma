@@ -4,6 +4,7 @@ import { DrillingReportApiService } from '../../infrastructure/api/services/Dril
 export interface WizardDataOptions {
   title: string
   value: string
+  type?: string
 }
 
 export const useReportWizardData = () => {
@@ -67,6 +68,7 @@ export const useReportWizardData = () => {
       toolOptions.value = (response.data || response || []).map((tool: any) => ({
         title: tool.name || tool.tool_name,
         value: tool.id,
+        type: tool.type || tool.tool_type || tool.tool_category,
       }))
 
       return toolOptions.value

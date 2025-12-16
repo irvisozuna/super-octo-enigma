@@ -77,7 +77,7 @@ export function usePrintReport() {
           mode: ['avoid-all', 'css', 'legacy'],
           before: '.page-break-before',
           after: '.page-break-after',
-          avoid: ['.no-page-break', '.section', '.data-table'],
+          avoid: ['.no-page-break', '.section', '.data-table', '.cdk-form-table'],
         },
       }
 

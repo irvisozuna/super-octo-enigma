@@ -260,3 +260,53 @@ export function searchTools(tools: Tool[], query: string): Tool[] {
     || tool.location.toLowerCase().includes(lowercaseQuery),
   )
 }
+
+/**
+ * Mapea tool_type (de la API) a tool_category (del wizard)
+ * @param toolType - El tipo de herramienta desde la API (type, tool_type, etc.)
+ * @param toolName - Opcional: nombre de la herramienta para ayudar en el mapeo
+ * @returns La categoría correspondiente para el wizard o null si no hay mapeo
+ */
+export function mapToolTypeToCategory(toolType: string | undefined | null, toolName?: string): string | null {
+  if (!toolType)
+    return null
+
+  const normalizedType = toolType.toLowerCase().trim()
+  const normalizedName = toolName?.toLowerCase().trim() || ''
+
+  // Mapeo directo de tipos específicos
+  const directMapping: Record<string, string> = {
+    diamond_bit: 'diamond_bit',
+    tricone: 'tricone',
+    tricone_bit: 'tricone',
+    reamer: 'reamer',
+    drill_pipe: 'drill_pipe',
+    pipe: 'drill_pipe',
+  }
+
+  if (directMapping[normalizedType])
+    return directMapping[normalizedType]
+
+  // Si el tipo es 'drill_bit', intentar determinar por el nombre
+  if (normalizedType === 'drill_bit') {
+    // Si el nombre contiene "tricone" o "tricono", es tricone
+    if (normalizedName.includes('tricone') || normalizedName.includes('tricono'))
+      return 'tricone'
+
+    // Si el nombre contiene "diamond" o "diamante", es diamond_bit
+    if (normalizedName.includes('diamond') || normalizedName.includes('diamante'))
+      return 'diamond_bit'
+
+    // Por defecto, usar diamond_bit (el usuario puede cambiarlo manualmente)
+    return 'diamond_bit'
+  }
+
+  // Mapeo de otros tipos genéricos
+  const genericMapping: Record<string, string> = {
+    casing: 'drill_pipe',
+    pump: 'drill_pipe', // O la categoría apropiada según el contexto
+    other: null, // No mapear 'other', dejar que el usuario seleccione
+  }
+
+  return genericMapping[normalizedType] || null
+}

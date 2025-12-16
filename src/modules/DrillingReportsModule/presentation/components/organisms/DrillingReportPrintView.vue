@@ -177,6 +177,45 @@ const horometerInfo = computed(() => ({
   nightHours: report.value?.horometer?.night?.hours_worked || 0,
 }))
 
+// Herramientas agrupadas por tipo para el formato CDK
+const toolsByType = computed(() => {
+  const tools = report.value?.tools || { reamers: [], bits: [], others: [] }
+
+  return {
+    // bits ya viene pre-filtrado del backend (incluye drill_bit_pdc, drill_bit_diamond)
+    brocas: tools.bits?.filter((t: any) => t.tool?.type !== 'tricone') || [],
+
+    // triconos se filtran por tipo
+    triconos: tools.bits?.filter((t: any) => t.tool?.type === 'tricone') || [],
+    escarreadores: tools.reamers || [],
+  }
+})
+
+// Resumen de perforación (primer desde, último hasta)
+const drillingSummary = computed(() => {
+  const depths = report.value?.depths
+  if (!depths)
+    return null
+
+  return {
+    desde: depths.drilling_start ?? 0,
+    hasta: depths.drilling_end ?? 0,
+    metrosPerforados: totalMeters.value,
+  }
+})
+
+// Consumos con valores por defecto para la tabla CDK
+const consumptionsForPrint = computed(() => {
+  const defaultItems = ['Petróleo', 'Lubricante', 'Aceites', 'Agua', 'Bentonita', 'Aditivos']
+  const existing = report.value?.consumptions || []
+
+  return defaultItems.map(item => {
+    const found = existing.find((c: any) => c.type_label?.toLowerCase() === item.toLowerCase())
+
+    return { label: item, quantity: found?.quantity || '', unit: found?.unit || '' }
+  })
+})
+
 // Methods
 const loadReport = async () => {
   loading.value = true
@@ -355,295 +394,219 @@ watch(() => report.value, newReport => {
           CONFIDENCIAL
         </div>
 
-        <!-- Report Header -->
-        <div class="report-header page-header">
-          <div class="company-logo">
-            <img
-              v-if="menuLogo"
-              :src="menuLogo"
-              alt="Logo"
-              class="logo-image"
+        <!-- CDK Style Form Table -->
+        <table class="cdk-form-table">
+          <!-- HEADER ROW -->
+          <tr class="header-row">
+            <td
+              class="logo-cell"
+              rowspan="2"
             >
-            <div
-              v-else
-              class="logo-text"
-            >
-              <div class="logo-main">
+              <img
+                v-if="menuLogo"
+                :src="menuLogo"
+                alt="Logo"
+                class="cdk-logo"
+              >
+              <div
+                v-else
+                class="cdk-logo-text"
+              >
                 {{ appTitle }}
               </div>
-              <div class="logo-sub">
-                -DRILLING-
-              </div>
-            </div>
-          </div>
-          <div class="report-title">
-            <h1>REPORTE DE PERFORACIÓN DIAMANTINA</h1>
-          </div>
-          <div class="report-info">
-            <div class="info-row">
-              <span class="label">Fecha:</span>
-              <span class="value">{{ reportDate }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Turno:</span>
-              <span class="value">{{ shiftLabel }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Hrs. Trabajadas:</span>
-              <span class="value">{{ totalHours }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">No.:</span>
-              <span class="value">{{ report.report_number }}</span>
-            </div>
-          </div>
-        </div>
+            </td>
+            <td
+              class="title-cell"
+              colspan="4"
+            >
+              REPORTE DE PERFORACIÓN DIAMANTINA
+            </td>
+            <td class="info-cell">
+              <div>Fecha: <strong>{{ reportDate }}</strong></div>
+              <div>Turno: <strong>{{ shiftLabel }}</strong></div>
+            </td>
+          </tr>
+          <tr class="header-row">
+            <td colspan="4" />
+            <td class="info-cell">
+              <div>Hrs: <strong>{{ totalHours }}</strong></div>
+              <div>No.: <strong>{{ report.report_number }}</strong></div>
+            </td>
+          </tr>
 
-        <!-- ROW 1: Antecedentes Consolidados (2 columnas) -->
-        <div class="info-row-dual">
-          <!-- Proyecto, Equipo & Personal -->
-          <div class="section-clean info-section">
-            <h3>PROYECTO, EQUIPO & PERSONAL</h3>
-            <div class="info-grid-compact">
-              <div class="info-row">
-                <span class="label">Faena:</span>
-                <span class="value">{{ projectInfo.name }}</span>
+          <!-- ANTECEDENTES + PARÁMETROS + CONSUMOS -->
+          <tr>
+            <td
+              colspan="2"
+              class="section-cell"
+            >
+              <div class="section-title">
+                ANTECEDENTES DE FAENA
               </div>
-              <div class="info-row">
-                <span class="label">C. Costo:</span>
-                <span class="value">{{ projectInfo.costCenter }}</span>
+              <table class="inner-table">
+                <tr>
+                  <td>Faena:</td>
+                  <td>{{ projectInfo.name }}</td>
+                </tr>
+                <tr>
+                  <td>C. Costo:</td>
+                  <td>{{ projectInfo.costCenter }}</td>
+                </tr>
+                <tr>
+                  <td>Lugar:</td>
+                  <td>{{ projectInfo.location }}</td>
+                </tr>
+                <tr>
+                  <td>Equipo:</td>
+                  <td>{{ equipmentInfo.name }}</td>
+                </tr>
+                <tr>
+                  <td>Operador:</td>
+                  <td>{{ personnelInfo.dayOperator || personnelInfo.nightOperator }}</td>
+                </tr>
+                <tr>
+                  <td>Ayudante 1:</td>
+                  <td>{{ personnelInfo.dayHelpers[0] || personnelInfo.nightHelpers[0] || '-' }}</td>
+                </tr>
+                <tr>
+                  <td>Ayudante 2:</td>
+                  <td>{{ personnelInfo.dayHelpers[1] || personnelInfo.nightHelpers[1] || '-' }}</td>
+                </tr>
+              </table>
+            </td>
+            <td
+              colspan="2"
+              class="section-cell"
+            >
+              <div class="section-title">
+                ANTECEDENTES DE POZO
               </div>
-              <div class="info-row">
-                <span class="label">Lugar:</span>
-                <span class="value">{{ projectInfo.location }}</span>
+              <table class="inner-table">
+                <tr>
+                  <td>Pozo No.:</td>
+                  <td>{{ wellInfo.name }}</td>
+                </tr>
+                <tr>
+                  <td>Sector:</td>
+                  <td>{{ wellInfo.sector }}</td>
+                </tr>
+                <tr>
+                  <td>Diámetro:</td>
+                  <td>{{ wellInfo.diameter }}</td>
+                </tr>
+                <tr>
+                  <td>Inclinación:</td>
+                  <td>{{ wellInfo.inclination }}</td>
+                </tr>
+                <tr>
+                  <td>Prof. Inicial:</td>
+                  <td>{{ wellInfo.initialDepth }} m</td>
+                </tr>
+                <tr>
+                  <td>Prof. Final:</td>
+                  <td>{{ wellInfo.finalDepth }} m</td>
+                </tr>
+                <tr>
+                  <td>Mts. Perf.:</td>
+                  <td><strong>{{ totalMeters }} m</strong></td>
+                </tr>
+              </table>
+            </td>
+            <td class="section-cell">
+              <div class="section-title">
+                PARÁMETROS
               </div>
-              <div class="info-row">
-                <span class="label">Equipo:</span>
-                <span class="value">{{ equipmentInfo.name }}</span>
+              <table class="inner-table">
+                <tr>
+                  <td>Pull Down:</td>
+                  <td>{{ parametersInfo.pullDown }}</td>
+                </tr>
+                <tr>
+                  <td>RPM:</td>
+                  <td>{{ parametersInfo.rpmPullDown }}</td>
+                </tr>
+              </table>
+              <div class="section-title">
+                HORÓMETRO
               </div>
-              <div class="info-row">
-                <span class="label">Operador:</span>
-                <span class="value">{{ personnelInfo.dayOperator }}</span>
+              <table class="inner-table">
+                <tr>
+                  <td>Inicial:</td>
+                  <td>{{ horometerInfo.dayStart || horometerInfo.nightStart }}</td>
+                </tr>
+                <tr>
+                  <td>Final:</td>
+                  <td>{{ horometerInfo.dayEnd || horometerInfo.nightEnd }}</td>
+                </tr>
+              </table>
+            </td>
+            <td class="section-cell">
+              <div class="section-title">
+                CONSUMOS
               </div>
-              <div class="info-row">
-                <span class="label">Ayudante 1:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[0] || '-' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Ayudante 2:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[1] || '-' }}</span>
-              </div>
-              <div
-                v-if="personnelInfo.dayHelpers[2]"
-                class="info-row"
-              >
-                <span class="label">Otro:</span>
-                <span class="value">{{ personnelInfo.dayHelpers[2] }}</span>
-              </div>
-            </div>
-          </div>
+              <table class="inner-table">
+                <tr
+                  v-for="c in consumptionsForPrint"
+                  :key="c.label"
+                >
+                  <td>{{ c.label }}:</td>
+                  <td>{{ c.quantity }} {{ c.unit ? getUnitLabel(c.unit) : '' }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-          <!-- Pozo, Parámetros & Horómetro -->
-          <div class="section-clean info-section">
-            <h3>POZO, PARÁMETROS & HORÓMETRO</h3>
-            <div class="info-grid-compact">
-              <div class="info-row">
-                <span class="label">Pozo No.:</span>
-                <span class="value">{{ wellInfo.name }}</span>
+          <!-- PERFORACIÓN (Resumen) -->
+          <tr>
+            <td colspan="6">
+              <div class="section-title">
+                PERFORACIÓN
               </div>
-              <div class="info-row">
-                <span class="label">Sector:</span>
-                <span class="value">{{ wellInfo.sector }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Diámetro:</span>
-                <span class="value">{{ wellInfo.diameter }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Inclinación:</span>
-                <span class="value">{{ wellInfo.inclination }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Prof. Inicial:</span>
-                <span class="value">{{ wellInfo.initialDepth }} m</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Prof. Final:</span>
-                <span class="value">{{ wellInfo.finalDepth }} m</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Mts. Perf.:</span>
-                <span class="value font-bold">{{ totalMeters }} m</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Pull Down:</span>
-                <span class="value">{{ parametersInfo.pullDown }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">RPM:</span>
-                <span class="value">{{ parametersInfo.rpmPullDown }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Horómetro Inicial:</span>
-                <span class="value">{{ horometerInfo.dayStart }} hrs</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Horómetro Final:</span>
-                <span class="value">{{ horometerInfo.dayEnd }} hrs</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Total Hrs.:</span>
-                <span class="value font-bold">{{ totalHours }} hrs</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ROW 2: Perforación (Full width) -->
-        <div class="full-row">
-          <div class="section full-section">
-            <h3>PERFORACION</h3>
-            <div class="table-container">
-              <table class="data-table">
+              <table class="data-table-cdk">
                 <thead>
                   <tr>
                     <th>Desde</th>
                     <th>Hasta</th>
                     <th>Mts. Perf.</th>
-                    <th>Recuper.</th>
+                    <th>Recup.</th>
                     <th>Tipo Roca</th>
                     <th>Dureza</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="detail in report.drilling_details"
-                    :key="detail.depth_from"
-                  >
-                    <td>{{ detail.depth_from }}</td>
-                    <td>{{ detail.depth_to }}</td>
-                    <td>{{ detail.meters_drilled }}</td>
-                    <td>{{ detail.recovery || '' }}</td>
-                    <td>{{ detail.rock_type || '' }}</td>
-                    <td>{{ detail.hardness || '' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ROW 3: Herramientas Utilizadas (Full width) -->
-        <div class="full-row">
-          <div class="section full-section">
-            <h3>HERRAMIENTAS UTILIZADAS</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Tipo</th>
-                    <th>No. Serie</th>
-                    <th>Marca</th>
-                    <th>Core Size</th>
-                    <th>Desde</th>
-                    <th>Hasta</th>
-                    <th>Mts. Perf.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="detail in report.drilling_details"
-                    :key="detail.depth_from"
-                  >
-                    <td>{{ getToolTypeLabel(detail.tool?.type || '') }}</td>
-                    <td>{{ detail.tool?.serial_number || '' }}</td>
-                    <td>{{ detail.tool?.brand || '' }}</td>
-                    <td>{{ detail.tool?.core_size || '' }}</td>
-                    <td>{{ detail.depth_from }}</td>
-                    <td>{{ detail.depth_to }}</td>
-                    <td>{{ detail.meters_drilled }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ROW 4: Rebaje + Consumos (2 columnas) -->
-        <div class="secondary-row">
-          <!-- Rebaje de Herramientas -->
-          <div class="section medium-section">
-            <h3>REBAJE DE HERRAMIENTAS DE PERFORACIÓN</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Acero</th>
-                    <th>No. Serie</th>
-                    <th>Patrón de Desgaste</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="detail in report.drilling_details"
-                    :key="detail.depth_from"
-                  >
-                    <td>{{ getToolTypeLabel(detail.tool?.type || '') }}</td>
-                    <td>{{ detail.tool?.serial_number || '' }}</td>
-                    <td>{{ getWearLevelLabel(detail.wear_level_after || '') }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Consumos -->
-          <div class="section medium-section">
-            <h3>CONSUMOS</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th>Unid.</th>
-                    <th>Envase</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="consumption in report.consumptions"
-                    :key="consumption.id"
-                  >
-                    <td>{{ consumption.type_label || consumption.type }}</td>
-                    <td>{{ consumption.quantity }}</td>
-                    <td>{{ getUnitLabel(consumption.unit) }}</td>
-                  </tr>
-                  <!-- Mostrar filas vacías si no hay consumos suficientes -->
-                  <tr
-                    v-for="n in Math.max(0, 4 - (report.consumptions?.length || 0))"
-                    :key="`empty-${n}`"
-                  >
+                  <tr v-if="drillingSummary">
+                    <td>{{ drillingSummary.desde }}</td>
+                    <td>{{ drillingSummary.hasta }}</td>
+                    <td>{{ drillingSummary.metrosPerforados }}</td>
                     <td />
                     <td />
                     <td />
                   </tr>
+                  <tr
+                    v-else
+                    class="empty-row"
+                  >
+                    <td colspan="6">
+                      Sin datos de perforación
+                    </td>
+                  </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
+            </td>
+          </tr>
 
-        <!-- ROW 5: Período en Horas (Full width) -->
-        <div class="full-row">
-          <div class="section full-section">
-            <h3>PERIODO EN HORAS</h3>
-            <div class="table-container">
-              <table class="data-table">
+          <!-- PERIODO EN HORAS -->
+          <tr>
+            <td colspan="6">
+              <div class="section-title">
+                PERIODO EN HORAS
+              </div>
+              <table class="data-table-cdk">
                 <thead>
                   <tr>
                     <th>Desde</th>
                     <th>Hasta</th>
-                    <th>DESCRIPCIÓN DE ACTIVIDADES REALIZADAS</th>
+                    <th>DESCRIPCIÓN DE ACTIVIDADES</th>
                     <th colspan="2">
                       HRS. CARGO
                     </th>
@@ -658,13 +621,15 @@ watch(() => report.value, newReport => {
                 </thead>
                 <tbody>
                   <tr
-                    v-for="activity in report.activities"
-                    :key="activity.id"
+                    v-for="a in report.activities"
+                    :key="a.id"
                   >
-                    <td>{{ activity.start_time || '' }}</td>
-                    <td>{{ activity.end_time || '' }}</td>
-                    <td>{{ getActivityTypeLabel(activity.type) }} {{ activity.description ? `- ${activity.description}` : '' }}</td>
-                    <td>{{ activity.hours || '' }}</td>
+                    <td>{{ a.start_time }}</td>
+                    <td>{{ a.end_time }}</td>
+                    <td class="text-left">
+                      {{ getActivityTypeLabel(a.type) }} {{ a.description ? `- ${a.description}` : '' }}
+                    </td>
+                    <td>{{ a.hours }}</td>
                     <td />
                   </tr>
                   <tr class="total-row">
@@ -676,108 +641,207 @@ watch(() => report.value, newReport => {
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
+            </td>
+          </tr>
 
-        <!-- Nota -->
-        <div class="note-section">
-          <p><strong>NOTA:</strong> Anotar siempre los tiempos ocupados en cada maniobra o actividad distinta realizada. Ejemplo: Movimiento de Herramientas, desarme de sonda, perforación, colación, etc.</p>
-        </div>
-
-        <!-- Signatures Section -->
-        <div class="signatures-section">
-          <div class="signature-box">
-            <div class="signature-label">
-              Firma Operador
-            </div>
-            <div class="signature-space">
-              <div
-                v-if="report.signatures?.find(s => s.signature_type === 'operator')"
-                class="signature-content"
-              >
-                <img
-                  :src="report.signatures.find(s => s.signature_type === 'operator')?.signature_data"
-                  alt="Firma Operador"
-                >
+          <!-- ACEROS DE PERFORACIÓN -->
+          <tr>
+            <td colspan="2">
+              <div class="section-title">
+                BROCA
               </div>
-            </div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-label">
-              Vo. Bo. SUPERVISION CDK
-            </div>
-            <div class="signature-space">
-              <div
-                v-if="report.signatures?.find(s => s.signature_type === 'supervisor')"
-                class="signature-content"
-              >
-                <img
-                  :src="report.signatures.find(s => s.signature_type === 'supervisor')?.signature_data"
-                  alt="Firma Supervisor"
-                >
+              <table class="tool-table-cdk">
+                <thead>
+                  <tr>
+                    <th>Diam.</th>
+                    <th>No. Serie</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="b in toolsByType.brocas"
+                    :key="b.tool?.id || b.depth_from"
+                  >
+                    <td>{{ b.tool?.diameter || '-' }}</td>
+                    <td>{{ b.tool?.serial_number || '-' }}</td>
+                    <td>{{ b.depth_from }}</td>
+                    <td>{{ b.depth_to }}</td>
+                  </tr>
+                  <tr
+                    v-if="!toolsByType.brocas.length"
+                    class="empty-row"
+                  >
+                    <td colspan="4">
+                      -
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td colspan="2">
+              <div class="section-title">
+                ESCARREADOR
               </div>
-            </div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-label">
-              CLIENTE
-            </div>
-            <div class="signature-space">
-              <div
-                v-if="report.signatures?.find(s => s.signature_type === 'client')"
-                class="signature-content"
-              >
-                <img
-                  :src="report.signatures.find(s => s.signature_type === 'client')?.signature_data"
-                  alt="Firma Cliente"
-                >
+              <table class="tool-table-cdk">
+                <thead>
+                  <tr>
+                    <th>Diam.</th>
+                    <th>No. Serie</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="e in toolsByType.escarreadores"
+                    :key="e.tool?.id || e.depth_from"
+                  >
+                    <td>{{ e.tool?.diameter || '-' }}</td>
+                    <td>{{ e.tool?.serial_number || '-' }}</td>
+                    <td>{{ e.depth_from }}</td>
+                    <td>{{ e.depth_to }}</td>
+                  </tr>
+                  <tr
+                    v-if="!toolsByType.escarreadores.length"
+                    class="empty-row"
+                  >
+                    <td colspan="4">
+                      -
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td colspan="2">
+              <div class="section-title">
+                TRICONO
               </div>
-            </div>
-          </div>
-        </div>
+              <table class="tool-table-cdk">
+                <thead>
+                  <tr>
+                    <th>Diam.</th>
+                    <th>No. Serie</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="tc in toolsByType.triconos"
+                    :key="tc.tool?.id || tc.depth_from"
+                  >
+                    <td>{{ tc.tool?.diameter || '-' }}</td>
+                    <td>{{ tc.tool?.serial_number || '-' }}</td>
+                    <td>{{ tc.depth_from }}</td>
+                    <td>{{ tc.depth_to }}</td>
+                  </tr>
+                  <tr
+                    v-if="!toolsByType.triconos.length"
+                    class="empty-row"
+                  >
+                    <td colspan="4">
+                      -
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
 
-        <!-- Observations -->
-        <div
-          v-if="report.observations"
-          class="observations-section"
-        >
-          <h3>OBSERVACIONES</h3>
-          <p>{{ report.observations }}</p>
-        </div>
+          <!-- OBSERVACIONES -->
+          <tr v-if="report.observations">
+            <td colspan="6">
+              <div class="section-title">
+                OBSERVACIONES
+              </div>
+              <p class="observations-text">
+                {{ report.observations }}
+              </p>
+            </td>
+          </tr>
 
-        <!-- Footer Enterprise -->
-        <div class="enterprise-footer no-page-break">
-          <div class="footer-content">
-            <div class="footer-left">
-              <p class="footer-title">
-                <strong>{{ appTitle }}</strong>
-              </p>
-              <p class="footer-disclaimer">
-                Este documento es confidencial y está destinado exclusivamente para uso interno.
-                La reproducción total o parcial requiere autorización previa por escrito.
-              </p>
-              <p class="footer-meta">
-                <strong>Reporte No.:</strong> {{ report.report_number }} |
-                <strong>Versión:</strong> 1.0 |
-                <strong>Fecha Reporte:</strong> {{ reportDate }}
-              </p>
-            </div>
-            <div
-              v-if="qrCodeUrl"
-              class="footer-right"
+          <!-- NOTA -->
+          <tr>
+            <td
+              colspan="6"
+              class="note-cell"
             >
-              <div class="qr-section">
-                <img
-                  :src="qrCodeUrl"
-                  alt="QR Code"
-                  class="qr-code"
-                >
-                <p class="qr-label">
-                  Escanea para ver online
-                </p>
+              <strong>NOTA:</strong> Anotar siempre los tiempos ocupados en cada maniobra o actividad distinta realizada.
+            </td>
+          </tr>
+
+          <!-- FIRMAS -->
+          <tr>
+            <td
+              colspan="2"
+              class="signature-cell"
+            >
+              <div class="signature-label">
+                Firma Operador
               </div>
-            </div>
+              <div class="signature-space">
+                <img
+                  v-if="report.signatures?.find(s => s.signature_type === 'operator')"
+                  :src="report.signatures.find(s => s.signature_type === 'operator')?.signature_data"
+                  alt="Firma"
+                  class="signature-img"
+                >
+              </div>
+              <div class="signature-line" />
+            </td>
+            <td
+              colspan="2"
+              class="signature-cell"
+            >
+              <div class="signature-label">
+                Vo. Bo. SUPERVISION CDK
+              </div>
+              <div class="signature-space">
+                <img
+                  v-if="report.signatures?.find(s => s.signature_type === 'supervisor')"
+                  :src="report.signatures.find(s => s.signature_type === 'supervisor')?.signature_data"
+                  alt="Firma"
+                  class="signature-img"
+                >
+              </div>
+              <div class="signature-line" />
+            </td>
+            <td
+              colspan="2"
+              class="signature-cell"
+            >
+              <div class="signature-label">
+                CLIENTE
+              </div>
+              <div class="signature-space">
+                <img
+                  v-if="report.signatures?.find(s => s.signature_type === 'client')"
+                  :src="report.signatures.find(s => s.signature_type === 'client')?.signature_data"
+                  alt="Firma"
+                  class="signature-img"
+                >
+              </div>
+              <div class="signature-line" />
+            </td>
+          </tr>
+        </table>
+
+        <!-- QR Code Footer -->
+        <div
+          v-if="qrCodeUrl"
+          class="cdk-footer"
+        >
+          <div class="footer-info">
+            <strong>{{ appTitle }}</strong> | Reporte No.: {{ report.report_number }} | {{ reportDate }}
+          </div>
+          <div class="qr-container">
+            <img
+              :src="qrCodeUrl"
+              alt="QR Code"
+              class="qr-code-small"
+            >
           </div>
         </div>
       </div>
@@ -2054,6 +2118,242 @@ watch(() => report.value, newReport => {
 
   .info-row {
     font-size: 8pt;
+  }
+}
+
+/* ============================================
+   CDK FORM STYLES - Estilo Formulario Físico
+   ============================================ */
+
+.cdk-form-table {
+  border: 2px solid #000;
+  border-collapse: collapse;
+  font-size: 9px;
+  inline-size: 100%;
+}
+
+.cdk-form-table td,
+.cdk-form-table th {
+  border: 1px solid #000;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+.cdk-form-table .header-row td {
+  background: #f5f5f5;
+  font-weight: bold;
+  text-align: center;
+}
+
+.cdk-form-table .logo-cell {
+  padding: 8px;
+  text-align: center;
+  vertical-align: middle;
+  inline-size: 100px;
+}
+
+.cdk-logo {
+  max-block-size: 50px;
+  max-inline-size: 90px;
+  object-fit: contain;
+}
+
+.cdk-logo-text {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cdk-form-table .title-cell {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.cdk-form-table .info-cell {
+  font-size: 9px;
+  text-align: start;
+  inline-size: 120px;
+}
+
+.cdk-form-table .info-cell div {
+  margin-block-end: 2px;
+}
+
+.cdk-form-table .section-cell {
+  padding: 0;
+}
+
+.cdk-form-table .section-title {
+  background: #e0e0e0;
+  border-block-end: 1px solid #000;
+  font-size: 8px;
+  font-weight: bold;
+  padding: 3px 6px;
+  text-transform: uppercase;
+}
+
+.cdk-form-table .section-title.mt-2 {
+  margin-block-start: 8px;
+}
+
+.cdk-form-table .inner-table {
+  border-collapse: collapse;
+  inline-size: 100%;
+}
+
+.cdk-form-table .inner-table td {
+  border: none;
+  font-size: 8px;
+  padding: 2px 6px;
+}
+
+.cdk-form-table .inner-table td:first-child {
+  font-weight: bold;
+  inline-size: 40%;
+}
+
+/* Data tables inside CDK form */
+.data-table-cdk,
+.tool-table-cdk {
+  border-collapse: collapse;
+  inline-size: 100%;
+  margin-block-start: 4px;
+}
+
+.data-table-cdk th,
+.data-table-cdk td,
+.tool-table-cdk th,
+.tool-table-cdk td {
+  border: 1px solid #000;
+  font-size: 8px;
+  padding: 3px 4px;
+  text-align: center;
+}
+
+.data-table-cdk th,
+.tool-table-cdk th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+.data-table-cdk .total-row {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.data-table-cdk .text-left,
+.tool-table-cdk .text-left {
+  text-align: start;
+}
+
+.data-table-cdk .empty-row td,
+.tool-table-cdk .empty-row td {
+  color: #999;
+  font-style: italic;
+}
+
+/* Note cell */
+.cdk-form-table .note-cell {
+  background: #fafafa;
+  font-size: 7px;
+  font-style: italic;
+  padding: 6px;
+}
+
+/* Signature cells */
+.cdk-form-table .signature-cell {
+  block-size: 70px;
+  padding: 8px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.cdk-form-table .signature-label {
+  font-size: 8px;
+  font-weight: bold;
+  margin-block-end: 4px;
+  text-transform: uppercase;
+}
+
+.cdk-form-table .signature-space {
+  block-size: 35px;
+  margin-block-end: 4px;
+}
+
+.cdk-form-table .signature-img {
+  max-block-size: 35px;
+  max-inline-size: 100%;
+  object-fit: contain;
+}
+
+.cdk-form-table .signature-line {
+  border-block-start: 1px solid #000;
+  inline-size: 80%;
+  margin-inline: auto;
+}
+
+/* Observations text */
+.cdk-form-table .observations-text {
+  font-size: 8px;
+  margin: 0;
+  min-block-size: 30px;
+  padding: 6px;
+}
+
+/* CDK Footer */
+.cdk-footer {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-start: 8px;
+  padding: 8px 12px;
+}
+
+.cdk-footer .footer-info {
+  font-size: 8px;
+}
+
+.cdk-footer .qr-container {
+  text-align: center;
+}
+
+.cdk-footer .qr-code-small {
+  block-size: 50px;
+  inline-size: 50px;
+}
+
+/* === CDK PRINT STYLES === */
+@media print {
+  .cdk-form-table {
+    -webkit-print-color-adjust: exact;
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+  }
+
+  .cdk-form-table td,
+  .cdk-form-table th {
+    border-color: #000 !important;
+  }
+
+  .cdk-form-table .header-row td,
+  .cdk-form-table .section-title,
+  .data-table-cdk th,
+  .tool-table-cdk th {
+    -webkit-print-color-adjust: exact;
+    background: #f0f0f0 !important;
+    print-color-adjust: exact;
+  }
+
+  .data-table-cdk thead,
+  .tool-table-cdk thead {
+    display: table-header-group;
+  }
+
+  .cdk-footer {
+    border-color: #000;
   }
 }
 </style>

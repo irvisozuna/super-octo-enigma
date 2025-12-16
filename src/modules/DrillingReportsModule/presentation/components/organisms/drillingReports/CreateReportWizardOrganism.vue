@@ -110,7 +110,7 @@ const nextStep = async () => {
   }
 
   if (wizardStore.currentStep === '5') {
-    if (!wizardStore.isToolsStepValid) {
+    if (!wizardStore.isToolGroupsStepValid) {
       console.log('❌ Step 5 validation failed - tools step not valid')
 
       return
@@ -174,6 +174,7 @@ const loadTools = async () => {
     toolOptions.value = (response || []).map((tool: any) => ({
       title: tool.serial_number || tool.tool_type,
       value: tool.id,
+      type: tool.tool_type,
     }))
   }
   catch (error) {
