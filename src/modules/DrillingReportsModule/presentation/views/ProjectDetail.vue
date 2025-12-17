@@ -62,7 +62,9 @@ import CreateReportWizardOrganism from '../components/organisms/drillingReports/
 
 // Usar el store directamente para algunos datos específicos
 import { useProjectDetailStore } from '../stores/projectDetailStore'
+import { useDrillingReportStore } from '../stores/drillingReportStore'
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
+import ActionConfirmationDialog from '@/components/shared/ActionConfirmationDialog.vue'
 import { useGlobalSnackbar } from '@/composables/useGlobalSnackbar'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 
@@ -138,6 +140,7 @@ const {
 } = useProjectPersonnel(projectId.value)
 
 const detailStore = useProjectDetailStore()
+const reportStore = useDrillingReportStore()
 
 // Computeds locales para datos específicos de tabs
 const currentWell = computed(() => detailStore.currentWell)
@@ -170,6 +173,11 @@ const canEditProject = computed(() =>
 const deleteCostDialog = ref(false)
 const costToDelete = ref<any>(null)
 const deletingCost = ref(false)
+
+// Estado para el diálogo de confirmación de eliminación de reporte
+const deleteReportDialog = ref(false)
+const reportToDelete = ref<any>(null)
+const deletingReport = ref(false)
 
 // Estado para el diálogo de vista detallada del reporte
 const showReportDetailDialog = ref(false)
@@ -738,17 +746,64 @@ function handleEditReport(report: any) {
 }
 
 /**
- * Manejar eliminación de reporte
+ * Manejar eliminación de reporte - Abre el diálogo de confirmación
  */
 function handleDeleteReport(report: any) {
-  console.log('Eliminar reporte:', report)
+  // Solo permitir eliminar reportes en borrador
+  if (report.status !== 'draft') {
+    showSnackbar({
+      title: 'Error',
+      message: 'Solo se pueden eliminar reportes en estado borrador',
+      color: 'error',
+    })
+    return
+  }
 
-  // TODO: Implementar eliminación con confirmación
-  showSnackbar({
-    title: 'Información',
-    message: 'La funcionalidad de eliminación estará disponible próximamente',
-    color: 'info',
-  })
+  reportToDelete.value = report
+  deleteReportDialog.value = true
+}
+
+/**
+ * Confirmar eliminación de reporte
+ */
+async function confirmDeleteReport() {
+  if (!reportToDelete.value)
+    return
+
+  deletingReport.value = true
+  try {
+    await reportStore.deleteReport(reportToDelete.value.id)
+
+    deleteReportDialog.value = false
+    reportToDelete.value = null
+
+    // Refrescar la lista de reportes
+    await refreshTab('reports')
+
+    showSnackbar({
+      title: 'Éxito',
+      message: 'Reporte eliminado correctamente',
+      color: 'success',
+    })
+  }
+  catch (error: any) {
+    showSnackbar({
+      title: 'Error',
+      message: error.message || 'Error al eliminar el reporte',
+      color: 'error',
+    })
+  }
+  finally {
+    deletingReport.value = false
+  }
+}
+
+/**
+ * Cerrar diálogo de eliminación de reporte
+ */
+function closeDeleteReportDialog() {
+  deleteReportDialog.value = false
+  reportToDelete.value = null
 }
 
 /**
@@ -1178,6 +1233,33 @@ onMounted(() => {
         </div>
       </template>
     </DeleteConfirmationDialog>
+
+    <!-- Diálogo de Confirmación de Eliminación de Reporte -->
+    <ActionConfirmationDialog
+      :visible="deleteReportDialog"
+      title="Eliminar Reporte"
+      action-type="delete"
+      entity-name="Reporte de Perforación"
+      confirmation-word="ELIMINAR"
+      :require-reason="false"
+      :loading="deletingReport"
+      @close="closeDeleteReportDialog"
+      @confirm="confirmDeleteReport"
+    >
+      <template #entity-info>
+        <div v-if="reportToDelete">
+          <div class="font-weight-medium">
+            Reporte #{{ reportToDelete.report_number }}
+          </div>
+          <div class="text-caption text-medium-emphasis mt-1">
+            Fecha: {{ reportToDelete.report_date }}
+          </div>
+          <div class="text-caption text-medium-emphasis">
+            Turno: {{ reportToDelete.shift === 'day' ? 'Día' : reportToDelete.shift === 'night' ? 'Noche' : 'Mixto' }}
+          </div>
+        </div>
+      </template>
+    </ActionConfirmationDialog>
 
     <!-- Diálogo de Crear Reporte (Wizard) -->
     <CreateReportWizardOrganism

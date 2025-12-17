@@ -33,13 +33,13 @@ export const WELL_DIAMETER_CATEGORIES = [
 ]
 
 export const WELL_DIAMETER_OPTIONS = [
-  { code: 'BQ', inches: 2.36, label: 'BQ (2.36")' },
-  { code: 'NQ', inches: 2.98, label: 'NQ (2.98")' },
-  { code: 'NQ3', inches: 2.98, label: 'NQ3 (2.98")' },
-  { code: 'HQ', inches: 3.78, label: 'HQ (3.78")' },
-  { code: 'HQ3', inches: 3.78, label: 'HQ3 (3.78")' },
-  { code: 'PQ', inches: 4.83, label: 'PQ (4.83")' },
-  { code: 'PQ3', inches: 4.83, label: 'PQ3 (4.83")' },
+  { code: 'BQ', inches: 1.43, label: 'BQ (1.43")' },
+  { code: 'NQ', inches: 1.875, label: 'NQ (1.875")' },
+  { code: 'NQ3', inches: 1.77, label: 'NQ3 (1.77")' },
+  { code: 'HQ', inches: 2.5, label: 'HQ (2.5")' },
+  { code: 'HQ3', inches: 2.38, label: 'HQ3 (2.38")' },
+  { code: 'PQ', inches: 3.345, label: 'PQ (3.345")' },
+  { code: 'PQ3', inches: 3.25, label: 'PQ3 (3.25")' },
 ]
 
 export const WELL_PHASES = [

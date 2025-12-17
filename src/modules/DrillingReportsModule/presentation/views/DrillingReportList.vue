@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDrillingReport } from '../composables/useDrillingReport'
 import DrillingReportCard from '../components/organisms/DrillingReportCard.vue'
+import ActionConfirmationDialog from '@/components/shared/ActionConfirmationDialog.vue'
 
 // Router
 const router = useRouter()
@@ -13,12 +14,13 @@ const {
   loading,
   error,
   pagination,
-  fetchReports,
+  loadReports: fetchReports,
   setFilters,
   resetFilters: resetFiltersComposable,
   clearError,
   currentPage,
   lastPage,
+  deleteReport,
 } = useDrillingReport()
 
 // Local state
@@ -28,6 +30,11 @@ const shiftFilter = ref('')
 const dateFrom = ref('')
 const dateTo = ref('')
 const showError = ref(false)
+
+// Delete dialog state
+const showDeleteDialog = ref(false)
+const selectedReportToDelete = ref<any>(null)
+const deleting = ref(false)
 
 // Computed
 const statusOptions = computed(() => [
@@ -87,16 +94,33 @@ const handleEditReport = (report: any) => {
   router.push(`/drilling/reports/${report.id}/edit`)
 }
 
-const handleDeleteReport = async (report: any) => {
-  if (confirm('¿Estás seguro de que quieres eliminar este reporte?')) {
-    try {
-      await deleteReport(report.id, 'current-user-id') // TODO: Get from auth
-      await fetchReports()
-    }
-    catch (err) {
-      console.error('Error deleting report:', err)
-    }
+const handleDeleteReport = (report: any) => {
+  selectedReportToDelete.value = report
+  showDeleteDialog.value = true
+}
+
+const confirmDeleteReport = async () => {
+  if (!selectedReportToDelete.value)
+    return
+
+  deleting.value = true
+  try {
+    await deleteReport(selectedReportToDelete.value.id)
+    showDeleteDialog.value = false
+    selectedReportToDelete.value = null
+    await fetchReports()
   }
+  catch (err) {
+    console.error('Error deleting report:', err)
+  }
+  finally {
+    deleting.value = false
+  }
+}
+
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false
+  selectedReportToDelete.value = null
 }
 
 const handleApproveReport = (report: any) => {
@@ -312,6 +336,25 @@ onMounted(async () => {
     >
       {{ error }}
     </VSnackbar>
+
+    <!-- Delete Confirmation Dialog -->
+    <ActionConfirmationDialog
+      :visible="showDeleteDialog"
+      title="Eliminar Reporte"
+      action-type="delete"
+      entity-name="Reporte de Perforación"
+      confirmation-word="ELIMINAR"
+      :require-reason="false"
+      :loading="deleting"
+      @close="closeDeleteDialog"
+      @confirm="confirmDeleteReport"
+    >
+      <template #entity-info>
+        <span v-if="selectedReportToDelete">
+          Reporte #{{ selectedReportToDelete.report_number }} del {{ selectedReportToDelete.report_date }}
+        </span>
+      </template>
+    </ActionConfirmationDialog>
   </div>
 </template>
 

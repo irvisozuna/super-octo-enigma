@@ -168,6 +168,7 @@ export interface ToolAssignmentDto {
   meters_drilled: number
   wear_pattern?: 'uniform' | 'centered' | 'eccentric' | 'one_sided'
   matrix?: 'good_condition' | 'moderate_wear' | 'severe_wear' | 'needs_replacement'
+  recovery?: number | null
   assigned_at: string
   tool?: {
     id: string
@@ -189,6 +190,7 @@ export interface CreateToolAssignmentDto {
   end_depth_meters: number
   wear_pattern?: 'uniform' | 'centered' | 'eccentric' | 'one_sided'
   matrix?: 'good_condition' | 'moderate_wear' | 'severe_wear' | 'needs_replacement'
+  recovery?: number | null
 }
 
 export interface UpdateToolAssignmentDto extends Partial<CreateToolAssignmentDto> {}

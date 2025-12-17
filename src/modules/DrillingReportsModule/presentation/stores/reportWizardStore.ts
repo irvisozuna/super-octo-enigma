@@ -50,6 +50,7 @@ interface ToolBit {
   end_depth_meters: number
   wear_pattern: string
   matrix: string
+  recovery: number | null
 }
 
 // Nueva interfaz para grupos de herramientas (escarreador + brocas)
@@ -640,6 +641,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       end_depth_meters: endDepth,
       wear_pattern: '',
       matrix: '',
+      recovery: endDepth - startDepth, // Auto-inicializar con metros perforados
     })
 
     // Auto-actualizar profundidad final del escarreador

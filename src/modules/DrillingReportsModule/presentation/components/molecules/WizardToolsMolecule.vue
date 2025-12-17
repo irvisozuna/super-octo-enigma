@@ -76,12 +76,6 @@ const bitOptions = computed(() => {
   })
 })
 
-// Opciones de tipo de broca
-const bitTypeOptions = [
-  { value: 'diamond_bit', title: 'Broca Diamante' },
-  { value: 'tricone', title: 'Tricono' },
-]
-
 // Computed para detectar si hay profundidad capturada (0 es un valor válido)
 const hasAnyDepth = computed(() => {
   // Usar !== null para que 0 sea considerado como valor válido
@@ -217,6 +211,59 @@ const getBitDisplayName = (toolId: string | null) => {
   return tool?.title || 'Broca desconocida'
 }
 
+// Obtener el tipo de herramienta basado en tool_id
+const getToolType = (toolId: string | null): 'diamond_bit' | 'tricone' => {
+  if (!toolId)
+    return 'diamond_bit'
+  const tool = props.toolOptions.find(t => t.value === toolId)
+  const type = (tool?.type || '').toLowerCase()
+  if (type === 'tricone' || type.includes('tricono'))
+    return 'tricone'
+
+  return 'diamond_bit'
+}
+
+// Regla de validación para recovery
+const recoveryRule = (bit: any) => (v: any) => {
+  if (v === null || v === '' || v === undefined)
+    return true
+  const maxRecovery = bit.end_depth_meters - bit.start_depth_meters
+  if (Number(v) > maxRecovery)
+    return `Máximo: ${maxRecovery.toFixed(2)}m`
+
+  return true
+}
+
+// Handler para selección de broca (auto-asigna tipo)
+const handleBitSelection = (groupIndex: number, bitIndex: number, toolId: string | null) => {
+  updateBit(groupIndex, bitIndex, 'tool_id', toolId)
+  updateBit(groupIndex, bitIndex, 'tool_category', getToolType(toolId))
+}
+
+// Handler para cambio de profundidad inicial (auto-calcula recovery)
+const handleStartDepthChange = (groupIndex: number, bitIndex: number, newStartDepth: number, bit: any) => {
+  const oldMetersDrilled = bit.end_depth_meters - bit.start_depth_meters
+  const newMetersDrilled = bit.end_depth_meters - newStartDepth
+
+  updateBit(groupIndex, bitIndex, 'start_depth_meters', newStartDepth)
+
+  // Auto-setear recovery si no ha sido modificado manualmente
+  if (bit.recovery === null || bit.recovery === oldMetersDrilled)
+    updateBit(groupIndex, bitIndex, 'recovery', newMetersDrilled > 0 ? newMetersDrilled : null)
+}
+
+// Handler para cambio de profundidad final (auto-calcula recovery)
+const handleEndDepthChange = (groupIndex: number, bitIndex: number, newEndDepth: number, bit: any) => {
+  const oldMetersDrilled = bit.end_depth_meters - bit.start_depth_meters
+  const newMetersDrilled = newEndDepth - bit.start_depth_meters
+
+  updateBit(groupIndex, bitIndex, 'end_depth_meters', newEndDepth)
+
+  // Auto-setear recovery si no ha sido modificado manualmente
+  if (bit.recovery === null || bit.recovery === oldMetersDrilled)
+    updateBit(groupIndex, bitIndex, 'recovery', newMetersDrilled > 0 ? newMetersDrilled : null)
+}
+
 // Calcular metros perforados por grupo
 const getGroupDrilledMeters = (group: any) => {
   return group.bits.reduce((sum: number, bit: any) => {
@@ -245,14 +292,6 @@ const getRemainingDepth = (group: any): number => {
   const lastDepth = lastBit?.end_depth_meters || group.reamer.start_depth_meters || 0
 
   return Math.max(0, maxDepth - lastDepth)
-}
-
-// Función para limitar valor dentro de un rango
-const clampValue = (value: number, min: number, max: number): number => {
-  if (Number.isNaN(value))
-    return min
-
-  return Math.min(Math.max(value, min), max)
 }
 
 // Validation rule for start depth
@@ -588,19 +627,20 @@ const endDepthRule = (startDepth: number) => {
                       :rules="[rules.required]"
                       prepend-inner-icon="tabler-tool"
                       density="compact"
-                      @update:model-value="(v) => updateBit(groupIndex, bitIndex, 'tool_id', v)"
+                      @update:model-value="(v) => handleBitSelection(groupIndex, bitIndex, v)"
                     />
                   </VCol>
                   <VCol
                     cols="6"
                     md="2"
                   >
-                    <VSelect
-                      :model-value="bit.tool_category"
-                      label="Tipo *"
-                      :items="bitTypeOptions"
+                    <VTextField
+                      :model-value="bit.tool_category === 'tricone' ? 'Tricono' : 'Broca Diamante'"
+                      label="Tipo"
                       density="compact"
-                      @update:model-value="(v) => updateBit(groupIndex, bitIndex, 'tool_category', v)"
+                      readonly
+                      variant="outlined"
+                      bg-color="grey-lighten-4"
                     />
                   </VCol>
                   <VCol
@@ -612,12 +652,10 @@ const endDepthRule = (startDepth: number) => {
                       label="Desde (m) *"
                       type="number"
                       step="0.01"
-                      :min="formData.drilling_depth_start || 0"
-                      :max="formData.drilling_depth_end || 9999"
                       :rules="[rules.required, startDepthRule]"
                       density="compact"
                       suffix="m"
-                      @update:model-value="(v) => updateBit(groupIndex, bitIndex, 'start_depth_meters', clampValue(Number(v), formData.drilling_depth_start || 0, formData.drilling_depth_end || 9999))"
+                      @update:model-value="(v) => handleStartDepthChange(groupIndex, bitIndex, Number(v) || 0, bit)"
                     />
                   </VCol>
                   <VCol
@@ -629,12 +667,10 @@ const endDepthRule = (startDepth: number) => {
                       label="Hasta (m) *"
                       type="number"
                       step="0.01"
-                      :min="bit.start_depth_meters || 0"
-                      :max="formData.drilling_depth_end || 9999"
                       :rules="[rules.required, endDepthRule(bit.start_depth_meters)]"
                       density="compact"
                       suffix="m"
-                      @update:model-value="(v) => updateBit(groupIndex, bitIndex, 'end_depth_meters', clampValue(Number(v), bit.start_depth_meters || 0, formData.drilling_depth_end || 9999))"
+                      @update:model-value="(v) => handleEndDepthChange(groupIndex, bitIndex, Number(v) || 0, bit)"
                     />
                   </VCol>
                   <VCol
@@ -654,6 +690,32 @@ const endDepthRule = (startDepth: number) => {
                       variant="text"
                       color="error"
                       @click="removeBitFromGroup(groupIndex, bitIndex)"
+                    />
+                  </VCol>
+                </VRow>
+
+                <!-- Campo de recuperación -->
+                <VRow
+                  dense
+                  class="mt-2"
+                >
+                  <VCol
+                    cols="6"
+                    md="4"
+                  >
+                    <VTextField
+                      :model-value="bit.recovery"
+                      label="Recuperación (m)"
+                      type="number"
+                      step="0.01"
+                      :min="0"
+                      :max="bit.end_depth_meters - bit.start_depth_meters"
+                      :rules="[recoveryRule(bit)]"
+                      density="compact"
+                      suffix="m"
+                      hint="Metros de testigo recuperados"
+                      persistent-hint
+                      @update:model-value="(v) => updateBit(groupIndex, bitIndex, 'recovery', v ? Number(v) : null)"
                     />
                   </VCol>
                 </VRow>

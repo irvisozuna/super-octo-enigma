@@ -204,6 +204,42 @@ const drillingSummary = computed(() => {
   }
 })
 
+// Detalles de perforación filtrados (solo brocas, no escarreadores)
+const drillingDetailsForPrint = computed(() => {
+  const details = report.value?.drilling_details || []
+
+  // Filtrar: solo brocas (excluir escarreadores explícitamente)
+  return details.filter((d: any) =>
+    d.affects_well_depth === true
+    && d.tool?.type !== 'reamer'
+    && d.group_position !== 'reamer',
+  )
+})
+
+// Brocas agrupadas por serial_number (para evitar repetición)
+const groupedBrocas = computed(() => {
+  const brocas = toolsByType.value.brocas
+  const grouped = new Map()
+
+  for (const b of brocas) {
+    const key = b.tool?.serial_number
+    if (!key)
+      continue
+
+    if (grouped.has(key)) {
+      const existing = grouped.get(key)
+
+      existing.depth_from = Math.min(Number.parseFloat(existing.depth_from), Number.parseFloat(b.depth_from))
+      existing.depth_to = Math.max(Number.parseFloat(existing.depth_to), Number.parseFloat(b.depth_to))
+    }
+    else {
+      grouped.set(key, { ...b })
+    }
+  }
+
+  return Array.from(grouped.values())
+})
+
 // Consumos con valores por defecto para la tabla CDK
 const consumptionsForPrint = computed(() => {
   const defaultItems = ['Petróleo', 'Lubricante', 'Aceites', 'Agua', 'Bentonita', 'Aditivos']
@@ -569,21 +605,24 @@ watch(() => report.value, newReport => {
                     <th>Hasta</th>
                     <th>Mts. Perf.</th>
                     <th>Recup.</th>
-                    <th>Tipo Roca</th>
+                    <th>Diám.</th>
                     <th>Dureza</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="drillingSummary">
-                    <td>{{ drillingSummary.desde }}</td>
-                    <td>{{ drillingSummary.hasta }}</td>
-                    <td>{{ drillingSummary.metrosPerforados }}</td>
-                    <td />
-                    <td />
-                    <td />
+                  <tr
+                    v-for="(d, idx) in drillingDetailsForPrint"
+                    :key="idx"
+                  >
+                    <td>{{ d.depth_from }}</td>
+                    <td>{{ d.depth_to }}</td>
+                    <td>{{ d.meters_drilled }}</td>
+                    <td>{{ d.recovery || '' }}</td>
+                    <td>{{ d.tool?.core_size || d.tool?.diameter || '' }}</td>
+                    <td>{{ d.hardness || '' }}</td>
                   </tr>
                   <tr
-                    v-else
+                    v-if="!drillingDetailsForPrint.length"
                     class="empty-row"
                   >
                     <td colspan="6">
@@ -661,16 +700,16 @@ watch(() => report.value, newReport => {
                 </thead>
                 <tbody>
                   <tr
-                    v-for="b in toolsByType.brocas"
-                    :key="b.tool?.id || b.depth_from"
+                    v-for="b in groupedBrocas"
+                    :key="b.tool?.serial_number"
                   >
-                    <td>{{ b.tool?.diameter || '-' }}</td>
+                    <td>{{ b.tool?.core_size || b.tool?.diameter || '-' }}</td>
                     <td>{{ b.tool?.serial_number || '-' }}</td>
                     <td>{{ b.depth_from }}</td>
                     <td>{{ b.depth_to }}</td>
                   </tr>
                   <tr
-                    v-if="!toolsByType.brocas.length"
+                    v-if="!groupedBrocas.length"
                     class="empty-row"
                   >
                     <td colspan="4">
@@ -698,7 +737,7 @@ watch(() => report.value, newReport => {
                     v-for="e in toolsByType.escarreadores"
                     :key="e.tool?.id || e.depth_from"
                   >
-                    <td>{{ e.tool?.diameter || '-' }}</td>
+                    <td>{{ e.tool?.core_size || e.tool?.diameter || '-' }}</td>
                     <td>{{ e.tool?.serial_number || '-' }}</td>
                     <td>{{ e.depth_from }}</td>
                     <td>{{ e.depth_to }}</td>
@@ -732,7 +771,7 @@ watch(() => report.value, newReport => {
                     v-for="tc in toolsByType.triconos"
                     :key="tc.tool?.id || tc.depth_from"
                   >
-                    <td>{{ tc.tool?.diameter || '-' }}</td>
+                    <td>{{ tc.tool?.core_size || tc.tool?.diameter || '-' }}</td>
                     <td>{{ tc.tool?.serial_number || '-' }}</td>
                     <td>{{ tc.depth_from }}</td>
                     <td>{{ tc.depth_to }}</td>

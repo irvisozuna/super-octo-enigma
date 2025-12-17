@@ -261,6 +261,7 @@ export class DrillingReportMapper {
       meters_drilled: entity.meters_drilled,
       wear_pattern: entity.wear_pattern,
       matrix: entity.matrix,
+      recovery: entity.recovery,
       assigned_at: entity.assigned_at,
       tool: entity.tool,
     }
@@ -278,6 +279,7 @@ export class DrillingReportMapper {
       end_depth_meters: dto.end_depth_meters,
       wear_pattern: dto.wear_pattern,
       matrix: dto.matrix,
+      recovery: dto.recovery,
     }
   }
 
