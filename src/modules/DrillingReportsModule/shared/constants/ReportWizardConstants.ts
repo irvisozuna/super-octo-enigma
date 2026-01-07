@@ -11,9 +11,10 @@ export const REPORT_WIZARD_STEPS = [
   { title: 'Información Básica', value: '1', icon: 'tabler-info-circle' },
   { title: 'Personal', value: '2', icon: 'tabler-users' },
   { title: 'Actividades', value: '3', icon: 'tabler-activity' },
-  { title: 'Consumos', value: '4', icon: 'tabler-droplet' },
-  { title: 'Herramientas', value: '5', icon: 'tabler-tool' },
-  { title: 'Revisión', value: '6', icon: 'tabler-check' },
+  { title: 'Mediciones Direccionales', value: '4', icon: 'tabler-ruler' },
+  { title: 'Consumos', value: '5', icon: 'tabler-droplet' },
+  { title: 'Herramientas', value: '6', icon: 'tabler-tool' },
+  { title: 'Revisión', value: '7', icon: 'tabler-check' },
 ]
 
 // Reuse activity types and shift options from ProjectConstants
@@ -58,6 +59,14 @@ export const UNIT_OPTIONS = CONSUMABLE_UNITS
 
 // Reuse tool categories from ToolConstants
 export const TOOL_CATEGORY_OPTIONS = TOOL_WIZARD_CATEGORIES
+
+// Measurement interval options for directional measurements
+export const MEASUREMENT_INTERVAL_OPTIONS = [
+  { title: 'Cada 2 metros', value: 2 },
+  { title: 'Cada 15 metros', value: 15 },
+  { title: 'Cada 30 metros', value: 30 },
+  { title: 'Cada 50 metros', value: 50 },
+]
 
 export const REPORT_VALIDATION_RULES = {
   required: (value: any) => !!value || 'Campo requerido',

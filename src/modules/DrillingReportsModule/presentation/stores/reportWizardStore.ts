@@ -30,6 +30,17 @@ interface Consumption {
   unit: string
 }
 
+interface DirectionalMeasurement {
+  id?: string
+  depth: number
+  azimuth: number
+  inclination: number
+  measurement_interval: number
+  notes?: string
+  measured_at?: string
+  measured_by?: string
+}
+
 interface ToolAssignment {
   tool_id: string | null
   shift: string
@@ -73,6 +84,7 @@ export interface ReportWizardData extends PersonnelData {
   equipment_id: string | null
   observations: string
   activities: Activity[]
+  directional_measurements: DirectionalMeasurement[]
   consumptions: Consumption[]
   tool_assignments: ToolAssignment[]
   tool_groups: ToolGroup[]
@@ -106,6 +118,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     rpm_rotation: null,
     observations: '',
     activities: [],
+    directional_measurements: [],
     consumptions: [],
     tool_assignments: [],
     tool_groups: [],
@@ -156,6 +169,31 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       && activity.shift
       && activity.hours !== null
       && activity.hours > 0,
+    )
+  })
+
+  // Validation for directional measurements step (optional)
+  const isDirectionalMeasurementsStepValid = computed(() => {
+    // Step is optional - if no measurements added, step is valid
+    if (formData.value.directional_measurements.length === 0)
+      return true
+
+    // If measurements exist, all must have required fields
+    return formData.value.directional_measurements.every(measurement =>
+      measurement.depth !== null
+      && measurement.depth !== undefined
+      && measurement.depth >= 0
+      && measurement.azimuth !== null
+      && measurement.azimuth !== undefined
+      && measurement.azimuth >= 0
+      && measurement.azimuth <= 360
+      && measurement.inclination !== null
+      && measurement.inclination !== undefined
+      && measurement.inclination >= 0
+      && measurement.inclination <= 90
+      && measurement.measurement_interval !== null
+      && measurement.measurement_interval !== undefined
+      && measurement.measurement_interval > 0.1,
     )
   })
 
@@ -339,14 +377,14 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   }
 
   const nextStep = () => {
-    const steps = ['1', '2', '3', '4', '5', '6']
+    const steps = ['1', '2', '3', '4', '5', '6', '7']
     const currentIndex = steps.indexOf(currentStep.value)
     if (currentIndex < steps.length - 1)
       currentStep.value = steps[currentIndex + 1]
   }
 
   const previousStep = () => {
-    const steps = ['1', '2', '3', '4', '5', '6']
+    const steps = ['1', '2', '3', '4', '5', '6', '7']
     const currentIndex = steps.indexOf(currentStep.value)
     if (currentIndex > 0)
       currentStep.value = steps[currentIndex - 1]
@@ -381,6 +419,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       rpm_rotation: null,
       observations: '',
       activities: [],
+      directional_measurements: [],
       consumptions: [],
       tool_assignments: [],
       tool_groups: [],
@@ -485,6 +524,31 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       updatedActivity.hours = calculateHoursFromTimes(value, activity.end_time)
 
     updateActivity(index, updatedActivity)
+  }
+
+  // Directional Measurement Management
+  const addDirectionalMeasurement = (measurement?: Partial<DirectionalMeasurement>) => {
+    formData.value.directional_measurements.push({
+      depth: measurement?.depth ?? 0,
+      azimuth: measurement?.azimuth ?? 0,
+      inclination: measurement?.inclination ?? 0,
+      measurement_interval: measurement?.measurement_interval ?? 50,
+      notes: measurement?.notes || '',
+    })
+    isDirty.value = true
+  }
+
+  const removeDirectionalMeasurement = (index: number) => {
+    formData.value.directional_measurements.splice(index, 1)
+    isDirty.value = true
+  }
+
+  const updateDirectionalMeasurement = (index: number, measurement: Partial<DirectionalMeasurement>) => {
+    formData.value.directional_measurements[index] = {
+      ...formData.value.directional_measurements[index],
+      ...measurement,
+    }
+    isDirty.value = true
   }
 
   // Consumption Management
@@ -823,6 +887,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     calculatedHorometerEnd,
     isFormValid,
     isActivitiesStepValid,
+    isDirectionalMeasurementsStepValid,
     isToolsStepValid,
     isToolGroupsStepValid,
     availableShiftOptions,
@@ -847,6 +912,11 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     updateActivityWithTimeCalculation,
     calculateEndTime,
     calculateHoursFromTimes,
+
+    // Directional Measurement Management
+    addDirectionalMeasurement,
+    removeDirectionalMeasurement,
+    updateDirectionalMeasurement,
 
     // Consumption Management
     addConsumption,

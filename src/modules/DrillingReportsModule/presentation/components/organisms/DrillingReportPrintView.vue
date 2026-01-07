@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDrillingReportStore } from '../../stores/drillingReportStore'
 import { ACTIVITY_TYPES } from '../../../shared/constants/ProjectConstants'
-import { formatDate } from '../../../shared/utils/dateUtils'
+import { formatDate, formatDateTime } from '../../../shared/utils/dateUtils'
 import { formatWellDiameter } from '../../../shared/utils/WellUtils'
 import { usePrintReport } from '../../composables/usePrintReport'
 import { useTenantConfig } from '@/composables/useTenantConfig'
@@ -251,6 +251,25 @@ const consumptionsForPrint = computed(() => {
     return { label: item, quantity: found?.quantity || '', unit: found?.unit || '' }
   })
 })
+
+// Sort directional measurements by depth (ascending)
+const sortedDirectionalMeasurements = computed(() => {
+  if (!report.value?.directional_measurements?.length)
+    return []
+  return [...report.value.directional_measurements].sort((a: any, b: any) => (a.depth || 0) - (b.depth || 0))
+})
+
+// Format measurement date/time for PDF (compact format)
+const formatMeasurementDateTime = (dateTime: string) => {
+  if (!dateTime)
+    return '-'
+  try {
+    return formatDateTime(dateTime, 'dd/MM/yyyy HH:mm')
+  }
+  catch {
+    return dateTime
+  }
+}
 
 // Methods
 const loadReport = async () => {
@@ -588,6 +607,40 @@ watch(() => report.value, newReport => {
                   <td>{{ c.label }}:</td>
                   <td>{{ c.quantity }} {{ c.unit ? getUnitLabel(c.unit) : '' }}</td>
                 </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- MEDICIONES DIRECCIONALES -->
+          <tr v-if="report.directional_measurements?.length > 0">
+            <td colspan="6">
+              <div class="section-title">
+                MEDICIONES DIRECCIONALES
+              </div>
+              <table class="data-table-cdk">
+                <thead>
+                  <tr>
+                    <th>Prof. (m)</th>
+                    <th>Azimuth (°)</th>
+                    <th>Inclinación (°)</th>
+                    <th>Intervalo (m)</th>
+                    <th>Notas</th>
+                    <th>Fecha/Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(m, idx) in sortedDirectionalMeasurements"
+                    :key="idx"
+                  >
+                    <td>{{ m.depth?.toFixed(1) || '-' }}</td>
+                    <td>{{ m.azimuth?.toFixed(1) || '-' }}</td>
+                    <td>{{ m.inclination?.toFixed(1) || '-' }}</td>
+                    <td>{{ m.measurement_interval || '-' }}</td>
+                    <td class="text-left">{{ m.notes || '-' }}</td>
+                    <td>{{ m.measured_at ? formatMeasurementDateTime(m.measured_at) : '-' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </td>
           </tr>
