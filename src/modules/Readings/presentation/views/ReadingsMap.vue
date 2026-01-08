@@ -23,6 +23,8 @@ const downloadedRoutes = ref<any[]>([])
 const readings = ref<any[]>([])
 const loading = ref(false)
 const readingsLoading = ref(false)
+const routeLoading = ref(false)
+const routeLatLngs = ref<Array<[number, number]>>([])
 
 const selectedPeriodId = ref<string | null>(null)
 const selectedReaderId = ref<string | null>(null)
@@ -183,6 +185,66 @@ const missingCoordsCount = computed(() => {
 })
 
 const mapLatLngs = computed(() => mapPoints.value.map(point => [point.lat, point.lng] as [number, number]))
+const routeKey = computed(() => mapLatLngs.value.map(point => `${point[0]},${point[1]}`).join(';'))
+const startPoint = computed(() => mapPoints.value[0] || null)
+const endPoint = computed(() => mapPoints.value[mapPoints.value.length - 1] || null)
+
+const startIcon = L.divIcon({
+  className: 'route-pin route-pin--start',
+  html: '<span></span>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+})
+
+const endIcon = L.divIcon({
+  className: 'route-pin route-pin--end',
+  html: '<span></span>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+})
+
+const arrowIcon = (angle: number) => L.divIcon({
+  className: 'route-arrow',
+  html: `<span style="transform: rotate(${angle}deg)"></span>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+})
+
+const toRadians = (value: number) => (value * Math.PI) / 180
+
+const getBearing = (from: [number, number], to: [number, number]) => {
+  const [lat1, lon1] = from.map(toRadians)
+  const [lat2, lon2] = to.map(toRadians)
+  const dLon = lon2 - lon1
+  const y = Math.sin(dLon) * Math.cos(lat2)
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+  const bearing = (Math.atan2(y, x) * 180) / Math.PI
+
+  return (bearing + 360) % 360
+}
+
+const arrowMarkers = computed(() => {
+  const points = routeLatLngs.value
+  if (points.length < 2)
+    return []
+
+  const step = Math.max(2, Math.floor(points.length / 12))
+  const markers: Array<{ latlng: [number, number]; angle: number }> = []
+
+  for (let i = step; i < points.length; i += step) {
+    const prev = points[i - 1]
+    const curr = points[i]
+    if (!prev || !curr)
+      continue
+
+    markers.push({
+      latlng: curr,
+      angle: getBearing(prev, curr),
+    })
+  }
+
+  return markers
+})
 
 const loadPeriods = async () => {
   loading.value = true
@@ -231,6 +293,53 @@ const loadReadings = async () => {
   }
 }
 
+const buildOsrmCoords = (latlngs: Array<[number, number]>, maxPoints = 100) => {
+  if (latlngs.length <= maxPoints)
+    return latlngs
+
+  const step = Math.ceil(latlngs.length / maxPoints)
+
+  return latlngs.filter((_, index) => index % step === 0)
+}
+
+const fetchOsrmRoute = async (latlngs: Array<[number, number]>) => {
+  if (latlngs.length < 2) {
+    routeLatLngs.value = latlngs
+    return
+  }
+
+  const coords = buildOsrmCoords(latlngs)
+  const coordString = coords.map(([lat, lng]) => `${lng},${lat}`).join(';')
+
+  const tryFetch = async (profile: 'walking' | 'driving') => {
+    const response = await fetch(`https://router.project-osrm.org/route/v1/${profile}/${coordString}?overview=full&geometries=geojson`)
+    if (!response.ok)
+      throw new Error(`OSRM ${profile} failed`)
+
+    return response.json()
+  }
+
+  routeLoading.value = true
+  try {
+    let data
+    try {
+      data = await tryFetch('walking')
+    }
+    catch {
+      data = await tryFetch('driving')
+    }
+
+    const geometry = data?.routes?.[0]?.geometry?.coordinates || []
+    routeLatLngs.value = geometry.map((point: [number, number]) => [point[1], point[0]])
+  }
+  catch {
+    routeLatLngs.value = latlngs
+  }
+  finally {
+    routeLoading.value = false
+  }
+}
+
 watch(selectedPeriodId, async () => {
   await loadDownloadedRoutes()
   await loadReadings()
@@ -240,7 +349,17 @@ watch(selectedReaderId, async () => {
   await loadReadings()
 })
 
-watch(mapLatLngs, latlngs => {
+watch(routeKey, async () => {
+  if (!mapLatLngs.value.length) {
+    routeLatLngs.value = []
+    return
+  }
+
+  await fetchOsrmRoute(mapLatLngs.value)
+}, { immediate: true })
+
+watch([mapLatLngs, routeLatLngs], ([rawLatlngs, routeLatlngs]) => {
+  const latlngs = routeLatlngs.length ? routeLatlngs : rawLatlngs
   if (!latlngs.length)
     return
 
@@ -328,10 +447,29 @@ onMounted(async () => {
                 attribution="&copy; OpenStreetMap contributors"
               />
               <LPolyline
-                v-if="mapLatLngs.length"
-                :lat-lngs="mapLatLngs"
+                v-if="routeLatLngs.length"
+                :lat-lngs="routeLatLngs"
                 color="#60a5fa"
                 :weight="4"
+              />
+              <LMarker
+                v-for="(arrow, index) in arrowMarkers"
+                :key="`arrow-${index}`"
+                :lat-lng="arrow.latlng"
+                :icon="arrowIcon(arrow.angle)"
+                :interactive="false"
+              />
+              <LMarker
+                v-if="startPoint"
+                :lat-lng="[startPoint.lat, startPoint.lng]"
+                :icon="startIcon"
+                :z-index-offset="1000"
+              />
+              <LMarker
+                v-if="endPoint && endPoint.id !== startPoint?.id"
+                :lat-lng="[endPoint.lat, endPoint.lng]"
+                :icon="endIcon"
+                :z-index-offset="1000"
               />
               <LMarker
                 v-for="point in mapPoints"
@@ -349,6 +487,9 @@ onMounted(async () => {
             </div>
             <div v-if="readingsLoading" class="map-empty">
               Cargando lecturas...
+            </div>
+            <div v-if="routeLoading && mapPoints.length" class="map-empty">
+              Trazando ruta por calles...
             </div>
           </div>
           <div class="map-list">
@@ -499,5 +640,44 @@ onMounted(async () => {
   .map-layout {
     grid-template-columns: 1fr;
   }
+}
+
+:global(.route-pin) {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+:global(.route-pin span) {
+  display: block;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
+:global(.route-pin--start span) {
+  background: #16a34a;
+}
+
+:global(.route-pin--end span) {
+  background: #dc2626;
+}
+
+:global(.route-arrow) {
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+:global(.route-arrow span) {
+  display: block;
+  inline-size: 0;
+  block-size: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid #2563eb;
+  transform-origin: 50% 65%;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.25));
 }
 </style>

@@ -12,6 +12,9 @@ const apiService = new ReadingApiService()
 
 const details = ref<any[]>([])
 const detailsLoading = ref(false)
+const photos = ref<any[]>([])
+const photosLoading = ref(false)
+const photosDialog = ref(false)
 const detailsPagination = ref({
   current_page: 1,
   last_page: 1,
@@ -37,6 +40,49 @@ const readingId = computed(() => route.params.id as string)
 const reading = computed(() =>
   readingsStore.items.find(item => String(item.id) === String(readingId.value)),
 )
+
+const normalizeArray = (response: any) => {
+  if (Array.isArray(response))
+    return response
+  if (Array.isArray(response?.data))
+    return response.data
+  if (Array.isArray(response?.data?.data))
+    return response.data.data
+
+  return []
+}
+
+const resolvePhotoUrl = (value?: string) => {
+  if (!value)
+    return ''
+
+  if (value.startsWith('http') || value.startsWith('data:'))
+    return value
+
+  const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL
+  const prefix = baseUrl ? baseUrl.replace(/\/$/, '') : ''
+
+  if (value.startsWith('/'))
+    return `${prefix}${value}`
+
+  return `${prefix}/${value}`
+}
+
+const photoItems = computed(() => {
+  return photos.value
+    .map(item => ({
+      id: item.id ?? item.uuid ?? item.path ?? item.url,
+      src: resolvePhotoUrl(
+        item.url
+        ?? item.photo_url
+        ?? item.path
+        ?? item.photo_path
+        ?? item.file_path,
+      ),
+      title: item.title ?? item.name ?? 'Foto de lectura',
+    }))
+    .filter(item => item.src)
+})
 
 const formatDate = (value?: string) => {
   if (!value)
@@ -101,6 +147,24 @@ const handleDetailsOptions = (params: Record<string, any>) => {
   loadDetails(params)
 }
 
+const openPhotos = async () => {
+  if (!readingId.value)
+    return
+
+  photosDialog.value = true
+  if (photos.value.length)
+    return
+
+  photosLoading.value = true
+  try {
+    const response = await apiService.getPhotos(readingId.value)
+    photos.value = normalizeArray(response)
+  }
+  finally {
+    photosLoading.value = false
+  }
+}
+
 onMounted(() => {
   loadDetails({
     page: detailsPagination.value.current_page,
@@ -118,9 +182,14 @@ onMounted(() => {
             <div class="detail-title">Detalle de lectura</div>
             <div class="detail-subtitle">ID: {{ readingId }}</div>
           </div>
-          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
-            Regresar
-          </VBtn>
+          <div class="detail-actions">
+            <VBtn variant="tonal" color="primary" prepend-icon="tabler-camera" @click="openPhotos">
+              Ver fotos
+            </VBtn>
+            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
+              Regresar
+            </VBtn>
+          </div>
         </div>
 
         <VDivider class="my-4" />
@@ -306,6 +375,35 @@ onMounted(() => {
         </div>
       </VCardText>
     </VCard>
+
+    <VDialog v-model="photosDialog" max-width="720">
+      <VCard>
+        <VCardTitle class="photo-modal__title">
+          Fotos de la lectura
+          <VSpacer />
+          <VBtn icon="tabler-x" variant="text" @click="photosDialog = false" />
+        </VCardTitle>
+        <VCardText>
+          <div v-if="photosLoading" class="photo-modal__empty">Cargando fotos...</div>
+          <div v-else-if="!photoItems.length" class="photo-modal__empty">Sin fotos disponibles.</div>
+          <VCarousel
+            v-else
+            hide-delimiter-background
+            show-arrows="hover"
+            height="420"
+          >
+            <VCarouselItem
+              v-for="item in photoItems"
+              :key="item.id"
+            >
+              <div class="photo-slide">
+                <VImg :src="item.src" :alt="item.title" cover />
+              </div>
+            </VCarouselItem>
+          </VCarousel>
+        </VCardText>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
@@ -341,6 +439,12 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .detail-title {
@@ -526,6 +630,29 @@ onMounted(() => {
   justify-content: space-between;
   font-size: 14px;
   font-weight: 700;
+}
+
+.photo-modal__title {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.photo-modal__empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  padding-block: 24px;
+}
+
+.photo-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
 }
 
 @media (max-width: 1100px) {

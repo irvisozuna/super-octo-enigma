@@ -47,4 +47,10 @@ export class ReadingApiService {
       params: filters,
     })
   }
+
+  async getPhotos(readingId: string) {
+    return await rawApi(`${this.baseUrl}/${readingId}/photos`, {
+      method: 'GET',
+    })
+  }
 }
