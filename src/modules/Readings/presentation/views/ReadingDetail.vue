@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import BaseDataTable from '@/components/BaseDataTable.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 import { useReadingsStore } from '../stores/readingsStore'
+import BaseDataTable from '@/components/BaseDataTable.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +15,7 @@ const detailsLoading = ref(false)
 const photos = ref<any[]>([])
 const photosLoading = ref(false)
 const photosDialog = ref(false)
+
 const detailsPagination = ref({
   current_page: 1,
   last_page: 1,
@@ -37,6 +38,7 @@ const totalCost = computed(() => {
 })
 
 const readingId = computed(() => route.params.id as string)
+
 const reading = computed(() =>
   readingsStore.items.find(item => String(item.id) === String(readingId.value)),
 )
@@ -158,6 +160,7 @@ const openPhotos = async () => {
   photosLoading.value = true
   try {
     const response = await apiService.getPhotos(readingId.value)
+
     photos.value = normalizeArray(response)
   }
   finally {
@@ -179,14 +182,28 @@ onMounted(() => {
       <VCardText>
         <div class="detail-header">
           <div>
-            <div class="detail-title">Detalle de lectura</div>
-            <div class="detail-subtitle">ID: {{ readingId }}</div>
+            <div class="detail-title">
+              Detalle de lectura
+            </div>
+            <div class="detail-subtitle">
+              ID: {{ readingId }}
+            </div>
           </div>
           <div class="detail-actions">
-            <VBtn variant="tonal" color="primary" prepend-icon="tabler-camera" @click="openPhotos">
+            <VBtn
+              variant="tonal"
+              color="primary"
+              prepend-icon="tabler-camera"
+              @click="openPhotos"
+            >
               Ver fotos
             </VBtn>
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              prepend-icon="tabler-arrow-left"
+              @click="goBack"
+            >
               Regresar
             </VBtn>
           </div>
@@ -196,26 +213,48 @@ onMounted(() => {
 
         <div class="detail-layout">
           <div class="detail-main">
-            <div v-if="reading" class="detail-summary">
+            <div
+              v-if="reading"
+              class="detail-summary"
+            >
               <div class="summary-card">
-                <div class="summary-label">Lectura anterior</div>
-                <div class="summary-value">{{ reading.previous_reading ?? '-' }}</div>
+                <div class="summary-label">
+                  Lectura anterior
+                </div>
+                <div class="summary-value">
+                  {{ reading.previous_reading ?? '-' }}
+                </div>
               </div>
               <div class="summary-card">
-                <div class="summary-label">Lectura actual</div>
-                <div class="summary-value">{{ reading.current_reading ?? '-' }}</div>
+                <div class="summary-label">
+                  Lectura actual
+                </div>
+                <div class="summary-value">
+                  {{ reading.current_reading ?? '-' }}
+                </div>
               </div>
               <div class="summary-card">
-                <div class="summary-label">Consumo</div>
-                <div class="summary-value">{{ reading.consumption ?? '-' }}</div>
+                <div class="summary-label">
+                  Consumo
+                </div>
+                <div class="summary-value">
+                  {{ reading.consumption ?? '-' }}
+                </div>
               </div>
               <div class="summary-card summary-card--highlight">
-                <div class="summary-label">Total lectura</div>
-                <div class="summary-value">$ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+                <div class="summary-label">
+                  Total lectura
+                </div>
+                <div class="summary-value">
+                  $ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                </div>
               </div>
             </div>
 
-            <div v-if="reading" class="detail-grid detail-grid--spaced">
+            <div
+              v-if="reading"
+              class="detail-grid detail-grid--spaced"
+            >
               <div class="detail-item">
                 <span class="detail-label">Contrato</span>
                 <span class="detail-value">
@@ -258,12 +297,17 @@ onMounted(() => {
               </div>
             </div>
 
-            <div v-else class="detail-empty">
+            <div
+              v-else
+              class="detail-empty"
+            >
               No se encontro la lectura en memoria. Regresa y vuelve a cargar la lista.
             </div>
 
             <div class="detail-section">
-              <div class="detail-section__title">Conceptos de la lectura</div>
+              <div class="detail-section__title">
+                Conceptos de la lectura
+              </div>
               <BaseDataTable
                 :headers="detailsHeaders"
                 :items="details"
@@ -280,8 +324,12 @@ onMounted(() => {
 
           <aside class="detail-ticket">
             <div class="ticket">
-              <div class="ticket__brand">acs Metrics</div>
-              <div class="ticket__subtitle">Recibo de lectura</div>
+              <div class="ticket__brand">
+                AQS Metrics
+              </div>
+              <div class="ticket__subtitle">
+                Recibo de lectura
+              </div>
 
               <div class="ticket__block">
                 <div class="ticket__row">
@@ -338,7 +386,9 @@ onMounted(() => {
               </div>
 
               <div class="ticket__block">
-                <div class="ticket__section-title">Lecturas</div>
+                <div class="ticket__section-title">
+                  Lecturas
+                </div>
                 <div class="ticket__row">
                   <span class="ticket__label">Anterior</span>
                   <span class="ticket__value">{{ reading?.previous_reading ?? '-' }}</span>
@@ -354,16 +404,30 @@ onMounted(() => {
               </div>
 
               <div class="ticket__block">
-                <div class="ticket__section-title">Conceptos</div>
-                <div v-if="details.length" class="ticket__concepts">
-                  <div v-for="item in details" :key="item.id" class="ticket__concept">
+                <div class="ticket__section-title">
+                  Conceptos
+                </div>
+                <div
+                  v-if="details.length"
+                  class="ticket__concepts"
+                >
+                  <div
+                    v-for="item in details"
+                    :key="item.id"
+                    class="ticket__concept"
+                  >
                     <span class="ticket__concept-name">{{ item.concept_name || item.concept_code }}</span>
                     <span class="ticket__concept-value">
                       $ {{ Number(item.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                     </span>
                   </div>
                 </div>
-                <div v-else class="ticket__empty">Sin conceptos</div>
+                <div
+                  v-else
+                  class="ticket__empty"
+                >
+                  Sin conceptos
+                </div>
               </div>
 
               <div class="ticket__total">
@@ -376,16 +440,33 @@ onMounted(() => {
       </VCardText>
     </VCard>
 
-    <VDialog v-model="photosDialog" max-width="720">
+    <VDialog
+      v-model="photosDialog"
+      max-width="720"
+    >
       <VCard>
         <VCardTitle class="photo-modal__title">
           Fotos de la lectura
           <VSpacer />
-          <VBtn icon="tabler-x" variant="text" @click="photosDialog = false" />
+          <VBtn
+            icon="tabler-x"
+            variant="text"
+            @click="photosDialog = false"
+          />
         </VCardTitle>
         <VCardText>
-          <div v-if="photosLoading" class="photo-modal__empty">Cargando fotos...</div>
-          <div v-else-if="!photoItems.length" class="photo-modal__empty">Sin fotos disponibles.</div>
+          <div
+            v-if="photosLoading"
+            class="photo-modal__empty"
+          >
+            Cargando fotos...
+          </div>
+          <div
+            v-else-if="!photoItems.length"
+            class="photo-modal__empty"
+          >
+            Sin fotos disponibles.
+          </div>
           <VCarousel
             v-else
             hide-delimiter-background
@@ -397,7 +478,11 @@ onMounted(() => {
               :key="item.id"
             >
               <div class="photo-slide">
-                <VImg :src="item.src" :alt="item.title" cover />
+                <VImg
+                  :src="item.src"
+                  :alt="item.title"
+                  cover
+                />
               </div>
             </VCarouselItem>
           </VCarousel>
@@ -415,23 +500,23 @@ onMounted(() => {
 
 .detail-card {
   border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 12%);
 }
 
 .detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
   align-items: start;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 320px;
 }
 
 .detail-main {
-  min-width: 0;
+  min-inline-size: 0;
 }
 
 .detail-ticket {
   position: sticky;
-  top: 20px;
+  inset-block-start: 20px;
 }
 
 .detail-header {
@@ -448,20 +533,20 @@ onMounted(() => {
 }
 
 .detail-title {
+  color: #1f2937;
   font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
 }
 
 .detail-subtitle {
-  font-size: 13px;
   color: #94a3b8;
+  font-size: 13px;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .detail-grid--spaced {
@@ -470,63 +555,65 @@ onMounted(() => {
 
 .detail-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   margin-block-end: 8px;
 }
 
 .summary-card {
-  padding: 14px 16px;
+  border: 1px solid rgba(15, 23, 42, 8%);
   border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 8%);
+  padding-block: 14px;
+  padding-inline: 16px;
   text-align: center;
 }
 
 .summary-card--highlight {
-  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
   border-color: #93c5fd;
-  box-shadow: 0 10px 22px rgba(59, 130, 246, 0.18);
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  box-shadow: 0 10px 22px rgba(59, 130, 246, 18%);
 }
 
 .summary-label {
-  font-size: 12px;
   color: #64748b;
+  font-size: 12px;
 }
 
 .summary-value {
-  margin-block-start: 6px;
+  color: #1f2937;
   font-size: 18px;
   font-weight: 700;
-  color: #1f2937;
+  margin-block-start: 6px;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  border: 1px solid rgba(15, 23, 42, 8%);
   border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 8%);
+  gap: 6px;
+  padding-block: 12px;
+  padding-inline: 14px;
 }
 
 .detail-label {
-  font-size: 12px;
   color: #64748b;
+  font-size: 12px;
 }
 
 .detail-value {
+  color: #1f2937;
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
 }
 
 .detail-empty {
-  font-size: 14px;
   color: #94a3b8;
+  font-size: 14px;
 }
 
 .detail-section {
@@ -534,20 +621,21 @@ onMounted(() => {
 }
 
 .detail-section__title {
+  color: #1f2937;
   font-size: 16px;
   font-weight: 700;
-  color: #1f2937;
   margin-block-end: 12px;
 }
 
 .ticket {
-  background: #fdfcf9;
-  border: 1px dashed rgba(15, 23, 42, 0.2);
+  border: 1px dashed rgba(15, 23, 42, 20%);
   border-radius: 18px;
-  padding: 18px 16px;
-  font-family: "Courier New", Courier, monospace;
+  background: #fdfcf9;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 8%);
   color: #1f2937;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  font-family: "Courier New", Courier, monospace;
+  padding-block: 18px;
+  padding-inline: 16px;
 }
 
 .ticket__brand {
@@ -558,23 +646,23 @@ onMounted(() => {
 }
 
 .ticket__subtitle {
-  font-size: 12px;
   color: #64748b;
+  font-size: 12px;
+  letter-spacing: 0.8px;
   margin-block: 4px 12px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
 }
 
 .ticket__block {
-  border-top: 1px dashed rgba(15, 23, 42, 0.2);
+  border-block-start: 1px dashed rgba(15, 23, 42, 20%);
   padding-block: 12px;
 }
 
 .ticket__row {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
   font-size: 12px;
+  gap: 8px;
   padding-block: 3px;
 }
 
@@ -585,15 +673,15 @@ onMounted(() => {
 
 .ticket__value {
   font-weight: 700;
-  text-align: right;
+  text-align: end;
 }
 
 .ticket__section-title {
+  color: #334155;
   font-size: 11px;
-  text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-block-end: 6px;
-  color: #334155;
+  text-transform: uppercase;
 }
 
 .ticket__concepts {
@@ -605,12 +693,12 @@ onMounted(() => {
 .ticket__concept {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
   font-size: 12px;
+  gap: 8px;
 }
 
 .ticket__concept-name {
-  max-width: 160px;
+  max-inline-size: 160px;
 }
 
 .ticket__concept-value {
@@ -618,18 +706,18 @@ onMounted(() => {
 }
 
 .ticket__empty {
-  font-size: 12px;
   color: #94a3b8;
+  font-size: 12px;
 }
 
 .ticket__total {
-  margin-block-start: 12px;
-  padding-block: 10px;
-  border-top: 2px dashed rgba(15, 23, 42, 0.25);
   display: flex;
   justify-content: space-between;
+  border-block-start: 2px dashed rgba(15, 23, 42, 25%);
   font-size: 14px;
   font-weight: 700;
+  margin-block-start: 12px;
+  padding-block: 10px;
 }
 
 .photo-modal__title {
@@ -639,20 +727,20 @@ onMounted(() => {
 }
 
 .photo-modal__empty {
-  text-align: center;
   color: #94a3b8;
   font-size: 14px;
   padding-block: 24px;
+  text-align: center;
 }
 
 .photo-slide {
   display: flex;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
-  block-size: 100%;
   border-radius: 12px;
-  overflow: hidden;
   background: #f8fafc;
+  block-size: 100%;
 }
 
 @media (max-width: 1100px) {
