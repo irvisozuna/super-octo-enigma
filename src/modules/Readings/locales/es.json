@@ -1,0 +1,19 @@
+{
+  "ReadingsModule": {
+    "title": "Lecturas",
+    "description": "Lista de lecturas del backend.",
+    "columns": {
+      "id": "ID",
+      "meter_id": "Medidor",
+      "reading": "Lectura",
+      "reading_date": "Fecha de lectura",
+      "value": "Valor",
+      "created_at": "Creado",
+      "updated_at": "Actualizado"
+    },
+    "empty": {
+      "title": "Sin lecturas",
+      "description": "No hay lecturas disponibles."
+    }
+  }
+}

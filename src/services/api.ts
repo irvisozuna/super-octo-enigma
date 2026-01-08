@@ -51,6 +51,8 @@ export async function rawApi(
   //    Ajusta la función `useCookie` según tu librería preferida.
 
   const accessToken = useCookie('accessToken').value
+  const localStorageToken = typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null
+  const token = accessToken || localStorageToken
 
   const fetchOptions: RequestInit = {
     method,
@@ -75,10 +77,10 @@ export async function rawApi(
     organization = (import.meta as any).env?.VITE_API_ORGANIZATION || ''
   }
 
-  if (accessToken) {
+  if (token) {
     fetchOptions.headers = {
       ...fetchOptions.headers,
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${token}`,
       'X-Organization': `${organization}`,
     }
   }

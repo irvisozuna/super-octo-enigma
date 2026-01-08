@@ -1,12 +1,12 @@
-/**
+﻿/**
  * Menu Order Configuration
  *
- * Este archivo define el orden en que los menús de los módulos aparecerán en la navegación.
+ * Este archivo define el orden en que los menÃºs de los mÃ³dulos aparecerÃ¡n en la navegaciÃ³n.
  * Cada entrada puede tener:
- * - module: nombre del módulo (debe coincidir con la carpeta en src/modules)
- * - order: número de orden (menor = aparece primero)
- * - enabled: si el menú está habilitado o no
- * - section: agrupa menús en secciones (opcional)
+ * - module: nombre del mÃ³dulo (debe coincidir con la carpeta en src/modules)
+ * - order: nÃºmero de orden (menor = aparece primero)
+ * - enabled: si el menÃº estÃ¡ habilitado o no
+ * - section: agrupa menÃºs en secciones (opcional)
  */
 
 export interface MenuOrderConfig {
@@ -17,17 +17,17 @@ export interface MenuOrderConfig {
 }
 
 /**
- * Configuración del orden de menús
+ * ConfiguraciÃ³n del orden de menÃºs
  *
  * IMPORTANTE:
- * - Los módulos no listados aquí se agregarán al final en orden alfabético
- * - Puedes deshabilitar un menú cambiando enabled: false
- * - Los números de orden no necesitan ser consecutivos
+ * - Los mÃ³dulos no listados aquÃ­ se agregarÃ¡n al final en orden alfabÃ©tico
+ * - Puedes deshabilitar un menÃº cambiando enabled: false
+ * - Los nÃºmeros de orden no necesitan ser consecutivos
  */
 export const menuOrderConfig: MenuOrderConfig[] = [
-  // Sección Principal
-  // NOTA: El menú 'dashboard' requiere que las rutas estén definidas en tu router
-  // Si ves errores de "No match for dashboards-*", déjalo deshabilitado
+  // SecciÃ³n Principal
+  // NOTA: El menÃº 'dashboard' requiere que las rutas estÃ©n definidas en tu router
+  // Si ves errores de "No match for dashboards-*", dÃ©jalo deshabilitado
   {
     module: 'dashboard',
     order: 5,
@@ -59,7 +59,7 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'main',
   },
 
-  // Sección Operaciones
+  // SecciÃ³n Operaciones
   {
     module: 'TransportModule',
     order: 40,
@@ -73,7 +73,7 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'operations',
   },
 
-  // Sección Administración
+  // SecciÃ³n AdministraciÃ³n
   {
     module: 'template',
     order: 60,
@@ -95,8 +95,8 @@ export const menuOrderConfig: MenuOrderConfig[] = [
 ]
 
 /**
- * Configuración de secciones (opcional)
- * Define separadores visuales entre grupos de menús
+ * ConfiguraciÃ³n de secciones (opcional)
+ * Define separadores visuales entre grupos de menÃºs
  */
 export interface MenuSectionConfig {
   id: string
@@ -111,7 +111,7 @@ export const menuSections: MenuSectionConfig[] = [
   },
   {
     id: 'drilling',
-    title: 'Perforación',
+    title: 'PerforaciÃ³n',
     order: 2,
   },
   {
@@ -121,7 +121,8 @@ export const menuSections: MenuSectionConfig[] = [
   },
   {
     id: 'admin',
-    title: 'Administración',
+    title: 'AdministraciÃ³n',
     order: 4,
   },
 ]
+
