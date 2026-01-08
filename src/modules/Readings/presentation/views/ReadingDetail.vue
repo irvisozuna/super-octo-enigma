@@ -125,85 +125,184 @@ onMounted(() => {
 
         <VDivider class="my-4" />
 
-        <div v-if="reading" class="detail-summary">
-          <div class="summary-card">
-            <div class="summary-label">Lectura anterior</div>
-            <div class="summary-value">{{ reading.previous_reading ?? '-' }}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Lectura actual</div>
-            <div class="summary-value">{{ reading.current_reading ?? '-' }}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Consumo</div>
-            <div class="summary-value">{{ reading.consumption ?? '-' }}</div>
-          </div>
-          <div class="summary-card summary-card--highlight">
-            <div class="summary-label">Total lectura</div>
-            <div class="summary-value">$ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
-          </div>
-        </div>
+        <div class="detail-layout">
+          <div class="detail-main">
+            <div v-if="reading" class="detail-summary">
+              <div class="summary-card">
+                <div class="summary-label">Lectura anterior</div>
+                <div class="summary-value">{{ reading.previous_reading ?? '-' }}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Lectura actual</div>
+                <div class="summary-value">{{ reading.current_reading ?? '-' }}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Consumo</div>
+                <div class="summary-value">{{ reading.consumption ?? '-' }}</div>
+              </div>
+              <div class="summary-card summary-card--highlight">
+                <div class="summary-label">Total lectura</div>
+                <div class="summary-value">$ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+              </div>
+            </div>
 
-        <div v-if="reading" class="detail-grid detail-grid--spaced">
-          <div class="detail-item">
-            <span class="detail-label">Contrato</span>
-            <span class="detail-value">
-              {{ reading.external_contract_id || reading.contract?.external_contract_id || reading.contract_id || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Usuario</span>
-            <span class="detail-value">
-              {{ reading.contract?.user_name || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Lecturista</span>
-            <span class="detail-value">
-              {{ reading.reader?.name || reading.reader_name || reading.reader_id || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Sector</span>
-            <span class="detail-value">
-              {{ reading.contract?.sector?.name || reading.contract?.sector_id || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Ruta</span>
-            <span class="detail-value">
-              {{ reading.contract?.route?.name || reading.contract?.route?.code || reading.contract?.external_route_id || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Anomalia</span>
-            <span class="detail-value">
-              {{ reading.anomaly?.name || '-' }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Fecha lectura</span>
-            <span class="detail-value">{{ formatDate(reading.reading_date) }}</span>
-          </div>
-        </div>
+            <div v-if="reading" class="detail-grid detail-grid--spaced">
+              <div class="detail-item">
+                <span class="detail-label">Contrato</span>
+                <span class="detail-value">
+                  {{ reading.external_contract_id || reading.contract?.external_contract_id || reading.contract_id || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Usuario</span>
+                <span class="detail-value">
+                  {{ reading.contract?.user_name || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Lecturista</span>
+                <span class="detail-value">
+                  {{ reading.reader?.name || reading.reader_name || reading.reader_id || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Sector</span>
+                <span class="detail-value">
+                  {{ reading.contract?.sector?.name || reading.contract?.sector_id || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Ruta</span>
+                <span class="detail-value">
+                  {{ reading.contract?.route?.name || reading.contract?.route?.code || reading.contract?.external_route_id || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Anomalia</span>
+                <span class="detail-value">
+                  {{ reading.anomaly?.name || '-' }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Fecha lectura</span>
+                <span class="detail-value">{{ formatDate(reading.reading_date) }}</span>
+              </div>
+            </div>
 
-        <div v-else class="detail-empty">
-          No se encontro la lectura en memoria. Regresa y vuelve a cargar la lista.
-        </div>
+            <div v-else class="detail-empty">
+              No se encontro la lectura en memoria. Regresa y vuelve a cargar la lista.
+            </div>
 
-        <div class="detail-section">
-          <div class="detail-section__title">Conceptos de la lectura</div>
-          <BaseDataTable
-            :headers="detailsHeaders"
-            :items="details"
-            :meta="detailsPagination"
-            :loading="detailsLoading"
-            :items-per-page-options="[10, 15, 25, 50]"
-            empty-state-title="Sin conceptos"
-            empty-state-description="No hay conceptos para esta lectura."
-            empty-state-icon="tabler-list-details"
-            @update:options="handleDetailsOptions"
-          />
+            <div class="detail-section">
+              <div class="detail-section__title">Conceptos de la lectura</div>
+              <BaseDataTable
+                :headers="detailsHeaders"
+                :items="details"
+                :meta="detailsPagination"
+                :loading="detailsLoading"
+                :items-per-page-options="[10, 15, 25, 50]"
+                empty-state-title="Sin conceptos"
+                empty-state-description="No hay conceptos para esta lectura."
+                empty-state-icon="tabler-list-details"
+                @update:options="handleDetailsOptions"
+              />
+            </div>
+          </div>
+
+          <aside class="detail-ticket">
+            <div class="ticket">
+              <div class="ticket__brand">acs Metrics</div>
+              <div class="ticket__subtitle">Recibo de lectura</div>
+
+              <div class="ticket__block">
+                <div class="ticket__row">
+                  <span class="ticket__label">Cuenta</span>
+                  <span class="ticket__value">
+                    {{ reading?.contract?.contract_number || reading?.contract_id || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Usuario</span>
+                  <span class="ticket__value">
+                    {{ reading?.contract?.user_name || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Contrato</span>
+                  <span class="ticket__value">
+                    {{ reading?.external_contract_id || reading?.contract?.external_contract_id || '-' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="ticket__block">
+                <div class="ticket__row">
+                  <span class="ticket__label">Periodo</span>
+                  <span class="ticket__value">
+                    {{ reading?.period?.name || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Fecha lectura</span>
+                  <span class="ticket__value">
+                    {{ formatDate(reading?.reading_date) }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Ruta</span>
+                  <span class="ticket__value">
+                    {{ reading?.contract?.route?.name || reading?.contract?.route?.code || reading?.contract?.external_route_id || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Sector</span>
+                  <span class="ticket__value">
+                    {{ reading?.contract?.sector?.name || reading?.contract?.sector_id || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Anomalia</span>
+                  <span class="ticket__value">
+                    {{ reading?.anomaly?.name || 'Lectura real' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="ticket__block">
+                <div class="ticket__section-title">Lecturas</div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Anterior</span>
+                  <span class="ticket__value">{{ reading?.previous_reading ?? '-' }}</span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Actual</span>
+                  <span class="ticket__value">{{ reading?.current_reading ?? '-' }}</span>
+                </div>
+                <div class="ticket__row">
+                  <span class="ticket__label">Consumo</span>
+                  <span class="ticket__value">{{ reading?.consumption ?? '-' }}</span>
+                </div>
+              </div>
+
+              <div class="ticket__block">
+                <div class="ticket__section-title">Conceptos</div>
+                <div v-if="details.length" class="ticket__concepts">
+                  <div v-for="item in details" :key="item.id" class="ticket__concept">
+                    <span class="ticket__concept-name">{{ item.concept_name || item.concept_code }}</span>
+                    <span class="ticket__concept-value">
+                      $ {{ Number(item.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </span>
+                  </div>
+                </div>
+                <div v-else class="ticket__empty">Sin conceptos</div>
+              </div>
+
+              <div class="ticket__total">
+                <span>Total a pagar</span>
+                <span>$ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </aside>
         </div>
       </VCardText>
     </VCard>
@@ -219,6 +318,22 @@ onMounted(() => {
 .detail-card {
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.detail-main {
+  min-width: 0;
+}
+
+.detail-ticket {
+  position: sticky;
+  top: 20px;
 }
 
 .detail-header {
@@ -319,5 +434,107 @@ onMounted(() => {
   font-weight: 700;
   color: #1f2937;
   margin-block-end: 12px;
+}
+
+.ticket {
+  background: #fdfcf9;
+  border: 1px dashed rgba(15, 23, 42, 0.2);
+  border-radius: 18px;
+  padding: 18px 16px;
+  font-family: "Courier New", Courier, monospace;
+  color: #1f2937;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.ticket__brand {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.ticket__subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-block: 4px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.ticket__block {
+  border-top: 1px dashed rgba(15, 23, 42, 0.2);
+  padding-block: 12px;
+}
+
+.ticket__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  padding-block: 3px;
+}
+
+.ticket__label {
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.ticket__value {
+  font-weight: 700;
+  text-align: right;
+}
+
+.ticket__section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-block-end: 6px;
+  color: #334155;
+}
+
+.ticket__concepts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket__concept {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.ticket__concept-name {
+  max-width: 160px;
+}
+
+.ticket__concept-value {
+  font-weight: 700;
+}
+
+.ticket__empty {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.ticket__total {
+  margin-block-start: 12px;
+  padding-block: 10px;
+  border-top: 2px dashed rgba(15, 23, 42, 0.25);
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-ticket {
+    position: static;
+  }
 }
 </style>
