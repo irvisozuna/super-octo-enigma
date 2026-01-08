@@ -127,7 +127,7 @@ const tableItems = computed(() => filteredItems.value.map(item => ({
   anterior: normalizeValue(item.previous_reading ?? item.anterior ?? item.ANTERIOR ?? item.previous),
   actual: normalizeValue(item.current_reading ?? item.actual ?? item.ACTUAL ?? item.reading),
   consumo: normalizeValue(item.consumption ?? item.consumo ?? item.Consumo ?? item.usage),
-  anomalia: normalizeValue(item.anomaly_id ?? item.anomalia ?? item.Anomalia ?? item.anomaly),
+  anomalia: normalizeValue(item.anomaly?.name ?? item.anomalia ?? item.Anomalia),
   estatus: normalizeValue(item.status ?? item.estatus ?? item.ESTATUS),
   _raw: item,
 })))
@@ -195,7 +195,9 @@ const getContractTypeColor = (value: string) => {
 }
 
 const getAnomalyColor = (value: string) => {
-  if (!value)
+  const normalized = String(value || '').toLowerCase()
+
+  if (!normalized || normalized.includes('lectura real'))
     return 'success'
 
   return 'warning'
@@ -227,7 +229,7 @@ const getAnomalyLabel = (value: string) => {
   if (!value)
     return 'LECTURA REAL'
 
-  return `ANOMALIA ${value}`
+  return String(value).toUpperCase()
 }
 
 const handleExport = () => {
