@@ -164,12 +164,26 @@ onMounted(() => {
             </span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">Fecha lectura</span>
-            <span class="detail-value">{{ formatDate(reading.reading_date) }}</span>
+            <span class="detail-label">Sector</span>
+            <span class="detail-value">
+              {{ reading.contract?.sector?.name || reading.contract?.sector_id || '-' }}
+            </span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">Estatus</span>
-            <span class="detail-value">{{ reading.status || '-' }}</span>
+            <span class="detail-label">Ruta</span>
+            <span class="detail-value">
+              {{ reading.contract?.route?.name || reading.contract?.route?.code || reading.contract?.external_route_id || '-' }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Anomalia</span>
+            <span class="detail-value">
+              {{ reading.anomaly?.name || '-' }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Fecha lectura</span>
+            <span class="detail-value">{{ formatDate(reading.reading_date) }}</span>
           </div>
         </div>
 
