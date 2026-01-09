@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import L from 'leaflet'
+import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { LMap, LMarker, LPopup, LPolyline, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
