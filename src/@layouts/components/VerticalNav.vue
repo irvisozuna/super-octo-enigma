@@ -32,12 +32,13 @@ const configStore = useLayoutConfigStore()
 // Obtener logo y título del tenant
 const { menuLogo, appTitle } = useTenantConfig()
 
-// Logo dinámico: usa el del tenant si existe, sino el del layoutConfig
+// Logo dinámico: Prioriza el del layoutConfig si está definido (para permitir branding local), sino usa el del tenant
 const dynamicLogo = computed(() => {
-  console.log('🔍 Menu logo:', menuLogo.value)
+  // Si el logo en layoutConfig es un VNode (h('img', ...)), lo usamos con prioridad
+  if (layoutConfig.app.logo && typeof layoutConfig.app.logo === 'object')
+    return layoutConfig.app.logo
+
   if (menuLogo.value) {
-    // Retornar un h('img') con el logo del tenant
-    // Ajustar el tamaño según si el título está visible o no
     const logoStyle = hideTitleAndIcon.value
       ? 'max-width: 60px; max-height: 40px; object-fit: contain; width: auto; height: auto;'
       : 'max-width: 150px; max-height: 48px; object-fit: contain;'
@@ -50,7 +51,6 @@ const dynamicLogo = computed(() => {
     })
   }
 
-  // Fallback al logo por defecto
   return layoutConfig.app.logo
 })
 

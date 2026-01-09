@@ -3,6 +3,7 @@ export interface location {
   lng: number
 }
 export interface UserInfoType {
+  id: string | null
   firstName: string
   lastName: string
   contact: string | null
@@ -19,6 +20,7 @@ export interface CompanyInfoType {
 export interface PropertyListingData {
   userInfo: UserInfoType
   companyInfo: CompanyInfoType
+  wizardStep: number
 }
 
 export interface User {

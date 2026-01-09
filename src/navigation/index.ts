@@ -46,22 +46,23 @@ export const initializeMenus = () => {
   const menusBySection = new Map<string, any[]>()
 
   menuOrderConfig
-    .filter(config => config.enabled !== false) // Solo menús habilitados
     .sort((a, b) => a.order - b.order) // Ordenar por número de orden
     .forEach(config => {
-      const moduleMenus = moduleMenuMap.get(config.module)
-      if (moduleMenus && moduleMenus.length > 0) {
-        configuredModules.add(config.module)
+      configuredModules.add(config.module)
 
-        // Agrupar por sección si está definida
-        if (config.section) {
-          if (!menusBySection.has(config.section))
-            menusBySection.set(config.section, [])
+      if (config.enabled !== false) {
+        const moduleMenus = moduleMenuMap.get(config.module)
+        if (moduleMenus && moduleMenus.length > 0) {
+          // Agrupar por sección si está definida
+          if (config.section) {
+            if (!menusBySection.has(config.section))
+              menusBySection.set(config.section, [])
 
-          menusBySection.get(config.section)!.push(...moduleMenus)
-        }
-        else {
-          orderedMenus.push(...moduleMenus)
+            menusBySection.get(config.section)!.push(...moduleMenus)
+          }
+          else {
+            orderedMenus.push(...moduleMenus)
+          }
         }
       }
     })
