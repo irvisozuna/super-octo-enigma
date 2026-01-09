@@ -2,9 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useReadingsStore } from '../stores/readingsStore'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
-import { useReadingsStore } from '../stores/readingsStore'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -78,6 +78,7 @@ const selectedPeriod = ref<string | null>(null)
 watch(periodOptions, options => {
   if (!options.length) {
     selectedPeriod.value = null
+
     return
   }
 
@@ -242,6 +243,7 @@ watch(() => readingsStore.pagination.per_page, value => {
 
 watch(search, () => {
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, { search: search.value })
+
   readingsStore.fetchReadings(params)
 })
 
@@ -251,12 +253,15 @@ watch(selectedPeriod, () => {
 
 const handlePerPageChange = (value: number) => {
   readingsStore.setItemsPerPage(value)
+
   const params = readingsStore.buildParams(1, value, { search: search.value })
+
   readingsStore.fetchReadings(params)
 }
 
 onMounted(() => {
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, { search: search.value })
+
   readingsStore.fetchReadings(params)
 })
 </script>
@@ -264,68 +269,111 @@ onMounted(() => {
 <template>
   <div class="readings-page">
     <BaseListHeader
-      :title="t('ReadingsModule.title')"
+      :title="t('Readings.ReadingsModule.title')"
       icon="tabler-gauge"
       :total="readingsStore.pagination.total"
       item-label="lectura"
       item-label-plural="lecturas"
-      :description="t('ReadingsModule.description')"
+      :description="t('Readings.ReadingsModule.description')"
       :show-create-button="false"
       class="readings-header"
     />
 
     <VCard class="readings-kpis">
       <VCardText>
-        <VRow class="readings-kpis__row" dense>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+        <VRow
+          class="readings-kpis__row"
+          dense
+        >
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <div class="kpi">
               <div>
-                <div class="kpi__value">{{ currentPeriodLabel }}</div>
-                <div class="kpi__label">Periodo actual</div>
+                <div class="kpi__value">
+                  {{ currentPeriodLabel }}
+                </div>
+                <div class="kpi__label">
+                  Periodo actual
+                </div>
               </div>
               <div class="kpi__icon">
                 <VIcon icon="tabler-calendar" />
               </div>
             </div>
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <div class="kpi">
               <div>
-                <div class="kpi__value">{{ formatNumber(totalContracts) }}</div>
-                <div class="kpi__label">Contratos del periodo</div>
+                <div class="kpi__value">
+                  {{ formatNumber(totalContracts) }}
+                </div>
+                <div class="kpi__label">
+                  Contratos del periodo
+                </div>
               </div>
               <div class="kpi__icon">
                 <VIcon icon="tabler-file-text" />
               </div>
             </div>
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <div class="kpi">
               <div>
-                <div class="kpi__value">{{ formatNumber(totalReadings) }}</div>
-                <div class="kpi__label">Lecturas realizadas</div>
+                <div class="kpi__value">
+                  {{ formatNumber(totalReadings) }}
+                </div>
+                <div class="kpi__label">
+                  Lecturas realizadas
+                </div>
               </div>
               <div class="kpi__icon">
                 <VIcon icon="tabler-check" />
               </div>
             </div>
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <div class="kpi">
               <div>
-                <div class="kpi__value">{{ formatNumber(progressPercent) }}%</div>
-                <div class="kpi__label">Avance global</div>
+                <div class="kpi__value">
+                  {{ formatNumber(progressPercent) }}%
+                </div>
+                <div class="kpi__label">
+                  Avance global
+                </div>
               </div>
               <div class="kpi__icon">
                 <VIcon icon="tabler-speedometer" />
               </div>
             </div>
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <div class="kpi">
               <div>
-                <div class="kpi__value">{{ formatNumber(totalConsumption) }} m3</div>
-                <div class="kpi__label">Consumo del periodo</div>
+                <div class="kpi__value">
+                  {{ formatNumber(totalConsumption) }} m3
+                </div>
+                <div class="kpi__label">
+                  Consumo del periodo
+                </div>
               </div>
               <div class="kpi__icon">
                 <VIcon icon="tabler-droplet" />
@@ -388,8 +436,8 @@ onMounted(() => {
           :loading="readingsStore.loading"
           :additional-params="additionalParams"
           :items-per-page-options="perPageOptions"
-          :empty-state-title="t('ReadingsModule.empty.title')"
-          :empty-state-description="t('ReadingsModule.empty.description')"
+          :empty-state-title="t('Readings.ReadingsModule.empty.title')"
+          :empty-state-description="t('Readings.ReadingsModule.empty.description')"
           empty-state-icon="tabler-database-off"
           @update:options="handleOptionsUpdate"
           @row:click="handleRowClick"
@@ -449,9 +497,9 @@ onMounted(() => {
 }
 
 .readings-kpis {
-  margin-block-end: 20px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(34, 41, 47, 0.08);
+  box-shadow: 0 8px 24px rgba(34, 41, 47, 8%);
+  margin-block-end: 20px;
 }
 
 .readings-kpis__row {
@@ -464,42 +512,43 @@ onMounted(() => {
 }
 
 .kpi {
-  inline-size: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
+  border: 1px solid rgba(15, 23, 42, 8%);
   border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  gap: 12px;
+  inline-size: 100%;
+  padding-block: 12px;
+  padding-inline: 16px;
 }
 
 .kpi__value {
+  color: #1f2937;
   font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
 }
 
 .kpi__label {
-  font-size: 12px;
   color: #64748b;
+  font-size: 12px;
 }
 
 .kpi__icon {
-  inline-size: 36px;
-  block-size: 36px;
-  border-radius: 10px;
-  background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 10px;
+  background: #f1f5f9;
+  block-size: 36px;
   color: #475569;
+  inline-size: 36px;
 }
 
 .readings-table {
   border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 8%);
 }
 
 .readings-toolbar {
@@ -540,15 +589,15 @@ onMounted(() => {
 .status-dot {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   font-weight: 600;
+  gap: 6px;
 }
 
 .status-dot__bullet {
-  inline-size: 6px;
-  block-size: 6px;
   border-radius: 50%;
   background: #10b981;
+  block-size: 6px;
+  inline-size: 6px;
 }
 
 .status-dot__bullet--warning {

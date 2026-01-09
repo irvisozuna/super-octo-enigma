@@ -14,6 +14,7 @@ const periods = ref<any[]>([])
 const selectedPeriodId = ref<string | null>(null)
 const downloadedRoutes = ref<any[]>([])
 const loading = ref(false)
+const metrics = ref<any | null>(null)
 
 const normalizeArray = (response: any) => {
   if (Array.isArray(response))
@@ -34,50 +35,78 @@ const periodOptions = computed(() => {
   }))
 })
 
-const statCards = [
+const formatNumber = (value?: number | string | null) => {
+  if (value === null || value === undefined || value === '')
+    return '-'
+
+  const numeric = typeof value === 'number' ? value : Number(value)
+  if (Number.isNaN(numeric))
+    return value.toString()
+
+  return numeric.toLocaleString('es-MX')
+}
+
+const formatPercent = (value?: number | string | null) => {
+  if (value === null || value === undefined || value === '')
+    return '-'
+
+  const numeric = typeof value === 'number' ? value : Number(value)
+  if (Number.isNaN(numeric))
+    return value.toString()
+
+  return `${numeric.toFixed(2)}%`
+}
+
+const statCards = computed(() => [
   {
     title: 'Anomalias',
     subtitle: 'Cuentas',
-    value: '22,874',
-    delta: '-12.2%',
+    value: formatNumber(metrics.value?.anomalies_count),
+    delta: '',
     color: 'error',
     icon: 'tabler-file-alert',
   },
   {
     title: 'Avisos',
     subtitle: 'Cuentas',
-    value: '91',
-    delta: '-12.2%',
+    value: formatNumber(metrics.value?.avisos_count),
+    delta: '',
     color: 'warning',
     icon: 'tabler-bell',
   },
   {
     title: 'Estimacion',
     subtitle: 'Porcentaje',
-    value: '17%',
-    delta: '-12.2%',
+    value: formatPercent(metrics.value?.estimated_percentage),
+    delta: '',
     color: 'info',
     icon: 'tabler-percentage',
   },
   {
     title: 'Consumo Real',
-    subtitle: 'Porcentaje',
-    value: '83%',
-    delta: '+24.5%',
+    subtitle: 'm3',
+    value: formatNumber(metrics.value?.consumption_real),
+    delta: '',
     color: 'success',
     icon: 'tabler-droplet',
   },
-]
+])
 
 const globalProgress = computed(() => {
-  const period = periods.value.find(item => item.id === selectedPeriodId.value)
+  const period =
+    metrics.value?.period
+    || periods.value.find(item => item.id === selectedPeriodId.value)
 
   return {
-    period: period?.name || period?.code || '2025 NOV',
-    completed: 72486,
-    total: 124878,
-    volume: '3,121,950 m3',
-    delta: '+24.5%',
+    period: period?.name || period?.code || 'Sin periodo',
+    completed: metrics.value?.readings_taken ?? 0,
+    total: metrics.value?.readings_expected ?? 0,
+    volume: metrics.value?.consumption_real
+      ? `${formatNumber(metrics.value?.consumption_real)} m3`
+      : '-',
+    delta: metrics.value?.avance_global_percentage !== null && metrics.value?.avance_global_percentage !== undefined
+      ? formatPercent(metrics.value?.avance_global_percentage)
+      : '-',
   }
 })
 
@@ -192,6 +221,18 @@ const loadDownloadedRoutes = async () => {
   }
 }
 
+const loadMetrics = async () => {
+  if (!selectedPeriodId.value)
+    return
+
+  try {
+    const response = await apiService.getMetrics(selectedPeriodId.value)
+    metrics.value = response?.data?.data ?? response?.data ?? response
+  }
+  finally {
+  }
+}
+
 watch(periodOptions, options => {
   if (!options.length)
     return
@@ -201,7 +242,7 @@ watch(periodOptions, options => {
 }, { immediate: true })
 
 watch(selectedPeriodId, async () => {
-  await loadDownloadedRoutes()
+  await Promise.all([loadDownloadedRoutes(), loadMetrics()])
   currentPage.value = 1
 })
 
@@ -216,7 +257,6 @@ const handlePerPageChange = (value: number) => {
 
 onMounted(async () => {
   await loadPeriods()
-  await loadDownloadedRoutes()
 })
 </script>
 

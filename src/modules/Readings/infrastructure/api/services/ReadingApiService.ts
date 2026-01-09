@@ -41,6 +41,16 @@ export class ReadingApiService {
     })
   }
 
+  async getMetrics(periodId: string, filters: ReadingFilter = {}) {
+    return await rawApi(`${this.baseUrl}/metrics`, {
+      method: 'GET',
+      params: {
+        period_id: periodId,
+        ...filters,
+      },
+    })
+  }
+
   async getDetails(readingId: string, filters: ReadingFilter = {}) {
     return await rawApi(`${this.baseUrl}/${readingId}/details`, {
       method: 'GET',
