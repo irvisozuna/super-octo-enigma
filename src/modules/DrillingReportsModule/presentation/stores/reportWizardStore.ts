@@ -189,7 +189,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       && measurement.azimuth <= 360
       && measurement.inclination !== null
       && measurement.inclination !== undefined
-      && measurement.inclination >= 0
+      && measurement.inclination >= -90
       && measurement.inclination <= 90
       && measurement.measurement_interval !== null
       && measurement.measurement_interval !== undefined

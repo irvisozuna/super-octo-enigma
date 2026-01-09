@@ -134,13 +134,14 @@ const projectInfo = computed(() => ({
 
 const wellInfo = computed(() => {
   const diameter = report.value?.well?.diameter
+  const inclination = report.value?.well?.inclination
 
   return {
     code: report.value?.well?.code || '',
     name: report.value?.well?.name || '',
     sector: report.value?.well?.sector || '',
     diameter: diameter ? formatWellDiameter(diameter) : '',
-    inclination: report.value?.well?.inclination || '',
+    inclination: inclination !== null && inclination !== undefined ? inclination.toString() : '-',
     initialDepth: report.value?.well?.initial_depth || 0,
     finalDepth: report.value?.well?.final_depth || 0,
     targetDepth: report.value?.well?.target_depth || 0,
@@ -553,13 +554,13 @@ watch(() => report.value, newReport => {
                   <td>Inclinación:</td>
                   <td>{{ wellInfo.inclination }}</td>
                 </tr>
-                <tr>
-                  <td>Prof. Inicial:</td>
-                  <td>{{ wellInfo.initialDepth }} m</td>
+                <tr v-if="report.depths?.drilling_start !== null && report.depths?.drilling_start !== undefined">
+                  <td>Prof. Inicio:</td>
+                  <td>{{ report.depths.drilling_start }} m</td>
                 </tr>
-                <tr>
-                  <td>Prof. Final:</td>
-                  <td>{{ wellInfo.finalDepth }} m</td>
+                <tr v-if="report.depths?.drilling_end !== null && report.depths?.drilling_end !== undefined">
+                  <td>Prof. Fin:</td>
+                  <td>{{ report.depths.drilling_end }} m</td>
                 </tr>
                 <tr>
                   <td>Mts. Perf.:</td>

@@ -140,14 +140,14 @@ const updateMeasurement = (index: number, field: string, value: any) => {
                   label="Inclinación (°) *"
                   type="number"
                   step="0.1"
-                  min="0"
+                  min="-90"
                   max="90"
                   :rules="[
                     rules.required,
                     (v) => {
                       if (v === null || v === '') return 'Campo requerido'
                       const num = Number(v)
-                      return (num >= 0 && num <= 90) || 'Debe estar entre 0 y 90 grados'
+                      return (num >= -90 && num <= 90) || 'Debe estar entre -90 y 90 grados'
                     },
                   ]"
                   prepend-inner-icon="tabler-arrow-down-circle"
@@ -238,7 +238,7 @@ const updateMeasurement = (index: number, field: string, value: any) => {
         <ul class="text-body-2">
           <li>• Todas las mediciones deben tener profundidad (>= 0)</li>
           <li>• Todas las mediciones deben tener azimuth (0-360 grados)</li>
-          <li>• Todas las mediciones deben tener inclinación (0-90 grados)</li>
+          <li>• Todas las mediciones deben tener inclinación (-90 a 90 grados)</li>
           <li>• Todas las mediciones deben tener intervalo de medición (> 0.1 metros)</li>
         </ul>
       </VAlert>

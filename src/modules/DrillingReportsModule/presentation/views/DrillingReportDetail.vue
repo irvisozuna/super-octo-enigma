@@ -361,8 +361,26 @@ onMounted(async () => {
               <span class="info-value">{{ report.well?.name }}</span>
             </div>
             <div class="info-item">
+              <label class="info-label">Inclinación del Pozo:</label>
+              <span class="info-value">{{ report.well?.inclination !== null && report.well?.inclination !== undefined ? report.well.inclination.toFixed(1) + '°' : '-' }}</span>
+            </div>
+            <div class="info-item">
               <label class="info-label">Equipo:</label>
               <span class="info-value">{{ report.equipment?.name || 'No asignado' }}</span>
+            </div>
+            <div
+              v-if="report.depths?.drilling_start !== null && report.depths?.drilling_start !== undefined"
+              class="info-item"
+            >
+              <label class="info-label">Profundidad Inicio:</label>
+              <span class="info-value">{{ report.depths.drilling_start }} m</span>
+            </div>
+            <div
+              v-if="report.depths?.drilling_end !== null && report.depths?.drilling_end !== undefined"
+              class="info-item"
+            >
+              <label class="info-label">Profundidad Fin:</label>
+              <span class="info-value">{{ report.depths.drilling_end }} m</span>
             </div>
           </VCol>
           <VCol
