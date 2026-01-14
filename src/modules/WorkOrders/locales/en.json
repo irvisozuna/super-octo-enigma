@@ -1,0 +1,13 @@
+{
+  "WorkOrdersModule": {
+    "title": "Work orders",
+    "description": "List of work orders.",
+    "empty": {
+      "title": "No work orders",
+      "description": "No work orders available."
+    },
+    "detail": {
+      "title": "Work order detail"
+    }
+  }
+}

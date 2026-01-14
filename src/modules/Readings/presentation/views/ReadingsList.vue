@@ -5,14 +5,27 @@ import { useI18n } from 'vue-i18n'
 import { useReadingsStore } from '../stores/readingsStore'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
+import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
+import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 
 const { t } = useI18n()
 const router = useRouter()
 const readingsStore = useReadingsStore()
+const apiService = new ReadingApiService()
 
 const search = ref('')
 const itemsPerPage = ref(readingsStore.pagination.per_page)
 const perPageOptions = [10, 25, 50, 100]
+const filterOpen = ref(false)
+const periods = ref<any[]>([])
+const periodsLoading = ref(false)
+const filters = ref({
+  status: '',
+  anomaly: '',
+  type: '',
+  sector: '',
+  route: '',
+})
 
 const headers = [
   { title: 'Folio', key: 'folio', sortable: true },
@@ -61,40 +74,83 @@ const getPeriodLabel = (periodKey: string) => {
 }
 
 const periodOptions = computed(() => {
-  const map = new Map<string, { title: string; value: string }>()
-
-  readingsStore.items.forEach(item => {
-    const key = getPeriodKey(item.reading_date)
-
-    if (key && !map.has(key))
-      map.set(key, { title: getPeriodLabel(key), value: key })
-  })
-
-  return Array.from(map.values()).sort((a, b) => b.value.localeCompare(a.value))
+  return periods.value.map(period => ({
+    title: period.name || period.code || period.external_id || period.externalId || period.id,
+    value: period.id || period.period_id || period.uuid,
+    is_active: period.is_active ?? period.isActive ?? false,
+  }))
 })
 
-const selectedPeriod = ref<string | null>(null)
+const selectedPeriodId = ref<string | null>(null)
 
 watch(periodOptions, options => {
   if (!options.length) {
-    selectedPeriod.value = null
+    selectedPeriodId.value = null
 
     return
   }
 
-  const exists = options.some(option => option.value === selectedPeriod.value)
+  const active = options.find(option => option.is_active)
+  const candidate = active?.value || options[0].value
+  const exists = options.some(option => option.value === selectedPeriodId.value)
   if (!exists)
-    selectedPeriod.value = options[0].value
+    selectedPeriodId.value = candidate
 }, { immediate: true })
 
 const filteredItems = computed(() => {
-  if (!selectedPeriod.value)
+  if (!selectedPeriodId.value)
     return readingsStore.items
 
-  return readingsStore.items.filter(item => getPeriodKey(item.reading_date) === selectedPeriod.value)
+  const selectedPeriod = periods.value.find(period => String(period.id) === String(selectedPeriodId.value))
+  const selectedPeriodKey = getPeriodKey(selectedPeriod?.start_date)
+
+  return readingsStore.items.filter(item => {
+    if (item.period_id || item.period?.id)
+      return String(item.period_id ?? item.period?.id) === String(selectedPeriodId.value)
+
+    if (selectedPeriodKey)
+      return getPeriodKey(item.reading_date) === selectedPeriodKey
+
+    return true
+  })
 })
 
-const tableItems = computed(() => filteredItems.value.map(item => ({
+const normalizedFilters = computed(() => ({
+  status: filters.value.status ? String(filters.value.status).toLowerCase() : '',
+  anomaly: filters.value.anomaly ? String(filters.value.anomaly).toLowerCase() : '',
+  type: filters.value.type ? String(filters.value.type).toLowerCase() : '',
+  sector: filters.value.sector ? String(filters.value.sector).toLowerCase() : '',
+  route: filters.value.route ? String(filters.value.route).toLowerCase() : '',
+}))
+
+const applyLocalFilters = (items: any[]) => {
+  const filterValues = normalizedFilters.value
+
+  return items.filter(item => {
+    const status = String(item.status ?? item.estatus ?? '').toLowerCase()
+    const anomaly = String(item.anomaly?.name ?? item.anomalia ?? '').toLowerCase()
+    const type = String(item.contract?.type?.name ?? item.tipo_contrato ?? '').toLowerCase()
+    const sector = String(item.contract?.sector?.name ?? item.sector ?? '').toLowerCase()
+    const route = String(item.contract?.route?.name ?? item.contract?.route?.code ?? item.ruta ?? '').toLowerCase()
+
+    if (filterValues.status && !status.includes(filterValues.status))
+      return false
+    if (filterValues.anomaly && !anomaly.includes(filterValues.anomaly))
+      return false
+    if (filterValues.type && !type.includes(filterValues.type))
+      return false
+    if (filterValues.sector && !sector.includes(filterValues.sector))
+      return false
+    if (filterValues.route && !route.includes(filterValues.route))
+      return false
+
+    return true
+  })
+}
+
+const filteredTableItems = computed(() => applyLocalFilters(filteredItems.value))
+
+const tableItems = computed(() => filteredTableItems.value.map(item => ({
   folio: normalizeValue(item.external_contract_id ?? item.folio ?? item.FOLIO ?? item.id),
   contrato: normalizeValue(item.contract?.contract_number ?? item.contract_number ?? item.contract_id ?? item.contrato ?? item.CONTRATO ?? item.account_id),
   usuario: normalizeValue(item.contract?.user_name ?? item.user_name ?? item.usuario ?? item.USUARIO ?? item.user ?? item.name),
@@ -150,26 +206,35 @@ const handleRowClick = (item: any) => {
 
 const additionalParams = computed(() => ({
   search: search.value,
+  period_id: selectedPeriodId.value || undefined,
 }))
 
 const currentPeriodLabel = computed(() => {
-  if (!selectedPeriod.value)
+  if (!selectedPeriodId.value)
     return '--'
 
-  return getPeriodLabel(selectedPeriod.value)
+  const selectedPeriod = periods.value.find(period => String(period.id) === String(selectedPeriodId.value))
+  if (selectedPeriod?.name)
+    return String(selectedPeriod.name).toUpperCase()
+
+  if (selectedPeriod?.code)
+    return String(selectedPeriod.code)
+
+  const fallbackKey = getPeriodKey(selectedPeriod?.start_date)
+  return fallbackKey ? getPeriodLabel(fallbackKey) : '--'
 })
 
-const totalReadings = computed(() => filteredItems.value.length)
+const totalReadings = computed(() => filteredTableItems.value.length)
 
 const totalContracts = computed(() => {
   const unique = new Set(
-    filteredItems.value.map(item => item.contract_id ?? item.contrato ?? item.CONTRATO ?? item.account_id ?? item.id),
+    filteredTableItems.value.map(item => item.contract_id ?? item.contrato ?? item.CONTRATO ?? item.account_id ?? item.id),
   )
 
   return unique.size
 })
 
-const totalConsumption = computed(() => filteredItems.value.reduce((acc, item) => {
+const totalConsumption = computed(() => filteredTableItems.value.reduce((acc, item) => {
   const raw = item.consumo ?? item.Consumo ?? item.consumption ?? item.usage ?? 0
   const numeric = Number(raw)
 
@@ -226,6 +291,60 @@ const getStatusLabel = (value: string) => {
   return value || '-'
 }
 
+const statusOptions = [
+  { title: 'Enviado', value: 'synced' },
+  { title: 'Enviado', value: 'processed' },
+  { title: 'Pendiente', value: 'pending' },
+]
+
+const anomalyOptions = computed(() => {
+  const map = new Map<string, string>()
+
+  filteredItems.value.forEach(item => {
+    const value = item.anomaly?.name ?? item.anomalia ?? item.Anomalia
+    if (value)
+      map.set(String(value), String(value))
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+})
+
+const typeOptions = computed(() => {
+  const map = new Map<string, string>()
+
+  filteredItems.value.forEach(item => {
+    const value = item.contract?.type?.name ?? item.tipo_contrato
+    if (value)
+      map.set(String(value), String(value))
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+})
+
+const sectorOptions = computed(() => {
+  const map = new Map<string, string>()
+
+  filteredItems.value.forEach(item => {
+    const value = item.contract?.sector?.name ?? item.sector
+    if (value)
+      map.set(String(value), String(value))
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+})
+
+const routeOptions = computed(() => {
+  const map = new Map<string, string>()
+
+  filteredItems.value.forEach(item => {
+    const value = item.contract?.route?.name ?? item.contract?.route?.code ?? item.ruta
+    if (value)
+      map.set(String(value), String(value))
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+})
+
 const getAnomalyLabel = (value: string) => {
   if (!value)
     return 'LECTURA REAL'
@@ -234,7 +353,61 @@ const getAnomalyLabel = (value: string) => {
 }
 
 const handleExport = () => {
-  // Placeholder for export logic
+  const rows = tableItems.value
+
+  if (!rows.length)
+    return
+
+  const columns = [
+    { key: 'folio', title: 'FOLIO' },
+    { key: 'contrato', title: 'CONTRATO' },
+    { key: 'usuario', title: 'USUARIO' },
+    { key: 'tipo_contrato', title: 'TIPO CONTRATO' },
+    { key: 'sector', title: 'SECTOR' },
+    { key: 'ruta', title: 'RUTA' },
+    { key: 'anterior', title: 'ANTERIOR' },
+    { key: 'actual', title: 'ACTUAL' },
+    { key: 'consumo', title: 'CONSUMO' },
+    { key: 'anomalia', title: 'ANOMALIA' },
+    { key: 'estatus', title: 'ESTATUS' },
+  ]
+
+  const escapeValue = (value: any) => {
+    const text = String(value ?? '')
+    const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
+
+    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+  }
+
+  const csvRows = [
+    columns.map(column => column.title).join(','),
+    ...rows.map(row => columns.map(column => escapeValue((row as any)[column.key])).join(',')),
+  ]
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', `lecturas_${new Date().toISOString().slice(0, 10)}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+const applyFilters = () => {
+  filterOpen.value = false
+}
+
+const clearFilters = () => {
+  filters.value = {
+    status: '',
+    anomaly: '',
+    type: '',
+    sector: '',
+    route: '',
+  }
 }
 
 watch(() => readingsStore.pagination.per_page, value => {
@@ -242,25 +415,63 @@ watch(() => readingsStore.pagination.per_page, value => {
 })
 
 watch(search, () => {
-  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, { search: search.value })
+  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
+    search: search.value,
+    period_id: selectedPeriodId.value,
+  })
 
   readingsStore.fetchReadings(params)
 })
 
-watch(selectedPeriod, () => {
+watch(selectedPeriodId, () => {
   readingsStore.setPage(1)
+  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
+    search: search.value,
+    period_id: selectedPeriodId.value,
+  })
+
+  readingsStore.fetchReadings(params)
 })
 
 const handlePerPageChange = (value: number) => {
   readingsStore.setItemsPerPage(value)
 
-  const params = readingsStore.buildParams(1, value, { search: search.value })
+  const params = readingsStore.buildParams(1, value, {
+    search: search.value,
+    period_id: selectedPeriodId.value,
+  })
 
   readingsStore.fetchReadings(params)
 }
 
-onMounted(() => {
-  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, { search: search.value })
+const normalizeArray = (response: any) => {
+  if (Array.isArray(response))
+    return response
+  if (Array.isArray(response?.data))
+    return response.data
+  if (Array.isArray(response?.data?.data))
+    return response.data.data
+
+  return []
+}
+
+const loadPeriods = async () => {
+  periodsLoading.value = true
+  try {
+    const response = await apiService.getPeriods()
+    periods.value = normalizeArray(response)
+  }
+  finally {
+    periodsLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await loadPeriods()
+  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
+    search: search.value,
+    period_id: selectedPeriodId.value,
+  })
 
   readingsStore.fetchReadings(params)
 })
@@ -398,7 +609,7 @@ onMounted(() => {
           />
           <div class="readings-toolbar__actions">
             <VSelect
-              v-model="selectedPeriod"
+              v-model="selectedPeriodId"
               :items="periodOptions"
               item-title="title"
               item-value="value"
@@ -406,7 +617,7 @@ onMounted(() => {
               variant="outlined"
               hide-details
               class="readings-toolbar__period"
-              :disabled="!periodOptions.length"
+              :disabled="!periodOptions.length || periodsLoading"
             />
             <VSelect
               v-model="itemsPerPage"
@@ -425,6 +636,15 @@ onMounted(() => {
               @click="handleExport"
             >
               Exportar
+            </VBtn>
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              prepend-icon="tabler-adjustments"
+              class="readings-toolbar__filters"
+              @click="filterOpen = true"
+            >
+              Filtros
             </VBtn>
           </div>
         </div>
@@ -483,6 +703,64 @@ onMounted(() => {
         </BaseDataTable>
       </VCardText>
     </VCard>
+
+    <ReadingsFilterDrawer
+      v-model="filterOpen"
+      title="Filtros"
+      @apply="applyFilters"
+      @clear="clearFilters"
+    >
+      <VSelect
+        v-model="filters.status"
+        :items="statusOptions"
+        item-title="title"
+        item-value="value"
+        label="Estatus"
+        density="compact"
+        variant="outlined"
+        hide-details
+      />
+      <VSelect
+        v-model="filters.anomaly"
+        :items="anomalyOptions"
+        item-title="title"
+        item-value="value"
+        label="Anomalia"
+        density="compact"
+        variant="outlined"
+        hide-details
+      />
+      <VSelect
+        v-model="filters.type"
+        :items="typeOptions"
+        item-title="title"
+        item-value="value"
+        label="Tipo de contrato"
+        density="compact"
+        variant="outlined"
+        hide-details
+      />
+      <VSelect
+        v-model="filters.sector"
+        :items="sectorOptions"
+        item-title="title"
+        item-value="value"
+        label="Sector"
+        density="compact"
+        variant="outlined"
+        hide-details
+      />
+      <VSelect
+        v-model="filters.route"
+        :items="routeOptions"
+        item-title="title"
+        item-value="value"
+        label="Ruta"
+        density="compact"
+        variant="outlined"
+        hide-details
+      />
+    </ReadingsFilterDrawer>
   </div>
 </template>
 
@@ -578,6 +856,10 @@ onMounted(() => {
 }
 
 .readings-toolbar__export {
+  font-weight: 600;
+}
+
+.readings-toolbar__filters {
   font-weight: 600;
 }
 

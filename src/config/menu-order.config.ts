@@ -1,12 +1,12 @@
-ï»¿/**
+/**
  * Menu Order Configuration
  *
- * Este archivo define el orden en que los menÃºs de los mÃ³dulos aparecerÃ¡n en la navegaciÃ³n.
+ * Este archivo define el orden en que los menús de los módulos aparecerán en la navegación.
  * Cada entrada puede tener:
- * - module: nombre del mÃ³dulo (debe coincidir con la carpeta en src/modules)
- * - order: nÃºmero de orden (menor = aparece primero)
- * - enabled: si el menÃº estÃ¡ habilitado o no
- * - section: agrupa menÃºs en secciones (opcional)
+ * - module: nombre del módulo (debe coincidir con la carpeta en src/modules)
+ * - order: número de orden (menor = aparece primero)
+ * - enabled: si el menú está habilitado o no
+ * - section: agrupa menús en secciones (opcional)
  */
 
 export interface MenuOrderConfig {
@@ -17,18 +17,24 @@ export interface MenuOrderConfig {
 }
 
 /**
- * ConfiguraciÃ³n del orden de menÃºs
+ * Configuración del orden de menús
  *
  * IMPORTANTE:
- * - Los mÃ³dulos no listados aquÃ­ se agregarÃ¡n al final en orden alfabÃ©tico
- * - Puedes deshabilitar un menÃº cambiando enabled: false
- * - Los nÃºmeros de orden no necesitan ser consecutivos
+ * - Los módulos no listados aquí se agregarán al final en orden alfabético
+ * - Puedes deshabilitar un menú cambiando enabled: false
+ * - Los números de orden no necesitan ser consecutivos
  */
 export const menuOrderConfig: MenuOrderConfig[] = [
-  // SecciÃ³n Principal
+  // Sección Principal
   {
     module: 'Readings',
     order: 10,
+    enabled: true,
+    section: 'main',
+  },
+  {
+    module: 'WorkOrders',
+    order: 15,
     enabled: true,
     section: 'main',
   },
@@ -39,7 +45,7 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'main',
   },
 
-  // SecciÃ³n AdministraciÃ³n
+  // Sección Administración
   {
     module: 'user',
     order: 10,
@@ -47,7 +53,7 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'admin',
   },
 
-  // MÃ³dulos deshabilitados o secundarios
+  // Módulos deshabilitados o secundarios
   {
     module: 'dashboard',
     order: 100,
@@ -111,8 +117,8 @@ export const menuOrderConfig: MenuOrderConfig[] = [
 ]
 
 /**
- * ConfiguraciÃ³n de secciones (opcional)
- * Define separadores visuales entre grupos de menÃºs
+ * Configuración de secciones (opcional)
+ * Define separadores visuales entre grupos de menús
  */
 export interface MenuSectionConfig {
   id: string
@@ -127,12 +133,12 @@ export const menuSections: MenuSectionConfig[] = [
   },
   {
     id: 'admin',
-    title: 'AdministraciÃ³n',
+    title: 'Administración',
     order: 2,
   },
   {
     id: 'drilling',
-    title: 'PerforaciÃ³n',
+    title: 'Perforación',
     order: 3,
   },
   {
@@ -141,4 +147,5 @@ export const menuSections: MenuSectionConfig[] = [
     order: 4,
   },
 ]
+
 

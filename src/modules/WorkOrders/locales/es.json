@@ -1,0 +1,13 @@
+{
+  "WorkOrdersModule": {
+    "title": "Ordenes de trabajo",
+    "description": "Lista de ordenes de trabajo.",
+    "empty": {
+      "title": "Sin ordenes",
+      "description": "No hay ordenes disponibles."
+    },
+    "detail": {
+      "title": "Detalle de orden"
+    }
+  }
+}
