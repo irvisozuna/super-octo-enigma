@@ -128,7 +128,7 @@ const historyRows = computed(() => {
     date: formatDate(item.changed_at ?? item.created_at ?? item.date ?? item.createdAt),
     status: item.status ?? item.state ?? '-',
     comment: item.comment ?? item.notes ?? item.message ?? '-',
-    author: item.changed_by_user?.name ?? item.changed_by ?? item.author ?? item.user_name ?? item.created_by ?? '-',
+    author: item.changed_by_worker?.name ?? item.changed_by_user?.name ?? item.changed_by ?? item.author ?? item.user_name ?? item.created_by ?? '-',
     _raw: item,
   }))
 
@@ -361,12 +361,12 @@ onMounted(async () => {
 
         <div v-if="workOrder" class="detail-top">
           <div class="detail-grid">
-            <div class="detail-item">
-              <span class="detail-label">Folio</span>
-              <span class="detail-value">
-                {{ workOrder.folio ?? workOrder.external_id ?? workOrder.code ?? workOrder.id ?? '-' }}
-              </span>
-            </div>
+          <div class="detail-item">
+            <span class="detail-label">Folio</span>
+            <span class="detail-value">
+              {{ workOrder.local_id ?? workOrder.folio ?? workOrder.external_id ?? workOrder.code ?? workOrder.id ?? '-' }}
+            </span>
+          </div>
             <div class="detail-item">
               <span class="detail-label">Tipo</span>
               <span class="detail-value">
@@ -427,12 +427,12 @@ onMounted(async () => {
                 {{ workOrder.neighborhood ?? '-' }}
               </span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Asignado a</span>
-              <span class="detail-value">
-                {{ workOrder.assigned_to ?? workOrder.worker?.name ?? workOrder.worker_id ?? '-' }}
-              </span>
-            </div>
+          <div class="detail-item">
+            <span class="detail-label">Asignado a</span>
+            <span class="detail-value">
+              {{ workOrder.worker?.name ?? workOrder.assigned_to ?? workOrder.worker_id ?? '-' }}
+            </span>
+          </div>
             <div class="detail-item">
               <span class="detail-label">Sistema</span>
               <span class="detail-value">

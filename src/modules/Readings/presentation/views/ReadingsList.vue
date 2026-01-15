@@ -151,7 +151,7 @@ const applyLocalFilters = (items: any[]) => {
 const filteredTableItems = computed(() => applyLocalFilters(filteredItems.value))
 
 const tableItems = computed(() => filteredTableItems.value.map(item => ({
-  folio: normalizeValue(item.external_contract_id ?? item.folio ?? item.FOLIO ?? item.id),
+  folio: normalizeValue(item.local_id ?? item.external_contract_id ?? item.folio ?? item.FOLIO ?? item.id),
   contrato: normalizeValue(item.contract?.contract_number ?? item.contract_number ?? item.contract_id ?? item.contrato ?? item.CONTRATO ?? item.account_id),
   usuario: normalizeValue(item.contract?.user_name ?? item.user_name ?? item.usuario ?? item.USUARIO ?? item.user ?? item.name),
   tipo_contrato: normalizeValue(

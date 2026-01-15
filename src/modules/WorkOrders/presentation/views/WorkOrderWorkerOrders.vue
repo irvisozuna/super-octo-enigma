@@ -63,7 +63,7 @@ const filteredItems = computed(() => {
 })
 
 const tableItems = computed(() => filteredItems.value.map(item => ({
-  folio: normalizeValue(item.folio ?? item.external_id ?? item.code ?? item.id),
+  folio: normalizeValue(item.local_id ?? item.folio ?? item.external_id ?? item.code ?? item.id),
   contract: normalizeValue(item.contract_number ?? item.contract?.contract_number ?? item.contract_id),
   user: normalizeValue(item.user_name ?? item.contract?.user_name ?? item.user ?? item.customer),
   type: normalizeValue(item.type ?? item.type_catalog?.name ?? item.work_order_type_id),
