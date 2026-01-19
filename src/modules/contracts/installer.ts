@@ -26,9 +26,11 @@ export class ContractModuleInstaller {
   private addCaslAbilities() {
     const abilities = [
       { action: 'read', subject: 'Contract' },
+      { action: 'view', subject: 'Contract' },
       { action: 'create', subject: 'Contract' },
       { action: 'update', subject: 'Contract' },
       { action: 'delete', subject: 'Contract' },
+      { action: 'export', subject: 'Contract' },
     ]
 
     if (!window.caslAbilities)
