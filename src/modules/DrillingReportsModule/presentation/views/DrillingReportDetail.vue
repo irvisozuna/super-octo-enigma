@@ -49,6 +49,13 @@ const selectedToolAssignment = ref(null)
 const report = computed(() => drillingReportStore.currentReport)
 const statusTransition = useDrillingReportStatusTransition(report.value)
 
+// Sort directional measurements by depth (ascending)
+const sortedDirectionalMeasurements = computed(() => {
+  if (!report.value?.directional_measurements?.length)
+    return []
+  return [...report.value.directional_measurements].sort((a, b) => (a.depth || 0) - (b.depth || 0))
+})
+
 const statusConfig = computed(() => statusTransition.currentStatusConfig.value)
 const canEdit = computed(() => statusTransition.canEdit.value)
 const canComplete = computed(() => statusTransition.canComplete.value)
@@ -354,8 +361,26 @@ onMounted(async () => {
               <span class="info-value">{{ report.well?.name }}</span>
             </div>
             <div class="info-item">
+              <label class="info-label">Inclinación del Pozo:</label>
+              <span class="info-value">{{ report.well?.inclination !== null && report.well?.inclination !== undefined ? report.well.inclination.toFixed(1) + '°' : '-' }}</span>
+            </div>
+            <div class="info-item">
               <label class="info-label">Equipo:</label>
               <span class="info-value">{{ report.equipment?.name || 'No asignado' }}</span>
+            </div>
+            <div
+              v-if="report.depths?.drilling_start !== null && report.depths?.drilling_start !== undefined"
+              class="info-item"
+            >
+              <label class="info-label">Profundidad Inicio:</label>
+              <span class="info-value">{{ report.depths.drilling_start }} m</span>
+            </div>
+            <div
+              v-if="report.depths?.drilling_end !== null && report.depths?.drilling_end !== undefined"
+              class="info-item"
+            >
+              <label class="info-label">Profundidad Fin:</label>
+              <span class="info-value">{{ report.depths.drilling_end }} m</span>
             </div>
           </VCol>
           <VCol
@@ -376,6 +401,55 @@ onMounted(async () => {
             </div>
           </VCol>
         </VRow>
+      </VCardText>
+    </VCard>
+
+    <!-- Directional Measurements -->
+    <VCard
+      v-if="report.directional_measurements?.length > 0"
+      class="mb-4"
+    >
+      <VCardTitle>
+        <VIcon
+          icon="tabler-ruler"
+          class="me-2"
+        />
+        Mediciones Direccionales
+      </VCardTitle>
+      <VCardText>
+        <VDataTable
+          :headers="[
+            { title: 'Profundidad (m)', key: 'depth', align: 'end' },
+            { title: 'Azimuth (°)', key: 'azimuth', align: 'end' },
+            { title: 'Inclinación (°)', key: 'inclination', align: 'end' },
+            { title: 'Intervalo (m)', key: 'measurement_interval', align: 'end' },
+            { title: 'Notas', key: 'notes' },
+            { title: 'Fecha/Hora', key: 'measured_at' },
+          ]"
+          :items="sortedDirectionalMeasurements"
+          :items-per-page="-1"
+          hide-default-footer
+          class="elevation-0"
+        >
+          <template #item.depth="{ item }">
+            {{ item.depth?.toFixed(1) || '-' }}
+          </template>
+          <template #item.azimuth="{ item }">
+            {{ item.azimuth?.toFixed(1) || '-' }}
+          </template>
+          <template #item.inclination="{ item }">
+            {{ item.inclination?.toFixed(1) || '-' }}
+          </template>
+          <template #item.measurement_interval="{ item }">
+            {{ item.measurement_interval || '-' }}
+          </template>
+          <template #item.notes="{ item }">
+            <span class="text-medium-emphasis">{{ item.notes || '-' }}</span>
+          </template>
+          <template #item.measured_at="{ item }">
+            {{ item.measured_at ? formatDateTime(item.measured_at) : '-' }}
+          </template>
+        </VDataTable>
       </VCardText>
     </VCard>
 

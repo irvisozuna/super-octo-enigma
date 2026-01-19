@@ -9,6 +9,7 @@ import { REPORT_WIZARD_STEPS } from '../../../../shared/constants'
 import WizardBasicInfoMolecule from '../../molecules/WizardBasicInfoMolecule.vue'
 import WizardPersonnelMolecule from '../../molecules/WizardPersonnelMolecule.vue'
 import WizardActivitiesMolecule from '../../molecules/WizardActivitiesMolecule.vue'
+import WizardDirectionalMeasurementsMolecule from '../../molecules/WizardDirectionalMeasurementsMolecule.vue'
 import WizardConsumptionsMolecule from '../../molecules/WizardConsumptionsMolecule.vue'
 import WizardToolsMolecule from '../../molecules/WizardToolsMolecule.vue'
 import WizardReviewMolecule from '../../molecules/WizardReviewMolecule.vue'
@@ -109,9 +110,17 @@ const nextStep = async () => {
     }
   }
 
-  if (wizardStore.currentStep === '5') {
+  if (wizardStore.currentStep === '4') {
+    if (!wizardStore.isDirectionalMeasurementsStepValid) {
+      console.log('❌ Step 4 validation failed - directional measurements step not valid')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '6') {
     if (!wizardStore.isToolGroupsStepValid) {
-      console.log('❌ Step 5 validation failed - tools step not valid')
+      console.log('❌ Step 6 validation failed - tools step not valid')
 
       return
     }
@@ -454,13 +463,18 @@ onMounted(() => {
               <WizardActivitiesMolecule />
             </VStepperWindowItem>
 
-            <!-- Step 4: Consumos -->
+            <!-- Step 4: Mediciones Direccionales -->
             <VStepperWindowItem value="4">
+              <WizardDirectionalMeasurementsMolecule />
+            </VStepperWindowItem>
+
+            <!-- Step 5: Consumos -->
+            <VStepperWindowItem value="5">
               <WizardConsumptionsMolecule />
             </VStepperWindowItem>
 
-            <!-- Step 5: Herramientas -->
-            <VStepperWindowItem value="5">
+            <!-- Step 6: Herramientas -->
+            <VStepperWindowItem value="6">
               <WizardToolsMolecule
                 :tool-options="toolOptions"
                 :loading-tools="loadingTools"
@@ -468,8 +482,8 @@ onMounted(() => {
               />
             </VStepperWindowItem>
 
-            <!-- Step 6: Revisión Final -->
-            <VStepperWindowItem value="6">
+            <!-- Step 7: Revisión Final -->
+            <VStepperWindowItem value="7">
               <WizardReviewMolecule />
             </VStepperWindowItem>
           </VStepperWindow>
