@@ -53,6 +53,7 @@ const statusTransition = useDrillingReportStatusTransition(report.value)
 const sortedDirectionalMeasurements = computed(() => {
   if (!report.value?.directional_measurements?.length)
     return []
+
   return [...report.value.directional_measurements].sort((a, b) => (a.depth || 0) - (b.depth || 0))
 })
 
@@ -362,7 +363,7 @@ onMounted(async () => {
             </div>
             <div class="info-item">
               <label class="info-label">Inclinación del Pozo:</label>
-              <span class="info-value">{{ report.well?.inclination !== null && report.well?.inclination !== undefined ? report.well.inclination.toFixed(1) + '°' : '-' }}</span>
+              <span class="info-value">{{ report.well?.inclination !== null && report.well?.inclination !== undefined ? `${report.well.inclination.toFixed(1)}°` : '-' }}</span>
             </div>
             <div class="info-item">
               <label class="info-label">Equipo:</label>
