@@ -1,0 +1,19 @@
+{
+  "ReadingsModule": {
+    "title": "Readings",
+    "description": "List of readings from the backend.",
+    "columns": {
+      "id": "ID",
+      "meter_id": "Meter",
+      "reading": "Reading",
+      "reading_date": "Reading date",
+      "value": "Value",
+      "created_at": "Created at",
+      "updated_at": "Updated at"
+    },
+    "empty": {
+      "title": "No readings",
+      "description": "No readings have been loaded yet."
+    }
+  }
+}

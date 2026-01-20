@@ -26,25 +26,77 @@ export interface MenuOrderConfig {
  */
 export const menuOrderConfig: MenuOrderConfig[] = [
   // Sección Principal
-  // NOTA: El menú 'dashboard' requiere que las rutas estén definidas en tu router
-  // Si ves errores de "No match for dashboards-*", déjalo deshabilitado
   {
     module: 'dashboard',
     order: 5,
-    enabled: true, // Deshabilitado porque las rutas no existen
+    enabled: true,
     section: 'main',
   },
   {
-    module: 'ClientModule',
+    module: 'Readings',
     order: 10,
     enabled: true,
     section: 'main',
   },
   {
-    module: 'DrillingReportsModule',
+    module: 'WorkOrders',
     order: 15,
     enabled: true,
+    section: 'main',
+  },
+  {
+    module: 'contracts',
+    order: 20,
+    enabled: true,
+    section: 'main',
+  },
+  // {
+  //   module: 'LimitationsModule',
+  //   order: 25,
+  //   enabled: true,
+  //   section: 'main',
+  // },
+  {
+    module: 'ClientModule',
+    order: 30,
+    enabled: true,
+    section: 'main',
+  },
+  {
+    module: 'EmployeeModule',
+    order: 40,
+    enabled: true,
+    section: 'main',
+  },
+
+  // Sección Perforación
+  {
+    module: 'DrillingReportsModule',
+    order: 10,
+    enabled: true,
     section: 'drilling',
+  },
+
+  // Sección Operaciones
+  {
+    module: 'TransportModule',
+    order: 10,
+    enabled: true,
+    section: 'operations',
+  },
+  {
+    module: 'paymentmandate',
+    order: 20,
+    enabled: true,
+    section: 'operations',
+  },
+
+  // Sección Administración
+  {
+    module: 'user',
+    order: 10,
+    enabled: true,
+    section: 'admin',
   },
   {
     module: 'DynamicReports',
@@ -53,42 +105,14 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'admin',
   },
   {
-    module: 'EmployeeModule',
-    order: 30,
-    enabled: true,
-    section: 'main',
-  },
-
-  // Sección Operaciones
-  {
-    module: 'TransportModule',
-    order: 40,
-    enabled: true,
-    section: 'operations',
-  },
-  {
-    module: 'paymentmandate',
-    order: 50,
-    enabled: true,
-    section: 'operations',
-  },
-
-  // Sección Administración
-  {
     module: 'template',
-    order: 60,
-    enabled: true,
-    section: 'admin',
-  },
-  {
-    module: 'user',
-    order: 70,
+    order: 30,
     enabled: true,
     section: 'admin',
   },
   {
     module: 'support',
-    order: 80,
+    order: 40,
     enabled: true,
     section: 'admin',
   },

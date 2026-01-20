@@ -6,6 +6,7 @@ import { useGenerateImageVariant } from '@core/composable/useGenerateImageVarian
 import { useTenantConfig } from '@/composables/useTenantConfig'
 import { initializeMenus } from '@/navigation'
 import authV2LoginOomsapasIllustrationLight from '@images/image_login_oomsapas.png'
+import authV2LoginAqsIllustrationLight from '@images/image_login_AQS.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
 import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
@@ -14,7 +15,7 @@ import authV2MaskLight from '@images/pages/misc-mask-light.png'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 
-const authV2LoginIllustrationLight = '/images/simos_logo (2).png'
+const authV2LoginIllustrationLight = '/images/image_login_AQS.png'
 
 // Usar logo del tenant si está disponible
 const { loginLogo } = useTenantConfig()
@@ -27,6 +28,8 @@ const authThemeImg = computed(() => {
   // Fallback a imágenes por defecto
   if (import.meta.env.VITE_API_ORGANIZATION === 'oomsapas')
     return useGenerateImageVariant(authV2LoginOomsapasIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
+  if (import.meta.env.VITE_API_ORGANIZATION === 'aqs')
+    return useGenerateImageVariant(authV2LoginAqsIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
 
   return useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true).value
 })
