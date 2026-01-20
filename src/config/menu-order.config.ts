@@ -1,12 +1,12 @@
 /**
  * Menu Order Configuration
  *
- * Este archivo define el orden en que los menús de los módulos aparecerán en la navegación.
+ * Este archivo define el orden en que los menÃºs de los mÃ³dulos aparecerÃ¡n en la navegaciÃ³n.
  * Cada entrada puede tener:
- * - module: nombre del módulo (debe coincidir con la carpeta en src/modules)
- * - order: número de orden (menor = aparece primero)
- * - enabled: si el menú está habilitado o no
- * - section: agrupa menús en secciones (opcional)
+ * - module: nombre del mÃ³dulo (debe coincidir con la carpeta en src/modules)
+ * - order: nÃºmero de orden (menor = aparece primero)
+ * - enabled: si el menÃº estÃ¡ habilitado o no
+ * - section: agrupa menÃºs en secciones (opcional)
  */
 
 export interface MenuOrderConfig {
@@ -17,15 +17,21 @@ export interface MenuOrderConfig {
 }
 
 /**
- * Configuración del orden de menús
+ * ConfiguraciÃ³n del orden de menÃºs
  *
  * IMPORTANTE:
- * - Los módulos no listados aquí se agregarán al final en orden alfabético
- * - Puedes deshabilitar un menú cambiando enabled: false
- * - Los números de orden no necesitan ser consecutivos
+ * - Los mÃ³dulos no listados aquÃ­ se agregarÃ¡n al final en orden alfabÃ©tico
+ * - Puedes deshabilitar un menÃº cambiando enabled: false
+ * - Los nÃºmeros de orden no necesitan ser consecutivos
  */
 export const menuOrderConfig: MenuOrderConfig[] = [
-  // Sección Principal
+  // SecciÃ³n Principal
+  {
+    module: 'dashboard',
+    order: 5,
+    enabled: true,
+    section: 'main',
+  },
   {
     module: 'Readings',
     order: 10,
@@ -44,81 +50,77 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     enabled: true,
     section: 'main',
   },
+  // {
+  //   module: 'LimitationsModule',
+  //   order: 25,
+  //   enabled: true,
+  //   section: 'main',
+  // },
+  {
+    module: 'ClientModule',
+    order: 30,
+    enabled: true,
+    section: 'main',
+  },
+  {
+    module: 'EmployeeModule',
+    order: 40,
+    enabled: true,
+    section: 'main',
+  },
 
-  // Sección Administración
+  // SecciÃ³n PerforaciÃ³n
+  {
+    module: 'DrillingReportsModule',
+    order: 10,
+    enabled: true,
+    section: 'drilling',
+  },
+
+  // SecciÃ³n Operaciones
+  {
+    module: 'TransportModule',
+    order: 10,
+    enabled: true,
+    section: 'operations',
+  },
+  {
+    module: 'paymentmandate',
+    order: 20,
+    enabled: true,
+    section: 'operations',
+  },
+
+  // SecciÃ³n AdministraciÃ³n
   {
     module: 'user',
     order: 10,
     enabled: true,
     section: 'admin',
   },
-
-  // Módulos deshabilitados o secundarios
-  {
-    module: 'dashboard',
-    order: 100,
-    enabled: false,
-    section: 'main',
-  },
-  {
-    module: 'ClientModule',
-    order: 110,
-    enabled: false,
-    section: 'main',
-  },
-  {
-    module: 'DrillingReportsModule',
-    order: 120,
-    enabled: false,
-    section: 'drilling',
-  },
   {
     module: 'DynamicReports',
-    order: 130,
-    enabled: false,
+    order: 20,
+    enabled: true,
     section: 'admin',
   },
   {
-    module: 'EmployeeModule',
-    order: 140,
-    enabled: false,
-    section: 'main',
-  },
-  {
-    module: 'TransportModule',
-    order: 150,
-    enabled: false,
-    section: 'operations',
-  },
-  {
-    module: 'paymentmandate',
-    order: 160,
-    enabled: false,
-    section: 'operations',
-  },
-  {
     module: 'template',
-    order: 170,
-    enabled: false,
+    order: 30,
+    enabled: true,
     section: 'admin',
   },
   {
     module: 'support',
-    order: 180,
-    enabled: false,
-    section: 'admin',
-  },
-  {
-    module: 'DocumentsModule',
-    order: 190,
-    enabled: false,
+    order: 40,
+    enabled: true,
     section: 'admin',
   },
 ]
 
 /**
- * Configuración de secciones (opcional)
- * Define separadores visuales entre grupos de menús
+ * ConfiguraciÃ³n de secciones (opcional)
+ * Define separadores visuales entre grupos de menÃºs
  */
 export interface MenuSectionConfig {
   id: string
@@ -132,20 +134,18 @@ export const menuSections: MenuSectionConfig[] = [
     order: 1,
   },
   {
-    id: 'admin',
-    title: 'Administración',
-    order: 2,
-  },
-  {
     id: 'drilling',
-    title: 'Perforación',
-    order: 3,
+    title: 'PerforaciÃ³n',
+    order: 2,
   },
   {
     id: 'operations',
     title: 'Operaciones',
+    order: 3,
+  },
+  {
+    id: 'admin',
+    title: 'AdministraciÃ³n',
     order: 4,
   },
 ]
-
-
