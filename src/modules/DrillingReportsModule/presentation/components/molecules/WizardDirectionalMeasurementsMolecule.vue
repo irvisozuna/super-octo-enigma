@@ -156,10 +156,12 @@ const updateMeasurement = (index: number, field: string, value: any) => {
               </VCol>
 
               <VCol cols="12">
-                <VSelect
+                <VTextField
                   :model-value="measurement.measurement_interval"
                   label="Intervalo de Medición (m) *"
-                  :items="measurementIntervalOptions"
+                  type="number"
+                  step="0.1"
+                  min="0.1"
                   :rules="[
                     rules.required,
                     (v) => v === null || v === '' || Number(v) > 0.1 || 'Debe ser mayor a 0.1 metros',
@@ -245,4 +247,3 @@ const updateMeasurement = (index: number, field: string, value: any) => {
     </VCol>
   </div>
 </template>
-
