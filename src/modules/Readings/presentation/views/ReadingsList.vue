@@ -208,6 +208,7 @@ const handleRowClick = (item: any) => {
 const additionalParams = computed(() => ({
   search: search.value,
   period_id: selectedPeriodId.value || undefined,
+  itemsPerPage: itemsPerPage.value,
 }))
 
 const currentPeriodLabel = computed(() => {
@@ -445,6 +446,7 @@ watch(search, () => {
     period_id: selectedPeriodId.value,
   })
 
+  params.itemsPerPage = readingsStore.pagination.per_page
   readingsStore.fetchReadings(params)
 })
 
@@ -455,6 +457,7 @@ watch(selectedPeriodId, () => {
     period_id: selectedPeriodId.value,
   })
 
+  params.itemsPerPage = readingsStore.pagination.per_page
   readingsStore.fetchReadings(params)
   loadMetrics()
 })
@@ -467,6 +470,7 @@ const handlePerPageChange = (value: number) => {
     period_id: selectedPeriodId.value,
   })
 
+  params.itemsPerPage = value
   readingsStore.fetchReadings(params)
 }
 
@@ -512,6 +516,7 @@ onMounted(async () => {
     period_id: selectedPeriodId.value,
   })
 
+  params.itemsPerPage = readingsStore.pagination.per_page
   readingsStore.fetchReadings(params)
   await loadMetrics()
 })

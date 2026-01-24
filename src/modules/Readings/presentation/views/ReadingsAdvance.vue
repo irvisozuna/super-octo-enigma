@@ -350,6 +350,47 @@ const handlePerPageChange = (value: number) => {
   currentPage.value = 1
 }
 
+const handleExport = () => {
+  const rows = filteredItems.value
+  if (!rows.length)
+    return
+
+  const columns = [
+    { key: 'sector', title: 'SECTOR' },
+    { key: 'ruta', title: 'RUTA' },
+    { key: 'lecturista', title: 'LECTURISTA' },
+    { key: 'avance', title: 'AVANCE' },
+    { key: 'cuentas', title: 'CUENTAS' },
+    { key: 'descarga', title: 'DESCARGA' },
+    { key: 'tpl', title: 'TPL / TTR' },
+    { key: 'cierre', title: 'CIERRE' },
+    { key: 'estatus', title: 'ESTATUS' },
+  ]
+
+  const escapeValue = (value: any) => {
+    const text = String(value ?? '')
+    const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
+
+    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+  }
+
+  const csvRows = [
+    columns.map(column => column.title).join(','),
+    ...rows.map(row => columns.map(column => escapeValue((row as any)[column.key])).join(',')),
+  ]
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', `avance_lecturistas_${new Date().toISOString().slice(0, 10)}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 onMounted(async () => {
   await loadPeriods()
   await loadCatalogs()
@@ -447,7 +488,7 @@ onMounted(async () => {
             >
               Filtros
             </VBtn>
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload">
+            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="handleExport">
               Exportar
             </VBtn>
           </div>

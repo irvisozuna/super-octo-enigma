@@ -27,6 +27,10 @@ export const useWorkOrdersStore = defineStore('workorders', () => {
 
     try {
       const requestParams = { ...params }
+      if (requestParams.itemsPerPage && !requestParams.per_page)
+        requestParams.per_page = requestParams.itemsPerPage
+
+      const requestedPerPage = requestParams.per_page ?? requestParams.limit ?? requestParams.itemsPerPage
 
       if (requestParams.page && requestParams.per_page && !requestParams.limit) {
         requestParams.limit = requestParams.per_page
@@ -55,6 +59,17 @@ export const useWorkOrdersStore = defineStore('workorders', () => {
       }
       else {
         updateState(response)
+      }
+
+      const perPageNum = Number(requestedPerPage)
+      if (Number.isFinite(perPageNum) && perPageNum > 0) {
+        if (items.value.length > perPageNum)
+          items.value = items.value.slice(0, perPageNum)
+
+        pagination.value.per_page = perPageNum
+        if (pagination.value.total) {
+          pagination.value.last_page = Math.max(1, Math.ceil(pagination.value.total / Math.max(perPageNum, 1)))
+        }
       }
     }
     catch (err: any) {
