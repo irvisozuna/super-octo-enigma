@@ -19,6 +19,7 @@ const perPageOptions = [10, 25, 50, 100]
 const filterOpen = ref(false)
 const periods = ref<any[]>([])
 const periodsLoading = ref(false)
+const metrics = ref<any | null>(null)
 const filters = ref({
   status: '',
   anomaly: '',
@@ -241,7 +242,31 @@ const totalConsumption = computed(() => filteredTableItems.value.reduce((acc, it
   return acc + (Number.isFinite(numeric) ? numeric : 0)
 }, 0))
 
+const totalReadingsDisplay = computed(() => {
+  if (metrics.value?.readings_taken !== null && metrics.value?.readings_taken !== undefined)
+    return Number(metrics.value.readings_taken)
+
+  return totalReadings.value
+})
+
+const totalContractsDisplay = computed(() => {
+  if (metrics.value?.readings_expected !== null && metrics.value?.readings_expected !== undefined)
+    return Number(metrics.value.readings_expected)
+
+  return totalContracts.value
+})
+
+const totalConsumptionDisplay = computed(() => {
+  if (metrics.value?.consumption_real !== null && metrics.value?.consumption_real !== undefined)
+    return Number(metrics.value.consumption_real)
+
+  return totalConsumption.value
+})
+
 const progressPercent = computed(() => {
+  if (metrics.value?.avance_global_percentage !== null && metrics.value?.avance_global_percentage !== undefined)
+    return Number(metrics.value.avance_global_percentage)
+
   const base = totalContracts.value || 1
 
   return (totalReadings.value / base) * 100
@@ -431,6 +456,7 @@ watch(selectedPeriodId, () => {
   })
 
   readingsStore.fetchReadings(params)
+  loadMetrics()
 })
 
 const handlePerPageChange = (value: number) => {
@@ -466,6 +492,19 @@ const loadPeriods = async () => {
   }
 }
 
+const loadMetrics = async () => {
+  if (!selectedPeriodId.value)
+    return
+
+  try {
+    const response = await apiService.getMetrics(selectedPeriodId.value)
+    metrics.value = response?.data?.data ?? response?.data ?? response
+  }
+  catch {
+    metrics.value = null
+  }
+}
+
 onMounted(async () => {
   await loadPeriods()
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
@@ -474,6 +513,7 @@ onMounted(async () => {
   })
 
   readingsStore.fetchReadings(params)
+  await loadMetrics()
 })
 </script>
 
@@ -523,7 +563,7 @@ onMounted(async () => {
             <div class="kpi">
               <div>
                 <div class="kpi__value">
-                  {{ formatNumber(totalContracts) }}
+                  {{ formatNumber(totalContractsDisplay) }}
                 </div>
                 <div class="kpi__label">
                   Contratos del periodo
@@ -542,7 +582,7 @@ onMounted(async () => {
             <div class="kpi">
               <div>
                 <div class="kpi__value">
-                  {{ formatNumber(totalReadings) }}
+                  {{ formatNumber(totalReadingsDisplay) }}
                 </div>
                 <div class="kpi__label">
                   Lecturas realizadas
@@ -580,7 +620,7 @@ onMounted(async () => {
             <div class="kpi">
               <div>
                 <div class="kpi__value">
-                  {{ formatNumber(totalConsumption) }} m3
+                  {{ formatNumber(totalConsumptionDisplay) }} m3
                 </div>
                 <div class="kpi__label">
                   Consumo del periodo

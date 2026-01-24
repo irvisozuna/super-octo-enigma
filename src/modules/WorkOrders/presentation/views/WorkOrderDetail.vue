@@ -6,12 +6,14 @@ import { WorkOrderApiService } from '../../infrastructure/api/services/WorkOrder
 import { useWorkOrdersStore } from '../stores/workOrdersStore'
 import { useTenantStore } from '@/stores/tenant.store'
 import { useCurrentUser } from '@/composables/useCurrentUser'
+import { useNotification } from '@/helpers/notificationHelper'
 
 const route = useRoute()
 const router = useRouter()
 const store = useWorkOrdersStore()
 const tenantStore = useTenantStore()
 const { getUserData } = useCurrentUser()
+const { showError } = useNotification()
 const apiService = new WorkOrderApiService()
 
 const histories = ref<any[]>([])
@@ -72,6 +74,25 @@ const normalizeArray = (response: any) => {
     return response.data.data
 
   return []
+}
+
+const resolveWorkerId = async (userId?: string | number | null) => {
+  if (!userId)
+    return null
+
+  let workers = normalizeArray(await apiService.getWorkers({ user_id: userId }).catch(() => []))
+
+  if (!workers.length)
+    workers = normalizeArray(await apiService.getWorkers().catch(() => []))
+
+  const match = workers.find(item => {
+    const workerUserId = item.user_id ?? item.userId ?? item.userid ?? item.user?.id ?? item.assigned_to ?? item.assigned?.id
+    return String(workerUserId ?? '') === String(userId)
+  })
+
+  const workerId = match?.id ?? match?.worker_id ?? match?.worker?.id
+
+  return workerId ? String(workerId) : null
 }
 
 const formatDate = (value?: string) => {
@@ -286,7 +307,13 @@ const saveStatusAndComment = async () => {
   savingUpdate.value = true
   try {
     const statusValue = selectedStatus.value || workOrder.value?.status || undefined
-    const changedBy = getUserData.value?.id ?? getUserData.value?.name ?? undefined
+    const userId = getUserData.value?.id ?? getUserData.value?.name ?? undefined
+    const workerId = await resolveWorkerId(userId)
+    if (userId && !workerId) {
+      showError('Usuario no tiene activado para hacer cambios.')
+      return
+    }
+    const changedBy = workerId ?? userId
     const changedAt = new Date().toISOString()
 
     if (statusValue)

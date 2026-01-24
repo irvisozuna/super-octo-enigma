@@ -29,6 +29,9 @@ const routeLatLngs = ref<Array<[number, number]>>([])
 const selectedPeriodId = ref<string | null>(null)
 const selectedReaderId = ref<string | null>(null)
 const selectedRouteId = ref<string | null>(null)
+const appliedPeriodId = ref<string | null>(null)
+const appliedReaderId = ref<string | null>(null)
+const appliedRouteId = ref<string | null>(null)
 const mapRef = ref<any>(null)
 const mapCenter = ref<[number, number]>([29.081, -110.963])
 const mapZoom = ref(12)
@@ -47,17 +50,119 @@ const normalizeArray = (response: any) => {
 const periodOptions = computed(() => {
   return periods.value.map(period => ({
     title: period.name || period.code || period.external_id || period.externalId || period.id,
-    value: period.id || period.period_id || period.uuid,
+    value: period.id || period.period_id || period.uuid || period.code || period.external_id || period.externalId,
     is_active: period.is_active ?? period.isActive ?? false,
   }))
 })
 
+const getDownloadedRoute = (item: any) => {
+  return item?.downloaded_route ?? item?.downloadedRoute ?? item?.route_downloaded ?? item?.routeDownloaded ?? item
+}
+
+const getDownloadedPeriodId = (item: any) => {
+  const downloadedRoute = getDownloadedRoute(item)
+  const periodId = downloadedRoute?.period_id ?? downloadedRoute?.period?.id ?? item?.period_id ?? item?.periodId
+
+  return periodId ? String(periodId) : null
+}
+
+const normalizeKey = (value: any) => {
+  if (value === null || value === undefined)
+    return null
+
+  return String(value).trim().toLowerCase()
+}
+
+const getPeriodKeys = (period: any) => {
+  return [
+    period?.id,
+    period?.period_id,
+    period?.uuid,
+    period?.code,
+    period?.external_id ?? period?.externalId,
+    period?.name,
+  ].map(normalizeKey).filter(Boolean) as string[]
+}
+
+const getDownloadedPeriodKeys = (item: any) => {
+  const downloadedRoute = getDownloadedRoute(item)
+  const period = downloadedRoute?.period ?? item?.period
+  const keys = [
+    downloadedRoute?.period_id,
+    period?.id,
+    period?.code,
+    period?.external_id ?? period?.externalId,
+    period?.name,
+    item?.period_id,
+    item?.periodId,
+  ]
+
+  return keys.map(normalizeKey).filter(Boolean) as string[]
+}
+
+const resolvedPeriodId = computed(() => {
+  const selectedKey = normalizeKey(appliedPeriodId.value)
+  if (!selectedKey)
+    return null
+
+  const period = periods.value.find(item => getPeriodKeys(item).includes(selectedKey))
+  const resolved = period?.id || period?.period_id || period?.uuid || period?.code || period?.external_id || period?.externalId
+
+  return resolved ? String(resolved) : String(selectedPeriodId.value)
+})
+
+const selectedPeriodKeys = computed(() => {
+  const selectedKey = normalizeKey(appliedPeriodId.value)
+  const resolvedKey = normalizeKey(resolvedPeriodId.value)
+  const period = periods.value.find(item => selectedKey && getPeriodKeys(item).includes(selectedKey))
+  const keys = [
+    selectedKey,
+    resolvedKey,
+    ...(period ? getPeriodKeys(period) : []),
+  ].filter(Boolean) as string[]
+
+  return Array.from(new Set(keys))
+})
+
+const getDownloadedReaderId = (item: any) => {
+  const downloadedRoute = getDownloadedRoute(item)
+  const reader = downloadedRoute?.reader ?? item?.reader
+  const id = downloadedRoute?.reader_id ?? reader?.id ?? item?.reader_id ?? item?.readerId
+
+  return id ? String(id) : null
+}
+
+const filteredDownloadedRoutes = computed(() => {
+  const periodKeys = selectedPeriodKeys.value
+  const readerId = appliedReaderId.value
+
+  return downloadedRoutes.value.filter(item => {
+    const keys = getDownloadedPeriodKeys(item)
+    const periodMatch = !periodKeys.length || !keys.length || keys.some(key => periodKeys.includes(key))
+
+    if (!periodMatch)
+      return false
+
+    if (!readerId)
+      return true
+
+    const currentReaderId = getDownloadedReaderId(item)
+    return !!currentReaderId && String(currentReaderId) === String(readerId)
+  })
+})
+
 const readerOptions = computed(() => {
   const map = new Map<string, string>()
+  const periodKeys = selectedPeriodKeys.value
 
   downloadedRoutes.value.forEach(item => {
-    const reader = item.downloaded_route?.reader
-    const id = item.downloaded_route?.reader_id || reader?.id
+    const keys = getDownloadedPeriodKeys(item)
+    if (periodKeys.length && keys.length && !keys.some(key => periodKeys.includes(key)))
+      return
+
+    const downloadedRoute = getDownloadedRoute(item)
+    const reader = downloadedRoute?.reader ?? item?.reader
+    const id = getDownloadedReaderId(item)
     const name = reader?.name || id
 
     if (id)
@@ -69,12 +174,16 @@ const readerOptions = computed(() => {
 
 const routeOptions = computed(() => {
   const map = new Map<string, string>()
-
-  downloadedRoutes.value.forEach(item => {
-    const routeId = item.downloaded_route?.external_route_id
+  filteredDownloadedRoutes.value.forEach(item => {
+    const downloadedRoute = getDownloadedRoute(item)
+    const route = downloadedRoute?.route ?? item?.route
+    const routeId = downloadedRoute?.external_route_id
+      ?? route?.external_id
+      ?? route?.code
+    const routeLabel = route?.name ?? route?.code ?? routeId
 
     if (routeId)
-      map.set(String(routeId), String(routeId))
+      map.set(String(routeId), String(routeLabel ?? routeId))
   })
 
   return Array.from(map.entries()).map(([value, title]) => ({ title, value }))
@@ -89,17 +198,27 @@ watch(periodOptions, options => {
 }, { immediate: true })
 
 watch(readerOptions, options => {
-  if (!selectedReaderId.value && options.length)
-    selectedReaderId.value = options[0].value
+  if (!options.length) {
+    selectedReaderId.value = null
+    return
+  }
+
+  if (selectedReaderId.value && !options.some(option => String(option.value) === String(selectedReaderId.value)))
+    selectedReaderId.value = null
 })
 
 watch(routeOptions, options => {
-  if (!selectedRouteId.value && options.length)
-    selectedRouteId.value = options[0].value
+  if (!options.length) {
+    selectedRouteId.value = null
+    return
+  }
+
+  if (selectedRouteId.value && !options.some(option => String(option.value) === String(selectedRouteId.value)))
+    selectedRouteId.value = null
 })
 
 const filteredReadings = computed(() => {
-  if (!selectedRouteId.value)
+  if (!appliedRouteId.value)
     return readings.value
 
   return readings.value.filter(item => {
@@ -108,7 +227,7 @@ const filteredReadings = computed(() => {
       ?? item.contract?.route?.code
       ?? item.external_route_id
 
-    return String(routeId || '') === String(selectedRouteId.value)
+    return String(routeId || '') === String(appliedRouteId.value)
   })
 })
 
@@ -246,6 +365,67 @@ const arrowMarkers = computed(() => {
   return markers
 })
 
+const coerceSelectValue = (value: unknown) => {
+  if (value === null || value === undefined || value === '')
+    return null
+
+  return String(value)
+}
+
+const setSelectedReaderId = (value: unknown) => {
+  selectedReaderId.value = coerceSelectValue(value)
+}
+
+const setSelectedRouteId = (value: unknown) => {
+  selectedRouteId.value = coerceSelectValue(value)
+}
+
+const selectedReaderModel = computed({
+  get: () => selectedReaderId.value,
+  set: value => setSelectedReaderId(value),
+})
+
+const selectedRouteModel = computed({
+  get: () => selectedRouteId.value,
+  set: value => setSelectedRouteId(value),
+})
+
+const applyPeriod = async () => {
+  appliedPeriodId.value = selectedPeriodId.value
+  appliedReaderId.value = null
+  appliedRouteId.value = null
+  selectedReaderId.value = null
+  selectedRouteId.value = null
+  readings.value = []
+  routeLatLngs.value = []
+  await loadReadings()
+}
+
+const applyReader = async () => {
+  appliedReaderId.value = selectedReaderId.value
+  appliedRouteId.value = null
+  selectedRouteId.value = null
+  readings.value = []
+  routeLatLngs.value = []
+  await loadReadings()
+}
+
+const applyRoute = async () => {
+  appliedRouteId.value = selectedRouteId.value
+  readings.value = []
+  routeLatLngs.value = []
+  await loadReadings()
+}
+
+const focusOnPoint = (point: { lat: number; lng: number }) => {
+  const map = mapRef.value?.leafletObject
+  if (!map)
+    return
+
+  const currentZoom = map.getZoom?.()
+  map.setView([point.lat, point.lng], currentZoom ?? mapZoom.value, { animate: true })
+}
+
 const loadPeriods = async () => {
   loading.value = true
   try {
@@ -258,12 +438,9 @@ const loadPeriods = async () => {
 }
 
 const loadDownloadedRoutes = async () => {
-  if (!selectedPeriodId.value)
-    return
-
   loading.value = true
   try {
-    const response = await apiService.getDownloadedRoutes(selectedPeriodId.value)
+    const response = await apiService.getDownloadedRoutes()
     downloadedRoutes.value = normalizeArray(response)
   }
   finally {
@@ -272,14 +449,14 @@ const loadDownloadedRoutes = async () => {
 }
 
 const loadReadings = async () => {
-  if (!selectedPeriodId.value || !selectedReaderId.value)
+  if (!resolvedPeriodId.value || !appliedReaderId.value)
     return
 
   readingsLoading.value = true
   try {
     const response = await apiService.getList({
-      period_id: selectedPeriodId.value,
-      reader_id: selectedReaderId.value,
+      period_id: resolvedPeriodId.value,
+      reader_id: appliedReaderId.value,
       itemsPerPage: 500,
       page: 1,
       sortBy: 'reading_date',
@@ -341,12 +518,28 @@ const fetchOsrmRoute = async (latlngs: Array<[number, number]>) => {
 }
 
 watch(selectedPeriodId, async () => {
-  await loadDownloadedRoutes()
-  await loadReadings()
+  if (selectedPeriodId.value && selectedPeriodId.value !== appliedPeriodId.value)
+    await applyPeriod()
+  else
+    selectedRouteId.value = null
 })
 
 watch(selectedReaderId, async () => {
-  await loadReadings()
+  if (!appliedPeriodId.value)
+    return
+
+  if (selectedReaderId.value && selectedReaderId.value !== appliedReaderId.value)
+    await applyReader()
+  else
+    selectedRouteId.value = null
+})
+
+watch(selectedRouteId, async () => {
+  if (!appliedReaderId.value)
+    return
+
+  if (selectedRouteId.value && selectedRouteId.value !== appliedRouteId.value)
+    await applyRoute()
 })
 
 watch(routeKey, async () => {
@@ -406,7 +599,7 @@ onMounted(async () => {
             class="map-toolbar__select"
           />
           <VSelect
-            v-model="selectedReaderId"
+            v-model="selectedReaderModel"
             :items="readerOptions"
             item-title="title"
             item-value="value"
@@ -414,10 +607,12 @@ onMounted(async () => {
             density="compact"
             variant="outlined"
             hide-details
+            :return-object="false"
+            :disabled="!appliedPeriodId"
             class="map-toolbar__select"
           />
           <VSelect
-            v-model="selectedRouteId"
+            v-model="selectedRouteModel"
             :items="routeOptions"
             item-title="title"
             item-value="value"
@@ -425,6 +620,8 @@ onMounted(async () => {
             density="compact"
             variant="outlined"
             hide-details
+            :return-object="false"
+            :disabled="!appliedReaderId"
             class="map-toolbar__select"
           />
         </div>
@@ -504,6 +701,10 @@ onMounted(async () => {
               v-for="point in mapPoints"
               :key="`list-${point.id}`"
               class="map-list__item"
+              role="button"
+              tabindex="0"
+              @click="focusOnPoint(point)"
+              @keydown.enter="focusOnPoint(point)"
             >
               <div class="map-list__index">{{ point.index }}</div>
               <div>
@@ -582,6 +783,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-block-size: 520px;
+  overflow-y: auto;
+  padding-inline-end: 4px;
 }
 
 .map-list__title {
@@ -607,6 +811,18 @@ onMounted(async () => {
   border-radius: 10px;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.map-list__item:hover {
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.map-list__item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .map-list__index {

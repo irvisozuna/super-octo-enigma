@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import BaseDataTable from '@/components/BaseDataTable.vue'
+import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 
 const apiService = new ReadingApiService()
@@ -9,12 +10,23 @@ const search = ref('')
 const itemsPerPage = ref(10)
 const perPageOptions = [10, 25, 50, 100]
 const currentPage = ref(1)
+const filtersOpen = ref(false)
+const filters = ref({
+  sector: '',
+  route: '',
+  reader: '',
+})
 
 const periods = ref<any[]>([])
 const selectedPeriodId = ref<string | null>(null)
 const downloadedRoutes = ref<any[]>([])
 const loading = ref(false)
 const metrics = ref<any | null>(null)
+const catalogs = ref({
+  sectors: [] as any[],
+  routes: [] as any[],
+  readers: [] as any[],
+})
 
 const normalizeArray = (response: any) => {
   if (Array.isArray(response))
@@ -164,15 +176,76 @@ const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
   avatar: 'tabler-user',
 })))
 
+const normalizeOptionValue = (value?: string | number | null) => {
+  if (value === null || value === undefined)
+    return ''
+
+  return String(value).trim()
+}
+
+const buildOptions = (items: any[], getLabel: (item: any) => string) => {
+  const map = new Map<string, string>()
+
+  items.forEach(item => {
+    const label = normalizeOptionValue(getLabel(item))
+    if (!label)
+      return
+
+    map.set(label, label)
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+}
+
+const sectorOptions = computed(() => {
+  if (catalogs.value.sectors.length) {
+    return buildOptions(catalogs.value.sectors, item =>
+      item?.name ?? item?.code ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.sector)
+})
+
+const routeOptions = computed(() => {
+  if (catalogs.value.routes.length) {
+    return buildOptions(catalogs.value.routes, item =>
+      item?.name ?? item?.code ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.ruta)
+})
+
+const readerOptions = computed(() => {
+  if (catalogs.value.readers.length) {
+    return buildOptions(catalogs.value.readers, item =>
+      item?.name ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.lecturista)
+})
+
 const filteredItems = computed(() => {
-  if (!search.value)
-    return mappedItems.value
+  const query = search.value.toLowerCase().trim()
+  const sector = filters.value.sector.toLowerCase().trim()
+  const route = filters.value.route.toLowerCase().trim()
+  const reader = filters.value.reader.toLowerCase().trim()
 
-  const query = search.value.toLowerCase()
+  return mappedItems.value.filter(item => {
+    const haystack = `${item.sector} ${item.ruta} ${item.lecturista}`.toLowerCase()
+    if (query && !haystack.includes(query))
+      return false
+    if (sector && String(item.sector).toLowerCase() !== sector)
+      return false
+    if (route && String(item.ruta).toLowerCase() !== route)
+      return false
+    if (reader && String(item.lecturista).toLowerCase() !== reader)
+      return false
 
-  return mappedItems.value.filter(item =>
-    `${item.sector} ${item.ruta} ${item.lecturista}`.toLowerCase().includes(query),
-  )
+    return true
+  })
 })
 
 const pagedItems = computed(() => {
@@ -233,6 +306,24 @@ const loadMetrics = async () => {
   }
 }
 
+const loadCatalogs = async () => {
+  try {
+    const response = await apiService.getAdvanceCatalogs()
+    catalogs.value = {
+      sectors: normalizeArray(response?.sectors),
+      routes: normalizeArray(response?.routes),
+      readers: normalizeArray(response?.readers),
+    }
+  }
+  catch {
+    catalogs.value = {
+      sectors: [],
+      routes: [],
+      readers: [],
+    }
+  }
+}
+
 watch(periodOptions, options => {
   if (!options.length)
     return
@@ -250,6 +341,10 @@ watch(search, () => {
   currentPage.value = 1
 })
 
+watch(filters, () => {
+  currentPage.value = 1
+}, { deep: true })
+
 const handlePerPageChange = (value: number) => {
   itemsPerPage.value = value
   currentPage.value = 1
@@ -257,6 +352,7 @@ const handlePerPageChange = (value: number) => {
 
 onMounted(async () => {
   await loadPeriods()
+  await loadCatalogs()
 })
 </script>
 
@@ -343,7 +439,12 @@ onMounted(async () => {
               hide-details
               class="advance-toolbar__period"
             />
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-adjustments">
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              prepend-icon="tabler-adjustments"
+              @click="filtersOpen = true"
+            >
               Filtros
             </VBtn>
             <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload">
@@ -351,6 +452,44 @@ onMounted(async () => {
             </VBtn>
           </div>
         </div>
+
+        <ReadingsFilterDrawer
+          v-model="filtersOpen"
+          title="Filtros"
+          @apply="filtersOpen = false"
+          @clear="filters.sector = ''; filters.route = ''; filters.reader = ''"
+        >
+          <VSelect
+            v-model="filters.sector"
+            :items="sectorOptions"
+            item-title="title"
+            item-value="value"
+            label="Sector"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+          <VSelect
+            v-model="filters.route"
+            :items="routeOptions"
+            item-title="title"
+            item-value="value"
+            label="Ruta"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+          <VSelect
+            v-model="filters.reader"
+            :items="readerOptions"
+            item-title="title"
+            item-value="value"
+            label="Lecturista"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+        </ReadingsFilterDrawer>
 
         <BaseDataTable
           :headers="headers"
