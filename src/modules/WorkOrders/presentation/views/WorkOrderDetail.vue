@@ -21,8 +21,12 @@ const photos = ref<any[]>([])
 const historiesLoading = ref(false)
 const photosLoading = ref(false)
 const savingUpdate = ref(false)
+const savingAssignment = ref(false)
 const commentText = ref('')
 const selectedStatus = ref('')
+const selectedWorkerId = ref<string | null>(null)
+const workers = ref<any[]>([])
+const workersLoading = ref(false)
 const photosDialog = ref(false)
 const activePhoto = ref(0)
 
@@ -180,6 +184,13 @@ const historyRows = computed(() => {
   })
 })
 
+const workerOptions = computed(() => {
+  return workers.value.map(item => ({
+    title: item.name ?? item.full_name ?? item.username ?? item.assigned_to ?? '-',
+    value: String(item.id ?? item.worker_id ?? item.user_id ?? ''),
+  })).filter(item => item.value)
+})
+
 const normalizeStatus = (value?: string) => {
   const normalized = String(value || '').toLowerCase()
 
@@ -246,6 +257,17 @@ const loadWorkOrder = async () => {
 
   store.clearCurrent()
   await store.fetchById(workOrderId.value)
+}
+
+const loadWorkers = async () => {
+  workersLoading.value = true
+  try {
+    const response = await apiService.getWorkers()
+    workers.value = normalizeArray(response)
+  }
+  finally {
+    workersLoading.value = false
+  }
 }
 
 const loadHistories = async () => {
@@ -338,6 +360,25 @@ const saveStatusAndComment = async () => {
   }
 }
 
+const saveAssignment = async () => {
+  if (!workOrderId.value || !selectedWorkerId.value)
+    return
+
+  savingAssignment.value = true
+  try {
+    await apiService.update(workOrderId.value, {
+      work_order_id: workOrderId.value,
+      worker_id: selectedWorkerId.value,
+      assigned_to: selectedWorkerId.value,
+    })
+
+    await loadWorkOrder()
+  }
+  finally {
+    savingAssignment.value = false
+  }
+}
+
 const openPhotos = (index: number) => {
   activePhoto.value = index
   photosDialog.value = true
@@ -350,6 +391,8 @@ const goBack = () => {
 watch(workOrder, value => {
   if (value?.status)
     selectedStatus.value = value.status
+  const workerId = value?.worker_id ?? value?.assigned_to ?? value?.worker?.id ?? null
+  selectedWorkerId.value = workerId ? String(workerId) : null
 }, { immediate: true })
 
 watch(workOrderId, async () => {
@@ -362,6 +405,7 @@ onMounted(async () => {
   await loadWorkOrder()
   await loadHistories()
   await loadPhotos()
+  await loadWorkers()
 })
 </script>
 
@@ -537,6 +581,34 @@ onMounted(async () => {
               :loading="savingUpdate"
               :disabled="!commentText.trim()"
               @click="saveStatusAndComment"
+            >
+              Guardar
+            </VBtn>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section__title">Cambiar asignación</div>
+          <div class="detail-actions">
+            <VSelect
+              v-model="selectedWorkerId"
+              :items="workerOptions"
+              item-title="title"
+              item-value="value"
+              label="Asignado a"
+              density="compact"
+              variant="outlined"
+              hide-details
+              :loading="workersLoading"
+              :disabled="workersLoading || savingAssignment"
+              class="detail-actions__select"
+            />
+            <VBtn
+              color="primary"
+              variant="tonal"
+              :loading="savingAssignment"
+              :disabled="!selectedWorkerId"
+              @click="saveAssignment"
             >
               Guardar
             </VBtn>

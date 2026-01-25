@@ -11,6 +11,9 @@ const apiService = new WorkOrderApiService()
 const workers = ref<any[]>([])
 const workOrders = ref<any[]>([])
 const loading = ref(false)
+const currentPage = ref(1)
+const itemsPerPage = ref(15)
+const perPageOptions = [10, 15, 25, 50, 100]
 
 const headers = [
   { title: 'Operador', key: 'name', sortable: true },
@@ -54,6 +57,29 @@ const tableItems = computed(() => {
     }
   })
 })
+
+const pagedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+
+  return tableItems.value.slice(start, end)
+})
+
+const pagination = computed(() => ({
+  current_page: currentPage.value,
+  last_page: Math.max(1, Math.ceil(tableItems.value.length / itemsPerPage.value)),
+  per_page: itemsPerPage.value,
+  total: tableItems.value.length,
+}))
+
+const handleOptionsUpdate = (params: Record<string, any>) => {
+  if (params.page)
+    currentPage.value = params.page
+  if (params.per_page) {
+    itemsPerPage.value = params.per_page
+    currentPage.value = 1
+  }
+}
 
 const handleRowClick = (item: any) => {
   const workerId = item?._raw?.id ?? item?.id
@@ -109,13 +135,14 @@ onMounted(async () => {
       <VCardText>
         <BaseDataTable
           :headers="headers"
-          :items="tableItems"
-          :meta="{ current_page: 1, last_page: 1, per_page: tableItems.length, total: tableItems.length }"
+          :items="pagedItems"
+          :meta="pagination"
           :loading="loading"
-          :items-per-page-options="[10, 25, 50, 100]"
+          :items-per-page-options="perPageOptions"
           empty-state-title="Sin operadores"
           empty-state-description="No hay operadores disponibles."
           empty-state-icon="tabler-user-off"
+          @update:options="handleOptionsUpdate"
           @row:click="handleRowClick"
         >
           <template #actions>
