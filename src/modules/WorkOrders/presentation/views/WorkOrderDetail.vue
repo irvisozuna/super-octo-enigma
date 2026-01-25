@@ -23,6 +23,7 @@ const photosLoading = ref(false)
 const savingUpdate = ref(false)
 const savingAssignment = ref(false)
 const commentText = ref('')
+const notesText = ref('')
 const selectedStatus = ref('')
 const selectedWorkerId = ref<string | null>(null)
 const workers = ref<any[]>([])
@@ -38,7 +39,7 @@ const historyPagination = ref({
 })
 
 const historySort = ref({
-  sortBy: 'changed_at',
+  sortBy: 'date',
   sortDesc: true,
 })
 
@@ -169,7 +170,7 @@ const historyRows = computed(() => {
     author: row => String(row.author || '').toLowerCase(),
   }
 
-  const getter = keyMap[sortKey] || (row => row[sortKey])
+  const getter = keyMap[sortKey] || keyMap.date
 
   return [...rows].sort((a, b) => {
     const aVal = getter(a)
@@ -184,11 +185,20 @@ const historyRows = computed(() => {
   })
 })
 
+const currentWorkerId = computed(() => {
+  const value = workOrder.value?.worker_id ?? workOrder.value?.assigned_to ?? workOrder.value?.worker?.id ?? null
+  return value ? String(value) : null
+})
+
+const currentWorkerName = computed(() => {
+  return workOrder.value?.worker?.name ?? workOrder.value?.assigned_to ?? workOrder.value?.worker_id ?? '-'
+})
+
 const workerOptions = computed(() => {
   return workers.value.map(item => ({
     title: item.name ?? item.full_name ?? item.username ?? item.assigned_to ?? '-',
     value: String(item.id ?? item.worker_id ?? item.user_id ?? ''),
-  })).filter(item => item.value)
+  })).filter(item => item.value && item.value !== currentWorkerId.value)
 })
 
 const normalizeStatus = (value?: string) => {
@@ -360,16 +370,80 @@ const saveStatusAndComment = async () => {
   }
 }
 
+const saveNotes = async () => {
+  if (!workOrderId.value)
+    return
+
+  savingUpdate.value = true
+  try {
+    const userId = getUserData.value?.id ?? getUserData.value?.name ?? undefined
+    const workerId = await resolveWorkerId(userId)
+    if (userId && !workerId) {
+      showError('Usuario no tiene activado para hacer cambios.')
+      return
+    }
+
+    const previousNotes = String(workOrder.value?.notes ?? '')
+    const nextNotes = String(notesText.value ?? '')
+    const historyNote = `Notas actualizadas: ${previousNotes || '-'} -> ${nextNotes || '-'}`
+
+    await apiService.update(workOrderId.value, {
+      work_order_id: workOrderId.value,
+      notes: nextNotes,
+      changed_by: workerId ?? userId,
+      changed_at: new Date().toISOString(),
+    })
+
+    await apiService.addHistory({
+      workorder_id: workOrderId.value,
+      work_order_id: workOrderId.value,
+      notes: historyNote,
+      comment: historyNote,
+      message: historyNote,
+      status: workOrder.value?.status ?? undefined,
+      company_id: companyId.value || undefined,
+      changed_by: workerId ?? userId,
+      changed_at: new Date().toISOString(),
+    })
+
+    await loadWorkOrder()
+    await loadHistories()
+  }
+  finally {
+    savingUpdate.value = false
+  }
+}
+
 const saveAssignment = async () => {
   if (!workOrderId.value || !selectedWorkerId.value)
     return
 
   savingAssignment.value = true
   try {
+    const userId = getUserData.value?.id ?? getUserData.value?.name ?? undefined
+    const workerId = await resolveWorkerId(userId)
+    if (userId && !workerId) {
+      showError('Usuario no tiene activado para hacer cambios.')
+      return
+    }
+
+    const previousWorker = currentWorkerName.value
+    const nextWorker = workerOptions.value.find(option => option.value === selectedWorkerId.value)?.title ?? selectedWorkerId.value
+
     await apiService.update(workOrderId.value, {
       work_order_id: workOrderId.value,
       worker_id: selectedWorkerId.value,
       assigned_to: selectedWorkerId.value,
+    })
+
+    await apiService.addHistory({
+      workorder_id: workOrderId.value,
+      work_order_id: workOrderId.value,
+      notes: `Cambio de asignación: ${previousWorker} -> ${nextWorker}`,
+      status: workOrder.value?.status ?? undefined,
+      company_id: companyId.value || undefined,
+      changed_by: workerId ?? userId,
+      changed_at: new Date().toISOString(),
     })
 
     await loadWorkOrder()
@@ -391,8 +465,8 @@ const goBack = () => {
 watch(workOrder, value => {
   if (value?.status)
     selectedStatus.value = value.status
-  const workerId = value?.worker_id ?? value?.assigned_to ?? value?.worker?.id ?? null
-  selectedWorkerId.value = workerId ? String(workerId) : null
+  notesText.value = value?.notes ?? ''
+  selectedWorkerId.value = null
 }, { immediate: true })
 
 watch(workOrderId, async () => {
@@ -603,12 +677,38 @@ onMounted(async () => {
               :disabled="workersLoading || savingAssignment"
               class="detail-actions__select"
             />
+            <div class="detail-actions__hint">
+              <VChip color="primary" variant="tonal" size="small">
+                Actual: {{ currentWorkerName }}
+              </VChip>
+            </div>
             <VBtn
               color="primary"
               variant="tonal"
               :loading="savingAssignment"
               :disabled="!selectedWorkerId"
               @click="saveAssignment"
+            >
+              Guardar
+            </VBtn>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section__title">Actualizar notas</div>
+          <VTextarea
+            v-model="notesText"
+            variant="outlined"
+            placeholder="Notas de la orden"
+            rows="3"
+            class="detail-comment"
+          />
+          <div class="detail-actions">
+            <VBtn
+              color="primary"
+              variant="tonal"
+              :loading="savingUpdate"
+              @click="saveNotes"
             >
               Guardar
             </VBtn>
