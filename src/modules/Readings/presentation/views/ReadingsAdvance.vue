@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 
 const apiService = new ReadingApiService()
+const router = useRouter()
 
 const search = ref('')
 const itemsPerPage = ref(10)
@@ -162,7 +164,13 @@ const formatDate = (value?: string) => {
 const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
   sector: item.downloaded_route?.route?.sector?.name ?? '-',
   ruta: item.downloaded_route?.route?.name ?? item.downloaded_route?.route?.code ?? item.downloaded_route?.external_route_id ?? '-',
+  route_id: item.downloaded_route?.external_route_id
+    ?? item.downloaded_route?.route?.external_id
+    ?? item.downloaded_route?.route?.code
+    ?? item.downloaded_route?.route_id
+    ?? null,
   lecturista: item.downloaded_route?.reader?.name ?? item.downloaded_route?.reader_id ?? '-',
+  reader_id: item.downloaded_route?.reader_id ?? item.downloaded_route?.reader?.id ?? null,
   avance: item.downloaded_route?.contracts_downloaded
     ? Math.round((Number(item.downloaded_route?.readings_count || item.readings_count || 0) / Number(item.downloaded_route?.contracts_downloaded || 0)) * 100)
     : 0,
@@ -348,6 +356,18 @@ watch(filters, () => {
 const handlePerPageChange = (value: number) => {
   itemsPerPage.value = value
   currentPage.value = 1
+}
+
+const goToMap = (item: any) => {
+  const query: Record<string, string> = {}
+  if (selectedPeriodId.value)
+    query.period_id = String(selectedPeriodId.value)
+  if (item?.reader_id)
+    query.reader_id = String(item.reader_id)
+  if (item?.route_id)
+    query.route_id = String(item.route_id)
+
+  router.push({ name: 'ReadingsMap', query })
 }
 
 const handleExport = () => {
@@ -565,8 +585,15 @@ onMounted(async () => {
               {{ item.estatus }}
             </VChip>
           </template>
-          <template #actions>
-            <VBtn icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+          <template #actions="{ item }">
+            <VMenu location="bottom end">
+              <template #activator="{ props }">
+                <VBtn v-bind="props" icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+              </template>
+              <VList density="compact">
+                <VListItem prepend-icon="tabler-map-2" title="Ver mapa" @click="goToMap(item)" />
+              </VList>
+            </VMenu>
           </template>
         </BaseDataTable>
       </VCardText>

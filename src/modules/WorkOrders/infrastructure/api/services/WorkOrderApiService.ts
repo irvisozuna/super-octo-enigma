@@ -81,6 +81,13 @@ export class WorkOrderApiService {
     })
   }
 
+  async updateWorker(id: string | number, payload: Record<string, any>) {
+    return await rawApi(`/workorder-workers/update/${id}`, {
+      method: 'PUT',
+      body: payload,
+    })
+  }
+
   async addPhoto(payload: Record<string, any>) {
     return await rawApi(`${this.photosBaseUrl}/add`, {
       method: 'POST',

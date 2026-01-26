@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { LMap, LMarker, LPopup, LPolyline, LTileLayer } from '@vue-leaflet/vue-leaflet'
@@ -10,6 +11,7 @@ import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 
 const apiService = new ReadingApiService()
+const route = useRoute()
 
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -29,6 +31,7 @@ const routeLatLngs = ref<Array<[number, number]>>([])
 const selectedPeriodId = ref<string | null>(null)
 const selectedReaderId = ref<string | null>(null)
 const selectedRouteId = ref<string | null>(null)
+const isApplyingQuery = ref(false)
 const appliedPeriodId = ref<string | null>(null)
 const appliedReaderId = ref<string | null>(null)
 const appliedRouteId = ref<string | null>(null)
@@ -189,6 +192,22 @@ const routeOptions = computed(() => {
   return Array.from(map.entries()).map(([value, title]) => ({ title, value }))
 })
 
+const selectedReaderLabel = computed(() => {
+  if (!appliedReaderId.value)
+    return '-'
+
+  const option = readerOptions.value.find(item => String(item.value) === String(appliedReaderId.value))
+  return option?.title ?? String(appliedReaderId.value)
+})
+
+const selectedRouteLabel = computed(() => {
+  if (!appliedRouteId.value)
+    return '-'
+
+  const option = routeOptions.value.find(item => String(item.value) === String(appliedRouteId.value))
+  return option?.title ?? String(appliedRouteId.value)
+})
+
 watch(periodOptions, options => {
   if (!options.length)
     return
@@ -198,6 +217,9 @@ watch(periodOptions, options => {
 }, { immediate: true })
 
 watch(readerOptions, options => {
+  if (isApplyingQuery.value)
+    return
+
   if (!options.length) {
     selectedReaderId.value = null
     return
@@ -208,6 +230,9 @@ watch(readerOptions, options => {
 })
 
 watch(routeOptions, options => {
+  if (isApplyingQuery.value)
+    return
+
   if (!options.length) {
     selectedRouteId.value = null
     return
@@ -417,6 +442,38 @@ const applyRoute = async () => {
   await loadReadings()
 }
 
+const applySelectionsFromQuery = async () => {
+  const query = route.query
+  const periodId = query.period_id ? String(query.period_id) : null
+  const readerId = query.reader_id ? String(query.reader_id) : null
+  const routeId = query.route_id ? String(query.route_id) : null
+
+  if (!periodId && !readerId && !routeId)
+    return false
+
+  isApplyingQuery.value = true
+
+  if (periodId) {
+    selectedPeriodId.value = periodId
+    await applyPeriod()
+  }
+
+  await loadDownloadedRoutes()
+
+  if (readerId) {
+    selectedReaderId.value = readerId
+    await applyReader()
+  }
+
+  if (routeId) {
+    selectedRouteId.value = routeId
+    await applyRoute()
+  }
+
+  isApplyingQuery.value = false
+  return true
+}
+
 const focusOnPoint = (point: { lat: number; lng: number }) => {
   const map = mapRef.value?.leafletObject
   if (!map)
@@ -569,6 +626,7 @@ onMounted(async () => {
   await loadPeriods()
   await loadDownloadedRoutes()
   await loadReadings()
+  await applySelectionsFromQuery()
 })
 </script>
 
@@ -630,6 +688,16 @@ onMounted(async () => {
 
     <VCard class="map-content">
       <VCardText>
+        <div class="map-summary">
+          <div class="map-summary__item">
+            <span class="map-summary__label">Lecturista:</span>
+            <span class="map-summary__value">{{ selectedReaderLabel }}</span>
+          </div>
+          <div class="map-summary__item">
+            <span class="map-summary__label">Ruta:</span>
+            <span class="map-summary__value">{{ selectedRouteLabel }}</span>
+          </div>
+        </div>
         <div class="map-layout">
           <div class="map-canvas">
             <LMap
@@ -747,6 +815,34 @@ onMounted(async () => {
 .map-content {
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.map-summary {
+  display: flex;
+  gap: 16px;
+  margin-block-end: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.map-summary__item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: #334155;
+}
+
+.map-summary__label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.map-summary__value {
+  font-weight: 600;
+  color: #2563eb;
 }
 
 .map-layout {
