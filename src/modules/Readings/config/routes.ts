@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { READINGS_PERMISSIONS } from './permissions'
 
 const readingsRoutes: RouteRecordRaw[] = [
   {
@@ -7,8 +8,8 @@ const readingsRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/ReadingsList.vue'),
     meta: {
       title: 'Readings',
-      action: 'read',
-      subject: 'Reading',
+      action: 'manage',
+      subject: READINGS_PERMISSIONS.viewReadings,
       requiresAuth: true,
     },
   },
@@ -18,8 +19,8 @@ const readingsRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/ReadingsAdvance.vue'),
     meta: {
       title: 'Avance de Lecturista',
-      action: 'read',
-      subject: 'Reading',
+      action: 'manage',
+      subject: READINGS_PERMISSIONS.viewReadingAdvance,
       requiresAuth: true,
     },
   },
@@ -29,8 +30,8 @@ const readingsRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/ReadingDetail.vue'),
     meta: {
       title: 'Detalle de Lectura',
-      action: 'read',
-      subject: 'Reading',
+      action: 'manage',
+      subject: READINGS_PERMISSIONS.viewReadingDetail,
       requiresAuth: true,
     },
   },
@@ -40,8 +41,8 @@ const readingsRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/ReadingsMap.vue'),
     meta: {
       title: 'Mapa de Lecturas',
-      action: 'read',
-      subject: 'Reading',
+      action: 'manage',
+      subject: READINGS_PERMISSIONS.viewReadingMap,
       requiresAuth: true,
     },
   },

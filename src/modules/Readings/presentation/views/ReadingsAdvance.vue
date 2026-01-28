@@ -27,7 +27,19 @@ const metrics = ref<any | null>(null)
 const catalogs = ref({
   sectors: [] as any[],
   routes: [] as any[],
-  readers: [] as any[],
+  workers: [] as any[],
+})
+const pageLoading = computed(() => loading.value)
+
+const selectedExternalPeriodId = computed(() => {
+  if (!selectedPeriodId.value)
+    return null
+
+  const period = periods.value.find(item =>
+    String(item.id ?? item.period_id ?? item.uuid ?? item.code ?? item.external_id ?? item.externalId) === String(selectedPeriodId.value),
+  )
+
+  return period?.external_id ?? period?.externalId ?? selectedPeriodId.value
 })
 
 const normalizeArray = (response: any) => {
@@ -44,7 +56,7 @@ const normalizeArray = (response: any) => {
 const periodOptions = computed(() => {
   return periods.value.map(period => ({
     title: period.name || period.code || period.external_id || period.externalId || period.id,
-    value: period.id || period.period_id || period.uuid,
+    value: period.external_id || period.externalId || period.id || period.period_id || period.uuid,
     is_active: period.is_active ?? period.isActive ?? false,
   }))
 })
@@ -109,7 +121,9 @@ const statCards = computed(() => [
 const globalProgress = computed(() => {
   const period =
     metrics.value?.period
-    || periods.value.find(item => item.id === selectedPeriodId.value)
+    || periods.value.find(item =>
+      String(item.external_id ?? item.externalId ?? item.id ?? item.period_id ?? item.uuid) === String(selectedPeriodId.value),
+    )
 
   return {
     period: period?.name || period?.code || 'Sin periodo',
@@ -169,8 +183,12 @@ const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
     ?? item.downloaded_route?.route?.code
     ?? item.downloaded_route?.route_id
     ?? null,
-  lecturista: item.downloaded_route?.reader?.name ?? item.downloaded_route?.reader_id ?? '-',
-  reader_id: item.downloaded_route?.reader_id ?? item.downloaded_route?.reader?.id ?? null,
+  lecturista: item.downloaded_route?.worker?.name ?? item.downloaded_route?.reader?.name ?? item.downloaded_route?.worker_external_id ?? item.downloaded_route?.reader_id ?? '-',
+  reader_id: item.downloaded_route?.worker_external_id
+    ?? item.downloaded_route?.worker?.external_id
+    ?? item.downloaded_route?.reader_id
+    ?? item.downloaded_route?.reader?.id
+    ?? null,
   avance: item.downloaded_route?.contracts_downloaded
     ? Math.round((Number(item.downloaded_route?.readings_count || item.readings_count || 0) / Number(item.downloaded_route?.contracts_downloaded || 0)) * 100)
     : 0,
@@ -226,8 +244,8 @@ const routeOptions = computed(() => {
 })
 
 const readerOptions = computed(() => {
-  if (catalogs.value.readers.length) {
-    return buildOptions(catalogs.value.readers, item =>
+  if (catalogs.value.workers.length) {
+    return buildOptions(catalogs.value.workers, item =>
       item?.name ?? item?.external_id ?? item?.externalId ?? item?.id,
     )
   }
@@ -292,9 +310,13 @@ const loadDownloadedRoutes = async () => {
   if (!selectedPeriodId.value)
     return
 
+  const externalPeriodId = selectedExternalPeriodId.value
+  if (!externalPeriodId)
+    return
+
   loading.value = true
   try {
-    const response = await apiService.getDownloadedRoutes(selectedPeriodId.value)
+    const response = await apiService.getDownloadedRoutes(String(externalPeriodId))
     downloadedRoutes.value = normalizeArray(response)
   }
   finally {
@@ -307,7 +329,11 @@ const loadMetrics = async () => {
     return
 
   try {
-    const response = await apiService.getMetrics(selectedPeriodId.value)
+    const externalPeriodId = selectedExternalPeriodId.value
+    if (!externalPeriodId)
+      return
+
+    const response = await apiService.getMetrics(String(externalPeriodId))
     metrics.value = response?.data?.data ?? response?.data ?? response
   }
   finally {
@@ -320,14 +346,14 @@ const loadCatalogs = async () => {
     catalogs.value = {
       sectors: normalizeArray(response?.sectors),
       routes: normalizeArray(response?.routes),
-      readers: normalizeArray(response?.readers),
+      workers: normalizeArray(response?.workers),
     }
   }
   catch {
     catalogs.value = {
       sectors: [],
       routes: [],
-      readers: [],
+      workers: [],
     }
   }
 }
@@ -420,6 +446,14 @@ onMounted(async () => {
 <template>
   <div class="advance-page">
     <div class="advance-stats">
+      <template v-if="pageLoading">
+        <VCard v-for="index in 5" :key="`skeleton-${index}`" class="advance-stats__card">
+          <VCardText>
+            <VSkeletonLoader type="card" />
+          </VCardText>
+        </VCard>
+      </template>
+      <template v-else>
       <VCard
         v-for="card in statCards"
         :key="card.title"
@@ -475,11 +509,20 @@ onMounted(async () => {
           </div>
         </VCardText>
       </VCard>
+      </template>
     </div>
 
     <VCard class="advance-table">
       <VCardText>
-        <div class="advance-toolbar">
+        <div v-if="pageLoading" class="advance-toolbar">
+          <VSkeletonLoader type="text" class="advance-toolbar__search" />
+          <div class="advance-toolbar__actions">
+            <VSkeletonLoader type="text" width="140" />
+            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="advance-toolbar">
           <VTextField
             v-model="search"
             variant="outlined"

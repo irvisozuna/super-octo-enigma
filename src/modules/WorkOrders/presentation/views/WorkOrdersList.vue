@@ -10,6 +10,7 @@ import WorkOrdersFilterDrawer from '../../share/WorkOrdersFilterDrawer.vue'
 const { t } = useI18n()
 const router = useRouter()
 const workOrdersStore = useWorkOrdersStore()
+const pageLoading = computed(() => workOrdersStore.loading)
 
 const search = ref('')
 const itemsPerPage = ref(workOrdersStore.pagination.per_page)
@@ -272,6 +273,7 @@ onMounted(() => {
 <template>
   <div class="workorders-page">
     <BaseListHeader
+      v-if="!pageLoading"
       :title="t('WorkOrders.WorkOrdersModule.title')"
       icon="tabler-clipboard-list"
       :total="workOrdersStore.pagination.total"
@@ -281,10 +283,23 @@ onMounted(() => {
       :show-create-button="false"
       class="workorders-header"
     />
+    <VSkeletonLoader
+      v-else
+      type="heading"
+      class="workorders-header"
+    />
 
     <VCard class="workorders-table">
       <VCardText>
-        <div class="workorders-toolbar">
+        <div v-if="pageLoading" class="workorders-toolbar">
+          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+          <div class="workorders-toolbar__actions">
+            <VSkeletonLoader type="text" width="140" />
+            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="workorders-toolbar">
           <VTextField
             v-model="search"
             variant="outlined"

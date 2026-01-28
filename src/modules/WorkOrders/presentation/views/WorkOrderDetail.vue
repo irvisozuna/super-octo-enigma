@@ -53,6 +53,7 @@ const historyHeaders = [
 const workOrderId = computed(() => route.params.id as string)
 const workOrder = computed(() => store.currentItem)
 const companyId = computed(() => tenantStore.data?.companyId || '')
+const pageLoading = computed(() => store.detailLoading)
 
 const statusOptions = [
   'Pendiente',
@@ -233,6 +234,49 @@ const getPriorityColor = (value: string) => {
     return 'priority--low'
 
   return 'priority--default'
+}
+
+const getPriorityLabel = (value?: string) => {
+  const normalized = String(value || '').toLowerCase()
+
+  if (normalized.includes('high'))
+    return 'Alta'
+  if (normalized.includes('medium'))
+    return 'Media'
+  if (normalized.includes('low'))
+    return 'Baja'
+
+  return value || 'Sin prioridad'
+}
+
+const getPriorityBadge = (value?: string) => {
+  const normalized = String(value || '').toLowerCase()
+
+  if (normalized.includes('high'))
+    return 'priority-badge--high'
+  if (normalized.includes('medium'))
+    return 'priority-badge--medium'
+  if (normalized.includes('low'))
+    return 'priority-badge--low'
+
+  return 'priority-badge--default'
+}
+
+const getStatusChipColor = (value?: string) => {
+  const normalized = String(value || '').toLowerCase()
+
+  if (normalized.includes('cerrad') || normalized.includes('closed'))
+    return 'default'
+  if (normalized.includes('complet') || normalized.includes('complete'))
+    return 'success'
+  if (normalized.includes('revision') || normalized.includes('review'))
+    return 'info'
+  if (normalized.includes('proceso') || normalized.includes('progress'))
+    return 'warning'
+  if (normalized.includes('pend'))
+    return 'secondary'
+
+  return 'primary'
 }
 
 const currentStepIndex = computed(() => {
@@ -447,6 +491,7 @@ const saveAssignment = async () => {
     })
 
     await loadWorkOrder()
+    await loadHistories()
   }
   finally {
     savingAssignment.value = false
@@ -487,124 +532,137 @@ onMounted(async () => {
   <div class="workorder-detail">
     <VCard class="detail-card">
       <VCardText>
-        <div class="detail-header">
-          <div>
-            <div class="detail-title">Detalle de orden</div>
-            <div class="detail-subtitle">ID: {{ workOrderId }}</div>
-          </div>
-          <div class="detail-actions detail-actions--header">
-            <VBtn variant="tonal" color="primary" prepend-icon="tabler-camera" @click="openPhotos(0)">
-              Ver fotos
-            </VBtn>
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
-              Regresar
-            </VBtn>
+        <div v-if="pageLoading" class="detail-header">
+          <VSkeletonLoader type="heading" class="mb-2" />
+          <VSkeletonLoader type="text" />
+        </div>
+        <div v-else class="detail-header">
+          <div class="detail-hero">
+            <div class="detail-hero__main">
+              <div class="detail-hero__eyebrow">Orden de trabajo</div>
+              <div class="detail-hero__title">
+                {{ workOrder?.local_id ?? workOrder?.folio ?? workOrder?.external_id ?? workOrder?.code ?? workOrderId }}
+              </div>
+              <div class="detail-hero__meta">
+                <span>ID: {{ workOrderId }}</span>
+                <span>•</span>
+                <span>Programada: {{ formatDate(workOrder?.scheduled_at) }}</span>
+              </div>
+              <div class="detail-hero__chips">
+                <VChip size="small" variant="tonal" :color="getStatusChipColor(workOrder?.status)">
+                  {{ workOrder?.status ?? 'Sin estado' }}
+                </VChip>
+                <VChip size="small" variant="tonal" color="info">
+                  {{ workOrder?.type ?? workOrder?.type_catalog?.name ?? 'Sin tipo' }}
+                </VChip>
+                <VChip size="small" variant="tonal" color="secondary">
+                  Asignado: {{ currentWorkerName }}
+                </VChip>
+              </div>
+            </div>
+            <div class="detail-hero__actions">
+              <VBtn variant="flat" color="primary" prepend-icon="tabler-camera" @click="openPhotos(0)">
+                Ver fotos
+              </VBtn>
+              <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
+                Regresar
+              </VBtn>
+            </div>
           </div>
         </div>
 
         <VDivider class="my-4" />
 
-        <div v-if="workOrder" class="detail-top">
-          <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Folio</span>
-            <span class="detail-value">
-              {{ workOrder.local_id ?? workOrder.folio ?? workOrder.external_id ?? workOrder.code ?? workOrder.id ?? '-' }}
-            </span>
-          </div>
-            <div class="detail-item">
-              <span class="detail-label">Tipo</span>
-              <span class="detail-value">
-                {{ workOrder.type ?? workOrder.type_catalog?.name ?? workOrder.work_order_type_id ?? '-' }}
-              </span>
+        <div v-if="pageLoading" class="detail-top">
+          <VSkeletonLoader type="text@6" />
+        </div>
+        <div v-else-if="workOrder" class="detail-top">
+          <div class="detail-strip">
+            <div class="detail-strip__section">
+              <div class="detail-strip__title">Resumen</div>
+              <dl class="detail-list">
+                <div class="detail-list__row">
+                  <dt>Folio</dt>
+                  <dd>{{ workOrder.local_id ?? workOrder.folio ?? workOrder.external_id ?? workOrder.code ?? workOrder.id ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Tipo</dt>
+                  <dd>{{ workOrder.type ?? workOrder.type_catalog?.name ?? workOrder.work_order_type_id ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Estado</dt>
+                  <dd>{{ workOrder.status ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row" :class="getPriorityColor(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
+                  <dt>Prioridad</dt>
+                  <dd>
+                    <span class="priority-badge" :class="getPriorityBadge(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
+                      <span class="priority-badge__dot" />
+                      {{ getPriorityLabel(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '') }}
+                    </span>
+                  </dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Asignado a</dt>
+                  <dd>{{ workOrder.worker?.name ?? workOrder.assigned_to ?? workOrder.worker_id ?? '-' }}</dd>
+                </div>
+              </dl>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">Estado</span>
-              <span class="detail-value">
-                {{ workOrder.status ?? '-' }}
-              </span>
+
+            <div class="detail-strip__section">
+              <div class="detail-strip__title">Contrato</div>
+              <dl class="detail-list">
+                <div class="detail-list__row">
+                  <dt>Contrato</dt>
+                  <dd>{{ workOrder.contract_number ?? workOrder.contract?.contract_number ?? workOrder.contract_id ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Usuario</dt>
+                  <dd>{{ workOrder.user_name ?? workOrder.contract?.user_name ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Sistema</dt>
+                  <dd>{{ workOrder.system?.name ?? workOrder.system_id ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Sector</dt>
+                  <dd>{{ workOrder.sector?.name ?? workOrder.sector_id ?? '-' }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Ruta</dt>
+                  <dd>{{ workOrder.route?.name ?? workOrder.route_id ?? '-' }}</dd>
+                </div>
+              </dl>
             </div>
-            <div class="detail-item" :class="getPriorityColor(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
-              <span class="detail-label">Prioridad</span>
-              <span class="detail-value">
-                {{ workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Contrato</span>
-              <span class="detail-value">
-                {{ workOrder.contract_number ?? workOrder.contract?.contract_number ?? workOrder.contract_id ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Usuario</span>
-              <span class="detail-value">
-                {{ workOrder.user_name ?? workOrder.contract?.user_name ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Programada</span>
-              <span class="detail-value">
-                {{ formatDate(workOrder.scheduled_at) }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Solicitada</span>
-              <span class="detail-value">
-                {{ formatDate(workOrder.requested_at) }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Vencimiento</span>
-              <span class="detail-value">
-                {{ formatDate(workOrder.due_at) }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Completada</span>
-              <span class="detail-value">
-                {{ formatDate(workOrder.completed_at) }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Barrio</span>
-              <span class="detail-value">
-                {{ workOrder.neighborhood ?? '-' }}
-              </span>
-            </div>
-          <div class="detail-item">
-            <span class="detail-label">Asignado a</span>
-            <span class="detail-value">
-              {{ workOrder.worker?.name ?? workOrder.assigned_to ?? workOrder.worker_id ?? '-' }}
-            </span>
-          </div>
-            <div class="detail-item">
-              <span class="detail-label">Sistema</span>
-              <span class="detail-value">
-                {{ workOrder.system?.name ?? workOrder.system_id ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Sector</span>
-              <span class="detail-value">
-                {{ workOrder.sector?.name ?? workOrder.sector_id ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Ruta</span>
-              <span class="detail-value">
-                {{ workOrder.route?.name ?? workOrder.route_id ?? '-' }}
-              </span>
-            </div>
-            <div class="detail-item detail-item--full">
-              <span class="detail-label">Notas</span>
-              <span class="detail-value">
-                {{ workOrder.notes ?? '-' }}
-              </span>
+
+            <div class="detail-strip__section">
+              <div class="detail-strip__title">Fechas</div>
+              <dl class="detail-list">
+                <div class="detail-list__row">
+                  <dt>Programada</dt>
+                  <dd>{{ formatDate(workOrder.scheduled_at) }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Solicitada</dt>
+                  <dd>{{ formatDate(workOrder.requested_at) }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Vencimiento</dt>
+                  <dd>{{ formatDate(workOrder.due_at) }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Completada</dt>
+                  <dd>{{ formatDate(workOrder.completed_at) }}</dd>
+                </div>
+                <div class="detail-list__row">
+                  <dt>Barrio</dt>
+                  <dd>{{ workOrder.neighborhood ?? '-' }}</dd>
+                </div>
+              </dl>
             </div>
           </div>
 
-          <div class="status-panel">
+          <div class="status-panel status-panel--wide">
             <div class="status-panel__title">Estatus</div>
             <div class="status-traffic status-traffic--vertical">
               <div
@@ -624,98 +682,152 @@ onMounted(async () => {
           </div>
         </div>
 
+        <div v-if="workOrder" class="detail-notes">
+          <div class="detail-strip__title">Notas</div>
+          <div class="detail-notes__content">
+            {{ workOrder.notes ?? '-' }}
+          </div>
+        </div>
+
         <div v-else class="detail-empty">
           No se encontro la orden. Regresa y vuelve a cargar la lista.
         </div>
 
-        <div class="detail-section">
-          <div class="detail-section__title">Actualizar estado y comentario</div>
-          <div class="detail-actions">
-            <VSelect
-              v-model="selectedStatus"
-              :items="statusOptions"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="detail-actions__select"
-              :disabled="savingUpdate"
-            />
-          </div>
-          <VTextarea
-            v-model="commentText"
-            variant="outlined"
-            placeholder="Escribe un comentario"
-            rows="3"
-            class="detail-comment"
-          />
-          <div class="detail-actions">
-            <VBtn
-              color="primary"
-              variant="tonal"
-              :loading="savingUpdate"
-              :disabled="!commentText.trim()"
-              @click="saveStatusAndComment"
-            >
-              Guardar
-            </VBtn>
-          </div>
-        </div>
+        <VExpansionPanels
+          variant="accordion"
+          class="detail-panels"
+        >
+          <VExpansionPanel elevation="0" class="detail-panel">
+            <VExpansionPanelTitle>
+              <div class="detail-panel__title">
+                <div class="detail-panel__icon">
+                  <VIcon icon="tabler-message-circle" size="18" />
+                </div>
+                <div>
+                  <div class="detail-panel__label">Actualizar estado</div>
+                  <div class="detail-panel__hint">Agrega un comentario y guarda el cambio</div>
+                </div>
+              </div>
+            </VExpansionPanelTitle>
+            <VExpansionPanelText>
+              <div class="detail-section detail-section--form">
+                <div class="detail-actions">
+                  <VSelect
+                    v-model="selectedStatus"
+                    :items="statusOptions"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    class="detail-actions__select"
+                    :disabled="savingUpdate"
+                  />
+                </div>
+                <VTextarea
+                  v-model="commentText"
+                  variant="outlined"
+                  placeholder="Escribe un comentario"
+                  rows="3"
+                  class="detail-comment"
+                />
+                <div class="detail-actions">
+                  <VBtn
+                    color="primary"
+                    variant="tonal"
+                    :loading="savingUpdate"
+                    :disabled="!commentText.trim()"
+                    @click="saveStatusAndComment"
+                  >
+                    Guardar
+                  </VBtn>
+                </div>
+              </div>
+            </VExpansionPanelText>
+          </VExpansionPanel>
 
-        <div class="detail-section">
-          <div class="detail-section__title">Cambiar asignación</div>
-          <div class="detail-actions">
-            <VSelect
-              v-model="selectedWorkerId"
-              :items="workerOptions"
-              item-title="title"
-              item-value="value"
-              label="Asignado a"
-              density="compact"
-              variant="outlined"
-              hide-details
-              :loading="workersLoading"
-              :disabled="workersLoading || savingAssignment"
-              class="detail-actions__select"
-            />
-            <div class="detail-actions__hint">
-              <VChip color="primary" variant="tonal" size="small">
-                Actual: {{ currentWorkerName }}
-              </VChip>
-            </div>
-            <VBtn
-              color="primary"
-              variant="tonal"
-              :loading="savingAssignment"
-              :disabled="!selectedWorkerId"
-              @click="saveAssignment"
-            >
-              Guardar
-            </VBtn>
-          </div>
-        </div>
+          <VExpansionPanel elevation="0" class="detail-panel">
+            <VExpansionPanelTitle>
+              <div class="detail-panel__title">
+                <div class="detail-panel__icon">
+                  <VIcon icon="tabler-user-check" size="18" />
+                </div>
+                <div>
+                  <div class="detail-panel__label">Cambiar asignación</div>
+                  <div class="detail-panel__hint">Selecciona un nuevo operador</div>
+                </div>
+              </div>
+            </VExpansionPanelTitle>
+            <VExpansionPanelText>
+              <div class="detail-section detail-section--form">
+                <div class="detail-actions">
+                  <VSelect
+                    v-model="selectedWorkerId"
+                    :items="workerOptions"
+                    item-title="title"
+                    item-value="value"
+                    label="Asignado a"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    :loading="workersLoading"
+                    :disabled="workersLoading || savingAssignment"
+                    class="detail-actions__select"
+                  />
+                  <div class="detail-actions__hint">
+                    <VChip color="primary" variant="tonal" size="small">
+                      Actual: {{ currentWorkerName }}
+                    </VChip>
+                  </div>
+                  <VBtn
+                    color="primary"
+                    variant="tonal"
+                    :loading="savingAssignment"
+                    :disabled="!selectedWorkerId"
+                    @click="saveAssignment"
+                  >
+                    Guardar
+                  </VBtn>
+                </div>
+              </div>
+            </VExpansionPanelText>
+          </VExpansionPanel>
 
-        <div class="detail-section">
-          <div class="detail-section__title">Actualizar notas</div>
-          <VTextarea
-            v-model="notesText"
-            variant="outlined"
-            placeholder="Notas de la orden"
-            rows="3"
-            class="detail-comment"
-          />
-          <div class="detail-actions">
-            <VBtn
-              color="primary"
-              variant="tonal"
-              :loading="savingUpdate"
-              @click="saveNotes"
-            >
-              Guardar
-            </VBtn>
-          </div>
-        </div>
+          <VExpansionPanel elevation="0" class="detail-panel">
+            <VExpansionPanelTitle>
+              <div class="detail-panel__title">
+                <div class="detail-panel__icon">
+                  <VIcon icon="tabler-notes" size="18" />
+                </div>
+                <div>
+                  <div class="detail-panel__label">Actualizar notas</div>
+                  <div class="detail-panel__hint">Edita la descripción interna</div>
+                </div>
+              </div>
+            </VExpansionPanelTitle>
+            <VExpansionPanelText>
+              <div class="detail-section detail-section--form">
+                <VTextarea
+                  v-model="notesText"
+                  variant="outlined"
+                  placeholder="Notas de la orden"
+                  rows="3"
+                  class="detail-comment"
+                />
+                <div class="detail-actions">
+                  <VBtn
+                    color="primary"
+                    variant="tonal"
+                    :loading="savingUpdate"
+                    @click="saveNotes"
+                  >
+                    Guardar
+                  </VBtn>
+                </div>
+              </div>
+            </VExpansionPanelText>
+          </VExpansionPanel>
+        </VExpansionPanels>
 
-        <div class="detail-section">
+        <div class="detail-section detail-section--history">
           <div class="detail-section__title">Historial</div>
           <BaseDataTable
             :headers="historyHeaders"
@@ -786,31 +898,68 @@ onMounted(async () => {
 
 .detail-card {
   border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, #ffffff 45%);
 }
 
 .detail-header {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 16px;
 }
 
-.detail-title {
-  font-size: 20px;
+.detail-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  inline-size: 100%;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #e8f1ff;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.detail-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-hero__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
   font-weight: 700;
-  color: #1f2937;
 }
 
-.detail-subtitle {
-  font-size: 13px;
-  color: #94a3b8;
+.detail-hero__title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+.detail-hero__meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.detail-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .detail-top {
@@ -820,50 +969,144 @@ onMounted(async () => {
   align-items: start;
 }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #ffffff;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+.detail-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-.detail-item--full {
-  grid-column: 1 / -1;
+.detail-strip__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-strip__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.detail-list__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding-block-end: 8px;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.3);
+}
+
+.detail-list__row:last-child {
+  border-bottom: none;
+  padding-block-end: 0;
+}
+
+.detail-list__row dt {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.detail-list__row dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.detail-notes {
+  margin-block-start: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.detail-notes__content {
+  font-size: 14px;
+  color: #0f172a;
+  margin-block-start: 8px;
 }
 
 .priority--high {
-  border-color: rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px dashed rgba(239, 68, 68, 0.35);
 }
 
 .priority--medium {
-  border-color: rgba(245, 158, 11, 0.3);
-  background: rgba(245, 158, 11, 0.08);
+  border-bottom: 1px dashed rgba(245, 158, 11, 0.35);
 }
 
 .priority--low {
-  border-color: rgba(34, 197, 94, 0.3);
-  background: rgba(34, 197, 94, 0.08);
+  border-bottom: 1px dashed rgba(34, 197, 94, 0.35);
 }
 
 .priority--default {
-  border-color: rgba(148, 163, 184, 0.3);
-  background: rgba(148, 163, 184, 0.08);
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.3);
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.priority-badge__dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.priority-badge--high {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.priority-badge--medium {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.priority-badge--low {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.priority-badge--default {
+  color: #475569;
+  background: rgba(148, 163, 184, 0.16);
 }
 
 .detail-label {
   font-size: 12px;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .detail-value {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: #1f2937;
+  color: #0f172a;
 }
 
 .detail-empty {
@@ -874,6 +1117,113 @@ onMounted(async () => {
 
 .detail-section {
   margin-block-start: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.detail-section--form {
+  background: #f8fafc;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  position: relative;
+}
+
+.detail-section--form::before {
+  content: '';
+  position: absolute;
+  inset-block: 16px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.detail-section--form .detail-section__title {
+  padding-inline-start: 8px;
+}
+
+.detail-panels {
+  margin-block-start: 20px;
+  display: grid;
+  gap: 12px;
+  inline-size: 100%;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  align-items: start;
+}
+
+.detail-panel {
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: #ffffff;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.detail-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-panel__icon {
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0ecff;
+  color: #2563eb;
+}
+
+.detail-panel__label {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.detail-panel__hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.detail-panel :global(.v-expansion-panel-title) {
+  padding-block: 16px;
+  padding-inline: 16px;
+}
+
+.detail-panel :global(.v-expansion-panel-text__wrapper) {
+  padding-top: 0;
+}
+
+.detail-panel :global(.v-expansion-panel-title__overlay) {
+  opacity: 0.06;
+}
+
+.detail-panel :global(.v-expansion-panel-title:hover) {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.detail-section--history {
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.detail-section--history :global(.v-table) {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.detail-section--history :global(th) {
+  font-weight: 700;
+  color: #64748b;
+}
+
+.detail-section--history :global(tbody tr:hover) {
+  background: rgba(37, 99, 235, 0.04);
 }
 
 .detail-section__title {
@@ -886,9 +1236,13 @@ onMounted(async () => {
 .status-panel {
   border-radius: 16px;
   padding: 14px 12px;
-  background: #ffffff;
+  background: linear-gradient(160deg, rgba(226, 232, 240, 0.6), #ffffff 60%);
   border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.status-panel--wide {
+  padding: 18px 16px;
 }
 
 .status-panel__title {
@@ -945,6 +1299,7 @@ onMounted(async () => {
   margin-inline-start: 5px;
 }
 
+
 .status-step--active .status-step__dot {
   background: #22c55e;
   border-color: #22c55e;
@@ -964,17 +1319,33 @@ onMounted(async () => {
   .status-panel {
     max-inline-size: 320px;
   }
+
+  .detail-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-hero__actions {
+    inline-size: 100%;
+    justify-content: flex-start;
+  }
+
+  .detail-list__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .detail-panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-block-start: 8px;
-}
-
-.detail-actions--header {
-  margin-block-start: 0;
 }
 
 .detail-actions__select {
@@ -995,7 +1366,7 @@ onMounted(async () => {
   overflow: hidden;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
 }
 
 .photo-modal__title {

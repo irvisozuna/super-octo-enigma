@@ -77,12 +77,24 @@ const getPeriodLabel = (periodKey: string) => {
 const periodOptions = computed(() => {
   return periods.value.map(period => ({
     title: period.name || period.code || period.external_id || period.externalId || period.id,
-    value: period.id || period.period_id || period.uuid,
+    value: period.external_id || period.externalId || period.id || period.period_id || period.uuid,
     is_active: period.is_active ?? period.isActive ?? false,
   }))
 })
 
 const selectedPeriodId = ref<string | null>(null)
+const pageLoading = computed(() => periodsLoading.value || readingsStore.loading)
+
+const selectedExternalPeriodId = computed(() => {
+  if (!selectedPeriodId.value)
+    return null
+
+  const period = periods.value.find(item =>
+    String(item.id ?? item.period_id ?? item.uuid ?? item.code ?? item.external_id ?? item.externalId) === String(selectedPeriodId.value),
+  )
+
+  return period?.external_id ?? period?.externalId ?? selectedPeriodId.value
+})
 
 watch(periodOptions, options => {
   if (!options.length) {
@@ -102,12 +114,15 @@ const filteredItems = computed(() => {
   if (!selectedPeriodId.value)
     return readingsStore.items
 
-  const selectedPeriod = periods.value.find(period => String(period.id) === String(selectedPeriodId.value))
-  const selectedPeriodKey = getPeriodKey(selectedPeriod?.start_date)
+  const selectedPeriod = periods.value.find(period =>
+    String(period.external_id ?? period.externalId ?? period.id ?? period.period_id ?? period.uuid) === String(selectedPeriodId.value),
+  )
+  const selectedPeriodKey = getPeriodKey(selectedPeriod?.start_date ?? selectedPeriod?.meta?.start_date)
 
   return readingsStore.items.filter(item => {
-    if (item.period_id || item.period?.id)
-      return String(item.period_id ?? item.period?.id) === String(selectedPeriodId.value)
+    const itemPeriodExternal = item.period?.external_id ?? item.period?.externalId ?? item.external_period_id
+    if (itemPeriodExternal)
+      return String(itemPeriodExternal) === String(selectedPeriodId.value)
 
     if (selectedPeriodKey)
       return getPeriodKey(item.reading_date) === selectedPeriodKey
@@ -126,6 +141,7 @@ const normalizedFilters = computed(() => ({
 
 const applyLocalFilters = (items: any[]) => {
   const filterValues = normalizedFilters.value
+  const query = search.value.trim().toLowerCase()
 
   return items.filter(item => {
     const status = String(item.status ?? item.estatus ?? '').toLowerCase()
@@ -133,6 +149,15 @@ const applyLocalFilters = (items: any[]) => {
     const type = String(item.contract?.type?.name ?? item.tipo_contrato ?? '').toLowerCase()
     const sector = String(item.contract?.sector?.name ?? item.sector ?? '').toLowerCase()
     const route = String(item.contract?.route?.name ?? item.contract?.route?.code ?? item.ruta ?? '').toLowerCase()
+    const folio = String(item.local_id ?? item.external_contract_id ?? item.folio ?? item.FOLIO ?? item.id ?? '').toLowerCase()
+    const contrato = String(item.contract?.contract_number ?? item.contract_number ?? item.contract_id ?? item.contrato ?? item.CONTRATO ?? item.account_id ?? '').toLowerCase()
+    const usuario = String(item.contract?.user_name ?? item.user_name ?? item.usuario ?? item.USUARIO ?? item.user ?? item.name ?? '').toLowerCase()
+
+    if (query) {
+      const haystack = `${folio} ${contrato} ${usuario} ${status} ${anomaly} ${type} ${sector} ${route}`.trim()
+      if (!haystack.includes(query))
+        return false
+    }
 
     if (filterValues.status && !status.includes(filterValues.status))
       return false
@@ -206,8 +231,8 @@ const handleRowClick = (item: any) => {
 }
 
 const additionalParams = computed(() => ({
-  search: search.value,
   period_id: selectedPeriodId.value || undefined,
+  external_period_id: selectedExternalPeriodId.value || undefined,
   itemsPerPage: itemsPerPage.value,
 }))
 
@@ -215,7 +240,9 @@ const currentPeriodLabel = computed(() => {
   if (!selectedPeriodId.value)
     return '--'
 
-  const selectedPeriod = periods.value.find(period => String(period.id) === String(selectedPeriodId.value))
+  const selectedPeriod = periods.value.find(period =>
+    String(period.external_id ?? period.externalId ?? period.id ?? period.period_id ?? period.uuid) === String(selectedPeriodId.value),
+  )
   if (selectedPeriod?.name)
     return String(selectedPeriod.name).toUpperCase()
 
@@ -440,21 +467,11 @@ watch(() => readingsStore.pagination.per_page, value => {
   itemsPerPage.value = value
 })
 
-watch(search, () => {
-  const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
-    search: search.value,
-    period_id: selectedPeriodId.value,
-  })
-
-  params.itemsPerPage = readingsStore.pagination.per_page
-  readingsStore.fetchReadings(params)
-})
-
 watch(selectedPeriodId, () => {
   readingsStore.setPage(1)
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
-    search: search.value,
     period_id: selectedPeriodId.value,
+    external_period_id: selectedExternalPeriodId.value || undefined,
   })
 
   params.itemsPerPage = readingsStore.pagination.per_page
@@ -466,8 +483,8 @@ const handlePerPageChange = (value: number) => {
   readingsStore.setItemsPerPage(value)
 
   const params = readingsStore.buildParams(1, value, {
-    search: search.value,
     period_id: selectedPeriodId.value,
+    external_period_id: selectedExternalPeriodId.value || undefined,
   })
 
   params.itemsPerPage = value
@@ -501,7 +518,11 @@ const loadMetrics = async () => {
     return
 
   try {
-    const response = await apiService.getMetrics(selectedPeriodId.value)
+    const externalPeriodId = selectedExternalPeriodId.value
+    if (!externalPeriodId)
+      return
+
+    const response = await apiService.getMetrics(String(externalPeriodId))
     metrics.value = response?.data?.data ?? response?.data ?? response
   }
   catch {
@@ -512,8 +533,8 @@ const loadMetrics = async () => {
 onMounted(async () => {
   await loadPeriods()
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
-    search: search.value,
     period_id: selectedPeriodId.value,
+    external_period_id: selectedExternalPeriodId.value || undefined,
   })
 
   params.itemsPerPage = readingsStore.pagination.per_page
@@ -525,6 +546,7 @@ onMounted(async () => {
 <template>
   <div class="readings-page">
     <BaseListHeader
+      v-if="!pageLoading"
       :title="t('Readings.ReadingsModule.title')"
       icon="tabler-gauge"
       :total="readingsStore.pagination.total"
@@ -534,10 +556,37 @@ onMounted(async () => {
       :show-create-button="false"
       class="readings-header"
     />
+    <VSkeletonLoader
+      v-else
+      type="heading"
+      class="readings-header"
+    />
 
     <VCard class="readings-kpis">
       <VCardText>
         <VRow
+          v-if="pageLoading"
+          class="readings-kpis__row"
+          dense
+        >
+          <VCol cols="12" md="2" class="readings-kpis__item">
+            <VSkeletonLoader type="card" />
+          </VCol>
+          <VCol cols="12" md="2" class="readings-kpis__item">
+            <VSkeletonLoader type="card" />
+          </VCol>
+          <VCol cols="12" md="2" class="readings-kpis__item">
+            <VSkeletonLoader type="card" />
+          </VCol>
+          <VCol cols="12" md="2" class="readings-kpis__item">
+            <VSkeletonLoader type="card" />
+          </VCol>
+          <VCol cols="12" md="2" class="readings-kpis__item">
+            <VSkeletonLoader type="card" />
+          </VCol>
+        </VRow>
+        <VRow
+          v-else
           class="readings-kpis__row"
           dense
         >
@@ -642,7 +691,16 @@ onMounted(async () => {
 
     <VCard class="readings-table">
       <VCardText>
-        <div class="readings-toolbar">
+        <div v-if="pageLoading" class="readings-toolbar">
+          <VSkeletonLoader type="text" class="readings-toolbar__search" />
+          <div class="readings-toolbar__actions">
+            <VSkeletonLoader type="text" width="140" />
+            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="readings-toolbar">
           <VTextField
             v-model="search"
             variant="outlined"

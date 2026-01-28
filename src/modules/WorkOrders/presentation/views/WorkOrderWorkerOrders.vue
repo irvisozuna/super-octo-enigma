@@ -8,6 +8,7 @@ import { useWorkOrdersStore } from '../stores/workOrdersStore'
 const route = useRoute()
 const router = useRouter()
 const store = useWorkOrdersStore()
+const pageLoading = computed(() => store.loading)
 
 const search = ref('')
 const itemsPerPage = ref(store.pagination.per_page)
@@ -159,6 +160,7 @@ onMounted(() => {
 <template>
   <div class="workorders-page">
     <BaseListHeader
+      v-if="!pageLoading"
       title="Ordenes asignadas"
       icon="tabler-clipboard-check"
       :total="store.pagination.total"
@@ -168,10 +170,21 @@ onMounted(() => {
       :show-create-button="false"
       class="workorders-header"
     />
+    <VSkeletonLoader
+      v-else
+      type="heading"
+      class="workorders-header"
+    />
 
     <VCard class="workorders-table">
       <VCardText>
-        <div class="workorders-toolbar">
+        <div v-if="pageLoading" class="workorders-toolbar">
+          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+          <div class="workorders-toolbar__actions">
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="workorders-toolbar">
           <VTextField
             v-model="search"
             variant="outlined"

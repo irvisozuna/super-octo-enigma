@@ -38,6 +38,7 @@ const appliedRouteId = ref<string | null>(null)
 const mapRef = ref<any>(null)
 const mapCenter = ref<[number, number]>([29.081, -110.963])
 const mapZoom = ref(12)
+const pageLoading = computed(() => loading.value)
 
 const normalizeArray = (response: any) => {
   if (Array.isArray(response))
@@ -53,7 +54,7 @@ const normalizeArray = (response: any) => {
 const periodOptions = computed(() => {
   return periods.value.map(period => ({
     title: period.name || period.code || period.external_id || period.externalId || period.id,
-    value: period.id || period.period_id || period.uuid || period.code || period.external_id || period.externalId,
+    value: period.external_id || period.externalId || period.id || period.period_id || period.uuid || period.code,
     is_active: period.is_active ?? period.isActive ?? false,
   }))
 })
@@ -91,6 +92,7 @@ const getDownloadedPeriodKeys = (item: any) => {
   const downloadedRoute = getDownloadedRoute(item)
   const period = downloadedRoute?.period ?? item?.period
   const keys = [
+    downloadedRoute?.external_period_id,
     downloadedRoute?.period_id,
     period?.id,
     period?.code,
@@ -127,10 +129,26 @@ const selectedPeriodKeys = computed(() => {
   return Array.from(new Set(keys))
 })
 
+const selectedExternalPeriodId = computed(() => {
+  if (!appliedPeriodId.value)
+    return null
+
+  const period = periods.value.find(item =>
+    String(item.id ?? item.period_id ?? item.uuid ?? item.code ?? item.external_id ?? item.externalId) === String(appliedPeriodId.value),
+  )
+
+  return period?.external_id ?? period?.externalId ?? appliedPeriodId.value
+})
+
 const getDownloadedReaderId = (item: any) => {
   const downloadedRoute = getDownloadedRoute(item)
-  const reader = downloadedRoute?.reader ?? item?.reader
-  const id = downloadedRoute?.reader_id ?? reader?.id ?? item?.reader_id ?? item?.readerId
+  const worker = downloadedRoute?.worker ?? item?.worker
+  const id = downloadedRoute?.worker_external_id
+    ?? worker?.external_id
+    ?? downloadedRoute?.reader_id
+    ?? worker?.id
+    ?? item?.reader_id
+    ?? item?.readerId
 
   return id ? String(id) : null
 }
@@ -164,7 +182,7 @@ const readerOptions = computed(() => {
       return
 
     const downloadedRoute = getDownloadedRoute(item)
-    const reader = downloadedRoute?.reader ?? item?.reader
+    const reader = downloadedRoute?.worker ?? downloadedRoute?.reader ?? item?.worker ?? item?.reader
     const id = getDownloadedReaderId(item)
     const name = reader?.name || id
 
@@ -423,6 +441,7 @@ const applyPeriod = async () => {
   selectedRouteId.value = null
   readings.value = []
   routeLatLngs.value = []
+  await loadDownloadedRoutes()
   await loadReadings()
 }
 
@@ -497,7 +516,11 @@ const loadPeriods = async () => {
 const loadDownloadedRoutes = async () => {
   loading.value = true
   try {
-    const response = await apiService.getDownloadedRoutes()
+    const externalPeriodId = selectedExternalPeriodId.value
+    if (!externalPeriodId)
+      return
+
+    const response = await apiService.getDownloadedRoutes(String(externalPeriodId))
     downloadedRoutes.value = normalizeArray(response)
   }
   finally {
@@ -512,8 +535,9 @@ const loadReadings = async () => {
   readingsLoading.value = true
   try {
     const response = await apiService.getList({
-      period_id: resolvedPeriodId.value,
+      external_period_id: selectedExternalPeriodId.value ?? undefined,
       reader_id: appliedReaderId.value,
+      worker_external_id: appliedReaderId.value,
       itemsPerPage: 500,
       page: 1,
       sortBy: 'reading_date',
@@ -633,6 +657,7 @@ onMounted(async () => {
 <template>
   <div class="readings-map">
     <BaseListHeader
+      v-if="!pageLoading"
       title="Mapa de lecturas"
       icon="tabler-map-2"
       :total="orderedReadings.length"
@@ -641,10 +666,16 @@ onMounted(async () => {
       description="Selecciona lecturista y ruta para ver el orden de las lecturas."
       :show-create-button="false"
     />
+    <VSkeletonLoader v-else type="heading" class="mb-4" />
 
     <VCard class="map-toolbar">
       <VCardText>
-        <div class="map-toolbar__filters">
+        <div v-if="pageLoading" class="map-toolbar__filters">
+          <VSkeletonLoader type="text" width="220" />
+          <VSkeletonLoader type="text" width="220" />
+          <VSkeletonLoader type="text" width="220" />
+        </div>
+        <div v-else class="map-toolbar__filters">
           <VSelect
             v-model="selectedPeriodId"
             :items="periodOptions"

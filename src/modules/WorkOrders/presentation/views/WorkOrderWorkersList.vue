@@ -20,6 +20,7 @@ const loading = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = ref(15)
 const perPageOptions = [10, 15, 25, 50, 100]
+const pageLoading = computed(() => loading.value)
 const linkDialogOpen = ref(false)
 const users = ref<any[]>([])
 const usersLoading = ref(false)
@@ -64,6 +65,7 @@ const tableItems = computed(() => {
     const employeeCode = item.employee_code ?? item.external_id ?? item.externalId ?? item.code ?? '-'
     const userId = item.user_id ?? item.userId ?? item.user?.id ?? null
     const linkedUserFromCatalog = userId ? usersById.value.get(String(userId)) : null
+    const workerName = item.name ?? item.assigned_to ?? item.full_name ?? item.username ?? '-'
     const linkedUser = linkedUserFromCatalog?.name
       ?? linkedUserFromCatalog?.username
       ?? linkedUserFromCatalog?.email
@@ -73,7 +75,7 @@ const tableItems = computed(() => {
       ?? (userId ? `#${userId}` : 'Sin vincular')
 
     return {
-      name: item.name ?? item.assigned_to ?? item.full_name ?? item.username ?? '-',
+      name: userId ? workerName : `${workerName} (sin usuario)`,
       employee_code: employeeCode,
       linked_user: linkedUser,
       assigned: counts.get(key) ?? item.assigned_count ?? item.orders_count ?? item.total ?? 0,
@@ -248,6 +250,7 @@ onMounted(async () => {
 <template>
   <div class="workorders-page">
     <BaseListHeader
+      v-if="!pageLoading"
       title="Operadores"
       icon="tabler-user"
       :total="workers.length"
@@ -255,6 +258,11 @@ onMounted(async () => {
       item-label-plural="operadores"
       description="Lista de operadores con ordenes asignadas."
       :show-create-button="false"
+      class="workorders-header"
+    />
+    <VSkeletonLoader
+      v-else
+      type="heading"
       class="workorders-header"
     />
 

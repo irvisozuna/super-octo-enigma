@@ -75,7 +75,7 @@ export class WorkOrderApiService {
   }
 
   async getWorkers(params: Record<string, any> = {}) {
-    return await rawApi('/workorder-workers', {
+    return await rawApi('/catalogs-readings/workers', {
       method: 'GET',
       params,
     })
