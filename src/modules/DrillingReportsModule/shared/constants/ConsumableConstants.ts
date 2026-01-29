@@ -81,6 +81,15 @@ export const CONSUMABLE_TYPES = [
     translationKey: 'DrillingReportsModule.consumables.gasoline',
   },
   {
+    title: 'Petróleo',
+    value: 'petroleum',
+    icon: 'tabler-oil',
+    color: '#F59E0B',
+    category: 'fuel',
+    description: 'Combustible petróleo',
+    translationKey: 'DrillingReportsModule.consumables.petroleum',
+  },
+  {
     title: 'Ezze Pac R',
     value: 'ezze_pac_r',
     icon: 'tabler-chemical',

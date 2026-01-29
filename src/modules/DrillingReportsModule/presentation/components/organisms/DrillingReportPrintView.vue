@@ -241,6 +241,30 @@ const groupedBrocas = computed(() => {
   return Array.from(grouped.values())
 })
 
+// Escarreadores agrupados por serial_number (para evitar repetición)
+const groupedEscarreadores = computed(() => {
+  const escarreadores = toolsByType.value.escarreadores
+  const grouped = new Map()
+
+  for (const e of escarreadores) {
+    const key = e.tool?.serial_number
+    if (!key)
+      continue
+
+    if (grouped.has(key)) {
+      const existing = grouped.get(key)
+
+      existing.depth_from = Math.min(Number.parseFloat(existing.depth_from), Number.parseFloat(e.depth_from))
+      existing.depth_to = Math.max(Number.parseFloat(existing.depth_to), Number.parseFloat(e.depth_to))
+    }
+    else {
+      grouped.set(key, { ...e })
+    }
+  }
+
+  return Array.from(grouped.values())
+})
+
 // Consumos con valores por defecto para la tabla CDK
 const consumptionsForPrint = computed(() => {
   const defaultItems = ['Petróleo', 'Lubricante', 'Aceites', 'Agua', 'Bentonita', 'Aditivos']
@@ -257,6 +281,7 @@ const consumptionsForPrint = computed(() => {
 const sortedDirectionalMeasurements = computed(() => {
   if (!report.value?.directional_measurements?.length)
     return []
+
   return [...report.value.directional_measurements].sort((a: any, b: any) => (a.depth || 0) - (b.depth || 0))
 })
 
@@ -638,7 +663,9 @@ watch(() => report.value, newReport => {
                     <td>{{ m.azimuth?.toFixed(1) || '-' }}</td>
                     <td>{{ m.inclination?.toFixed(1) || '-' }}</td>
                     <td>{{ m.measurement_interval || '-' }}</td>
-                    <td class="text-left">{{ m.notes || '-' }}</td>
+                    <td class="text-left">
+                      {{ m.notes || '-' }}
+                    </td>
                     <td>{{ m.measured_at ? formatMeasurementDateTime(m.measured_at) : '-' }}</td>
                   </tr>
                 </tbody>
@@ -788,7 +815,7 @@ watch(() => report.value, newReport => {
                 </thead>
                 <tbody>
                   <tr
-                    v-for="e in toolsByType.escarreadores"
+                    v-for="e in groupedEscarreadores"
                     :key="e.tool?.id || e.depth_from"
                   >
                     <td>{{ e.tool?.core_size || e.tool?.diameter || '-' }}</td>
@@ -797,7 +824,7 @@ watch(() => report.value, newReport => {
                     <td>{{ e.depth_to }}</td>
                   </tr>
                   <tr
-                    v-if="!toolsByType.escarreadores.length"
+                    v-if="!groupedEscarreadores.length"
                     class="empty-row"
                   >
                     <td colspan="4">
