@@ -1,20 +1,34 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseDataTable from '@/components/BaseDataTable.vue'
+import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
 
 const apiService = new ReadingApiService()
+const router = useRouter()
 
 const search = ref('')
 const itemsPerPage = ref(10)
 const perPageOptions = [10, 25, 50, 100]
 const currentPage = ref(1)
+const filtersOpen = ref(false)
+const filters = ref({
+  sector: '',
+  route: '',
+  reader: '',
+})
 
 const periods = ref<any[]>([])
 const selectedPeriodId = ref<string | null>(null)
 const downloadedRoutes = ref<any[]>([])
 const loading = ref(false)
 const metrics = ref<any | null>(null)
+const catalogs = ref({
+  sectors: [] as any[],
+  routes: [] as any[],
+  readers: [] as any[],
+})
 
 const normalizeArray = (response: any) => {
   if (Array.isArray(response))
@@ -150,7 +164,13 @@ const formatDate = (value?: string) => {
 const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
   sector: item.downloaded_route?.route?.sector?.name ?? '-',
   ruta: item.downloaded_route?.route?.name ?? item.downloaded_route?.route?.code ?? item.downloaded_route?.external_route_id ?? '-',
+  route_id: item.downloaded_route?.external_route_id
+    ?? item.downloaded_route?.route?.external_id
+    ?? item.downloaded_route?.route?.code
+    ?? item.downloaded_route?.route_id
+    ?? null,
   lecturista: item.downloaded_route?.reader?.name ?? item.downloaded_route?.reader_id ?? '-',
+  reader_id: item.downloaded_route?.reader_id ?? item.downloaded_route?.reader?.id ?? null,
   avance: item.downloaded_route?.contracts_downloaded
     ? Math.round((Number(item.downloaded_route?.readings_count || item.readings_count || 0) / Number(item.downloaded_route?.contracts_downloaded || 0)) * 100)
     : 0,
@@ -164,15 +184,76 @@ const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
   avatar: 'tabler-user',
 })))
 
+const normalizeOptionValue = (value?: string | number | null) => {
+  if (value === null || value === undefined)
+    return ''
+
+  return String(value).trim()
+}
+
+const buildOptions = (items: any[], getLabel: (item: any) => string) => {
+  const map = new Map<string, string>()
+
+  items.forEach(item => {
+    const label = normalizeOptionValue(getLabel(item))
+    if (!label)
+      return
+
+    map.set(label, label)
+  })
+
+  return Array.from(map.entries()).map(([value, title]) => ({ value, title }))
+}
+
+const sectorOptions = computed(() => {
+  if (catalogs.value.sectors.length) {
+    return buildOptions(catalogs.value.sectors, item =>
+      item?.name ?? item?.code ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.sector)
+})
+
+const routeOptions = computed(() => {
+  if (catalogs.value.routes.length) {
+    return buildOptions(catalogs.value.routes, item =>
+      item?.name ?? item?.code ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.ruta)
+})
+
+const readerOptions = computed(() => {
+  if (catalogs.value.readers.length) {
+    return buildOptions(catalogs.value.readers, item =>
+      item?.name ?? item?.external_id ?? item?.externalId ?? item?.id,
+    )
+  }
+
+  return buildOptions(mappedItems.value, item => item.lecturista)
+})
+
 const filteredItems = computed(() => {
-  if (!search.value)
-    return mappedItems.value
+  const query = search.value.toLowerCase().trim()
+  const sector = filters.value.sector.toLowerCase().trim()
+  const route = filters.value.route.toLowerCase().trim()
+  const reader = filters.value.reader.toLowerCase().trim()
 
-  const query = search.value.toLowerCase()
+  return mappedItems.value.filter(item => {
+    const haystack = `${item.sector} ${item.ruta} ${item.lecturista}`.toLowerCase()
+    if (query && !haystack.includes(query))
+      return false
+    if (sector && String(item.sector).toLowerCase() !== sector)
+      return false
+    if (route && String(item.ruta).toLowerCase() !== route)
+      return false
+    if (reader && String(item.lecturista).toLowerCase() !== reader)
+      return false
 
-  return mappedItems.value.filter(item =>
-    `${item.sector} ${item.ruta} ${item.lecturista}`.toLowerCase().includes(query),
-  )
+    return true
+  })
 })
 
 const pagedItems = computed(() => {
@@ -233,6 +314,24 @@ const loadMetrics = async () => {
   }
 }
 
+const loadCatalogs = async () => {
+  try {
+    const response = await apiService.getAdvanceCatalogs()
+    catalogs.value = {
+      sectors: normalizeArray(response?.sectors),
+      routes: normalizeArray(response?.routes),
+      readers: normalizeArray(response?.readers),
+    }
+  }
+  catch {
+    catalogs.value = {
+      sectors: [],
+      routes: [],
+      readers: [],
+    }
+  }
+}
+
 watch(periodOptions, options => {
   if (!options.length)
     return
@@ -250,13 +349,71 @@ watch(search, () => {
   currentPage.value = 1
 })
 
+watch(filters, () => {
+  currentPage.value = 1
+}, { deep: true })
+
 const handlePerPageChange = (value: number) => {
   itemsPerPage.value = value
   currentPage.value = 1
 }
 
+const goToMap = (item: any) => {
+  const query: Record<string, string> = {}
+  if (selectedPeriodId.value)
+    query.period_id = String(selectedPeriodId.value)
+  if (item?.reader_id)
+    query.reader_id = String(item.reader_id)
+  if (item?.route_id)
+    query.route_id = String(item.route_id)
+
+  router.push({ name: 'ReadingsMap', query })
+}
+
+const handleExport = () => {
+  const rows = filteredItems.value
+  if (!rows.length)
+    return
+
+  const columns = [
+    { key: 'sector', title: 'SECTOR' },
+    { key: 'ruta', title: 'RUTA' },
+    { key: 'lecturista', title: 'LECTURISTA' },
+    { key: 'avance', title: 'AVANCE' },
+    { key: 'cuentas', title: 'CUENTAS' },
+    { key: 'descarga', title: 'DESCARGA' },
+    { key: 'tpl', title: 'TPL / TTR' },
+    { key: 'cierre', title: 'CIERRE' },
+    { key: 'estatus', title: 'ESTATUS' },
+  ]
+
+  const escapeValue = (value: any) => {
+    const text = String(value ?? '')
+    const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
+
+    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+  }
+
+  const csvRows = [
+    columns.map(column => column.title).join(','),
+    ...rows.map(row => columns.map(column => escapeValue((row as any)[column.key])).join(',')),
+  ]
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.setAttribute('download', `avance_lecturistas_${new Date().toISOString().slice(0, 10)}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 onMounted(async () => {
   await loadPeriods()
+  await loadCatalogs()
 })
 </script>
 
@@ -343,14 +500,57 @@ onMounted(async () => {
               hide-details
               class="advance-toolbar__period"
             />
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-adjustments">
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              prepend-icon="tabler-adjustments"
+              @click="filtersOpen = true"
+            >
               Filtros
             </VBtn>
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload">
+            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="handleExport">
               Exportar
             </VBtn>
           </div>
         </div>
+
+        <ReadingsFilterDrawer
+          v-model="filtersOpen"
+          title="Filtros"
+          @apply="filtersOpen = false"
+          @clear="filters.sector = ''; filters.route = ''; filters.reader = ''"
+        >
+          <VSelect
+            v-model="filters.sector"
+            :items="sectorOptions"
+            item-title="title"
+            item-value="value"
+            label="Sector"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+          <VSelect
+            v-model="filters.route"
+            :items="routeOptions"
+            item-title="title"
+            item-value="value"
+            label="Ruta"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+          <VSelect
+            v-model="filters.reader"
+            :items="readerOptions"
+            item-title="title"
+            item-value="value"
+            label="Lecturista"
+            density="compact"
+            variant="outlined"
+            hide-details
+          />
+        </ReadingsFilterDrawer>
 
         <BaseDataTable
           :headers="headers"
@@ -385,8 +585,15 @@ onMounted(async () => {
               {{ item.estatus }}
             </VChip>
           </template>
-          <template #actions>
-            <VBtn icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+          <template #actions="{ item }">
+            <VMenu location="bottom end">
+              <template #activator="{ props }">
+                <VBtn v-bind="props" icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+              </template>
+              <VList density="compact">
+                <VListItem prepend-icon="tabler-map-2" title="Ver mapa" @click="goToMap(item)" />
+              </VList>
+            </VMenu>
           </template>
         </BaseDataTable>
       </VCardText>

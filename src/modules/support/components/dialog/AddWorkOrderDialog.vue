@@ -4,11 +4,13 @@ import { ref } from 'vue'
 import { useContractStore } from '../../stores/contractStore'
 import { useWorkOrderValidation } from '../../validations/WorkOrderValidation'
 import { useNotification } from '@/helpers/notificationHelper'
+import { WorkOrderApiService } from '@/modules/WorkOrders/infrastructure/api/services/WorkOrderApiService'
 
 const { closeDialog } = useAppManager()
 const contractStore = useContractStore()
 const { showSuccess, showError } = useNotification()
 const workOrderValidation = useWorkOrderValidation()
+const workOrderApiService = new WorkOrderApiService()
 
 // Modificar la configuración del formulario para asegurar la validación
 const { handleSubmit, errors, validate } = useForm({
@@ -44,6 +46,36 @@ const { value: subject } = useField('subject')
 const { value: message } = useField('message')
 const { value: files } = useField('files')
 
+const normalizeArray = (response: any) => {
+  if (Array.isArray(response))
+    return response
+  if (Array.isArray(response?.data))
+    return response.data
+  if (Array.isArray(response?.data?.data))
+    return response.data.data
+
+  return []
+}
+
+const resolveWorkerId = async (userId?: string | number | null) => {
+  if (!userId)
+    return null
+
+  let workers = normalizeArray(await workOrderApiService.getWorkers({ user_id: userId }).catch(() => []))
+
+  if (!workers.length)
+    workers = normalizeArray(await workOrderApiService.getWorkers().catch(() => []))
+
+  const match = workers.find(item => {
+    const workerUserId = item.user_id ?? item.userId ?? item.userid ?? item.user?.id ?? item.assigned_to ?? item.assigned?.id
+    return String(workerUserId ?? '') === String(userId)
+  })
+
+  const workerId = match?.id ?? match?.worker_id ?? match?.worker?.id
+
+  return workerId ? String(workerId) : null
+}
+
 // Opciones para los selects
 
 const priorities = ref([
@@ -57,6 +89,12 @@ const priorities = ref([
 const onFormSubmit = handleSubmit(async values => {
   try {
     const token_dolibarr = useCookie('dolibarrToken').value
+    const workerId = await resolveWorkerId(values.fk_user_assign)
+
+    if (values.fk_user_assign && !workerId) {
+      showError('Usuario no tiene activado para hacer cambios.')
+      return
+    }
 
     // 1. Crear un objeto FormData
     const formData = new FormData()
@@ -65,7 +103,9 @@ const onFormSubmit = handleSubmit(async values => {
     formData.append('source_entity', values.source_entity ?? '')
     formData.append('type_code', values.type_code ?? '')
     formData.append('severity_code', values.severity_code ?? '')
-    formData.append('fk_user_assign', values.fk_user_assign ?? '')
+    formData.append('fk_user_assign', workerId ?? '')
+    formData.append('assigned_to', workerId ?? '')
+    formData.append('worker_id', workerId ?? '')
     formData.append('options_area', values.options_area ?? '')
     formData.append('options_department', values.options_department ?? '')
     formData.append('options_reported_by', values.options_reported_by ?? '')

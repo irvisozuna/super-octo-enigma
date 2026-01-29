@@ -179,7 +179,26 @@ const handleExport = () => {
 }
 
 const handleOptionsUpdate = (params: Record<string, any>) => {
-  workOrdersStore.fetchList(params)
+  const page = params.page ?? workOrdersStore.pagination.current_page ?? 1
+  const perPage = params.per_page ?? itemsPerPage.value ?? workOrdersStore.pagination.per_page
+
+  if (params.per_page) {
+    workOrdersStore.setItemsPerPage(perPage)
+    itemsPerPage.value = perPage
+  }
+  if (params.page)
+    workOrdersStore.setPage(page)
+
+  const requestParams = workOrdersStore.buildParams(page, perPage, {
+    search: search.value,
+    local_id: search.value || undefined,
+    folio: search.value || undefined,
+    status: filters.value.status,
+    type: filters.value.type,
+    priority: filters.value.priority,
+  })
+  requestParams.itemsPerPage = perPage
+  workOrdersStore.fetchList(requestParams)
 }
 
 const handleRowClick = (item: any) => {
@@ -192,6 +211,8 @@ const handleRowClick = (item: any) => {
 
 const additionalParams = computed(() => ({
   search: search.value,
+  local_id: search.value || undefined,
+  folio: search.value || undefined,
   status: filters.value.status,
   type: filters.value.type,
   priority: filters.value.priority,
@@ -202,17 +223,25 @@ watch(() => workOrdersStore.pagination.per_page, value => {
 })
 
 watch(search, () => {
-  const params = workOrdersStore.buildParams(1, workOrdersStore.pagination.per_page, { search: search.value })
+  const params = workOrdersStore.buildParams(1, workOrdersStore.pagination.per_page, {
+    search: search.value,
+    local_id: search.value || undefined,
+    folio: search.value || undefined,
+  })
+  params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 })
 
 const applyFilters = () => {
   const params = workOrdersStore.buildParams(1, workOrdersStore.pagination.per_page, {
     search: search.value,
+    local_id: search.value || undefined,
+    folio: search.value || undefined,
     status: filters.value.status,
     type: filters.value.type,
     priority: filters.value.priority,
   })
+  params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 }
 
@@ -226,13 +255,16 @@ const clearFilters = () => {
 }
 
 const handlePerPageChange = (value: number) => {
-  workOrdersStore.setItemsPerPage(value)
-  const params = workOrdersStore.buildParams(1, value, { search: search.value })
-  workOrdersStore.fetchList(params)
+  handleOptionsUpdate({ page: 1, per_page: value })
 }
 
 onMounted(() => {
-  const params = workOrdersStore.buildParams(1, workOrdersStore.pagination.per_page, { search: search.value })
+  const params = workOrdersStore.buildParams(1, workOrdersStore.pagination.per_page, {
+    search: search.value,
+    local_id: search.value || undefined,
+    folio: search.value || undefined,
+  })
+  params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 })
 </script>

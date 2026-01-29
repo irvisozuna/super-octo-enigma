@@ -26,6 +26,8 @@ export const useReadingsStore = defineStore('readings', () => {
 
     try {
       const requestParams = { ...params }
+      if (requestParams.itemsPerPage && !requestParams.per_page)
+        requestParams.per_page = requestParams.itemsPerPage
 
       if (requestParams.page && requestParams.per_page && !requestParams.limit) {
         requestParams.limit = requestParams.per_page
