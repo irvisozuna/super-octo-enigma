@@ -47,6 +47,11 @@ const normalizeArray = (response: any) => {
   return []
 }
 
+const isLecturista = (item: any) => {
+  const code = item?.worker_type?.code ?? item?.workerType?.code ?? item?.type?.code ?? item?.category?.code ?? item?.code ?? item?.worker_type ?? item?.workerType ?? item?.type ?? item?.category ?? ''
+  return String(code).toUpperCase() === 'LECTURISTA'
+}
+
 const tableItems = computed(() => {
   const counts = new Map<string, number>()
 
@@ -186,14 +191,37 @@ const openLinkDialog = async (item: any) => {
 }
 
 const saveUserLink = async () => {
-  const workerId = selectedWorker.value?.id ?? selectedWorker.value?.worker_id
-  if (!workerId || !selectedUserId.value)
+  let workerId = selectedWorker.value?.id ?? selectedWorker.value?.worker_id
+  const externalId = selectedWorker.value?.external_id ?? selectedWorker.value?.externalId ?? selectedWorker.value?.employee_code
+  if (!selectedUserId.value)
+    return
+
+  if (!workerId && externalId) {
+    const localMatch = workers.value.find(item =>
+      String(item.external_id ?? item.externalId ?? item.employee_code ?? '') === String(externalId),
+    )
+    workerId = localMatch?.id ?? localMatch?.worker_id
+  }
+
+  if (!workerId && externalId) {
+    try {
+      const response = await apiService.getWorkers({ external_id: externalId })
+      const matches = normalizeArray(response)
+      workerId = matches[0]?.id ?? matches[0]?.worker_id
+    }
+    catch {
+      workerId = null
+    }
+  }
+
+  if (!workerId)
     return
 
   savingLink.value = true
   try {
     const worker = selectedWorker.value ?? {}
     await apiService.updateWorker(workerId, {
+      external_id: externalId ?? worker.external_id ?? worker.externalId ?? undefined,
       id: worker.id ?? workerId,
       local_id: worker.local_id ?? worker.localId ?? worker.localid ?? undefined,
       company_id: worker.company_id ?? worker.companyId ?? undefined,
@@ -225,7 +253,8 @@ const loadWorkers = async () => {
   loading.value = true
   try {
     const response = await apiService.getWorkers()
-    workers.value = normalizeArray(response)
+    const allWorkers = normalizeArray(response)
+    workers.value = allWorkers.filter(item => !isLecturista(item))
   }
   finally {
     loading.value = false

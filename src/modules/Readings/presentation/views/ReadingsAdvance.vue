@@ -152,7 +152,6 @@ const headers = [
   { title: 'Avance', key: 'avance', sortable: true },
   { title: 'Cuentas', key: 'cuentas', sortable: true },
   { title: 'Descarga', key: 'descarga', sortable: true },
-  { title: 'TPL / TTR', key: 'tpl', sortable: true },
   { title: 'Cierre', key: 'cierre', sortable: true },
   { title: 'Estatus', key: 'estatus', sortable: true },
   { title: 'Acciones', key: 'actions', sortable: false, align: 'end' },
@@ -196,7 +195,6 @@ const mappedItems = computed(() => downloadedRoutes.value.map(item => ({
     ? `${item.downloaded_route?.readings_count || item.readings_count || 0}/${item.downloaded_route?.contracts_downloaded || 0}`
     : (item.readings_count?.toString() ?? '0'),
   descarga: formatDate(item.downloaded_route?.download_date ?? item.downloaded_route?.created_at),
-  tpl: '2min / 4hr',
   cierre: '-',
   estatus: item.downloaded_route?.status ?? (item.downloaded_route?.contracts_downloaded ? 'EN CURSO' : '-'),
   avatar: 'tabler-user',
@@ -408,7 +406,6 @@ const handleExport = () => {
     { key: 'avance', title: 'AVANCE' },
     { key: 'cuentas', title: 'CUENTAS' },
     { key: 'descarga', title: 'DESCARGA' },
-    { key: 'tpl', title: 'TPL / TTR' },
     { key: 'cierre', title: 'CIERRE' },
     { key: 'estatus', title: 'ESTATUS' },
   ]

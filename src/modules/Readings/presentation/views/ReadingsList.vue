@@ -191,7 +191,9 @@ const tableItems = computed(() => filteredTableItems.value.map(item => ({
     ?? item.type,
   ),
   sector: normalizeValue(
-    item.contract?.sector?.name
+    item.contract?.route?.sector?.name
+    ?? item.contract?.route?.sector_external_id
+    ?? item.contract?.sector?.name
     ?? item.contract?.sector_id
     ?? item.sector
     ?? item.SECTOR

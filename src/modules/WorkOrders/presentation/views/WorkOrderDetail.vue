@@ -25,6 +25,7 @@ const savingAssignment = ref(false)
 const commentText = ref('')
 const notesText = ref('')
 const selectedStatus = ref('')
+const statusLoading = ref(false)
 const selectedWorkerId = ref<string | null>(null)
 const workers = ref<any[]>([])
 const workersLoading = ref(false)
@@ -55,13 +56,13 @@ const workOrder = computed(() => store.currentItem)
 const companyId = computed(() => tenantStore.data?.companyId || '')
 const pageLoading = computed(() => store.detailLoading)
 
-const statusOptions = [
-  'Pendiente',
-  'En proceso',
-  'En revision',
-  'Completado',
-  'Cerrado',
-]
+const statusCatalogs = ref<any[]>([])
+const statusOptions = computed(() => {
+  return statusCatalogs.value.map(item => ({
+    title: item.name ?? item.label ?? item.code ?? item.external_id ?? item.externalId ?? item.id,
+    value: item.code ?? item.external_id ?? item.externalId ?? item.id ?? item.name,
+  })).filter(item => item.value)
+})
 const statusSteps = [
   { key: 'created', label: 'Creada' },
   { key: 'pending', label: 'Pendiente' },
@@ -96,9 +97,12 @@ const resolveWorkerId = async (userId?: string | number | null) => {
     return String(workerUserId ?? '') === String(userId)
   })
 
-  const workerId = match?.id ?? match?.worker_id ?? match?.worker?.id
+  const workerExternalId = match?.external_id ?? match?.externalId ?? match?.employee_code ?? match?.code ?? null
+  const workerId = match?.id ?? match?.worker_id ?? match?.worker?.id ?? null
 
-  return workerId ? String(workerId) : null
+  return workerExternalId
+    ? String(workerExternalId)
+    : (workerId ? String(workerId) : null)
 }
 
 const formatDate = (value?: string) => {
@@ -155,7 +159,14 @@ const historyRows = computed(() => {
     date: formatDate(item.changed_at ?? item.created_at ?? item.date ?? item.createdAt),
     status: item.status ?? item.state ?? '-',
     comment: item.comment ?? item.notes ?? item.message ?? '-',
-    author: item.changed_by_worker?.name ?? item.changed_by_user?.name ?? item.changed_by ?? item.author ?? item.user_name ?? item.created_by ?? '-',
+    author: item.changed_by_worker?.name
+      ?? item.changed_by_user?.name
+      ?? workersByExternalId.value.get(String(item.changed_by ?? ''))?.name
+      ?? item.changed_by
+      ?? item.author
+      ?? item.user_name
+      ?? item.created_by
+      ?? '-',
     _raw: item,
   }))
 
@@ -202,18 +213,45 @@ const workerOptions = computed(() => {
   })).filter(item => item.value && item.value !== currentWorkerId.value)
 })
 
+const workersById = computed(() => {
+  const map = new Map<string, any>()
+  workers.value.forEach(item => {
+    const key = String(item.id ?? item.worker_id ?? item.user_id ?? '')
+    if (key)
+      map.set(key, item)
+  })
+  return map
+})
+
+const workersByExternalId = computed(() => {
+  const map = new Map<string, any>()
+  workers.value.forEach(item => {
+    const keys = [
+      item.external_id,
+      item.externalId,
+      item.employee_code,
+      item.code,
+    ].filter(key => key !== null && key !== undefined && key !== '')
+
+    keys.forEach(key => map.set(String(key), item))
+  })
+  return map
+})
+
 const normalizeStatus = (value?: string) => {
   const normalized = String(value || '').toLowerCase()
 
-  if (normalized.includes('creat'))
+  if (normalized.includes('creat') || normalized.includes('cread'))
     return 'created'
+  if (normalized.includes('assign') || normalized.includes('asignad'))
+    return 'pending'
   if (normalized.includes('pend'))
     return 'pending'
   if (normalized.includes('proceso') || normalized.includes('progress'))
     return 'in_progress'
-  if (normalized.includes('revision') || normalized.includes('review'))
+  if (normalized.includes('revision') || normalized.includes('revisión') || normalized.includes('review'))
     return 'in_review'
-  if (normalized.includes('complet'))
+  if (normalized.includes('complet') || normalized.includes('terminad') || normalized.includes('finaliz'))
     return 'completed'
   if (normalized.includes('cerrad') || normalized.includes('closed'))
     return 'closed'
@@ -224,13 +262,13 @@ const normalizeStatus = (value?: string) => {
 const getPriorityColor = (value: string) => {
   const normalized = String(value || '').toLowerCase()
 
-  if (normalized.includes('high'))
+  if (normalized.includes('high') || normalized.includes('alta'))
     return 'priority--high'
 
-  if (normalized.includes('medium'))
+  if (normalized.includes('medium') || normalized.includes('media'))
     return 'priority--medium'
 
-  if (normalized.includes('low'))
+  if (normalized.includes('low') || normalized.includes('baja'))
     return 'priority--low'
 
   return 'priority--default'
@@ -239,11 +277,11 @@ const getPriorityColor = (value: string) => {
 const getPriorityLabel = (value?: string) => {
   const normalized = String(value || '').toLowerCase()
 
-  if (normalized.includes('high'))
+  if (normalized.includes('high') || normalized.includes('alta'))
     return 'Alta'
-  if (normalized.includes('medium'))
+  if (normalized.includes('medium') || normalized.includes('media'))
     return 'Media'
-  if (normalized.includes('low'))
+  if (normalized.includes('low') || normalized.includes('baja'))
     return 'Baja'
 
   return value || 'Sin prioridad'
@@ -252,11 +290,11 @@ const getPriorityLabel = (value?: string) => {
 const getPriorityBadge = (value?: string) => {
   const normalized = String(value || '').toLowerCase()
 
-  if (normalized.includes('high'))
+  if (normalized.includes('high') || normalized.includes('alta'))
     return 'priority-badge--high'
-  if (normalized.includes('medium'))
+  if (normalized.includes('medium') || normalized.includes('media'))
     return 'priority-badge--medium'
-  if (normalized.includes('low'))
+  if (normalized.includes('low') || normalized.includes('baja'))
     return 'priority-badge--low'
 
   return 'priority-badge--default'
@@ -279,10 +317,33 @@ const getStatusChipColor = (value?: string) => {
   return 'primary'
 }
 
-const currentStepIndex = computed(() => {
-  const key = normalizeStatus(workOrder.value?.status)
+const getStatusDisplay = (item: any) => {
+  return item?.status_catalog?.name ?? item?.status ?? item?.estado ?? item?.state ?? '-'
+}
 
-  return statusSteps.findIndex(step => step.key === key)
+const getStatusValue = (item: any) => {
+  return item?.status_catalog?.code
+    ?? item?.status_catalog?.external_id
+    ?? item?.status_catalog?.externalId
+    ?? item?.external_work_order_status_id
+    ?? item?.status
+    ?? ''
+}
+
+const currentStatusKey = computed(() => {
+  const raw = workOrder.value?.status_catalog?.name
+    ?? workOrder.value?.status_catalog?.code
+    ?? workOrder.value?.status_catalog?.external_id
+    ?? workOrder.value?.status
+    ?? workOrder.value?.estado
+    ?? workOrder.value?.state
+    ?? ''
+
+  return normalizeStatus(raw)
+})
+
+const currentStepIndex = computed(() => {
+  return statusSteps.findIndex(step => step.key === currentStatusKey.value)
 })
 
 const getStepState = (index: number) => {
@@ -311,6 +372,27 @@ const loadWorkOrder = async () => {
 
   store.clearCurrent()
   await store.fetchById(workOrderId.value)
+}
+
+const loadStatusCatalogs = async () => {
+  statusLoading.value = true
+  try {
+    const response = await apiService.getStatusCatalogs({
+      company_id: companyId.value || undefined,
+      itemsPerPage: 500,
+      page: 1,
+    })
+    const data = normalizeArray(response)
+    statusCatalogs.value = data.length
+      ? data
+      : (workOrder.value?.status_catalog ? [workOrder.value.status_catalog] : [])
+  }
+  catch {
+    statusCatalogs.value = workOrder.value?.status_catalog ? [workOrder.value.status_catalog] : []
+  }
+  finally {
+    statusLoading.value = false
+  }
 }
 
 const loadWorkers = async () => {
@@ -383,6 +465,9 @@ const saveStatusAndComment = async () => {
   savingUpdate.value = true
   try {
     const statusValue = selectedStatus.value || workOrder.value?.status || undefined
+    const statusLabel = statusCatalogs.value.find(item =>
+      String(item.code ?? item.external_id ?? item.externalId ?? item.id ?? item.name) === String(statusValue),
+    )?.name ?? statusValue
     const userId = getUserData.value?.id ?? getUserData.value?.name ?? undefined
     const workerId = await resolveWorkerId(userId)
     if (userId && !workerId) {
@@ -392,14 +477,20 @@ const saveStatusAndComment = async () => {
     const changedBy = workerId ?? userId
     const changedAt = new Date().toISOString()
 
-    if (statusValue)
-      await apiService.update(workOrderId.value, { status: statusValue, work_order_id: workOrderId.value, changed_by: changedBy, changed_at: changedAt })
+  if (statusValue)
+      await apiService.update(workOrderId.value, {
+        status: statusValue,
+        external_work_order_status_id: statusValue,
+        work_order_id: workOrderId.value,
+        changed_by: changedBy,
+        changed_at: changedAt,
+      })
 
     await apiService.addHistory({
       workorder_id: workOrderId.value,
       work_order_id: workOrderId.value,
       notes: commentText.value.trim(),
-      status: statusValue,
+      status: statusLabel,
       company_id: companyId.value || undefined,
       changed_by: changedBy,
       changed_at: changedAt,
@@ -444,7 +535,7 @@ const saveNotes = async () => {
       notes: historyNote,
       comment: historyNote,
       message: historyNote,
-      status: workOrder.value?.status ?? undefined,
+      status: getStatusDisplay(workOrder.value) || undefined,
       company_id: companyId.value || undefined,
       changed_by: workerId ?? userId,
       changed_at: new Date().toISOString(),
@@ -471,20 +562,23 @@ const saveAssignment = async () => {
       return
     }
 
-    const previousWorker = currentWorkerName.value
-    const nextWorker = workerOptions.value.find(option => option.value === selectedWorkerId.value)?.title ?? selectedWorkerId.value
+  const previousWorker = currentWorkerName.value
+  const nextWorker = workerOptions.value.find(option => option.value === selectedWorkerId.value)?.title ?? selectedWorkerId.value
+  const selectedWorker = selectedWorkerId.value ? workersById.value.get(String(selectedWorkerId.value)) : null
+  const selectedWorkerExternalId = selectedWorker?.external_id ?? selectedWorker?.externalId ?? selectedWorker?.employee_code ?? selectedWorker?.code ?? null
 
-    await apiService.update(workOrderId.value, {
-      work_order_id: workOrderId.value,
-      worker_id: selectedWorkerId.value,
-      assigned_to: selectedWorkerId.value,
-    })
+  await apiService.update(workOrderId.value, {
+    work_order_id: workOrderId.value,
+    worker_id: selectedWorkerExternalId ?? selectedWorkerId.value,
+    assigned_to: selectedWorkerExternalId ?? selectedWorkerId.value,
+    external_worker_id: selectedWorkerExternalId ?? undefined,
+  })
 
     await apiService.addHistory({
       workorder_id: workOrderId.value,
       work_order_id: workOrderId.value,
       notes: `Cambio de asignación: ${previousWorker} -> ${nextWorker}`,
-      status: workOrder.value?.status ?? undefined,
+      status: getStatusDisplay(workOrder.value) || undefined,
       company_id: companyId.value || undefined,
       changed_by: workerId ?? userId,
       changed_at: new Date().toISOString(),
@@ -508,8 +602,8 @@ const goBack = () => {
 }
 
 watch(workOrder, value => {
-  if (value?.status)
-    selectedStatus.value = value.status
+  if (value)
+    selectedStatus.value = getStatusValue(value)
   notesText.value = value?.notes ?? ''
   selectedWorkerId.value = null
 }, { immediate: true })
@@ -525,6 +619,7 @@ onMounted(async () => {
   await loadHistories()
   await loadPhotos()
   await loadWorkers()
+  await loadStatusCatalogs()
 })
 </script>
 
@@ -549,8 +644,8 @@ onMounted(async () => {
                 <span>Programada: {{ formatDate(workOrder?.scheduled_at) }}</span>
               </div>
               <div class="detail-hero__chips">
-                <VChip size="small" variant="tonal" :color="getStatusChipColor(workOrder?.status)">
-                  {{ workOrder?.status ?? 'Sin estado' }}
+                <VChip size="small" variant="tonal" :color="getStatusChipColor(getStatusDisplay(workOrder))">
+                  {{ getStatusDisplay(workOrder) }}
                 </VChip>
                 <VChip size="small" variant="tonal" color="info">
                   {{ workOrder?.type ?? workOrder?.type_catalog?.name ?? 'Sin tipo' }}
@@ -591,7 +686,7 @@ onMounted(async () => {
                 </div>
                 <div class="detail-list__row">
                   <dt>Estado</dt>
-                  <dd>{{ workOrder.status ?? '-' }}</dd>
+                  <dd>{{ getStatusDisplay(workOrder) }}</dd>
                 </div>
                 <div class="detail-list__row" :class="getPriorityColor(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
                   <dt>Prioridad</dt>
@@ -715,11 +810,14 @@ onMounted(async () => {
                   <VSelect
                     v-model="selectedStatus"
                     :items="statusOptions"
+                    item-title="title"
+                    item-value="value"
                     density="compact"
                     variant="outlined"
                     hide-details
                     class="detail-actions__select"
-                    :disabled="savingUpdate"
+                    :loading="statusLoading"
+                    :disabled="savingUpdate || statusLoading"
                   />
                 </div>
                 <VTextarea

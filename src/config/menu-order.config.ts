@@ -45,6 +45,12 @@ export const menuOrderConfig: MenuOrderConfig[] = [
     section: 'main',
   },
   {
+    module: 'CatalogsReadings',
+    order: 18,
+    enabled: true,
+    section: 'main',
+  },
+  {
     module: 'contracts',
     order: 20,
     enabled: true,
