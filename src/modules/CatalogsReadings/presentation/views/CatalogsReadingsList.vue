@@ -175,12 +175,15 @@ const catalogColumnOverrides: Record<string, ColumnDef[]> = {
 const getAutoColumns = (rawItems: any[], existingKeys: Set<string>): ColumnDef[] => {
   const sample = rawItems.slice(0, 50)
   const keys = new Set<string>()
+  const excludedKeys = new Set(['id', 'company_id', 'companyId'])
 
   sample.forEach(item => {
     if (!item || typeof item !== 'object')
       return
 
     Object.keys(item).forEach(key => {
+      if (excludedKeys.has(key))
+        return
       if (existingKeys.has(key))
         return
       const value = item[key]
