@@ -717,15 +717,37 @@ onMounted(async () => {
                 </div>
                 <div class="detail-list__row">
                   <dt>Sistema</dt>
-                  <dd>{{ workOrder.system?.name ?? workOrder.system_id ?? '-' }}</dd>
+                  <dd>
+                    {{ workOrder.route?.sector?.system?.name
+                      ?? workOrder.route?.sector?.system?.code
+                      ?? workOrder.system?.name
+                      ?? workOrder.system?.code
+                      ?? workOrder.system_id
+                      ?? workOrder.external_system_id
+                      ?? '-' }}
+                  </dd>
                 </div>
                 <div class="detail-list__row">
                   <dt>Sector</dt>
-                  <dd>{{ workOrder.sector?.name ?? workOrder.sector_id ?? '-' }}</dd>
+                  <dd>
+                    {{ workOrder.route?.sector?.name
+                      ?? workOrder.route?.sector?.code
+                      ?? workOrder.sector?.name
+                      ?? workOrder.sector?.code
+                      ?? workOrder.sector_id
+                      ?? workOrder.external_sector_id
+                      ?? '-' }}
+                  </dd>
                 </div>
                 <div class="detail-list__row">
                   <dt>Ruta</dt>
-                  <dd>{{ workOrder.route?.name ?? workOrder.route_id ?? '-' }}</dd>
+                  <dd>
+                    {{ workOrder.route?.name
+                      ?? workOrder.route?.code
+                      ?? workOrder.route_id
+                      ?? workOrder.external_route_id
+                      ?? '-' }}
+                  </dd>
                 </div>
               </dl>
             </div>

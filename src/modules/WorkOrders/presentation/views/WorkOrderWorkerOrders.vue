@@ -57,7 +57,16 @@ const filteredItems = computed(() => {
     return store.items
 
   return store.items.filter(item => {
-    const assignedId = item.assigned_to ?? item.worker_id ?? item.worker?.id ?? item.assigned?.id
+    const assignedId = item.external_worker_id
+      ?? item.worker_external_id
+      ?? item.assigned_to
+      ?? item.worker?.external_id
+      ?? item.worker?.externalId
+      ?? item.assigned?.external_id
+      ?? item.assigned?.externalId
+      ?? item.worker_id
+      ?? item.worker?.id
+      ?? item.assigned?.id
 
     return String(assignedId || '') === String(workerId.value)
   })

@@ -52,21 +52,38 @@ const isLecturista = (item: any) => {
   return String(code).toUpperCase() === 'LECTURISTA'
 }
 
+const getWorkerExternalKey = (item: any) => {
+  const key = item?.external_id ?? item?.externalId ?? item?.employee_code ?? item?.code ?? null
+  return key ? String(key) : null
+}
+
+const getOrderExternalKey = (order: any) => {
+  const key = order?.external_worker_id
+    ?? order?.worker_external_id
+    ?? order?.assigned_to
+    ?? order?.worker?.external_id
+    ?? order?.worker?.externalId
+    ?? order?.assigned?.external_id
+    ?? order?.assigned?.externalId
+    ?? null
+
+  return key ? String(key) : null
+}
+
 const tableItems = computed(() => {
   const counts = new Map<string, number>()
 
   workOrders.value.forEach(order => {
-    const assignedId = order.assigned_to ?? order.worker_id ?? order.worker?.id ?? order.assigned?.id
-    if (!assignedId)
+    const externalKey = getOrderExternalKey(order)
+    if (!externalKey)
       return
 
-    const key = String(assignedId)
-    counts.set(key, (counts.get(key) || 0) + 1)
+    counts.set(externalKey, (counts.get(externalKey) || 0) + 1)
   })
 
   return workers.value.map(item => {
-    const id = item.id ?? item.worker_id ?? item.user_id ?? '-'
-    const key = String(id)
+    const externalKey = getWorkerExternalKey(item)
+    const fallbackKey = String(item.id ?? item.worker_id ?? item.user_id ?? '')
     const employeeCode = item.employee_code ?? item.external_id ?? item.externalId ?? item.code ?? '-'
     const userId = item.user_id ?? item.userId ?? item.user?.id ?? null
     const linkedUserFromCatalog = userId ? usersById.value.get(String(userId)) : null
@@ -83,7 +100,21 @@ const tableItems = computed(() => {
       name: userId ? workerName : `${workerName} (sin usuario)`,
       employee_code: employeeCode,
       linked_user: linkedUser,
-      assigned: counts.get(key) ?? item.assigned_count ?? item.orders_count ?? item.total ?? 0,
+      assigned: (() => {
+        if (externalKey) {
+          const totalAssigned = counts.get(externalKey) ?? 0
+          if (totalAssigned)
+            return totalAssigned
+        }
+
+        if (fallbackKey) {
+          const totalAssigned = counts.get(fallbackKey) ?? 0
+          if (totalAssigned)
+            return totalAssigned
+        }
+
+        return item.assigned_count ?? item.orders_count ?? item.total ?? 0
+      })(),
       _raw: item,
     }
   })
@@ -139,13 +170,15 @@ const usersById = computed(() => {
 })
 
 const handleRowClick = (item: any) => {
+  const workerExternalId = getWorkerExternalKey(item?._raw ?? item)
   const workerId = item?._raw?.id ?? item?.id
-  if (!workerId)
+  const targetId = workerExternalId ?? workerId
+  if (!targetId)
     return
 
   router.push({
     name: 'WorkOrderWorkerOrders',
-    params: { id: workerId },
+    params: { id: targetId },
   })
 }
 
