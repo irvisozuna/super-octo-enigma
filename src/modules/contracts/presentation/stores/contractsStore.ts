@@ -31,11 +31,21 @@ export const useContractsStore = defineStore('contracts', () => {
     try {
       const response = await applicationService.getContracts(filters)
       items.value = response.data
+      const meta = response.meta ?? response.pagination ?? {}
+      const perPage = meta.per_page ?? meta.limit ?? pagination.value.per_page
+      const total = meta.total ?? pagination.value.total ?? 0
+      const currentPage = meta.current_page
+        ?? (meta.offset !== undefined && perPage
+          ? Math.floor(Number(meta.offset) / Number(perPage)) + 1
+          : pagination.value.current_page)
+      const lastPage = meta.last_page
+        ?? (perPage ? Math.max(1, Math.ceil(Number(total) / Number(perPage))) : pagination.value.last_page)
+
       pagination.value = {
-        current_page: response.meta.current_page,
-        last_page: response.meta.last_page,
-        per_page: response.meta.per_page,
-        total: response.meta.total,
+        current_page: Number(currentPage) || 1,
+        last_page: Number(lastPage) || 1,
+        per_page: Number(perPage) || pagination.value.per_page,
+        total: Number(total) || 0,
       }
     }
     catch (err: any) {

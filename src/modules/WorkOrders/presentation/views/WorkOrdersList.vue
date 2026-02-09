@@ -10,6 +10,7 @@ import WorkOrdersFilterDrawer from '../../share/WorkOrdersFilterDrawer.vue'
 const { t } = useI18n()
 const router = useRouter()
 const workOrdersStore = useWorkOrdersStore()
+const pageLoading = computed(() => workOrdersStore.loading)
 
 const search = ref('')
 const itemsPerPage = ref(workOrdersStore.pagination.per_page)
@@ -65,7 +66,7 @@ const tableItems = computed(() => workOrdersStore.items.map(item => ({
   type: normalizeValue(item.type ?? item.type_catalog?.name ?? item.work_order_type_id),
   subject: normalizeValue(item.subject ?? item.title ?? item.description ?? item.asunto ?? item.notes),
   priority: normalizeValue(item.priority ?? item.severity ?? item.priority_code ?? item.prioridad),
-  status: normalizeValue(item.status ?? item.estado ?? item.state),
+  status: normalizeValue(item.status_catalog?.name ?? item.status ?? item.estado ?? item.state),
   scheduled: formatDate(item.scheduled_at ?? item.requested_at ?? item.due_at),
   _raw: item,
 })))
@@ -80,9 +81,9 @@ const statusOptions = [
 ]
 
 const priorityOptions = [
-  { title: 'High', value: 'high' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'Low', value: 'low' },
+  { title: 'Alta', value: 'alta' },
+  { title: 'Media', value: 'media' },
+  { title: 'Baja', value: 'baja' },
 ]
 
 const typeOptions = computed(() => {
@@ -125,16 +126,29 @@ const getStatusLabel = (value: string) => {
 const getPriorityColor = (value: string) => {
   const normalized = String(value || '').toLowerCase()
 
-  if (normalized.includes('high'))
+  if (normalized.includes('high') || normalized.includes('alta'))
     return 'error'
 
-  if (normalized.includes('medium'))
+  if (normalized.includes('medium') || normalized.includes('media'))
     return 'warning'
 
-  if (normalized.includes('low'))
+  if (normalized.includes('low') || normalized.includes('baja'))
     return 'success'
 
   return 'secondary'
+}
+
+const getPriorityLabel = (value: string) => {
+  const normalized = String(value || '').toLowerCase()
+
+  if (normalized.includes('high') || normalized.includes('alta'))
+    return 'Alta'
+  if (normalized.includes('medium') || normalized.includes('media'))
+    return 'Media'
+  if (normalized.includes('low') || normalized.includes('baja'))
+    return 'Baja'
+
+  return value || '-'
 }
 
 const handleExport = () => {
@@ -272,6 +286,7 @@ onMounted(() => {
 <template>
   <div class="workorders-page">
     <BaseListHeader
+      v-if="!pageLoading"
       :title="t('WorkOrders.WorkOrdersModule.title')"
       icon="tabler-clipboard-list"
       :total="workOrdersStore.pagination.total"
@@ -281,10 +296,23 @@ onMounted(() => {
       :show-create-button="false"
       class="workorders-header"
     />
+    <VSkeletonLoader
+      v-else
+      type="heading"
+      class="workorders-header"
+    />
 
     <VCard class="workorders-table">
       <VCardText>
-        <div class="workorders-toolbar">
+        <div v-if="pageLoading" class="workorders-toolbar">
+          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+          <div class="workorders-toolbar__actions">
+            <VSkeletonLoader type="text" width="140" />
+            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="workorders-toolbar">
           <VTextField
             v-model="search"
             variant="outlined"
@@ -352,7 +380,7 @@ onMounted(() => {
               variant="tonal"
               :color="getPriorityColor(item.priority)"
             >
-              {{ item.priority || '-' }}
+              {{ getPriorityLabel(item.priority) }}
             </VChip>
           </template>
           <template #actions>

@@ -54,6 +54,36 @@ const totalDebt = computed(() => {
   return contract.value.debt_concepts.reduce((acc: number, curr: any) => acc + Number.parseFloat(curr.total), 0)
 })
 
+const formatDateTime = (value?: string) => {
+  if (!value)
+    return '-'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime()))
+    return value
+
+  return date.toLocaleString('es-MX', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const getConceptLabel = (item: any) => {
+  const raw = item?.concept_name ?? item?.concept ?? item?.name ?? item?.concepto ?? null
+
+  if (raw && typeof raw === 'object') {
+    return raw.name ?? raw.title ?? raw.code ?? raw.external_id ?? raw.externalId ?? item?.external_concept_id ?? '-'
+  }
+
+  if (typeof raw === 'string' && raw.trim() !== '')
+    return raw
+
+  return item?.external_concept_id ?? item?.concept_code ?? item?.external_concept_code ?? '-'
+}
+
 const toggleEdit = () => {
   if (isEditing.value) {
     resetEditedContract()
@@ -312,7 +342,7 @@ onMounted(() => {
                 v-else
                 class="font-weight-medium"
               >
-                {{ contract.system || 'N/A' }}
+                {{ contract.system?.name || contract.system || 'N/A' }}
               </div>
             </div>
           </VCol>
@@ -339,7 +369,7 @@ onMounted(() => {
                 v-else
                 class="font-weight-medium"
               >
-                {{ contract.sector || 'N/A' }}
+                {{ contract.sector?.name || contract.sector || 'N/A' }}
               </div>
             </div>
           </VCol>
@@ -484,11 +514,6 @@ onMounted(() => {
               <div class="d-flex justify-space-between align-center">
                 <span class="text-caption text-medium-emphasis">Adeudo Total</span>
                 <span class="text-body-2 font-weight-bold" :class="totalDebt > 0 ? 'text-error' : 'text-success'">{{ formatCurrency(totalDebt) }}</span>
-              </div>
-              <VDivider style="border-style: dashed;" />
-              <div class="d-flex justify-space-between align-center">
-                <span class="text-caption text-medium-emphasis">Periodo</span>
-                <span class="text-body-2 font-weight-bold">{{ contract.period }}</span>
               </div>
               <VDivider style="border-style: dashed;" />
               <div class="d-flex justify-space-between align-center">
@@ -832,7 +857,6 @@ onMounted(() => {
         <VDataTable
           :headers="[
             { title: 'Concepto', key: 'concept_name' },
-            { title: 'Periodo', key: 'period_code' },
             { title: 'Cant.', key: 'quantity', align: 'end' },
             { title: 'P. Unitario', key: 'unit_price', align: 'end' },
             { title: 'Subtotal', key: 'subtotal', align: 'end' },
@@ -845,18 +869,8 @@ onMounted(() => {
         >
           <template v-slot:item.concept_name="{ item }">
             <div class="font-weight-medium">
-              {{ item.concept_name }}
+              {{ getConceptLabel(item) }}
             </div>
-          </template>
-          <template v-slot:item.period_code="{ item }">
-            <VChip
-              size="x-small"
-              variant="tonal"
-              color="info"
-              class="font-weight-bold"
-            >
-              {{ item.period_code }}
-            </VChip>
           </template>
           <template v-slot:item.unit_price="{ item }">
             {{ formatCurrency(item.unit_price) }}
@@ -889,13 +903,17 @@ onMounted(() => {
           :headers="[
             { title: 'Concepto', key: 'concept_name' },
             { title: 'Código Externo', key: 'external_concept_id' },
-            { title: 'Código Periodo', key: 'period_code' },
             { title: 'Descargado el', key: 'downloaded_at' }
           ]"
           :items="contract.charge_concepts"
           hide-default-footer
           class="concepts-table"
         >
+          <template v-slot:item.concept_name="{ item }">
+            <div class="font-weight-medium">
+              {{ getConceptLabel(item) }}
+            </div>
+          </template>
           <template v-slot:item.external_concept_id="{ item }">
             <VChip
               size="x-small"
@@ -905,14 +923,8 @@ onMounted(() => {
               {{ item.external_concept_id }}
             </VChip>
           </template>
-          <template v-slot:item.period_code="{ item }">
-             <VChip
-              size="x-small"
-              variant="tonal"
-              color="info"
-            >
-              {{ item.period_code }}
-            </VChip>
+          <template v-slot:item.downloaded_at="{ item }">
+            {{ formatDateTime(item.downloaded_at) }}
           </template>
         </VDataTable>
       </VCardText>

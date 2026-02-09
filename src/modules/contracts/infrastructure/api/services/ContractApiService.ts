@@ -12,8 +12,8 @@ export class ContractApiService {
     return response
   }
 
-  async getContractById(id: string): Promise<ContractDto> {
-    const response = await ApiService.get(`/contracts/${id}`)
+  async getContractById(localId: string | number): Promise<ContractDto> {
+    const response = await ApiService.get(`/contracts/local/${localId}`)
 
     return response.data || response
   }
@@ -29,11 +29,14 @@ export class ContractApiService {
   }
 
   async getCatalogs(): Promise<any> {
-    const [status, systems, sectors, type_contracts] = await Promise.all([
+    const [status, systems, sectors, type_contracts, routes, rates, periods] = await Promise.all([
       ApiService.get('/catalogs-readings/contract-statuses').catch(() => ({ data: [] })),
       ApiService.get('/catalogs-readings/systems').catch(() => ({ data: [] })),
       ApiService.get('/catalogs-readings/sectors').catch(() => ({ data: [] })),
       ApiService.get('/catalogs-readings/contracts-types').catch(() => ({ data: [] })),
+      ApiService.get('/catalogs-readings/routes').catch(() => ({ data: [] })),
+      ApiService.get('/catalogs-readings/rates').catch(() => ({ data: [] })),
+      ApiService.get('/catalogs-readings/periods').catch(() => ({ data: [] })),
     ])
 
     return {
@@ -41,6 +44,9 @@ export class ContractApiService {
       systems: Array.isArray(systems) ? systems : (systems.data || []),
       sectors: Array.isArray(sectors) ? sectors : (sectors.data || []),
       type_contracts: Array.isArray(type_contracts) ? type_contracts : (type_contracts.data || []),
+      routes: Array.isArray(routes) ? routes : (routes.data || []),
+      rates: Array.isArray(rates) ? rates : (rates.data || []),
+      periods: Array.isArray(periods) ? periods : (periods.data || []),
     }
   }
 }

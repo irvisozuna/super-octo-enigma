@@ -44,6 +44,7 @@ export interface ChargeConcept {
 
 export interface ContractEntity {
   id: string
+  local_id?: string | number
   company_id: string
   contract_id: string
   external_user_id: string
@@ -77,8 +78,8 @@ export interface ContractEntity {
   downloaded_at: string
   meta: any
   metadata: any
-  system: string | null
-  sector: string | null
+  system: { id?: string; external_id?: string; code?: string; name?: string } | string | null
+  sector: { id?: string; external_id?: string; code?: string; name?: string } | string | null
   debt_concepts: DebtConcept[]
   charge_concepts: ChargeConcept[]
 }

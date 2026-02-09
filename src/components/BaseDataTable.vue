@@ -129,6 +129,9 @@ const handleCreate = () => {
 }
 
 const handleRowClick = (event: any, row: any) => {
+  if (event?.target?.closest?.('[data-row-action="true"]'))
+    return
+
   emit('row:click', row.item)
 }
 </script>
@@ -165,10 +168,12 @@ const handleRowClick = (event: any, row: any) => {
       v-if="$slots.actions"
       #item.actions="{ item }"
     >
-      <slot
-        name="actions"
-        :item="item"
-      />
+      <div data-row-action="true" @click.stop>
+        <slot
+          name="actions"
+          :item="item"
+        />
+      </div>
     </template>
 
     <!-- Top slot for additional content above table -->

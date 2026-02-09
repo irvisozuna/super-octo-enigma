@@ -51,41 +51,41 @@ export class ReadingApiService {
     })
   }
 
-  async getReadersCatalog() {
-    return await rawApi(this.getCatalogRootUrl('/readers'), {
+  async getWorkersCatalog() {
+    return await rawApi(this.getCatalogRootUrl('/workers'), {
       method: 'GET',
     })
   }
 
   async getAdvanceCatalogs() {
-    const [sectors, routes, readers] = await Promise.all([
+    const [sectors, routes, workers] = await Promise.all([
       this.getSectorsCatalog().catch(() => []),
       this.getRoutesCatalog().catch(() => []),
-      this.getReadersCatalog().catch(() => []),
+      this.getWorkersCatalog().catch(() => []),
     ])
 
     return {
       sectors,
       routes,
-      readers,
+      workers,
     }
   }
 
-  async getDownloadedRoutes(periodId?: string | null, filters: ReadingFilter = {}) {
+  async getDownloadedRoutes(externalPeriodId?: string | null, filters: ReadingFilter = {}) {
     return await rawApi(`${this.baseUrl}/downloaded-routes`, {
       method: 'GET',
       params: {
-        ...(periodId ? { period_id: periodId } : {}),
+        ...(externalPeriodId ? { external_period_id: externalPeriodId } : {}),
         ...filters,
       },
     })
   }
 
-  async getMetrics(periodId: string, filters: ReadingFilter = {}) {
+  async getMetrics(externalPeriodId: string, filters: ReadingFilter = {}) {
     return await rawApi(`${this.baseUrl}/metrics`, {
       method: 'GET',
       params: {
-        period_id: periodId,
+        external_period_id: externalPeriodId,
         ...filters,
       },
     })
@@ -95,6 +95,12 @@ export class ReadingApiService {
     return await rawApi(`${this.baseUrl}/${readingId}/details`, {
       method: 'GET',
       params: filters,
+    })
+  }
+
+  async getReadingView(readingId: string | number) {
+    return await rawApi(`${this.baseUrl}/view/${readingId}`, {
+      method: 'GET',
     })
   }
 

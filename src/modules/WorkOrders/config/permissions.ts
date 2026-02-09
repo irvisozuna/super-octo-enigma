@@ -34,4 +34,3 @@ export const WORK_ORDERS_PERMISSION_GROUPS = {
     WORK_ORDERS_PERMISSIONS.viewWorkers,
   ],
 }
-

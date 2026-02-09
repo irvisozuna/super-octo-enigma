@@ -6,7 +6,7 @@ export interface ReadingsPermissions {
   viewReadings: string
   viewReadingDetail: string
   viewReadingAdvance: string
-  viewReadingMap: string 
+  viewReadingMap: string
   exportReadings: string
 }
 
@@ -27,4 +27,3 @@ export const READINGS_PERMISSION_GROUPS = {
     READINGS_PERMISSIONS.viewReadingMap,
   ],
 }
-
