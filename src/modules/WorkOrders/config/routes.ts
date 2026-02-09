@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { WORK_ORDERS_PERMISSIONS } from './permissions'
 
 const workOrdersRoutes: RouteRecordRaw[] = [
   {
@@ -7,8 +8,8 @@ const workOrdersRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/WorkOrdersList.vue'),
     meta: {
       title: 'WorkOrders',
-      action: 'read',
-      subject: 'WorkOrder',
+      action: 'manage',
+      subject: WORK_ORDERS_PERMISSIONS.viewWorkOrders,
       requiresAuth: true,
     },
   },
@@ -18,8 +19,8 @@ const workOrdersRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/WorkOrderWorkersList.vue'),
     meta: {
       title: 'Operadores',
-      action: 'read',
-      subject: 'WorkOrder',
+      action: 'manage',
+      subject: WORK_ORDERS_PERMISSIONS.viewWorkers,
       requiresAuth: true,
     },
   },
@@ -29,8 +30,8 @@ const workOrdersRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/WorkOrderWorkerOrders.vue'),
     meta: {
       title: 'Ordenes asignadas',
-      action: 'read',
-      subject: 'WorkOrder',
+      action: 'manage',
+      subject: WORK_ORDERS_PERMISSIONS.viewWorkers,
       requiresAuth: true,
     },
   },
@@ -40,8 +41,8 @@ const workOrdersRoutes: RouteRecordRaw[] = [
     component: () => import('../presentation/views/WorkOrderDetail.vue'),
     meta: {
       title: 'Detalle de orden',
-      action: 'read',
-      subject: 'WorkOrder',
+      action: 'manage',
+      subject: WORK_ORDERS_PERMISSIONS.viewWorkOrderDetail,
       requiresAuth: true,
     },
   },

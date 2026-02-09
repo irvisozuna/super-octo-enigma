@@ -12,9 +12,12 @@ const apiService = new ReadingApiService()
 
 const details = ref<any[]>([])
 const detailsLoading = ref(false)
+const readingData = ref<any | null>(null)
+const readingLoading = ref(false)
 const photos = ref<any[]>([])
 const photosLoading = ref(false)
 const photosDialog = ref(false)
+const pageLoading = computed(() => detailsLoading.value || readingLoading.value)
 
 const detailsPagination = ref({
   current_page: 1,
@@ -37,11 +40,21 @@ const totalCost = computed(() => {
   return details.value.reduce((acc, item) => acc + Number(item.total || 0), 0)
 })
 
+const detailsRows = computed(() => {
+  return details.value.map(item => ({
+    concept_code: item.external_concept_id ?? item.concept?.code ?? item.concept_code ?? item.concept_id ?? '-',
+    concept_name: item.concept?.name ?? item.concept_name ?? item.notes ?? item.description ?? '-',
+    quantity: item.quantity ?? 0,
+    unit_price: item.unit_price ?? item.unitPrice ?? 0,
+    subtotal: item.subtotal ?? 0,
+    iva_amount: item.iva_amount ?? item.iva ?? 0,
+    total: item.total ?? 0,
+  }))
+})
+
 const readingId = computed(() => route.params.id as string)
 
-const reading = computed(() =>
-  readingsStore.items.find(item => String(item.id) === String(readingId.value)),
-)
+const reading = computed(() => readingData.value)
 
 const normalizeArray = (response: any) => {
   if (Array.isArray(response))
@@ -108,7 +121,8 @@ const goBack = () => {
 }
 
 const loadDetails = async (params: Record<string, any> = {}) => {
-  if (!readingId.value)
+  const idForDetails = readingData.value?.local_id ?? readingId.value
+  if (!idForDetails)
     return
 
   detailsLoading.value = true
@@ -120,7 +134,7 @@ const loadDetails = async (params: Record<string, any> = {}) => {
       requestParams.offset = (Number(requestParams.page) - 1) * Number(requestParams.per_page)
     }
 
-    const response = await apiService.getDetails(readingId.value, requestParams)
+    const response = await apiService.getDetails(String(idForDetails), requestParams)
     const pagination = response?.pagination || response?.data?.pagination
 
     details.value = response?.data?.data || response?.data || response || []
@@ -142,6 +156,20 @@ const loadDetails = async (params: Record<string, any> = {}) => {
   }
   finally {
     detailsLoading.value = false
+  }
+}
+
+const loadReading = async () => {
+  if (!readingId.value)
+    return
+
+  readingLoading.value = true
+  try {
+    const response = await apiService.getReadingView(readingId.value)
+    readingData.value = response?.data?.data ?? response?.data ?? response ?? null
+  }
+  finally {
+    readingLoading.value = false
   }
 }
 
@@ -168,7 +196,8 @@ const openPhotos = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadReading()
   loadDetails({
     page: detailsPagination.value.current_page,
     per_page: detailsPagination.value.per_page,
@@ -180,32 +209,41 @@ onMounted(() => {
   <div class="reading-detail">
     <VCard class="detail-card">
       <VCardText>
-        <div class="detail-header">
-          <div>
-            <div class="detail-title">
-              Detalle de lectura
+        <div v-if="pageLoading" class="detail-header">
+          <VSkeletonLoader type="heading" class="mb-2" />
+          <VSkeletonLoader type="text" />
+        </div>
+        <div v-else class="detail-header">
+          <div class="detail-hero">
+            <div class="detail-hero__main">
+              <div class="detail-hero__eyebrow">Lectura</div>
+              <div class="detail-hero__title">
+                {{ reading?.external_contract_id || reading?.contract?.external_contract_id || readingId }}
+              </div>
+              <div class="detail-hero__meta">
+                <span>ID: {{ readingId }}</span>
+                <span>•</span>
+                <span>Fecha: {{ formatDate(reading?.reading_date) }}</span>
+              </div>
             </div>
-            <div class="detail-subtitle">
-              ID: {{ readingId }}
+            <div class="detail-hero__actions">
+              <VBtn
+                variant="flat"
+                color="primary"
+                prepend-icon="tabler-camera"
+                @click="openPhotos"
+              >
+                Ver fotos
+              </VBtn>
+              <VBtn
+                variant="tonal"
+                color="secondary"
+                prepend-icon="tabler-arrow-left"
+                @click="goBack"
+              >
+                Regresar
+              </VBtn>
             </div>
-          </div>
-          <div class="detail-actions">
-            <VBtn
-              variant="tonal"
-              color="primary"
-              prepend-icon="tabler-camera"
-              @click="openPhotos"
-            >
-              Ver fotos
-            </VBtn>
-            <VBtn
-              variant="tonal"
-              color="secondary"
-              prepend-icon="tabler-arrow-left"
-              @click="goBack"
-            >
-              Regresar
-            </VBtn>
           </div>
         </div>
 
@@ -215,37 +253,23 @@ onMounted(() => {
           <div class="detail-main">
             <div
               v-if="reading"
-              class="detail-summary"
+              class="reading-highlights"
             >
-              <div class="summary-card">
-                <div class="summary-label">
-                  Lectura anterior
-                </div>
-                <div class="summary-value">
-                  {{ reading.previous_reading ?? '-' }}
-                </div>
+              <div class="reading-highlight">
+                <div class="reading-highlight__label">Lectura anterior</div>
+                <div class="reading-highlight__value">{{ reading.previous_reading ?? '-' }}</div>
               </div>
-              <div class="summary-card">
-                <div class="summary-label">
-                  Lectura actual
-                </div>
-                <div class="summary-value">
-                  {{ reading.current_reading ?? '-' }}
-                </div>
+              <div class="reading-highlight">
+                <div class="reading-highlight__label">Lectura actual</div>
+                <div class="reading-highlight__value">{{ reading.current_reading ?? '-' }}</div>
               </div>
-              <div class="summary-card">
-                <div class="summary-label">
-                  Consumo
-                </div>
-                <div class="summary-value">
-                  {{ reading.consumption ?? '-' }}
-                </div>
+              <div class="reading-highlight">
+                <div class="reading-highlight__label">Consumo</div>
+                <div class="reading-highlight__value">{{ reading.consumption ?? '-' }}</div>
               </div>
-              <div class="summary-card summary-card--highlight">
-                <div class="summary-label">
-                  Total lectura
-                </div>
-                <div class="summary-value">
+              <div class="reading-highlight reading-highlight--total">
+                <div class="reading-highlight__label">Total lectura</div>
+                <div class="reading-highlight__value">
                   $ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </div>
               </div>
@@ -253,47 +277,40 @@ onMounted(() => {
 
             <div
               v-if="reading"
-              class="detail-grid detail-grid--spaced"
+              class="detail-strip detail-strip--single detail-strip--spaced"
             >
-              <div class="detail-item">
-                <span class="detail-label">Contrato</span>
-                <span class="detail-value">
-                  {{ reading.external_contract_id || reading.contract?.external_contract_id || reading.contract_id || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Usuario</span>
-                <span class="detail-value">
-                  {{ reading.contract?.user_name || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Lecturista</span>
-                <span class="detail-value">
-                  {{ reading.reader?.name || reading.reader_name || reading.reader_id || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Sector</span>
-                <span class="detail-value">
-                  {{ reading.contract?.sector?.name || reading.contract?.sector_id || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Ruta</span>
-                <span class="detail-value">
-                  {{ reading.contract?.route?.name || reading.contract?.route?.code || reading.contract?.external_route_id || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Anomalia</span>
-                <span class="detail-value">
-                  {{ reading.anomaly?.name || '-' }}
-                </span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Fecha lectura</span>
-                <span class="detail-value">{{ formatDate(reading.reading_date) }}</span>
+              <div class="detail-strip__section">
+                <div class="detail-strip__title">Datos del contrato</div>
+                <dl class="detail-list">
+                  <div class="detail-list__row">
+                    <dt>Contrato</dt>
+                    <dd>{{ reading.external_contract_id || reading.contract?.external_contract_id || reading.contract_id || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Usuario</dt>
+                    <dd>{{ reading.contract?.user_name || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Lecturista</dt>
+                    <dd>{{ reading.worker?.name || reading.reader?.name || reading.reader_name || reading.external_worker_id || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Sector</dt>
+                    <dd>{{ reading.contract?.route?.sector?.name || reading.contract?.route?.sector_external_id || reading.contract?.sector?.name || reading.contract?.sector_id || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Ruta</dt>
+                    <dd>{{ reading.contract?.route?.name || reading.contract?.route?.code || reading.contract?.external_route_id || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Anomalia</dt>
+                    <dd>{{ reading.anomaly?.name || '-' }}</dd>
+                  </div>
+                  <div class="detail-list__row">
+                    <dt>Fecha lectura</dt>
+                    <dd>{{ formatDate(reading.reading_date) }}</dd>
+                  </div>
+                </dl>
               </div>
             </div>
 
@@ -310,7 +327,7 @@ onMounted(() => {
               </div>
               <BaseDataTable
                 :headers="detailsHeaders"
-                :items="details"
+                :items="detailsRows"
                 :meta="detailsPagination"
                 :loading="detailsLoading"
                 :items-per-page-options="[10, 15, 25, 50]"
@@ -345,6 +362,12 @@ onMounted(() => {
                   </span>
                 </div>
                 <div class="ticket__row">
+                  <span class="ticket__label">Lecturista</span>
+                  <span class="ticket__value">
+                    {{ reading?.worker?.name || reading?.reader?.name || reading?.external_worker_id || '-' }}
+                  </span>
+                </div>
+                <div class="ticket__row">
                   <span class="ticket__label">Contrato</span>
                   <span class="ticket__value">
                     {{ reading?.external_contract_id || reading?.contract?.external_contract_id || '-' }}
@@ -356,7 +379,7 @@ onMounted(() => {
                 <div class="ticket__row">
                   <span class="ticket__label">Periodo</span>
                   <span class="ticket__value">
-                    {{ reading?.period?.name || '-' }}
+                    {{ reading?.period?.name || reading?.external_period_id || '-' }}
                   </span>
                 </div>
                 <div class="ticket__row">
@@ -374,7 +397,7 @@ onMounted(() => {
                 <div class="ticket__row">
                   <span class="ticket__label">Sector</span>
                   <span class="ticket__value">
-                    {{ reading?.contract?.sector?.name || reading?.contract?.sector_id || '-' }}
+                    {{ reading?.contract?.route?.sector?.name || reading?.contract?.route?.sector_external_id || reading?.contract?.sector?.name || reading?.contract?.sector_id || '-' }}
                   </span>
                 </div>
                 <div class="ticket__row">
@@ -408,12 +431,12 @@ onMounted(() => {
                   Conceptos
                 </div>
                 <div
-                  v-if="details.length"
+                  v-if="detailsRows.length"
                   class="ticket__concepts"
                 >
                   <div
-                    v-for="item in details"
-                    :key="item.id"
+                    v-for="item in detailsRows"
+                    :key="item.concept_code"
                     class="ticket__concept"
                   >
                     <span class="ticket__concept-name">{{ item.concept_name || item.concept_code }}</span>
@@ -526,89 +549,152 @@ onMounted(() => {
   gap: 16px;
 }
 
-.detail-actions {
+.detail-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  inline-size: 100%;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #e8f1ff;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.detail-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-hero__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.detail-hero__title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.detail-hero__meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.detail-hero__actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.detail-title {
-  color: #1f2937;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.detail-subtitle {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.detail-grid {
+.detail-strip {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-.detail-grid--spaced {
+.detail-strip--spaced {
   margin-block-start: 16px;
 }
 
-.detail-summary {
+.reading-highlights {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  margin-block-end: 8px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #eff6ff;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.12);
 }
 
-.summary-card {
-  border: 1px solid rgba(15, 23, 42, 8%);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 8%);
-  padding-block: 14px;
-  padding-inline: 16px;
-  text-align: center;
+.reading-highlight {
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
 }
 
-.summary-card--highlight {
-  border-color: #93c5fd;
-  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
-  box-shadow: 0 10px 22px rgba(59, 130, 246, 18%);
-}
-
-.summary-label {
-  color: #64748b;
+.reading-highlight__label {
   font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
 }
 
-.summary-value {
-  color: #1f2937;
-  font-size: 18px;
-  font-weight: 700;
+.reading-highlight__value {
   margin-block-start: 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.detail-item {
+.reading-highlight--total {
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.detail-strip__section {
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(15, 23, 42, 8%);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 8%);
-  gap: 6px;
-  padding-block: 12px;
-  padding-inline: 14px;
+  gap: 10px;
 }
 
-.detail-label {
-  color: #64748b;
+.detail-strip__title {
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
-.detail-value {
-  color: #1f2937;
-  font-size: 14px;
+.detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.detail-list__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding-block-end: 8px;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.3);
+}
+
+.detail-list__row:last-child {
+  border-bottom: none;
+  padding-block-end: 0;
+}
+
+.detail-list__row dt {
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.detail-list__row dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .detail-empty {
@@ -750,6 +836,25 @@ onMounted(() => {
 
   .detail-ticket {
     position: static;
+  }
+
+  .detail-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-hero__actions {
+    inline-size: 100%;
+    justify-content: flex-start;
+  }
+
+  .detail-list__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .reading-highlights {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
   }
 }
 </style>

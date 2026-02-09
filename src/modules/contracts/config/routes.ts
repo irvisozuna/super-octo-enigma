@@ -3,6 +3,7 @@
  */
 
 import type { RouteRecordRaw } from 'vue-router'
+import { CONTRACT_PERMISSIONS } from './permissions'
 
 const contractsRoutes: RouteRecordRaw[] = [
   {
@@ -10,8 +11,8 @@ const contractsRoutes: RouteRecordRaw[] = [
     name: 'contracts-list',
     component: () => import('../presentation/views/index.vue'),
     meta: {
-      action: 'read',
-      subject: 'Contract',
+      action: 'manage',
+      subject: CONTRACT_PERMISSIONS.viewContracts,
       requiresAuth: true,
     },
   },
@@ -20,8 +21,8 @@ const contractsRoutes: RouteRecordRaw[] = [
     name: 'contracts-detail',
     component: () => import('../presentation/views/ContractDetailView.vue'),
     meta: {
-      action: 'read',
-      subject: 'Contract',
+      action: 'manage',
+      subject: CONTRACT_PERMISSIONS.viewContractDetail,
       requiresAuth: true,
     },
   },

@@ -17,7 +17,7 @@ export const useReadingsAdvanceStore = defineStore('readings-advance', () => {
 
   const apiService = new ReadingApiService()
 
-  const fetchAdvance = async (periodId: string, params: Record<string, any> = {}) => {
+  const fetchAdvance = async (externalPeriodId: string, params: Record<string, any> = {}) => {
     loading.value = true
     error.value = null
 
@@ -29,7 +29,7 @@ export const useReadingsAdvanceStore = defineStore('readings-advance', () => {
         requestParams.offset = (Number(requestParams.page) - 1) * Number(requestParams.per_page)
       }
 
-      const response = await apiService.getDownloadedRoutes(periodId, requestParams)
+      const response = await apiService.getDownloadedRoutes(externalPeriodId, requestParams)
       const pagination = response?.pagination || response?.data?.pagination
 
       if (pagination) {

@@ -4,6 +4,7 @@
 
 export interface ContractDto {
   id: string
+  local_id?: string | number
   company_id: string
   contract_id: string
   external_user_id: string
@@ -37,21 +38,27 @@ export interface ContractDto {
   downloaded_at: string
   meta: any
   metadata: any
-  system: string | null
-  sector: string | null
+  system: { id?: string; external_id?: string; code?: string; name?: string } | string | null
+  sector: { id?: string; external_id?: string; code?: string; name?: string } | string | null
   debt_concepts: any[]
   charge_concepts: any[]
 }
 
 export interface PaginatedContractsResponseDto {
   data: ContractDto[]
-  meta: {
-    current_page: number
-    last_page: number
-    per_page: number
-    total: number
+  meta?: {
+    current_page?: number
+    last_page?: number
+    per_page?: number
+    total?: number
     from?: number
     to?: number
+  }
+  pagination?: {
+    limit?: number
+    offset?: number
+    count?: number
+    total?: number
   }
 }
 
