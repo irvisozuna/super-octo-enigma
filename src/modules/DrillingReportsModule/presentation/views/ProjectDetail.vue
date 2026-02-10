@@ -183,6 +183,13 @@ const deletingReport = ref(false)
 const showReportDetailDialog = ref(false)
 const selectedReportForDetail = ref<any>(null)
 
+// Estado para el wizard de edición de reporte
+const showEditReportWizard = ref(false)
+const selectedReportForEdit = ref<any>(null)
+const editingReport = ref(false)
+const editReportError = ref<string | null>(null)
+const editReportWizardRef = ref<any>(null)
+
 // Referencia al diálogo de asignación de personal
 const assignPersonnelDialogRef = ref<any>(null)
 
@@ -737,12 +744,49 @@ function handleViewReport(report: any) {
 function handleEditReport(report: any) {
   console.log('Editar reporte:', report)
 
-  // TODO: Abrir wizard con datos precargados
-  showSnackbar({
-    title: 'Información',
-    message: 'La funcionalidad de edición estará disponible próximamente',
-    color: 'info',
-  })
+  // Abrir wizard en modo edición
+  selectedReportForEdit.value = report
+  showEditReportWizard.value = true
+}
+
+/**
+ * Manejar actualización de reporte desde el wizard
+ */
+async function handleUpdateReport({ reportId, data }: { reportId: string, data: any }) {
+  editingReport.value = true
+  editReportError.value = null
+
+  try {
+    await withErrorHandling(
+      async () => {
+        await reportStore.updateReport(reportId, data)
+
+        // Llamar al método onSuccess del wizard para limpiar todo
+        if (editReportWizardRef.value?.onSuccess)
+          editReportWizardRef.value.onSuccess()
+
+        showSnackbar({
+          title: 'Éxito',
+          message: 'Reporte actualizado correctamente',
+          color: 'success',
+        })
+
+        // Cerrar wizard y refrescar tab
+        showEditReportWizard.value = false
+        selectedReportForEdit.value = null
+        await refreshTab('reports')
+      },
+    )
+  }
+  catch (error: any) {
+    console.error('Error updating report:', error)
+    if (editReportWizardRef.value?.onError)
+      editReportWizardRef.value.onError(error)
+    editReportError.value = error.message || 'Error al actualizar el reporte'
+  }
+  finally {
+    editingReport.value = false
+  }
 }
 
 /**
@@ -1272,6 +1316,21 @@ onMounted(() => {
       :loading="creatingReport"
       :error="reportError"
       @submit="handleCreateReportSubmit"
+    />
+
+    <!-- Wizard de Edición de Reporte -->
+    <CreateReportWizardOrganism
+      v-if="selectedReportForEdit"
+      ref="editReportWizardRef"
+      v-model="showEditReportWizard"
+      :project-id="selectedReportForEdit.project?.id || projectId"
+      :project-name="selectedReportForEdit.project?.name || project?.project_name || ''"
+      :well-id="selectedReportForEdit.well?.id || currentWell?.id || ''"
+      :well-name="selectedReportForEdit.well?.name || currentWell?.name || ''"
+      :report-id="selectedReportForEdit.id"
+      :loading="editingReport"
+      :error="editReportError"
+      @update="handleUpdateReport"
     />
 
     <!-- Diálogo de Vista Detallada del Reporte -->

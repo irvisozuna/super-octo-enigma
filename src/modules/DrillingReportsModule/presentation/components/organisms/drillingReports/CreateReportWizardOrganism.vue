@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReportWizardStore } from '../../../stores/reportWizardStore'
 import { useProjectDetailStore } from '../../../stores/projectDetailStore'
+import { useDrillingReportStore } from '../../../stores/drillingReportStore'
 import { REPORT_WIZARD_STEPS } from '../../../../shared/constants'
 
 // Import Molecules
@@ -20,6 +21,7 @@ export interface CreateReportWizardProps {
   projectName: string
   wellId: string
   wellName: string
+  reportId?: string
   loading?: boolean
   error?: string | null
 }
@@ -29,6 +31,7 @@ const props = defineProps<CreateReportWizardProps>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'submit': [data: any]
+  'update': [data: { reportId: string, data: any }]
 }>()
 
 const { t } = useI18n()
@@ -36,6 +39,7 @@ const { t } = useI18n()
 // Store
 const wizardStore = useReportWizardStore()
 const detailStore = useProjectDetailStore()
+const drillingReportStore = useDrillingReportStore()
 
 // Form refs
 const step1Form = ref()
@@ -205,7 +209,12 @@ const handleSubmit = async () => {
 
   // Important: We don't clear here because we need to wait for the parent's response
   // The parent will call onSuccess() if the save is successful
-  emit('submit', data)
+  if (props.reportId) {
+    emit('update', { reportId: props.reportId, data })
+  }
+  else {
+    emit('submit', data)
+  }
 }
 
 const handleCancel = () => {
@@ -249,31 +258,94 @@ defineExpose({
   onError,
 })
 
+// Function to load report data when editing
+const loadReportForEditing = async () => {
+  if (!props.reportId) {
+    console.warn('⚠️ loadReportForEditing called but no reportId provided')
+    return
+  }
+
+  try {
+    console.log('🔄 Loading report with ID:', props.reportId)
+    const response = await drillingReportStore.fetchReportById(props.reportId)
+    console.log('📦 Raw API response:', response)
+    
+    // The API might return { data: report } or just report
+    const report = response?.data || response
+    console.log('📋 Report object extracted:', report)
+    console.log('📋 Report keys:', report ? Object.keys(report) : 'No report object')
+
+    if (!report) {
+      console.error('❌ No report data received')
+      wizardStore.setError('Error', 'No se recibieron datos del reporte')
+      return
+    }
+
+    if (!report.id && !report.report_number) {
+      console.error('❌ Invalid report structure:', report)
+      wizardStore.setError('Error', 'El reporte recibido no tiene la estructura esperada')
+      return
+    }
+
+    console.log('✅ Valid report received, loading into wizard...')
+    wizardStore.loadReportData(report)
+    console.log('✅ Report data loaded into wizard successfully')
+  }
+  catch (error: any) {
+    console.error('❌ Error loading report for editing:', error)
+    console.error('❌ Error details:', {
+      message: error?.message,
+      response: error?.response,
+      stack: error?.stack,
+    })
+    wizardStore.setError('Error', error?.message || 'No se pudo cargar el reporte para editar')
+  }
+}
+
 // Watch for dialog open/close
-watch(() => props.modelValue, newValue => {
+watch(() => props.modelValue, async newValue => {
   if (newValue) {
     // Always start fresh
     wizardStore.setStep('1')
     wizardStore.clearError()
 
-    // Load required data
-    loadEquipment()
-    loadEmployees()
-    loadTools()
+    // Load required data first
+    await Promise.all([
+      loadEquipment(),
+      loadEmployees(),
+      loadTools(),
+    ])
 
-    // Try to load draft if exists
-    const draftLoaded = wizardStore.loadDraft(props.projectId, props.wellId)
+    // If editing (reportId exists), load report data
+    if (props.reportId) {
+      console.log('🔧 Edit mode detected, reportId:', props.reportId)
+      await loadReportForEditing()
+    }
+    else {
+      // Try to load draft if exists (only for new reports)
+      const draftLoaded = wizardStore.loadDraft(props.projectId, props.wellId)
 
-    // If no draft loaded, ensure we start with clean form
-    if (!draftLoaded)
-      wizardStore.resetForm()
-
-    else
-      console.log('📋 Draft loaded successfully')
+      // If no draft loaded, ensure we start with clean form
+      if (!draftLoaded)
+        wizardStore.resetForm()
+      else
+        console.log('📋 Draft loaded successfully')
+    }
   }
   else {
     // When dialog closes, ensure everything is clean for next time
     wizardStore.clearError()
+    // Reset form when closing to avoid stale data
+    if (!props.reportId) {
+      wizardStore.resetForm()
+    }
+  }
+})
+
+// Watch for reportId changes (in case it changes after dialog opens)
+watch(() => props.reportId, async (newReportId, oldReportId) => {
+  if (props.modelValue && newReportId && newReportId !== oldReportId) {
+    await loadReportForEditing()
   }
 })
 
@@ -327,11 +399,19 @@ watch(() => props.error, newError => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (props.modelValue) {
-    loadEquipment()
-    loadEmployees()
-    loadTools()
+    await Promise.all([
+      loadEquipment(),
+      loadEmployees(),
+      loadTools(),
+    ])
+
+    // If editing and reportId is available, load report data
+    if (props.reportId) {
+      console.log('🔧 Component mounted in edit mode, loading report:', props.reportId)
+      await loadReportForEditing()
+    }
   }
 })
 </script>
@@ -350,7 +430,7 @@ onMounted(() => {
             icon="tabler-file-plus"
             color="primary"
           />
-          <span>Nuevo Reporte de Perforación</span>
+          <span>{{ props.reportId ? 'Editar Reporte de Perforación' : 'Nuevo Reporte de Perforación' }}</span>
         </div>
         <VBtn
           icon="tabler-x"
