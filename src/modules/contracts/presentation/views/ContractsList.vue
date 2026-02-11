@@ -66,6 +66,13 @@ const headers = [
 
 const normalize = (value: any) => String(value ?? '').toLowerCase()
 
+const getDebtValue = (item: any) => {
+  const raw = item?.debt ?? item?.total_debt ?? item?.totalDebt ?? item?.debt_amount ?? item?.debtAmount ?? 0
+  const value = typeof raw === 'number' ? raw : Number(raw)
+
+  return Number.isFinite(value) ? value : 0
+}
+
 const toSelectOptions = (items?: any[]) => (items ?? []).map(item => ({
   title: item.name || item.code || item.external_id || item.externalId || item.id,
   value: item.external_id ?? item.externalId ?? item.code ?? item.id,
@@ -372,10 +379,10 @@ onMounted(() => {
 
           <template #item.debt="{ item }">
             <span
-              :class="item.debt > 0 ? 'text-error font-weight-bold' : 'text-success'"
+              :class="getDebtValue(item) > 0 ? 'text-error font-weight-bold' : 'text-success'"
               class="text-body-2"
             >
-              {{ formatCurrency(item.debt) }}
+              {{ formatCurrency(getDebtValue(item)) }}
             </span>
           </template>
 
