@@ -55,4 +55,3 @@ export function isReadingsFeatureEnabled(
 ): boolean {
   return READINGS_MODULE_CONFIG.enabled && READINGS_MODULE_CONFIG.features[feature]
 }
-

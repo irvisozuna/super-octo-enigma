@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { WorkOrderApiService } from '../../infrastructure/api/services/WorkOrderApiService'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
-import { WorkOrderApiService } from '../../infrastructure/api/services/WorkOrderApiService'
 import { rawApi } from '@/services/api'
 import { useNotification } from '@/helpers/notificationHelper'
 import { useTenantStore } from '@/stores/tenant.store'
@@ -49,11 +49,13 @@ const normalizeArray = (response: any) => {
 
 const isLecturista = (item: any) => {
   const code = item?.worker_type?.code ?? item?.workerType?.code ?? item?.type?.code ?? item?.category?.code ?? item?.code ?? item?.worker_type ?? item?.workerType ?? item?.type ?? item?.category ?? ''
+
   return String(code).toUpperCase() === 'LECTURISTA'
 }
 
 const getWorkerExternalKey = (item: any) => {
   const key = item?.external_id ?? item?.externalId ?? item?.employee_code ?? item?.code ?? null
+
   return key ? String(key) : null
 }
 
@@ -88,6 +90,7 @@ const tableItems = computed(() => {
     const userId = item.user_id ?? item.userId ?? item.user?.id ?? null
     const linkedUserFromCatalog = userId ? usersById.value.get(String(userId)) : null
     const workerName = item.name ?? item.assigned_to ?? item.full_name ?? item.username ?? '-'
+
     const linkedUser = linkedUserFromCatalog?.name
       ?? linkedUserFromCatalog?.username
       ?? linkedUserFromCatalog?.email
@@ -152,6 +155,7 @@ const userOptions = computed(() => {
 
 const usersById = computed(() => {
   const map = new Map<string, any>()
+
   users.value.forEach(item => {
     const keys = [
       item.id,
@@ -193,6 +197,7 @@ const loadUsers = async () => {
         company_id: companyId.value || undefined,
       },
     })
+
     const allUsers = normalizeArray(response)
     const hasCompanyField = allUsers.some((item: any) => item?.company_id || item?.companyId)
     if (companyId.value && hasCompanyField) {
@@ -215,7 +220,9 @@ const loadUsers = async () => {
 
 const openLinkDialog = async (item: any) => {
   selectedWorker.value = item?._raw ?? null
+
   const currentUserId = selectedWorker.value?.user_id ?? selectedWorker.value?.userId ?? selectedWorker.value?.user?.id ?? null
+
   selectedUserId.value = currentUserId ? String(currentUserId) : null
   linkDialogOpen.value = true
 
@@ -233,6 +240,7 @@ const saveUserLink = async () => {
     const localMatch = workers.value.find(item =>
       String(item.external_id ?? item.externalId ?? item.employee_code ?? '') === String(externalId),
     )
+
     workerId = localMatch?.id ?? localMatch?.worker_id
   }
 
@@ -240,6 +248,7 @@ const saveUserLink = async () => {
     try {
       const response = await apiService.getWorkers({ external_id: externalId })
       const matches = normalizeArray(response)
+
       workerId = matches[0]?.id ?? matches[0]?.worker_id
     }
     catch {
@@ -253,6 +262,7 @@ const saveUserLink = async () => {
   savingLink.value = true
   try {
     const worker = selectedWorker.value ?? {}
+
     await apiService.updateWorker(workerId, {
       external_id: externalId ?? worker.external_id ?? worker.externalId ?? undefined,
       id: worker.id ?? workerId,
@@ -287,6 +297,7 @@ const loadWorkers = async () => {
   try {
     const response = await apiService.getWorkers()
     const allWorkers = normalizeArray(response)
+
     workers.value = allWorkers.filter(item => !isLecturista(item))
   }
   finally {
@@ -297,6 +308,7 @@ const loadWorkers = async () => {
 const loadWorkOrders = async () => {
   try {
     const response = await apiService.getList({ itemsPerPage: 500, page: 1 })
+
     workOrders.value = normalizeArray(response)
   }
   catch {
@@ -345,10 +357,20 @@ onMounted(async () => {
           <template #actions="{ item }">
             <VMenu location="bottom end">
               <template #activator="{ props }">
-                <VBtn v-bind="props" icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+                <VBtn
+                  v-bind="props"
+                  icon="tabler-dots-vertical"
+                  variant="text"
+                  size="small"
+                  color="secondary"
+                />
               </template>
               <VList density="compact">
-                <VListItem prepend-icon="tabler-link" title="Vincular usuario" @click="openLinkDialog(item)" />
+                <VListItem
+                  prepend-icon="tabler-link"
+                  title="Vincular usuario"
+                  @click="openLinkDialog(item)"
+                />
               </VList>
             </VMenu>
           </template>
@@ -356,9 +378,14 @@ onMounted(async () => {
       </VCardText>
     </VCard>
 
-    <VDialog v-model="linkDialogOpen" max-width="520">
+    <VDialog
+      v-model="linkDialogOpen"
+      max-width="520"
+    >
       <VCard>
-        <VCardTitle class="text-h6">Vincular usuario</VCardTitle>
+        <VCardTitle class="text-h6">
+          Vincular usuario
+        </VCardTitle>
         <VCardText class="d-flex flex-column gap-4">
           <div class="text-body-2">
             Operador: <strong>{{ selectedWorker?.name ?? selectedWorker?.full_name ?? selectedWorker?.username ?? '-' }}</strong>
@@ -377,10 +404,21 @@ onMounted(async () => {
           />
         </VCardText>
         <VCardActions class="justify-end">
-          <VBtn variant="text" color="secondary" :disabled="savingLink" @click="linkDialogOpen = false">
+          <VBtn
+            variant="text"
+            color="secondary"
+            :disabled="savingLink"
+            @click="linkDialogOpen = false"
+          >
             Cancelar
           </VBtn>
-          <VBtn color="primary" variant="tonal" :loading="savingLink" :disabled="!selectedUserId" @click="saveUserLink">
+          <VBtn
+            color="primary"
+            variant="tonal"
+            :loading="savingLink"
+            :disabled="!selectedUserId"
+            @click="saveUserLink"
+          >
             Guardar
           </VBtn>
         </VCardActions>

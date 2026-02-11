@@ -68,6 +68,7 @@ const resolveWorkerId = async (userId?: string | number | null) => {
 
   const match = workers.find(item => {
     const workerUserId = item.user_id ?? item.userId ?? item.userid ?? item.user?.id ?? item.assigned_to ?? item.assigned?.id
+
     return String(workerUserId ?? '') === String(userId)
   })
 
@@ -93,6 +94,7 @@ const onFormSubmit = handleSubmit(async values => {
 
     if (values.fk_user_assign && !workerId) {
       showError('Usuario no tiene activado para hacer cambios.')
+
       return
     }
 

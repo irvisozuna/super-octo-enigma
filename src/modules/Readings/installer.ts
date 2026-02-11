@@ -10,10 +10,12 @@ export class ReadingsModuleInstaller {
   async install() {
     try {
       await this.addTranslations()
+
       return true
     }
     catch (error) {
       console.error('Error installing ReadingsModule:', error)
+
       return false
     }
   }

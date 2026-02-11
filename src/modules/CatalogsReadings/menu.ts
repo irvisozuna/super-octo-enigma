@@ -2,9 +2,9 @@
  * Catalogs Readings Module Menu Configuration
  */
 
+import { CATALOGS_READINGS_PERMISSIONS } from './config/permissions'
 import type { VerticalNavItems } from '@layouts/types'
 import { createValidatedMenu } from '@/utils/menuValidator'
-import { CATALOGS_READINGS_PERMISSIONS } from './config/permissions'
 
 const catalogsReadingsMenu: VerticalNavItems = [
   {

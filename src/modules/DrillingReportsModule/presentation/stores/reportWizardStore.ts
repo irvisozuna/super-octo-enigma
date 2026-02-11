@@ -510,6 +510,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         return h.id || h.employee?.id || h.employee_id || h
       }).filter((id: any) => id))
     }
+
     // Fallback to individual helper IDs if helpers array doesn't exist (legacy structure)
     if (helperDayIds.length === 0) {
       if (report.personnel?.helper1_day?.id || report.helper1_day_id)
@@ -526,6 +527,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         return h.id || h.employee?.id || h.employee_id || h
       }).filter((id: any) => id))
     }
+
     // Fallback to individual helper IDs if helpers array doesn't exist (legacy structure)
     if (helperNightIds.length === 0) {
       if (report.personnel?.helper1_night?.id || report.helper1_night_id)
@@ -602,6 +604,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
     // Consumptions - check both consumptions array and additives array
     const consumptionsList = report.consumptions || report.additives || []
+
     formData.value.consumptions = consumptionsList.map((cons: any) => ({
       consumable_type: cons.consumable_type || cons.type || '',
       shift: cons.shift || formData.value.shift,
@@ -634,9 +637,11 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
     // Get tools from report (could be in tools.reamers/tools.bits or tool_assignments or drilling_details)
     const toolAssignments = report.tool_assignments || []
+
     const reamers = report.tools?.reamers || toolAssignments.filter((t: any) =>
       t.tool_category === 'reamer' || t.tool?.type === 'reamer' || t.tool?.type?.includes('reamer'),
     )
+
     const bits = report.tools?.bits || toolAssignments.filter((t: any) =>
       t.tool_category === 'diamond_bit' || t.tool_category === 'tricone'
       || t.tool?.type === 'diamond_bit' || t.tool?.type === 'tricone',
@@ -650,22 +655,31 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       && (d.tool?.type === 'diamond_bit' || d.tool?.type === 'tricone' || d.tool_category === 'diamond_bit' || d.tool_category === 'tricone'),
     )
 
-    // Combine bits from both sources and deduplicate by tool_id
-    // Use a Map to ensure each bit (by tool_id) appears only once
+    // Combine bits from both sources and deduplicate by composite key (tool_id + depth)
+    // Use a Map to ensure each bit usage (same tool at different depths) is preserved
     const bitsMap = new Map<string, any>()
+
+    // Helper to create unique key for each bit usage
+    const getBitUniqueKey = (bit: any) => {
+      const toolId = bit.tool?.id || bit.tool_id
+      const depthFrom = bit.depth_from ?? bit.start_depth_meters ?? 0
+      const depthTo = bit.depth_to ?? bit.end_depth_meters ?? 0
+
+      return `${toolId}_${depthFrom}_${depthTo}`
+    }
 
     // Add bits from tools.bits or tool_assignments first
     bits.forEach((bit: any) => {
-      const toolId = bit.tool?.id || bit.tool_id
-      if (toolId && !bitsMap.has(toolId))
-        bitsMap.set(toolId, bit)
+      const uniqueKey = getBitUniqueKey(bit)
+      if (!bitsMap.has(uniqueKey))
+        bitsMap.set(uniqueKey, bit)
     })
 
     // Add bits from drilling_details, but don't overwrite if already exists
     drillingDetailsBits.forEach((bit: any) => {
-      const toolId = bit.tool?.id || bit.tool_id
-      if (toolId && !bitsMap.has(toolId))
-        bitsMap.set(toolId, bit)
+      const uniqueKey = getBitUniqueKey(bit)
+      if (!bitsMap.has(uniqueKey))
+        bitsMap.set(uniqueKey, bit)
     })
 
     // Convert map back to array
@@ -680,22 +694,26 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       bitsAfterDedup: allBits.length,
     })
 
-    // Track which bits have been assigned to avoid duplicates
-    const assignedBitIds = new Set<string>()
+    // Track which bits have been assigned to avoid duplicates (using composite key)
+    const assignedBitKeys = new Set<string>()
 
     // Group reamers with their bits
     // Try multiple strategies to match bits with reamers:
-    // 1. By reamer_id field
-    // 2. By group_index/group_position
-    // 3. By depth ranges (bits within reamer depth range)
+    // 1. By tool_group_id (most reliable)
+    // 2. By reamer_id field
+    // 3. By group_index/group_position
+    // 4. By depth ranges (bits within reamer depth range)
     reamers.forEach((reamer: any, index: number) => {
       const reamerId = reamer.tool?.id || reamer.tool_id
+      const reamerToolGroupId = reamer.tool_group_id
+
       // API uses depth_from/depth_to, not start_depth_meters/end_depth_meters
       const reamerStartDepth = reamer.depth_from ?? reamer.start_depth_meters ?? 0
       const reamerEndDepth = reamer.depth_to ?? reamer.end_depth_meters ?? 0
 
       console.log(`🔍 Processing reamer ${index + 1}:`, {
         reamerId,
+        reamerToolGroupId,
         reamerStartDepth,
         reamerEndDepth,
         reamerRaw: reamer,
@@ -703,11 +721,18 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
       // Try to find bits associated with this reamer (only unassigned bits)
       let reamerBits = allBits.filter((bit: any) => {
-        const bitToolId = bit.tool?.id || bit.tool_id
+        const bitUniqueKey = getBitUniqueKey(bit)
 
         // Skip if this bit has already been assigned to another reamer
-        if (assignedBitIds.has(bitToolId))
+        if (assignedBitKeys.has(bitUniqueKey))
           return false
+
+        // Strategy 1: Match by tool_group_id (most reliable for API data)
+        if (bit.tool_group_id && reamerToolGroupId && bit.tool_group_id === reamerToolGroupId) {
+          console.log(`  ✅ Bit matched by tool_group_id: ${bit.tool?.id || bit.tool_id} (${bit.depth_from}-${bit.depth_to})`)
+
+          return true
+        }
 
         // Check all possible reamer_id fields
         const bitReamerId = bit.reamer_id
@@ -723,6 +748,8 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         console.log(`  🔍 Checking bit ${bit.tool?.id || bit.tool_id}:`, {
           bitReamerId,
           reamerId,
+          bitToolGroupId: bit.tool_group_id,
+          reamerToolGroupId,
           bitGroupIndex,
           bitGroupPosition,
           bitDepthFrom: bit.depth_from,
@@ -731,14 +758,14 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
           reamerEndDepth,
         })
 
-        // Strategy 1: Direct reamer_id match
+        // Strategy 2: Direct reamer_id match
         if (bitReamerId && bitReamerId === reamerId) {
           console.log(`  ✅ Bit matched by reamer_id: ${bit.tool?.id || bit.tool_id}`)
 
           return true
         }
 
-        // Strategy 2: Group index/position match
+        // Strategy 3: Group index/position match
         if (bitGroupPosition === 'bit' && bitGroupIndex === index) {
           console.log(`  ✅ Bit matched by group_index: ${bit.tool?.id || bit.tool_id}`)
 
@@ -773,9 +800,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       // Only assign unassigned bits
       if (reamerBits.length === 0 && reamers.length === 1) {
         const unassignedBits = allBits.filter((bit: any) => {
-          const bitToolId = bit.tool?.id || bit.tool_id
+          const bitUniqueKey = getBitUniqueKey(bit)
 
-          return !assignedBitIds.has(bitToolId)
+          return !assignedBitKeys.has(bitUniqueKey)
         })
 
         if (unassignedBits.length > 0) {
@@ -786,10 +813,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
 
       // Mark all matched bits as assigned
       reamerBits.forEach((bit: any) => {
-        const bitToolId = bit.tool?.id || bit.tool_id
+        const bitUniqueKey = getBitUniqueKey(bit)
 
-        if (bitToolId)
-          assignedBitIds.add(bitToolId)
+        assignedBitKeys.add(bitUniqueKey)
       })
 
       console.log(`✅ Found ${reamerBits.length} bits for reamer ${index + 1}:`, reamerBits.map(b => ({
@@ -805,6 +831,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         reamer: {
           tool_id: reamerId,
           shift: reamer.shift || formData.value.shift,
+
           // Convert depth_from/depth_to to start_depth_meters/end_depth_meters
           // Ensure start_depth < end_depth (swap if needed)
           start_depth_meters: Number(reamerStartDepth) <= Number(reamerEndDepth) ? Number(reamerStartDepth) : Number(reamerEndDepth),
@@ -815,6 +842,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         bits: reamerBits.map((bit: any) => {
           const bitToolId = bit.tool?.id || bit.tool_id
           const bitCategory = bit.tool_category || (bit.tool?.type === 'tricone' ? 'tricone' : 'diamond_bit')
+
           // API uses depth_from/depth_to, convert to start_depth_meters/end_depth_meters
           const bitStartDepth = bit.depth_from ?? bit.start_depth_meters ?? 0
           const bitEndDepth = bit.depth_to ?? bit.end_depth_meters ?? 0
@@ -859,6 +887,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     // If no reamers but there are bits, create a group without reamer
     if (reamers.length === 0 && allBits.length > 0) {
       console.log('⚠️ No reamers found, creating group with bits only')
+
       const firstBitStart = allBits[0]?.depth_from ?? allBits[0]?.start_depth_meters ?? 0
       const lastBitEnd = allBits[allBits.length - 1]?.depth_to ?? allBits[allBits.length - 1]?.end_depth_meters ?? 0
 

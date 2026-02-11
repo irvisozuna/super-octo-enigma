@@ -35,4 +35,3 @@ export class WorkOrdersModuleContainer {
 }
 
 export const workOrdersContainer = WorkOrdersModuleContainer.getInstance()
-

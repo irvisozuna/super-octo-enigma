@@ -30,6 +30,9 @@ const totalDrillingDepth = computed(() => wizardStore.totalDrillingDepth)
 // Filtrar herramientas por tipo (solo escarreadores)
 // Excluye los escarreadores ya seleccionados en otros grupos
 const getAvailableReamers = (currentGroupIndex: number) => {
+  // Obtener el ID del escarreador actualmente seleccionado en este grupo
+  const currentReamerId = toolGroups.value[currentGroupIndex]?.reamer?.tool_id
+
   // Obtener IDs de escarreadores ya seleccionados en OTROS grupos
   const usedReamerIds = toolGroups.value
     .filter((_, index) => index !== currentGroupIndex)
@@ -37,6 +40,10 @@ const getAvailableReamers = (currentGroupIndex: number) => {
     .filter(id => id !== null)
 
   return props.toolOptions.filter(tool => {
+    // SIEMPRE incluir el escarreador actualmente seleccionado (para que VSelect muestre el título)
+    if (tool.value === currentReamerId)
+      return true
+
     const toolType = (tool.type || '').toLowerCase()
     const isReamer = toolType === 'reamer' || toolType.includes('reamer') || toolType.includes('escarreador')
 

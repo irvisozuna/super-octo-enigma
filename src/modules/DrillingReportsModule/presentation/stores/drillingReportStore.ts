@@ -165,6 +165,7 @@ export const useDrillingReportStore = defineStore('drillingReport', () => {
 
     try {
       const response = await DrillingReportApiService.getReportById(id)
+
       // API returns { data: DrillingReport }
       const report = response?.data || response
 

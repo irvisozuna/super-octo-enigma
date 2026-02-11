@@ -752,7 +752,7 @@ function handleEditReport(report: any) {
 /**
  * Manejar actualización de reporte desde el wizard
  */
-async function handleUpdateReport({ reportId, data }: { reportId: string, data: any }) {
+async function handleUpdateReport({ reportId, data }: { reportId: string; data: any }) {
   editingReport.value = true
   editReportError.value = null
 
@@ -800,6 +800,7 @@ function handleDeleteReport(report: any) {
       message: 'Solo se pueden eliminar reportes en estado borrador',
       color: 'error',
     })
+
     return
   }
 

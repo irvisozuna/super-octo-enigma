@@ -31,7 +31,7 @@ const props = defineProps<CreateReportWizardProps>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'submit': [data: any]
-  'update': [data: { reportId: string, data: any }]
+  'update': [data: { reportId: string; data: any }]
 }>()
 
 const { t } = useI18n()
@@ -209,12 +209,11 @@ const handleSubmit = async () => {
 
   // Important: We don't clear here because we need to wait for the parent's response
   // The parent will call onSuccess() if the save is successful
-  if (props.reportId) {
+  if (props.reportId)
     emit('update', { reportId: props.reportId, data })
-  }
-  else {
+
+  else
     emit('submit', data)
-  }
 }
 
 const handleCancel = () => {
@@ -262,32 +261,57 @@ defineExpose({
 const loadReportForEditing = async () => {
   if (!props.reportId) {
     console.warn('⚠️ loadReportForEditing called but no reportId provided')
+
     return
   }
 
   try {
     console.log('🔄 Loading report with ID:', props.reportId)
+
     const response = await drillingReportStore.fetchReportById(props.reportId)
+
     console.log('📦 Raw API response:', response)
-    
+
     // The API might return { data: report } or just report
     const report = response?.data || response
+
     console.log('📋 Report object extracted:', report)
     console.log('📋 Report keys:', report ? Object.keys(report) : 'No report object')
 
     if (!report) {
       console.error('❌ No report data received')
       wizardStore.setError('Error', 'No se recibieron datos del reporte')
+
       return
     }
 
     if (!report.id && !report.report_number) {
       console.error('❌ Invalid report structure:', report)
       wizardStore.setError('Error', 'El reporte recibido no tiene la estructura esperada')
+
       return
     }
 
     console.log('✅ Valid report received, loading into wizard...')
+
+    // Add tools from the report to toolOptions if they don't exist
+    // This ensures reamers and bits from the report are selectable in dropdowns
+    const reportTools = [
+      ...(report.tools?.reamers || []),
+      ...(report.tools?.bits || []),
+    ].map((item: any) => item.tool).filter(Boolean)
+
+    reportTools.forEach((tool: any) => {
+      if (tool.id && !toolOptions.value.find((opt: any) => opt.value === tool.id)) {
+        toolOptions.value.push({
+          title: tool.serial_number || tool.type,
+          value: tool.id,
+          type: tool.type,
+        })
+        console.log('➕ Added missing tool from report:', tool.serial_number || tool.id)
+      }
+    })
+
     wizardStore.loadReportData(report)
     console.log('✅ Report data loaded into wizard successfully')
   }
@@ -335,18 +359,17 @@ watch(() => props.modelValue, async newValue => {
   else {
     // When dialog closes, ensure everything is clean for next time
     wizardStore.clearError()
+
     // Reset form when closing to avoid stale data
-    if (!props.reportId) {
+    if (!props.reportId)
       wizardStore.resetForm()
-    }
   }
 })
 
 // Watch for reportId changes (in case it changes after dialog opens)
 watch(() => props.reportId, async (newReportId, oldReportId) => {
-  if (props.modelValue && newReportId && newReportId !== oldReportId) {
+  if (props.modelValue && newReportId && newReportId !== oldReportId)
     await loadReportForEditing()
-  }
 })
 
 // Auto-save draft on changes

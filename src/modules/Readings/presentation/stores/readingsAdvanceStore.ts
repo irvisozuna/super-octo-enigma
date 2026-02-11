@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { useDataTable } from '@/composables/useDataTable'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
+import { useDataTable } from '@/composables/useDataTable'
 
 export const useReadingsAdvanceStore = defineStore('readings-advance', () => {
   const {

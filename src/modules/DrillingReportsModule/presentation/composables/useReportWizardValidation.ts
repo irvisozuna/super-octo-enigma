@@ -23,19 +23,19 @@ export const useReportWizardValidation = () => {
         formRef = step2Form
         break
       case 3:
-        // Step 3 (Activities) uses computed validation from store
+      // Step 3 (Activities) uses computed validation from store
         return wizardStore.isActivitiesStepValid
       case 4:
-        // Step 4 (Directional Measurements) uses computed validation from store
+      // Step 4 (Directional Measurements) uses computed validation from store
         return wizardStore.isDirectionalMeasurementsStepValid
       case 5:
         formRef = step5Form
         break
       case 6:
-        // Step 6 (Tools) uses computed validation from store
+      // Step 6 (Tools) uses computed validation from store
         return wizardStore.isToolGroupsStepValid
       case 7:
-        // Step 7 (Review) is always valid
+      // Step 7 (Review) is always valid
         return true
       default:
         return true

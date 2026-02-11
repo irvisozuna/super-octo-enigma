@@ -30,14 +30,18 @@ export const useContractsStore = defineStore('contracts', () => {
     error.value = null
     try {
       const response = await applicationService.getContracts(filters)
+
       items.value = response.data
+
       const meta = response.meta ?? response.pagination ?? {}
       const perPage = meta.per_page ?? meta.limit ?? pagination.value.per_page
       const total = meta.total ?? pagination.value.total ?? 0
+
       const currentPage = meta.current_page
         ?? (meta.offset !== undefined && perPage
           ? Math.floor(Number(meta.offset) / Number(perPage)) + 1
           : pagination.value.current_page)
+
       const lastPage = meta.last_page
         ?? (perPage ? Math.max(1, Math.ceil(Number(total) / Number(perPage))) : pagination.value.last_page)
 
@@ -77,11 +81,11 @@ export const useContractsStore = defineStore('contracts', () => {
       const updated = await applicationService.updateContract(id, data)
       if (currentItem.value?.id === id)
         currentItem.value = updated
-      
+
       const index = items.value.findIndex(i => i.id === id)
       if (index !== -1)
         items.value[index] = updated
-        
+
       return updated
     }
     catch (err: any) {
@@ -117,6 +121,7 @@ export const useContractsStore = defineStore('contracts', () => {
     }
     catch (err: any) {
       error.value = err.message || 'Error loading catalogs'
+
       return { status: [], systems: [], sectors: [], type_contracts: [] }
     }
   }

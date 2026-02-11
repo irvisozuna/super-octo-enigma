@@ -42,4 +42,3 @@ export class ReadingsModuleContainer {
 }
 
 export const readingsContainer = ReadingsModuleContainer.getInstance()
-

@@ -1,10 +1,10 @@
-﻿/**
+/**
  * Readings Module Menu Configuration
  */
 
+import { READINGS_PERMISSIONS } from './config/permissions'
 import type { VerticalNavItems } from '@layouts/types'
 import { createValidatedMenu } from '@/utils/menuValidator'
-import { READINGS_PERMISSIONS } from './config/permissions'
 
 const readingsMenu: VerticalNavItems = [
   {
