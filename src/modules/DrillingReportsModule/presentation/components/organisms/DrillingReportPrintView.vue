@@ -205,16 +205,36 @@ const drillingSummary = computed(() => {
   }
 })
 
-// Detalles de perforación filtrados (solo brocas, no escarreadores)
+// Detalles de perforación filtrados y deduplicados
 const drillingDetailsForPrint = computed(() => {
   const details = report.value?.drilling_details || []
 
   // Filtrar: solo brocas (excluir escarreadores explícitamente)
-  return details.filter((d: any) =>
+  const filtered = details.filter((d: any) =>
     d.affects_well_depth === true
     && d.tool?.type !== 'reamer'
     && d.group_position !== 'reamer',
   )
+
+  // Deduplicar por depth_from + depth_to, conservando la entrada con mayor información
+  const deduped = new Map<string, any>()
+
+  for (const d of filtered) {
+    const key = `${d.depth_from}-${d.depth_to}`
+
+    if (deduped.has(key)) {
+      const existing = deduped.get(key)
+
+      // Conservar la entrada que tenga datos de recuperación
+      if (!existing.recovery && d.recovery)
+        deduped.set(key, d)
+    }
+    else {
+      deduped.set(key, d)
+    }
+  }
+
+  return Array.from(deduped.values())
 })
 
 // Brocas agrupadas por serial_number (para evitar repetición)
