@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { formatDate } from '../../../shared/utils/dateUtils'
 
 export interface ProjectReportsTabProps {
@@ -25,6 +25,18 @@ const filters = ref({
   shift: null as string | null,
   date: '',
 })
+
+// Pagination state
+const paginationPage = ref(1)
+const paginationPerPage = ref(15)
+
+const itemsPerPageOptions = [
+  { title: '10', value: 10 },
+  { title: '15', value: 15 },
+  { title: '20', value: 20 },
+  { title: '25', value: 25 },
+  { title: '50', value: 50 },
+]
 
 const headers = [
   { title: 'Fecha', key: 'report_date', sortable: true },
@@ -75,6 +87,25 @@ const filteredReports = computed(() => {
 
   return result
 })
+
+// Paginated slice of filtered reports for VDataTableServer
+const paginatedReports = computed(() => {
+  const start = (paginationPage.value - 1) * paginationPerPage.value
+  const end = start + paginationPerPage.value
+
+  return filteredReports.value.slice(start, end)
+})
+
+// Reset page when filters change
+watch(filters, () => {
+  paginationPage.value = 1
+}, { deep: true })
+
+// Handle VDataTableServer options update (pagination, sorting)
+function handleOptionsUpdate(options: any) {
+  paginationPage.value = options.page
+  paginationPerPage.value = options.itemsPerPage
+}
 
 // Funciones para determinar acciones disponibles
 const getAvailableActions = (report: any) => {
@@ -234,12 +265,17 @@ const getStatusLabel = (status: string) => {
     </VCard>
 
     <!-- Reports Data Table -->
-    <VDataTable
+    <VDataTableServer
+      v-model:items-per-page="paginationPerPage"
+      v-model:page="paginationPage"
       :headers="headers"
-      :items="filteredReports"
+      :items="paginatedReports"
+      :items-length="filteredReports.length"
       :loading="loading"
-      :items-per-page="15"
+      :items-per-page-options="itemsPerPageOptions"
+      item-value="id"
       class="elevation-1"
+      @update:options="handleOptionsUpdate"
     >
       <!-- Report Date -->
       <template #item.report_date="{ item }">
@@ -405,7 +441,7 @@ const getStatusLabel = (status: string) => {
           </VBtn>
         </div>
       </template>
-    </VDataTable>
+    </VDataTableServer>
   </div>
 </template>
 
