@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useReportWizardStore } from '../../stores/reportWizardStore'
 import {
   ACTIVITY_TEMPLATES,
@@ -23,6 +23,25 @@ const availableShiftOptions = computed(() => {
 const totalHoursWorked = computed(() => wizardStore.totalHoursWorked)
 const calculatedHorometerEnd = computed(() => wizardStore.calculatedHorometerEnd)
 const isActivitiesStepValid = computed(() => wizardStore.isActivitiesStepValid)
+
+// Per-activity validation errors for specific error messages
+const activityValidationErrors = computed(() => {
+  const activities = formData.value.activities
+
+  const withErrors = activities.map((activity: any, index: number) => {
+    const errors: string[] = []
+    if (!activity.activity_type)
+      errors.push('tipo de actividad no seleccionado')
+    if (!activity.shift)
+      errors.push('turno no asignado')
+    if (activity.hours === null || activity.hours === undefined || Number(activity.hours) <= 0)
+      errors.push('horas trabajadas deben ser mayor a 0')
+
+    return { index, errors }
+  })
+
+  return withErrors.filter(item => item.errors.length > 0)
+})
 
 // Activity options
 const activityTypeOptions = ACTIVITY_TYPES
@@ -82,7 +101,7 @@ const updateActivity = (index: number, field: string, value: any) => {
     const activity = formData.value.activities[index]
     if (activity?.start_time && activity?.end_time) {
       // Calcular horas considerando el turno (para manejar cruce de medianoche en turnos nocturnos)
-      const calculatedHours = calculateHoursFromTimes(activity.start_time, activity.end_time, activity.shift)
+      const calculatedHours = calculateHoursFromTimes(activity.start_time, activity.end_time)
 
       wizardStore.updateActivity(index, { hours: calculatedHours })
     }
@@ -104,7 +123,29 @@ const toggleActivityExpansion = (index: number) => {
     expandedActivities.value.add(index)
 }
 
+const expandActivityAndScroll = (index: number) => {
+  expandedActivities.value.add(index)
+  expandedActivities.value = new Set(expandedActivities.value)
+
+  nextTick(() => {
+    const el = document.querySelector(`[data-activity-index="${index}"]`)
+
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+}
+
 const isActivityExpanded = (index: number) => expandedActivities.value.has(index)
+
+// Auto-expand activity cards that have validation errors so the user can see and fix them
+watch(activityValidationErrors, items => {
+  if (items.length > 0) {
+    const next = new Set(expandedActivities.value)
+
+    items.forEach(item => next.add(item.index))
+
+    expandedActivities.value = next
+  }
+}, { immediate: true })
 
 // Get activity display name for collapsed view
 const getActivityDisplayName = (activity: any) => {
@@ -165,41 +206,33 @@ const getSuggestedEndTime = (index: number) => {
 }
 
 // Calculate hours based on start and end time
-const calculateHoursFromTimes = (startTime: string, endTime: string, shift?: string) => {
+const calculateHoursFromTimes = (startTime: string, endTime: string) => {
   if (!startTime || !endTime)
     return 0
 
   const start = new Date(`2000-01-01T${startTime}`)
   let end = new Date(`2000-01-01T${endTime}`)
 
-  // Si es turno nocturno y end < start, significa que cruza medianoche
-  // Ejemplo: 19:00 (7 PM) a 07:00 (7 AM del día siguiente) = 12 horas
-  if (shift === 'night' && end < start) {
-    // Sumar 24 horas (1 día) a la hora de fin
+  // Si end < start, asumir cruce de medianoche (ej. 15:00 a 08:00 = 17 hrs)
+  if (end < start)
     end = new Date(end.getTime() + (24 * 60 * 60 * 1000))
-  }
-  else if (end < start) {
-    // Para turnos diurnos o mixtos, si end < start es inválido
-    return 0
-  }
 
   const diffMs = end.getTime() - start.getTime()
   const diffHours = diffMs / (1000 * 60 * 60)
 
-  return Math.max(0, diffHours) // Ensure non-negative
+  return Math.max(0, diffHours)
 }
 
 // Update activity with suggested times
 const setSuggestedTimes = (index: number) => {
   const suggestedStart = getSuggestedStartTime(index)
   const suggestedEnd = getSuggestedEndTime(index)
-  const activity = formData.value.activities[index]
 
   updateActivity(index, 'start_time', suggestedStart)
   updateActivity(index, 'end_time', suggestedEnd)
 
   // Calculate hours automatically, considerando el turno
-  const calculatedHours = calculateHoursFromTimes(suggestedStart, suggestedEnd, activity?.shift)
+  const calculatedHours = calculateHoursFromTimes(suggestedStart, suggestedEnd)
 
   wizardStore.updateActivity(index, { hours: calculatedHours })
 }
@@ -277,6 +310,8 @@ const calculateHorometer = () => {
         <VCard
           variant="outlined"
           class="activity-card"
+          :class="{ 'activity-card-invalid': activityValidationErrors.some(e => e.index === index) }"
+          :data-activity-index="index"
         >
           <!-- Collapsible Header -->
           <VCardTitle
@@ -481,7 +516,7 @@ const calculateHorometer = () => {
         </VCard>
       </VCol>
 
-      <!-- Validation Error -->
+      <!-- Validation Error: list which activities fail and why -->
       <VCol
         v-if="formData.activities.length > 0 && !isActivitiesStepValid"
         cols="12"
@@ -500,12 +535,22 @@ const calculateHorometer = () => {
             Validación Requerida
           </template>
           <p class="mb-2">
-            Por favor complete todos los campos requeridos:
+            Corrija las siguientes actividades:
           </p>
           <ul class="text-body-2">
-            <li>• Todas las actividades deben tener un tipo seleccionado</li>
-            <li>• Todas las actividades deben tener un turno asignado</li>
-            <li>• Todas las actividades deben tener horas trabajadas (mayor a 0)</li>
+            <li
+              v-for="item in activityValidationErrors"
+              :key="item.index"
+              class="mb-1"
+            >
+              <span
+                class="cursor-pointer text-decoration-underline"
+                @click="expandActivityAndScroll(item.index)"
+              >
+                Actividad {{ item.index + 1 }} ({{ getActivityDisplayName(formData.activities[item.index]) }}):
+              </span>
+              {{ item.errors.join(', ') }}
+            </li>
           </ul>
         </VAlert>
       </VCol>
@@ -541,6 +586,11 @@ const calculateHorometer = () => {
   &:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 10%);
   }
+}
+
+.activity-card-invalid {
+  border-color: rgb(var(--v-theme-error)) !important;
+  border-width: 2px;
 }
 
 .cursor-pointer {

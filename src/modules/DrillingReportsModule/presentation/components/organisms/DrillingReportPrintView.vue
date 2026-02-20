@@ -623,8 +623,8 @@ watch(() => report.value, newReport => {
                   <td>{{ parametersInfo.pullDown }}</td>
                 </tr>
                 <tr>
-                  <td>RPM:</td>
-                  <td>{{ parametersInfo.rpmPullDown }}</td>
+                  <td>RPM Rotación:</td>
+                  <td>{{ parametersInfo.rpmRotation }}</td>
                 </tr>
               </table>
               <div class="section-title">

@@ -445,6 +445,18 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     validationErrors.value = errors
   }
 
+  function calculateHoursFromTimesForLoad(startTime: string, endTime: string): number {
+    if (!startTime || !endTime)
+      return 0
+    const start = new Date(`2000-01-01T${startTime}`)
+    let end = new Date(`2000-01-01T${endTime}`)
+    if (end < start)
+      end = new Date(end.getTime() + (24 * 60 * 60 * 1000))
+    const diffMs = end.getTime() - start.getTime()
+
+    return Math.max(0, diffMs / (1000 * 60 * 60))
+  }
+
   // Load report data into wizard form
   const loadReportData = (report: any) => {
     console.log('🔄 loadReportData called with report:', report)
@@ -592,15 +604,26 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       rpm_rotation: formData.value.rpm_rotation,
     })
 
-    // Activities
-    formData.value.activities = (report.activities || []).map((act: any) => ({
-      activity_type: act.activity_type || 'drilling',
-      shift: act.shift || formData.value.shift,
-      hours: act.hours || 0,
-      start_time: act.start_time || '',
-      end_time: act.end_time || '',
-      description: act.description || '',
-    }))
+    // Activities - ensure numeric hours and recalculate from times when needed
+    const rawActivities = (report.activities || []).map((act: any) => {
+      const startTime = act.start_time || ''
+      const endTime = act.end_time || ''
+      let hours = Number(act.hours) || 0
+
+      if (hours <= 0 && startTime && endTime)
+        hours = calculateHoursFromTimesForLoad(startTime, endTime)
+
+      return {
+        activity_type: act.activity_type || 'drilling',
+        shift: act.shift || formData.value.shift,
+        hours,
+        start_time: startTime,
+        end_time: endTime,
+        description: act.description || '',
+      }
+    })
+
+    formData.value.activities = rawActivities
 
     // Consumptions - check both consumptions array and additives array
     const consumptionsList = report.consumptions || report.additives || []
