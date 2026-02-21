@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useWorkOrdersStore } from '../stores/workOrdersStore'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
-import { useWorkOrdersStore } from '../stores/workOrdersStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -159,22 +159,27 @@ watch(() => store.pagination.per_page, value => {
 
 watch(search, () => {
   const params = store.buildParams(1, store.pagination.per_page, { search: search.value, assigned_to: workerId.value })
+
   store.fetchList(params)
 })
 
 watch(workerId, () => {
   const params = store.buildParams(1, store.pagination.per_page, { search: search.value, assigned_to: workerId.value })
+
   store.fetchList(params)
 })
 
 const handlePerPageChange = (value: number) => {
   store.setItemsPerPage(value)
+
   const params = store.buildParams(1, value, { search: search.value, assigned_to: workerId.value })
+
   store.fetchList(params)
 }
 
 onMounted(() => {
   const params = store.buildParams(1, store.pagination.per_page, { search: search.value, assigned_to: workerId.value })
+
   store.fetchList(params)
 })
 </script>
@@ -200,13 +205,25 @@ onMounted(() => {
 
     <VCard class="workorders-table">
       <VCardText>
-        <div v-if="pageLoading" class="workorders-toolbar">
-          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+        <div
+          v-if="pageLoading"
+          class="workorders-toolbar"
+        >
+          <VSkeletonLoader
+            type="text"
+            class="workorders-toolbar__search"
+          />
           <div class="workorders-toolbar__actions">
-            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
           </div>
         </div>
-        <div v-else class="workorders-toolbar">
+        <div
+          v-else
+          class="workorders-toolbar"
+        >
           <VTextField
             v-model="search"
             variant="outlined"
@@ -261,7 +278,12 @@ onMounted(() => {
             </VChip>
           </template>
           <template #actions>
-            <VBtn icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+            <VBtn
+              icon="tabler-dots-vertical"
+              variant="text"
+              size="small"
+              color="secondary"
+            />
           </template>
         </BaseDataTable>
       </VCardText>

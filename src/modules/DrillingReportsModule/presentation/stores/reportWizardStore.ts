@@ -30,6 +30,17 @@ interface Consumption {
   unit: string
 }
 
+interface DirectionalMeasurement {
+  id?: string
+  depth: number
+  azimuth: number
+  inclination: number
+  measurement_interval: number
+  notes?: string
+  measured_at?: string
+  measured_by?: string
+}
+
 interface ToolAssignment {
   tool_id: string | null
   shift: string
@@ -73,6 +84,7 @@ export interface ReportWizardData extends PersonnelData {
   equipment_id: string | null
   observations: string
   activities: Activity[]
+  directional_measurements: DirectionalMeasurement[]
   consumptions: Consumption[]
   tool_assignments: ToolAssignment[]
   tool_groups: ToolGroup[]
@@ -106,6 +118,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     rpm_rotation: null,
     observations: '',
     activities: [],
+    directional_measurements: [],
     consumptions: [],
     tool_assignments: [],
     tool_groups: [],
@@ -156,6 +169,31 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       && activity.shift
       && activity.hours !== null
       && activity.hours > 0,
+    )
+  })
+
+  // Validation for directional measurements step (optional)
+  const isDirectionalMeasurementsStepValid = computed(() => {
+    // Step is optional - if no measurements added, step is valid
+    if (formData.value.directional_measurements.length === 0)
+      return true
+
+    // If measurements exist, all must have required fields
+    return formData.value.directional_measurements.every(measurement =>
+      measurement.depth !== null
+      && measurement.depth !== undefined
+      && measurement.depth >= 0
+      && measurement.azimuth !== null
+      && measurement.azimuth !== undefined
+      && measurement.azimuth >= 0
+      && measurement.azimuth <= 360
+      && measurement.inclination !== null
+      && measurement.inclination !== undefined
+      && measurement.inclination >= -90
+      && measurement.inclination <= 90
+      && measurement.measurement_interval !== null
+      && measurement.measurement_interval !== undefined
+      && measurement.measurement_interval > 0.1,
     )
   })
 
@@ -223,7 +261,10 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   const totalDrillBitDepthFromGroups = computed(() => {
     return formData.value.tool_groups.reduce((sum, group) => {
       return sum + group.bits.reduce((bitSum, bit) => {
-        return bitSum + (bit.end_depth_meters - bit.start_depth_meters)
+        // Only add positive depth differences (safeguard against invalid depths)
+        const depthDiff = Number(bit.end_depth_meters) - Number(bit.start_depth_meters)
+
+        return bitSum + (depthDiff > 0 ? depthDiff : 0)
       }, 0)
     }, 0)
   })
@@ -339,14 +380,14 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
   }
 
   const nextStep = () => {
-    const steps = ['1', '2', '3', '4', '5', '6']
+    const steps = ['1', '2', '3', '4', '5', '6', '7']
     const currentIndex = steps.indexOf(currentStep.value)
     if (currentIndex < steps.length - 1)
       currentStep.value = steps[currentIndex + 1]
   }
 
   const previousStep = () => {
-    const steps = ['1', '2', '3', '4', '5', '6']
+    const steps = ['1', '2', '3', '4', '5', '6', '7']
     const currentIndex = steps.indexOf(currentStep.value)
     if (currentIndex > 0)
       currentStep.value = steps[currentIndex - 1]
@@ -381,6 +422,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       rpm_rotation: null,
       observations: '',
       activities: [],
+      directional_measurements: [],
       consumptions: [],
       tool_assignments: [],
       tool_groups: [],
@@ -401,6 +443,531 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     errorTitle.value = title
     errorMessage.value = message
     validationErrors.value = errors
+  }
+
+  function calculateHoursFromTimesForLoad(startTime: string, endTime: string): number {
+    if (!startTime || !endTime)
+      return 0
+    const start = new Date(`2000-01-01T${startTime}`)
+    let end = new Date(`2000-01-01T${endTime}`)
+    if (end < start)
+      end = new Date(end.getTime() + (24 * 60 * 60 * 1000))
+    const diffMs = end.getTime() - start.getTime()
+
+    return Math.max(0, diffMs / (1000 * 60 * 60))
+  }
+
+  // Load report data into wizard form
+  const loadReportData = (report: any) => {
+    console.log('🔄 loadReportData called with report:', report)
+    console.log('📊 Report structure check:', {
+      hasReportDate: !!report.report_date,
+      hasShift: !!report.shift,
+      hasActivities: Array.isArray(report.activities),
+      activitiesCount: report.activities?.length || 0,
+      hasConsumptions: Array.isArray(report.consumptions),
+      consumptionsCount: report.consumptions?.length || 0,
+      hasToolAssignments: Array.isArray(report.tool_assignments),
+      toolAssignmentsCount: report.tool_assignments?.length || 0,
+      hasTools: !!report.tools,
+      hasPersonnel: !!report.personnel,
+    })
+
+    // Basic information
+    formData.value.report_date = report.report_date || new Date().toISOString().split('T')[0]
+    formData.value.shift = report.shift || 'day'
+    formData.value.equipment_id = report.equipment?.id || report.equipment_id || null
+    formData.value.observations = report.observations || ''
+
+    console.log('Basic info loaded:', {
+      report_date: formData.value.report_date,
+      shift: formData.value.shift,
+      equipment_id: formData.value.equipment_id,
+    })
+
+    console.log('🔍 Personnel structure:', {
+      personnel: report.personnel,
+      personnelDay: report.personnel?.day,
+      personnelNight: report.personnel?.night,
+    })
+
+    // Personnel - API structure: {day: {operator: {...}, helpers: [...]}, night: {...}}
+    // Also supports legacy structure: {operator_day: {...}, helper1_day: {...}, ...}
+    const personnelDay = report.personnel?.day || {}
+    const personnelNight = report.personnel?.night || {}
+
+    console.log('🔍 Extracted personnel:', {
+      dayOperator: personnelDay.operator,
+      dayHelpers: personnelDay.helpers,
+      nightOperator: personnelNight.operator,
+      nightHelpers: personnelNight.helpers,
+    })
+
+    // Operator - try new structure first, then legacy
+    formData.value.operator_day_id = personnelDay.operator?.id
+      || report.personnel?.operator_day?.id
+      || report.operator_day_id
+      || null
+
+    formData.value.operator_night_id = personnelNight.operator?.id
+      || report.personnel?.operator_night?.id
+      || report.operator_night_id
+      || null
+
+    // Helpers - convert from helpers array to helper_day_ids array
+    const helperDayIds: string[] = []
+    if (personnelDay.helpers && Array.isArray(personnelDay.helpers)) {
+      // New structure: helpers is an array
+      helperDayIds.push(...personnelDay.helpers.map((h: any) => {
+        return h.id || h.employee?.id || h.employee_id || h
+      }).filter((id: any) => id))
+    }
+
+    // Fallback to individual helper IDs if helpers array doesn't exist (legacy structure)
+    if (helperDayIds.length === 0) {
+      if (report.personnel?.helper1_day?.id || report.helper1_day_id)
+        helperDayIds.push(report.personnel?.helper1_day?.id || report.helper1_day_id)
+      if (report.personnel?.helper2_day?.id || report.helper2_day_id)
+        helperDayIds.push(report.personnel?.helper2_day?.id || report.helper2_day_id)
+    }
+    formData.value.helper_day_ids = helperDayIds
+
+    const helperNightIds: string[] = []
+    if (personnelNight.helpers && Array.isArray(personnelNight.helpers)) {
+      // New structure: helpers is an array
+      helperNightIds.push(...personnelNight.helpers.map((h: any) => {
+        return h.id || h.employee?.id || h.employee_id || h
+      }).filter((id: any) => id))
+    }
+
+    // Fallback to individual helper IDs if helpers array doesn't exist (legacy structure)
+    if (helperNightIds.length === 0) {
+      if (report.personnel?.helper1_night?.id || report.helper1_night_id)
+        helperNightIds.push(report.personnel?.helper1_night?.id || report.helper1_night_id)
+      if (report.personnel?.helper2_night?.id || report.helper2_night_id)
+        helperNightIds.push(report.personnel?.helper2_night?.id || report.helper2_night_id)
+    }
+    formData.value.helper_night_ids = helperNightIds
+
+    console.log('Personnel loaded:', {
+      operator_day_id: formData.value.operator_day_id,
+      operator_night_id: formData.value.operator_night_id,
+      helper_day_ids: formData.value.helper_day_ids,
+      helper_night_ids: formData.value.helper_night_ids,
+    })
+
+    // Horometer - API structure: {day: {start: ..., end: ...}, night: {start: ..., end: ...}}
+    console.log('🔍 Horometer structure:', report.horometer)
+
+    formData.value.horometer_start_day = report.horometer?.day?.start
+      || report.horometer?.day?.initial
+      || report.horometer_start_day
+      || null
+
+    formData.value.horometer_start_night = report.horometer?.night?.start
+      || report.horometer?.night?.initial
+      || report.horometer_start_night
+      || null
+
+    formData.value.horometer_end_day = report.horometer?.day?.end
+      || report.horometer?.day?.final
+      || report.horometer_end_day
+      || null
+
+    formData.value.horometer_end_night = report.horometer?.night?.end
+      || report.horometer?.night?.final
+      || report.horometer_end_night
+      || null
+
+    console.log('Horometer loaded:', {
+      start_day: formData.value.horometer_start_day,
+      end_day: formData.value.horometer_end_day,
+      start_night: formData.value.horometer_start_night,
+      end_night: formData.value.horometer_end_night,
+    })
+
+    // RPM - API structure: parameters: {rpm_pull_down: ..., rpm_rotation: ...}
+    formData.value.rpm_pull_down = report.parameters?.rpm_pull_down
+      || report.parameters?.pull_down
+      || report.rpm?.pull_down
+      || report.rpm_pull_down
+      || null
+
+    formData.value.rpm_rotation = report.parameters?.rpm_rotation
+      || report.parameters?.rotation
+      || report.rpm?.rotation
+      || report.rpm_rotation
+      || null
+
+    console.log('RPM loaded:', {
+      rpm_pull_down: formData.value.rpm_pull_down,
+      rpm_rotation: formData.value.rpm_rotation,
+    })
+
+    // Activities - ensure numeric hours and recalculate from times when needed
+    const rawActivities = (report.activities || []).map((act: any) => {
+      const startTime = act.start_time || ''
+      const endTime = act.end_time || ''
+      let hours = Number(act.hours) || 0
+
+      if (hours <= 0 && startTime && endTime)
+        hours = calculateHoursFromTimesForLoad(startTime, endTime)
+
+      return {
+        activity_type: act.activity_type || 'drilling',
+        shift: act.shift || formData.value.shift,
+        hours,
+        start_time: startTime,
+        end_time: endTime,
+        description: act.description || '',
+      }
+    })
+
+    formData.value.activities = rawActivities
+
+    // Consumptions - check both consumptions array and additives array
+    const consumptionsList = report.consumptions || report.additives || []
+
+    formData.value.consumptions = consumptionsList.map((cons: any) => ({
+      consumable_type: cons.consumable_type || cons.type || '',
+      shift: cons.shift || formData.value.shift,
+      quantity: cons.quantity || cons.amount || 0,
+      unit: cons.unit || 'kg',
+    }))
+
+    // Directional measurements
+    formData.value.directional_measurements = (report.directional_measurements || []).map((meas: any) => ({
+      depth: meas.depth || 0,
+      azimuth: meas.azimuth || 0,
+      inclination: meas.inclination || 0,
+      measurement_interval: meas.measurement_interval || 0,
+      notes: meas.notes || '',
+      measured_at: meas.measured_at || null,
+    }))
+
+    // Drilling depths - API structure: depths: {drilling_start: ..., drilling_end: ..., depth_from: ..., depth_to: ...}
+    formData.value.drilling_depth_start = report.depths?.drilling_start || report.depths?.depth_from || report.drilling_depth_start || null
+    formData.value.drilling_depth_end = report.depths?.drilling_end || report.depths?.depth_to || report.drilling_depth_end || null
+
+    // Tools - Convert tool_assignments to tool_groups
+    formData.value.tool_groups = []
+
+    console.log('🔍 Tools structure:', {
+      tools: report.tools,
+      tool_assignments: report.tool_assignments,
+      drilling_details: report.drilling_details,
+    })
+
+    // Get tools from report (could be in tools.reamers/tools.bits or tool_assignments or drilling_details)
+    const toolAssignments = report.tool_assignments || []
+
+    const reamers = report.tools?.reamers || toolAssignments.filter((t: any) =>
+      t.tool_category === 'reamer' || t.tool?.type === 'reamer' || t.tool?.type?.includes('reamer'),
+    )
+
+    const bits = report.tools?.bits || toolAssignments.filter((t: any) =>
+      t.tool_category === 'diamond_bit' || t.tool_category === 'tricone'
+      || t.tool?.type === 'diamond_bit' || t.tool?.type === 'tricone',
+    )
+
+    // Also check drilling_details for bits (they might be there)
+    const drillingDetailsBits = (report.drilling_details || []).filter((d: any) =>
+      d.affects_well_depth === true
+      && d.tool?.type !== 'reamer'
+      && d.group_position !== 'reamer'
+      && (d.tool?.type === 'diamond_bit' || d.tool?.type === 'tricone' || d.tool_category === 'diamond_bit' || d.tool_category === 'tricone'),
+    )
+
+    // Combine bits from both sources and deduplicate by composite key (tool_id + depth)
+    // Use a Map to ensure each bit usage (same tool at different depths) is preserved
+    const bitsMap = new Map<string, any>()
+
+    // Helper to create unique key for each bit usage
+    const getBitUniqueKey = (bit: any) => {
+      const toolId = bit.tool?.id || bit.tool_id
+      const depthFrom = bit.depth_from ?? bit.start_depth_meters ?? 0
+      const depthTo = bit.depth_to ?? bit.end_depth_meters ?? 0
+
+      return `${toolId}_${depthFrom}_${depthTo}`
+    }
+
+    // Add bits from tools.bits or tool_assignments first
+    bits.forEach((bit: any) => {
+      const uniqueKey = getBitUniqueKey(bit)
+      if (!bitsMap.has(uniqueKey))
+        bitsMap.set(uniqueKey, bit)
+    })
+
+    // Add bits from drilling_details, but don't overwrite if already exists
+    drillingDetailsBits.forEach((bit: any) => {
+      const uniqueKey = getBitUniqueKey(bit)
+      if (!bitsMap.has(uniqueKey))
+        bitsMap.set(uniqueKey, bit)
+    })
+
+    // Convert map back to array
+    const allBits = Array.from(bitsMap.values())
+
+    console.log('🔍 Extracted tools:', {
+      reamersCount: reamers.length,
+      reamers,
+      bitsCount: allBits.length,
+      bits: allBits,
+      bitsBeforeDedup: bits.length + drillingDetailsBits.length,
+      bitsAfterDedup: allBits.length,
+    })
+
+    // Track which bits have been assigned to avoid duplicates (using composite key)
+    const assignedBitKeys = new Set<string>()
+
+    // Group reamers with their bits
+    // Try multiple strategies to match bits with reamers:
+    // 1. By tool_group_id (most reliable)
+    // 2. By reamer_id field
+    // 3. By group_index/group_position
+    // 4. By depth ranges (bits within reamer depth range)
+    reamers.forEach((reamer: any, index: number) => {
+      const reamerId = reamer.tool?.id || reamer.tool_id
+      const reamerToolGroupId = reamer.tool_group_id
+
+      // API uses depth_from/depth_to, not start_depth_meters/end_depth_meters
+      const reamerStartDepth = reamer.depth_from ?? reamer.start_depth_meters ?? 0
+      const reamerEndDepth = reamer.depth_to ?? reamer.end_depth_meters ?? 0
+
+      console.log(`🔍 Processing reamer ${index + 1}:`, {
+        reamerId,
+        reamerToolGroupId,
+        reamerStartDepth,
+        reamerEndDepth,
+        reamerRaw: reamer,
+      })
+
+      // Try to find bits associated with this reamer (only unassigned bits)
+      let reamerBits = allBits.filter((bit: any) => {
+        const bitUniqueKey = getBitUniqueKey(bit)
+
+        // Skip if this bit has already been assigned to another reamer
+        if (assignedBitKeys.has(bitUniqueKey))
+          return false
+
+        // Strategy 1: Match by tool_group_id (most reliable for API data)
+        if (bit.tool_group_id && reamerToolGroupId && bit.tool_group_id === reamerToolGroupId) {
+          console.log(`  ✅ Bit matched by tool_group_id: ${bit.tool?.id || bit.tool_id} (${bit.depth_from}-${bit.depth_to})`)
+
+          return true
+        }
+
+        // Check all possible reamer_id fields
+        const bitReamerId = bit.reamer_id
+          || bit.tool?.reamer_id
+          || bit.reamer?.id
+          || bit.reamer_id
+          || bit.group_reamer_id
+          || bit.parent_reamer_id
+
+        const bitGroupIndex = bit.group_index
+        const bitGroupPosition = bit.group_position
+
+        console.log(`  🔍 Checking bit ${bit.tool?.id || bit.tool_id}:`, {
+          bitReamerId,
+          reamerId,
+          bitToolGroupId: bit.tool_group_id,
+          reamerToolGroupId,
+          bitGroupIndex,
+          bitGroupPosition,
+          bitDepthFrom: bit.depth_from,
+          bitDepthTo: bit.depth_to,
+          reamerStartDepth,
+          reamerEndDepth,
+        })
+
+        // Strategy 2: Direct reamer_id match
+        if (bitReamerId && bitReamerId === reamerId) {
+          console.log(`  ✅ Bit matched by reamer_id: ${bit.tool?.id || bit.tool_id}`)
+
+          return true
+        }
+
+        // Strategy 3: Group index/position match
+        if (bitGroupPosition === 'bit' && bitGroupIndex === index) {
+          console.log(`  ✅ Bit matched by group_index: ${bit.tool?.id || bit.tool_id}`)
+
+          return true
+        }
+
+        // Strategy 3: Depth range match (bit is within reamer's depth range)
+        // API uses depth_from/depth_to
+        const bitStartDepth = Number(bit.depth_from ?? bit.start_depth_meters ?? 0)
+        const bitEndDepth = Number(bit.depth_to ?? bit.end_depth_meters ?? 0)
+        const reamerStartNum = Number(reamerStartDepth)
+        const reamerEndNum = Number(reamerEndDepth)
+
+        // Check if bit depth range overlaps or is within reamer range
+        if (reamerStartNum > 0 && reamerEndNum > 0) {
+          // Bit starts within reamer range OR bit ends within reamer range OR bit completely contains reamer range
+          const bitStartsInRange = bitStartDepth >= reamerStartNum && bitStartDepth <= reamerEndNum
+          const bitEndsInRange = bitEndDepth >= reamerStartNum && bitEndDepth <= reamerEndNum
+          const bitContainsRange = bitStartDepth <= reamerStartNum && bitEndDepth >= reamerEndNum
+
+          if (bitStartsInRange || bitEndsInRange || bitContainsRange) {
+            console.log(`  ✅ Bit matched by depth range: ${bit.tool?.id || bit.tool_id} (${bitStartDepth}-${bitEndDepth} overlaps ${reamerStartNum}-${reamerEndNum})`)
+
+            return true
+          }
+        }
+
+        return false
+      })
+
+      // If no bits found by association, try to match by depth if there's only one reamer
+      // Only assign unassigned bits
+      if (reamerBits.length === 0 && reamers.length === 1) {
+        const unassignedBits = allBits.filter((bit: any) => {
+          const bitUniqueKey = getBitUniqueKey(bit)
+
+          return !assignedBitKeys.has(bitUniqueKey)
+        })
+
+        if (unassignedBits.length > 0) {
+          console.log('⚠️ No bits found by association, assigning all unassigned bits to single reamer')
+          reamerBits = unassignedBits
+        }
+      }
+
+      // Mark all matched bits as assigned
+      reamerBits.forEach((bit: any) => {
+        const bitUniqueKey = getBitUniqueKey(bit)
+
+        assignedBitKeys.add(bitUniqueKey)
+      })
+
+      console.log(`✅ Found ${reamerBits.length} bits for reamer ${index + 1}:`, reamerBits.map(b => ({
+        tool_id: b.tool?.id || b.tool_id,
+        depth_from: b.depth_from,
+        depth_to: b.depth_to,
+        start_depth_meters: b.start_depth_meters,
+        end_depth_meters: b.end_depth_meters,
+      })))
+
+      formData.value.tool_groups.push({
+        id: `group-${index}`,
+        reamer: {
+          tool_id: reamerId,
+          shift: reamer.shift || formData.value.shift,
+
+          // Convert depth_from/depth_to to start_depth_meters/end_depth_meters
+          // Ensure start_depth < end_depth (swap if needed)
+          start_depth_meters: Number(reamerStartDepth) <= Number(reamerEndDepth) ? Number(reamerStartDepth) : Number(reamerEndDepth),
+          end_depth_meters: Number(reamerEndDepth) >= Number(reamerStartDepth) ? Number(reamerEndDepth) : Number(reamerStartDepth),
+          wear_pattern: reamer.wear_pattern || '',
+          matrix: reamer.matrix || '',
+        },
+        bits: reamerBits.map((bit: any) => {
+          const bitToolId = bit.tool?.id || bit.tool_id
+          const bitCategory = bit.tool_category || (bit.tool?.type === 'tricone' ? 'tricone' : 'diamond_bit')
+
+          // API uses depth_from/depth_to, convert to start_depth_meters/end_depth_meters
+          const bitStartDepth = bit.depth_from ?? bit.start_depth_meters ?? 0
+          const bitEndDepth = bit.depth_to ?? bit.end_depth_meters ?? 0
+
+          console.log('  📍 Mapping bit:', {
+            tool_id: bitToolId,
+            depth_from: bit.depth_from,
+            depth_to: bit.depth_to,
+            start_depth_meters: bit.start_depth_meters,
+            end_depth_meters: bit.end_depth_meters,
+            mapped_start: bitStartDepth,
+            mapped_end: bitEndDepth,
+          })
+
+          // Ensure start_depth < end_depth (swap if needed)
+          let finalStartDepth = Number(bitStartDepth)
+          let finalEndDepth = Number(bitEndDepth)
+
+          if (finalStartDepth > finalEndDepth && finalEndDepth > 0) {
+            console.warn(`⚠️ Bit ${bitToolId} has inverted depths (${finalStartDepth} > ${finalEndDepth}), swapping`)
+
+            const temp = finalStartDepth
+
+            finalStartDepth = finalEndDepth
+            finalEndDepth = temp
+          }
+
+          return {
+            tool_id: bitToolId,
+            tool_category: bitCategory,
+            shift: bit.shift || formData.value.shift,
+            start_depth_meters: finalStartDepth,
+            end_depth_meters: finalEndDepth,
+            wear_pattern: bit.wear_pattern || '',
+            matrix: bit.matrix || '',
+            recovery: (bit.recovery ?? bit.meters_drilled ?? (finalEndDepth - finalStartDepth)) || null,
+          }
+        }),
+      })
+    })
+
+    // If no reamers but there are bits, create a group without reamer
+    if (reamers.length === 0 && allBits.length > 0) {
+      console.log('⚠️ No reamers found, creating group with bits only')
+
+      const firstBitStart = allBits[0]?.depth_from ?? allBits[0]?.start_depth_meters ?? 0
+      const lastBitEnd = allBits[allBits.length - 1]?.depth_to ?? allBits[allBits.length - 1]?.end_depth_meters ?? 0
+
+      formData.value.tool_groups.push({
+        id: 'group-0',
+        reamer: {
+          tool_id: null,
+          shift: formData.value.shift,
+          start_depth_meters: Number(firstBitStart),
+          end_depth_meters: Number(lastBitEnd),
+          wear_pattern: '',
+          matrix: '',
+        },
+        bits: allBits.map((bit: any) => {
+          const bitStartDepth = bit.depth_from ?? bit.start_depth_meters ?? 0
+          const bitEndDepth = bit.depth_to ?? bit.end_depth_meters ?? 0
+
+          return {
+            tool_id: bit.tool?.id || bit.tool_id,
+            tool_category: bit.tool_category || (bit.tool?.type === 'tricone' ? 'tricone' : 'diamond_bit'),
+            shift: bit.shift || formData.value.shift,
+            start_depth_meters: Number(bitStartDepth),
+            end_depth_meters: Number(bitEndDepth),
+            wear_pattern: bit.wear_pattern || '',
+            matrix: bit.matrix || '',
+            recovery: (bit.recovery ?? bit.meters_drilled ?? (Number(bitEndDepth) - Number(bitStartDepth))) || null,
+          }
+        }),
+      })
+    }
+
+    console.log('✅ Tool groups created:', {
+      groupsCount: formData.value.tool_groups.length,
+      groups: formData.value.tool_groups.map(g => ({
+        reamerId: g.reamer.tool_id,
+        bitsCount: g.bits.length,
+        bits: g.bits.map(b => ({ tool_id: b.tool_id, category: b.tool_category })),
+      })),
+    })
+
+    isDirty.value = false
+
+    console.log('✅ Report data loaded into wizard form:', {
+      report_date: formData.value.report_date,
+      shift: formData.value.shift,
+      activities_count: formData.value.activities.length,
+      consumptions_count: formData.value.consumptions.length,
+      tool_groups_count: formData.value.tool_groups.length,
+      total_bits_loaded: formData.value.tool_groups.reduce((sum, g) => sum + g.bits.length, 0),
+      directional_measurements_count: formData.value.directional_measurements.length,
+      tool_groups_detail: formData.value.tool_groups.map((g, idx) => ({
+        group: idx + 1,
+        reamer_id: g.reamer.tool_id,
+        bits_count: g.bits.length,
+        bits_ids: g.bits.map(b => b.tool_id),
+      })),
+    })
   }
 
   // Activity Management
@@ -485,6 +1052,31 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       updatedActivity.hours = calculateHoursFromTimes(value, activity.end_time)
 
     updateActivity(index, updatedActivity)
+  }
+
+  // Directional Measurement Management
+  const addDirectionalMeasurement = (measurement?: Partial<DirectionalMeasurement>) => {
+    formData.value.directional_measurements.push({
+      depth: measurement?.depth ?? 0,
+      azimuth: measurement?.azimuth ?? 0,
+      inclination: measurement?.inclination ?? 0,
+      measurement_interval: measurement?.measurement_interval ?? 50,
+      notes: measurement?.notes || '',
+    })
+    isDirty.value = true
+  }
+
+  const removeDirectionalMeasurement = (index: number) => {
+    formData.value.directional_measurements.splice(index, 1)
+    isDirty.value = true
+  }
+
+  const updateDirectionalMeasurement = (index: number, measurement: Partial<DirectionalMeasurement>) => {
+    formData.value.directional_measurements[index] = {
+      ...formData.value.directional_measurements[index],
+      ...measurement,
+    }
+    isDirty.value = true
   }
 
   // Consumption Management
@@ -614,6 +1206,16 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     isDirty.value = true
   }
 
+  // Actualizar profundidad final del escarreador basado en sus brocas
+  const updateReamerEndDepth = (groupIndex: number) => {
+    const group = formData.value.tool_groups[groupIndex]
+    if (group.bits.length > 0) {
+      const maxDepth = Math.max(...group.bits.map(b => b.end_depth_meters))
+
+      group.reamer.end_depth_meters = maxDepth
+    }
+  }
+
   // Agregar broca a un grupo específico
   const addBitToGroup = (groupIndex: number) => {
     const group = formData.value.tool_groups[groupIndex]
@@ -647,16 +1249,6 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     // Auto-actualizar profundidad final del escarreador
     updateReamerEndDepth(groupIndex)
     isDirty.value = true
-  }
-
-  // Actualizar profundidad final del escarreador basado en sus brocas
-  const updateReamerEndDepth = (groupIndex: number) => {
-    const group = formData.value.tool_groups[groupIndex]
-    if (group.bits.length > 0) {
-      const maxDepth = Math.max(...group.bits.map(b => b.end_depth_meters))
-
-      group.reamer.end_depth_meters = maxDepth
-    }
   }
 
   // Remover broca de un grupo
@@ -823,6 +1415,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     calculatedHorometerEnd,
     isFormValid,
     isActivitiesStepValid,
+    isDirectionalMeasurementsStepValid,
     isToolsStepValid,
     isToolGroupsStepValid,
     availableShiftOptions,
@@ -839,6 +1432,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     resetForm,
     clearError,
     setError,
+    loadReportData,
 
     // Activity Management
     addActivity,
@@ -847,6 +1441,11 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     updateActivityWithTimeCalculation,
     calculateEndTime,
     calculateHoursFromTimes,
+
+    // Directional Measurement Management
+    addDirectionalMeasurement,
+    removeDirectionalMeasurement,
+    updateDirectionalMeasurement,
 
     // Consumption Management
     addConsumption,

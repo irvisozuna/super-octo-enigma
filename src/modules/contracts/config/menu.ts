@@ -2,9 +2,9 @@
  * Contract Module Menu Configuration
  */
 
+import { CONTRACT_PERMISSIONS } from './permissions'
 import type { VerticalNavItems } from '@layouts/types'
 import { createValidatedMenu } from '@/utils/menuValidator'
-import { CONTRACT_PERMISSIONS } from './permissions'
 
 const contractsMenu: VerticalNavItems = [
   {

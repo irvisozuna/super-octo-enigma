@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import BaseDataTable from '@/components/BaseDataTable.vue'
 import { WorkOrderApiService } from '../../infrastructure/api/services/WorkOrderApiService'
 import { useWorkOrdersStore } from '../stores/workOrdersStore'
+import BaseDataTable from '@/components/BaseDataTable.vue'
 import { useTenantStore } from '@/stores/tenant.store'
 import { useCurrentUser } from '@/composables/useCurrentUser'
 import { useNotification } from '@/helpers/notificationHelper'
@@ -57,12 +57,14 @@ const companyId = computed(() => tenantStore.data?.companyId || '')
 const pageLoading = computed(() => store.detailLoading)
 
 const statusCatalogs = ref<any[]>([])
+
 const statusOptions = computed(() => {
   return statusCatalogs.value.map(item => ({
     title: item.name ?? item.label ?? item.code ?? item.external_id ?? item.externalId ?? item.id,
     value: item.code ?? item.external_id ?? item.externalId ?? item.id ?? item.name,
   })).filter(item => item.value)
 })
+
 const statusSteps = [
   { key: 'created', label: 'Creada' },
   { key: 'pending', label: 'Pendiente' },
@@ -94,6 +96,7 @@ const resolveWorkerId = async (userId?: string | number | null) => {
 
   const match = workers.find(item => {
     const workerUserId = item.user_id ?? item.userId ?? item.userid ?? item.user?.id ?? item.assigned_to ?? item.assigned?.id
+
     return String(workerUserId ?? '') === String(userId)
   })
 
@@ -199,6 +202,7 @@ const historyRows = computed(() => {
 
 const currentWorkerId = computed(() => {
   const value = workOrder.value?.worker_id ?? workOrder.value?.assigned_to ?? workOrder.value?.worker?.id ?? null
+
   return value ? String(value) : null
 })
 
@@ -215,16 +219,19 @@ const workerOptions = computed(() => {
 
 const workersById = computed(() => {
   const map = new Map<string, any>()
+
   workers.value.forEach(item => {
     const key = String(item.id ?? item.worker_id ?? item.user_id ?? '')
     if (key)
       map.set(key, item)
   })
+
   return map
 })
 
 const workersByExternalId = computed(() => {
   const map = new Map<string, any>()
+
   workers.value.forEach(item => {
     const keys = [
       item.external_id,
@@ -235,6 +242,7 @@ const workersByExternalId = computed(() => {
 
     keys.forEach(key => map.set(String(key), item))
   })
+
   return map
 })
 
@@ -382,7 +390,9 @@ const loadStatusCatalogs = async () => {
       itemsPerPage: 500,
       page: 1,
     })
+
     const data = normalizeArray(response)
+
     statusCatalogs.value = data.length
       ? data
       : (workOrder.value?.status_catalog ? [workOrder.value.status_catalog] : [])
@@ -399,6 +409,7 @@ const loadWorkers = async () => {
   workersLoading.value = true
   try {
     const response = await apiService.getWorkers()
+
     workers.value = normalizeArray(response)
   }
   finally {
@@ -416,6 +427,7 @@ const loadHistories = async () => {
       workorder_id: workOrderId.value,
       work_order_id: workOrderId.value,
     })
+
     const data = normalizeArray(response)
 
     histories.value = data.filter(item => {
@@ -451,6 +463,7 @@ const loadPhotos = async () => {
   photosLoading.value = true
   try {
     const response = await apiService.getPhotos({ workorder_id: workOrderId.value })
+
     photos.value = normalizeArray(response)
   }
   finally {
@@ -465,19 +478,22 @@ const saveStatusAndComment = async () => {
   savingUpdate.value = true
   try {
     const statusValue = selectedStatus.value || workOrder.value?.status || undefined
+
     const statusLabel = statusCatalogs.value.find(item =>
       String(item.code ?? item.external_id ?? item.externalId ?? item.id ?? item.name) === String(statusValue),
     )?.name ?? statusValue
+
     const userId = getUserData.value?.id ?? getUserData.value?.name ?? undefined
     const workerId = await resolveWorkerId(userId)
     if (userId && !workerId) {
       showError('Usuario no tiene activado para hacer cambios.')
+
       return
     }
     const changedBy = workerId ?? userId
     const changedAt = new Date().toISOString()
 
-  if (statusValue)
+    if (statusValue) {
       await apiService.update(workOrderId.value, {
         status: statusValue,
         external_work_order_status_id: statusValue,
@@ -485,6 +501,7 @@ const saveStatusAndComment = async () => {
         changed_by: changedBy,
         changed_at: changedAt,
       })
+    }
 
     await apiService.addHistory({
       workorder_id: workOrderId.value,
@@ -515,6 +532,7 @@ const saveNotes = async () => {
     const workerId = await resolveWorkerId(userId)
     if (userId && !workerId) {
       showError('Usuario no tiene activado para hacer cambios.')
+
       return
     }
 
@@ -559,20 +577,21 @@ const saveAssignment = async () => {
     const workerId = await resolveWorkerId(userId)
     if (userId && !workerId) {
       showError('Usuario no tiene activado para hacer cambios.')
+
       return
     }
 
-  const previousWorker = currentWorkerName.value
-  const nextWorker = workerOptions.value.find(option => option.value === selectedWorkerId.value)?.title ?? selectedWorkerId.value
-  const selectedWorker = selectedWorkerId.value ? workersById.value.get(String(selectedWorkerId.value)) : null
-  const selectedWorkerExternalId = selectedWorker?.external_id ?? selectedWorker?.externalId ?? selectedWorker?.employee_code ?? selectedWorker?.code ?? null
+    const previousWorker = currentWorkerName.value
+    const nextWorker = workerOptions.value.find(option => option.value === selectedWorkerId.value)?.title ?? selectedWorkerId.value
+    const selectedWorker = selectedWorkerId.value ? workersById.value.get(String(selectedWorkerId.value)) : null
+    const selectedWorkerExternalId = selectedWorker?.external_id ?? selectedWorker?.externalId ?? selectedWorker?.employee_code ?? selectedWorker?.code ?? null
 
-  await apiService.update(workOrderId.value, {
-    work_order_id: workOrderId.value,
-    worker_id: selectedWorkerExternalId ?? selectedWorkerId.value,
-    assigned_to: selectedWorkerExternalId ?? selectedWorkerId.value,
-    external_worker_id: selectedWorkerExternalId ?? undefined,
-  })
+    await apiService.update(workOrderId.value, {
+      work_order_id: workOrderId.value,
+      worker_id: selectedWorkerExternalId ?? selectedWorkerId.value,
+      assigned_to: selectedWorkerExternalId ?? selectedWorkerId.value,
+      external_worker_id: selectedWorkerExternalId ?? undefined,
+    })
 
     await apiService.addHistory({
       workorder_id: workOrderId.value,
@@ -627,14 +646,25 @@ onMounted(async () => {
   <div class="workorder-detail">
     <VCard class="detail-card">
       <VCardText>
-        <div v-if="pageLoading" class="detail-header">
-          <VSkeletonLoader type="heading" class="mb-2" />
+        <div
+          v-if="pageLoading"
+          class="detail-header"
+        >
+          <VSkeletonLoader
+            type="heading"
+            class="mb-2"
+          />
           <VSkeletonLoader type="text" />
         </div>
-        <div v-else class="detail-header">
+        <div
+          v-else
+          class="detail-header"
+        >
           <div class="detail-hero">
             <div class="detail-hero__main">
-              <div class="detail-hero__eyebrow">Orden de trabajo</div>
+              <div class="detail-hero__eyebrow">
+                Orden de trabajo
+              </div>
               <div class="detail-hero__title">
                 {{ workOrder?.local_id ?? workOrder?.folio ?? workOrder?.external_id ?? workOrder?.code ?? workOrderId }}
               </div>
@@ -644,22 +674,44 @@ onMounted(async () => {
                 <span>Programada: {{ formatDate(workOrder?.scheduled_at) }}</span>
               </div>
               <div class="detail-hero__chips">
-                <VChip size="small" variant="tonal" :color="getStatusChipColor(getStatusDisplay(workOrder))">
+                <VChip
+                  size="small"
+                  variant="tonal"
+                  :color="getStatusChipColor(getStatusDisplay(workOrder))"
+                >
                   {{ getStatusDisplay(workOrder) }}
                 </VChip>
-                <VChip size="small" variant="tonal" color="info">
+                <VChip
+                  size="small"
+                  variant="tonal"
+                  color="info"
+                >
                   {{ workOrder?.type ?? workOrder?.type_catalog?.name ?? 'Sin tipo' }}
                 </VChip>
-                <VChip size="small" variant="tonal" color="secondary">
+                <VChip
+                  size="small"
+                  variant="tonal"
+                  color="secondary"
+                >
                   Asignado: {{ currentWorkerName }}
                 </VChip>
               </div>
             </div>
             <div class="detail-hero__actions">
-              <VBtn variant="flat" color="primary" prepend-icon="tabler-camera" @click="openPhotos(0)">
+              <VBtn
+                variant="flat"
+                color="primary"
+                prepend-icon="tabler-camera"
+                @click="openPhotos(0)"
+              >
                 Ver fotos
               </VBtn>
-              <VBtn variant="tonal" color="secondary" prepend-icon="tabler-arrow-left" @click="goBack">
+              <VBtn
+                variant="tonal"
+                color="secondary"
+                prepend-icon="tabler-arrow-left"
+                @click="goBack"
+              >
                 Regresar
               </VBtn>
             </div>
@@ -668,13 +720,21 @@ onMounted(async () => {
 
         <VDivider class="my-4" />
 
-        <div v-if="pageLoading" class="detail-top">
+        <div
+          v-if="pageLoading"
+          class="detail-top"
+        >
           <VSkeletonLoader type="text@6" />
         </div>
-        <div v-else-if="workOrder" class="detail-top">
+        <div
+          v-else-if="workOrder"
+          class="detail-top"
+        >
           <div class="detail-strip">
             <div class="detail-strip__section">
-              <div class="detail-strip__title">Resumen</div>
+              <div class="detail-strip__title">
+                Resumen
+              </div>
               <dl class="detail-list">
                 <div class="detail-list__row">
                   <dt>Folio</dt>
@@ -688,10 +748,16 @@ onMounted(async () => {
                   <dt>Estado</dt>
                   <dd>{{ getStatusDisplay(workOrder) }}</dd>
                 </div>
-                <div class="detail-list__row" :class="getPriorityColor(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
+                <div
+                  class="detail-list__row"
+                  :class="getPriorityColor(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')"
+                >
                   <dt>Prioridad</dt>
                   <dd>
-                    <span class="priority-badge" :class="getPriorityBadge(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')">
+                    <span
+                      class="priority-badge"
+                      :class="getPriorityBadge(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '')"
+                    >
                       <span class="priority-badge__dot" />
                       {{ getPriorityLabel(workOrder.priority ?? workOrder.severity ?? workOrder.priority_code ?? '') }}
                     </span>
@@ -705,7 +771,9 @@ onMounted(async () => {
             </div>
 
             <div class="detail-strip__section">
-              <div class="detail-strip__title">Contrato</div>
+              <div class="detail-strip__title">
+                Contrato
+              </div>
               <dl class="detail-list">
                 <div class="detail-list__row">
                   <dt>Contrato</dt>
@@ -753,7 +821,9 @@ onMounted(async () => {
             </div>
 
             <div class="detail-strip__section">
-              <div class="detail-strip__title">Fechas</div>
+              <div class="detail-strip__title">
+                Fechas
+              </div>
               <dl class="detail-list">
                 <div class="detail-list__row">
                   <dt>Programada</dt>
@@ -780,7 +850,9 @@ onMounted(async () => {
           </div>
 
           <div class="status-panel status-panel--wide">
-            <div class="status-panel__title">Estatus</div>
+            <div class="status-panel__title">
+              Estatus
+            </div>
             <div class="status-traffic status-traffic--vertical">
               <div
                 v-for="(step, index) in statusSteps"
@@ -795,14 +867,22 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div v-if="workOrder" class="detail-notes">
-          <div class="detail-strip__title">Notas</div>
+        <div
+          v-if="workOrder"
+          class="detail-notes"
+        >
+          <div class="detail-strip__title">
+            Notas
+          </div>
           <div class="detail-notes__content">
             {{ workOrder.notes ?? '-' }}
           </div>
         </div>
 
-        <div v-else class="detail-empty">
+        <div
+          v-else
+          class="detail-empty"
+        >
           No se encontro la orden. Regresa y vuelve a cargar la lista.
         </div>
 
@@ -810,15 +890,25 @@ onMounted(async () => {
           variant="accordion"
           class="detail-panels"
         >
-          <VExpansionPanel elevation="0" class="detail-panel">
+          <VExpansionPanel
+            elevation="0"
+            class="detail-panel"
+          >
             <VExpansionPanelTitle>
               <div class="detail-panel__title">
                 <div class="detail-panel__icon">
-                  <VIcon icon="tabler-message-circle" size="18" />
+                  <VIcon
+                    icon="tabler-message-circle"
+                    size="18"
+                  />
                 </div>
                 <div>
-                  <div class="detail-panel__label">Actualizar estado</div>
-                  <div class="detail-panel__hint">Agrega un comentario y guarda el cambio</div>
+                  <div class="detail-panel__label">
+                    Actualizar estado
+                  </div>
+                  <div class="detail-panel__hint">
+                    Agrega un comentario y guarda el cambio
+                  </div>
                 </div>
               </div>
             </VExpansionPanelTitle>
@@ -860,15 +950,25 @@ onMounted(async () => {
             </VExpansionPanelText>
           </VExpansionPanel>
 
-          <VExpansionPanel elevation="0" class="detail-panel">
+          <VExpansionPanel
+            elevation="0"
+            class="detail-panel"
+          >
             <VExpansionPanelTitle>
               <div class="detail-panel__title">
                 <div class="detail-panel__icon">
-                  <VIcon icon="tabler-user-check" size="18" />
+                  <VIcon
+                    icon="tabler-user-check"
+                    size="18"
+                  />
                 </div>
                 <div>
-                  <div class="detail-panel__label">Cambiar asignación</div>
-                  <div class="detail-panel__hint">Selecciona un nuevo operador</div>
+                  <div class="detail-panel__label">
+                    Cambiar asignación
+                  </div>
+                  <div class="detail-panel__hint">
+                    Selecciona un nuevo operador
+                  </div>
                 </div>
               </div>
             </VExpansionPanelTitle>
@@ -889,7 +989,11 @@ onMounted(async () => {
                     class="detail-actions__select"
                   />
                   <div class="detail-actions__hint">
-                    <VChip color="primary" variant="tonal" size="small">
+                    <VChip
+                      color="primary"
+                      variant="tonal"
+                      size="small"
+                    >
                       Actual: {{ currentWorkerName }}
                     </VChip>
                   </div>
@@ -907,15 +1011,25 @@ onMounted(async () => {
             </VExpansionPanelText>
           </VExpansionPanel>
 
-          <VExpansionPanel elevation="0" class="detail-panel">
+          <VExpansionPanel
+            elevation="0"
+            class="detail-panel"
+          >
             <VExpansionPanelTitle>
               <div class="detail-panel__title">
                 <div class="detail-panel__icon">
-                  <VIcon icon="tabler-notes" size="18" />
+                  <VIcon
+                    icon="tabler-notes"
+                    size="18"
+                  />
                 </div>
                 <div>
-                  <div class="detail-panel__label">Actualizar notas</div>
-                  <div class="detail-panel__hint">Edita la descripción interna</div>
+                  <div class="detail-panel__label">
+                    Actualizar notas
+                  </div>
+                  <div class="detail-panel__hint">
+                    Edita la descripción interna
+                  </div>
                 </div>
               </div>
             </VExpansionPanelTitle>
@@ -944,7 +1058,9 @@ onMounted(async () => {
         </VExpansionPanels>
 
         <div class="detail-section detail-section--history">
-          <div class="detail-section__title">Historial</div>
+          <div class="detail-section__title">
+            Historial
+          </div>
           <BaseDataTable
             :headers="historyHeaders"
             :items="historyRows"
@@ -959,29 +1075,55 @@ onMounted(async () => {
         </div>
 
         <div class="detail-section">
-          <div class="detail-section__title">Fotos</div>
-          <div v-if="photosLoading" class="detail-empty">Cargando fotos...</div>
-          <div v-else-if="!photoItems.length" class="detail-empty">Sin fotos disponibles.</div>
-          <div v-else class="photo-grid">
+          <div class="detail-section__title">
+            Fotos
+          </div>
+          <div
+            v-if="photosLoading"
+            class="detail-empty"
+          >
+            Cargando fotos...
+          </div>
+          <div
+            v-else-if="!photoItems.length"
+            class="detail-empty"
+          >
+            Sin fotos disponibles.
+          </div>
+          <div
+            v-else
+            class="photo-grid"
+          >
             <VCard
               v-for="(photo, index) in photoItems"
               :key="photo.id"
               class="photo-card"
               @click="openPhotos(index)"
             >
-              <VImg :src="photo.src" :alt="photo.title" cover />
+              <VImg
+                :src="photo.src"
+                :alt="photo.title"
+                cover
+              />
             </VCard>
           </div>
         </div>
       </VCardText>
     </VCard>
 
-    <VDialog v-model="photosDialog" max-width="820">
+    <VDialog
+      v-model="photosDialog"
+      max-width="820"
+    >
       <VCard>
         <VCardTitle class="photo-modal__title">
           Fotos de la orden
           <VSpacer />
-          <VBtn icon="tabler-x" variant="text" @click="photosDialog = false" />
+          <VBtn
+            icon="tabler-x"
+            variant="text"
+            @click="photosDialog = false"
+          />
         </VCardTitle>
         <VCardText>
           <VCarousel
@@ -996,7 +1138,11 @@ onMounted(async () => {
               :key="photo.id"
             >
               <div class="photo-slide">
-                <VImg :src="photo.src" :alt="photo.title" cover />
+                <VImg
+                  :src="photo.src"
+                  :alt="photo.title"
+                  cover
+                />
               </div>
             </VCarouselItem>
           </VCarousel>
@@ -1414,7 +1560,6 @@ onMounted(async () => {
   background: #1e293b;
   margin-inline-start: 5px;
 }
-
 
 .status-step--active .status-step__dot {
   background: #22c55e;

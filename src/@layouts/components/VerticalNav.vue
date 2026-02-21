@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { Component } from 'vue'
-import { computed } from 'vue'
+import { computed, h, provide, ref, watch } from 'vue'
+import { useElementHover } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import { VNodeRenderer } from './VNodeRenderer'
 import { layoutConfig } from '@layouts'
@@ -32,12 +34,11 @@ const configStore = useLayoutConfigStore()
 // Obtener logo y título del tenant
 const { menuLogo, appTitle } = useTenantConfig()
 
-// Logo dinámico: Prioriza el del layoutConfig si está definido (para permitir branding local), sino usa el del tenant
-const dynamicLogo = computed(() => {
-  // Si el logo en layoutConfig es un VNode (h('img', ...)), lo usamos con prioridad
-  if (layoutConfig.app.logo && typeof layoutConfig.app.logo === 'object')
-    return layoutConfig.app.logo
+const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
 
+// Logo dinámico: Prioriza el logo del tenant sobre el del layoutConfig
+const dynamicLogo = computed(() => {
+  // Si hay logo del tenant (menuLogo), usarlo con prioridad
   if (menuLogo.value) {
     const logoStyle = hideTitleAndIcon.value
       ? 'max-width: 60px; max-height: 40px; object-fit: contain; width: auto; height: auto;'
@@ -51,6 +52,7 @@ const dynamicLogo = computed(() => {
     })
   }
 
+  // Si no hay logo del tenant, usar el del layoutConfig como fallback
   return layoutConfig.app.logo
 })
 
@@ -84,8 +86,6 @@ const updateIsVerticalNavScrolled = (val: boolean) => isVerticalNavScrolled.valu
 const handleNavScroll = (evt: Event) => {
   isVerticalNavScrolled.value = (evt.target as HTMLElement).scrollTop > 0
 }
-
-const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
 </script>
 
 <template>
@@ -157,7 +157,7 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
       :update-is-vertical-nav-scrolled="updateIsVerticalNavScrolled"
     >
       <PerfectScrollbar
-        :key="configStore.isAppRTL"
+        :key="String(configStore.isAppRTL)"
         tag="ul"
         class="nav-items"
         :options="{ wheelPropagation: false }"

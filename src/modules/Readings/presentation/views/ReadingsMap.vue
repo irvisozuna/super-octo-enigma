@@ -3,12 +3,12 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { LMap, LMarker, LPopup, LPolyline, LTileLayer } from '@vue-leaflet/vue-leaflet'
+import { LMap, LMarker, LPolyline, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
+import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 
 const apiService = new ReadingApiService()
 const route = useRoute()
@@ -91,6 +91,7 @@ const getPeriodKeys = (period: any) => {
 const getDownloadedPeriodKeys = (item: any) => {
   const downloadedRoute = getDownloadedRoute(item)
   const period = downloadedRoute?.period ?? item?.period
+
   const keys = [
     downloadedRoute?.external_period_id,
     downloadedRoute?.period_id,
@@ -120,6 +121,7 @@ const selectedPeriodKeys = computed(() => {
   const selectedKey = normalizeKey(appliedPeriodId.value)
   const resolvedKey = normalizeKey(resolvedPeriodId.value)
   const period = periods.value.find(item => selectedKey && getPeriodKeys(item).includes(selectedKey))
+
   const keys = [
     selectedKey,
     resolvedKey,
@@ -143,6 +145,7 @@ const selectedExternalPeriodId = computed(() => {
 const getDownloadedReaderId = (item: any) => {
   const downloadedRoute = getDownloadedRoute(item)
   const worker = downloadedRoute?.worker ?? item?.worker
+
   const id = downloadedRoute?.worker_external_id
     ?? worker?.external_id
     ?? downloadedRoute?.reader_id
@@ -168,6 +171,7 @@ const filteredDownloadedRoutes = computed(() => {
       return true
 
     const currentReaderId = getDownloadedReaderId(item)
+
     return !!currentReaderId && String(currentReaderId) === String(readerId)
   })
 })
@@ -195,12 +199,15 @@ const readerOptions = computed(() => {
 
 const routeOptions = computed(() => {
   const map = new Map<string, string>()
+
   filteredDownloadedRoutes.value.forEach(item => {
     const downloadedRoute = getDownloadedRoute(item)
     const route = downloadedRoute?.route ?? item?.route
+
     const routeId = downloadedRoute?.external_route_id
       ?? route?.external_id
       ?? route?.code
+
     const routeLabel = route?.name ?? route?.code ?? routeId
 
     if (routeId)
@@ -215,6 +222,7 @@ const selectedReaderLabel = computed(() => {
     return '-'
 
   const option = readerOptions.value.find(item => String(item.value) === String(appliedReaderId.value))
+
   return option?.title ?? String(appliedReaderId.value)
 })
 
@@ -223,6 +231,7 @@ const selectedRouteLabel = computed(() => {
     return '-'
 
   const option = routeOptions.value.find(item => String(item.value) === String(appliedRouteId.value))
+
   return option?.title ?? String(appliedRouteId.value)
 })
 
@@ -231,6 +240,7 @@ watch(periodOptions, options => {
     return
 
   const active = options.find(option => option.is_active)
+
   selectedPeriodId.value = active?.value || options[0].value
 }, { immediate: true })
 
@@ -240,6 +250,7 @@ watch(readerOptions, options => {
 
   if (!options.length) {
     selectedReaderId.value = null
+
     return
   }
 
@@ -253,6 +264,7 @@ watch(routeOptions, options => {
 
   if (!options.length) {
     selectedRouteId.value = null
+
     return
   }
 
@@ -490,6 +502,7 @@ const applySelectionsFromQuery = async () => {
   }
 
   isApplyingQuery.value = false
+
   return true
 }
 
@@ -499,6 +512,7 @@ const focusOnPoint = (point: { lat: number; lng: number }) => {
     return
 
   const currentZoom = map.getZoom?.()
+
   map.setView([point.lat, point.lng], currentZoom ?? mapZoom.value, { animate: true })
 }
 
@@ -506,6 +520,7 @@ const loadPeriods = async () => {
   loading.value = true
   try {
     const response = await apiService.getPeriods()
+
     periods.value = normalizeArray(response)
   }
   finally {
@@ -521,6 +536,7 @@ const loadDownloadedRoutes = async () => {
       return
 
     const response = await apiService.getDownloadedRoutes(String(externalPeriodId))
+
     downloadedRoutes.value = normalizeArray(response)
   }
   finally {
@@ -563,6 +579,7 @@ const buildOsrmCoords = (latlngs: Array<[number, number]>, maxPoints = 100) => {
 const fetchOsrmRoute = async (latlngs: Array<[number, number]>) => {
   if (latlngs.length < 2) {
     routeLatLngs.value = latlngs
+
     return
   }
 
@@ -588,6 +605,7 @@ const fetchOsrmRoute = async (latlngs: Array<[number, number]>) => {
     }
 
     const geometry = data?.routes?.[0]?.geometry?.coordinates || []
+
     routeLatLngs.value = geometry.map((point: [number, number]) => [point[1], point[0]])
   }
   catch {
@@ -626,6 +644,7 @@ watch(selectedRouteId, async () => {
 watch(routeKey, async () => {
   if (!mapLatLngs.value.length) {
     routeLatLngs.value = []
+
     return
   }
 
@@ -666,16 +685,35 @@ onMounted(async () => {
       description="Selecciona lecturista y ruta para ver el orden de las lecturas."
       :show-create-button="false"
     />
-    <VSkeletonLoader v-else type="heading" class="mb-4" />
+    <VSkeletonLoader
+      v-else
+      type="heading"
+      class="mb-4"
+    />
 
     <VCard class="map-toolbar">
       <VCardText>
-        <div v-if="pageLoading" class="map-toolbar__filters">
-          <VSkeletonLoader type="text" width="220" />
-          <VSkeletonLoader type="text" width="220" />
-          <VSkeletonLoader type="text" width="220" />
+        <div
+          v-if="pageLoading"
+          class="map-toolbar__filters"
+        >
+          <VSkeletonLoader
+            type="text"
+            width="220"
+          />
+          <VSkeletonLoader
+            type="text"
+            width="220"
+          />
+          <VSkeletonLoader
+            type="text"
+            width="220"
+          />
         </div>
-        <div v-else class="map-toolbar__filters">
+        <div
+          v-else
+          class="map-toolbar__filters"
+        >
           <VSelect
             v-model="selectedPeriodId"
             :items="periodOptions"
@@ -778,18 +816,29 @@ onMounted(async () => {
                 </LPopup>
               </LMarker>
             </LMap>
-            <div v-if="!mapPoints.length && !readingsLoading" class="map-empty">
+            <div
+              v-if="!mapPoints.length && !readingsLoading"
+              class="map-empty"
+            >
               No hay coordenadas para mostrar en el mapa.
             </div>
-            <div v-if="readingsLoading" class="map-empty">
+            <div
+              v-if="readingsLoading"
+              class="map-empty"
+            >
               Cargando lecturas...
             </div>
-            <div v-if="routeLoading && mapPoints.length" class="map-empty">
+            <div
+              v-if="routeLoading && mapPoints.length"
+              class="map-empty"
+            >
               Trazando ruta por calles...
             </div>
           </div>
           <div class="map-list">
-            <div class="map-list__title">Orden de lecturas</div>
+            <div class="map-list__title">
+              Orden de lecturas
+            </div>
             <div
               v-if="missingCoordsCount"
               class="map-list__warning"
@@ -805,13 +854,22 @@ onMounted(async () => {
               @click="focusOnPoint(point)"
               @keydown.enter="focusOnPoint(point)"
             >
-              <div class="map-list__index">{{ point.index }}</div>
+              <div class="map-list__index">
+                {{ point.index }}
+              </div>
               <div>
-                <div class="map-list__contract">{{ point.contract }}</div>
-                <div class="map-list__coords">{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</div>
+                <div class="map-list__contract">
+                  {{ point.contract }}
+                </div>
+                <div class="map-list__coords">
+                  {{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}
+                </div>
               </div>
             </div>
-            <div v-if="!mapPoints.length && !readingsLoading" class="map-empty-list">
+            <div
+              v-if="!mapPoints.length && !readingsLoading"
+              class="map-empty-list"
+            >
               Sin lecturas para esta seleccion.
             </div>
           </div>

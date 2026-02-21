@@ -3,10 +3,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useReadingsStore } from '../stores/readingsStore'
-import BaseDataTable from '@/components/BaseDataTable.vue'
-import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
+import BaseDataTable from '@/components/BaseDataTable.vue'
+import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -20,6 +20,7 @@ const filterOpen = ref(false)
 const periods = ref<any[]>([])
 const periodsLoading = ref(false)
 const metrics = ref<any | null>(null)
+
 const filters = ref({
   status: '',
   anomaly: '',
@@ -117,6 +118,7 @@ const filteredItems = computed(() => {
   const selectedPeriod = periods.value.find(period =>
     String(period.external_id ?? period.externalId ?? period.id ?? period.period_id ?? period.uuid) === String(selectedPeriodId.value),
   )
+
   const selectedPeriodKey = getPeriodKey(selectedPeriod?.start_date ?? selectedPeriod?.meta?.start_date)
 
   return readingsStore.items.filter(item => {
@@ -245,6 +247,7 @@ const currentPeriodLabel = computed(() => {
   const selectedPeriod = periods.value.find(period =>
     String(period.external_id ?? period.externalId ?? period.id ?? period.period_id ?? period.uuid) === String(selectedPeriodId.value),
   )
+
   if (selectedPeriod?.name)
     return String(selectedPeriod.name).toUpperCase()
 
@@ -252,6 +255,7 @@ const currentPeriodLabel = computed(() => {
     return String(selectedPeriod.code)
 
   const fallbackKey = getPeriodKey(selectedPeriod?.start_date)
+
   return fallbackKey ? getPeriodLabel(fallbackKey) : '--'
 })
 
@@ -431,7 +435,7 @@ const handleExport = () => {
     const text = String(value ?? '')
     const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
 
-    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+    return needsEscaping ? `"${text.replace(/"/g, '""')}"` : text
   }
 
   const csvRows = [
@@ -471,6 +475,7 @@ watch(() => readingsStore.pagination.per_page, value => {
 
 watch(selectedPeriodId, () => {
   readingsStore.setPage(1)
+
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
     period_id: selectedPeriodId.value,
     external_period_id: selectedExternalPeriodId.value || undefined,
@@ -508,6 +513,7 @@ const loadPeriods = async () => {
   periodsLoading.value = true
   try {
     const response = await apiService.getPeriods()
+
     periods.value = normalizeArray(response)
   }
   finally {
@@ -525,6 +531,7 @@ const loadMetrics = async () => {
       return
 
     const response = await apiService.getMetrics(String(externalPeriodId))
+
     metrics.value = response?.data?.data ?? response?.data ?? response
   }
   catch {
@@ -534,6 +541,7 @@ const loadMetrics = async () => {
 
 onMounted(async () => {
   await loadPeriods()
+
   const params = readingsStore.buildParams(1, readingsStore.pagination.per_page, {
     period_id: selectedPeriodId.value,
     external_period_id: selectedExternalPeriodId.value || undefined,
@@ -571,19 +579,39 @@ onMounted(async () => {
           class="readings-kpis__row"
           dense
         >
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <VSkeletonLoader type="card" />
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <VSkeletonLoader type="card" />
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <VSkeletonLoader type="card" />
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <VSkeletonLoader type="card" />
           </VCol>
-          <VCol cols="12" md="2" class="readings-kpis__item">
+          <VCol
+            cols="12"
+            md="2"
+            class="readings-kpis__item"
+          >
             <VSkeletonLoader type="card" />
           </VCol>
         </VRow>
@@ -693,16 +721,37 @@ onMounted(async () => {
 
     <VCard class="readings-table">
       <VCardText>
-        <div v-if="pageLoading" class="readings-toolbar">
-          <VSkeletonLoader type="text" class="readings-toolbar__search" />
+        <div
+          v-if="pageLoading"
+          class="readings-toolbar"
+        >
+          <VSkeletonLoader
+            type="text"
+            class="readings-toolbar__search"
+          />
           <div class="readings-toolbar__actions">
-            <VSkeletonLoader type="text" width="140" />
-            <VSkeletonLoader type="text" width="120" />
-            <VSkeletonLoader type="text" width="120" />
-            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader
+              type="text"
+              width="140"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
           </div>
         </div>
-        <div v-else class="readings-toolbar">
+        <div
+          v-else
+          class="readings-toolbar"
+        >
           <VTextField
             v-model="search"
             variant="outlined"

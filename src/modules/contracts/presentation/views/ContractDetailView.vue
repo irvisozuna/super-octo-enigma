@@ -13,6 +13,7 @@ const { formatCurrency } = useContractsHelpers()
 const isEditing = ref(false)
 const isDeleteDialogVisible = ref(false)
 const editedContract = ref<any>({})
+
 const catalogOptions = ref({
   status: [] as any[],
   systems: [] as any[],
@@ -30,27 +31,28 @@ const loadData = async () => {
 
   await Promise.all([
     contractsStore.fetchById(id),
-    loadCatalogs()
+    loadCatalogs(),
   ])
-  
-  if (contract.value) {
+
+  if (contract.value)
     resetEditedContract()
-  }
 }
 
 const loadCatalogs = async () => {
   const catalogs = await contractsStore.fetchCatalogs()
+
   catalogOptions.value = catalogs
 }
 
 const resetEditedContract = () => {
-  if (contract.value) {
+  if (contract.value)
     editedContract.value = { ...contract.value }
-  }
 }
 
 const totalDebt = computed(() => {
-  if (!contract.value?.debt_concepts) return 0
+  if (!contract.value?.debt_concepts)
+    return 0
+
   return contract.value.debt_concepts.reduce((acc: number, curr: any) => acc + Number.parseFloat(curr.total), 0)
 })
 
@@ -74,9 +76,8 @@ const formatDateTime = (value?: string) => {
 const getConceptLabel = (item: any) => {
   const raw = item?.concept_name ?? item?.concept ?? item?.name ?? item?.concepto ?? null
 
-  if (raw && typeof raw === 'object') {
+  if (raw && typeof raw === 'object')
     return raw.name ?? raw.title ?? raw.code ?? raw.external_id ?? raw.externalId ?? item?.external_concept_id ?? '-'
-  }
 
   if (typeof raw === 'string' && raw.trim() !== '')
     return raw
@@ -85,19 +86,21 @@ const getConceptLabel = (item: any) => {
 }
 
 const toggleEdit = () => {
-  if (isEditing.value) {
+  if (isEditing.value)
     resetEditedContract()
-  }
+
   isEditing.value = !isEditing.value
 }
 
 const handleSave = async () => {
-  if (!contract.value) return
-  
+  if (!contract.value)
+    return
+
   try {
     await contractsStore.updateItem(contract.value.id, editedContract.value)
     isEditing.value = false
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error updating contract:', error)
   }
 }
@@ -107,13 +110,15 @@ const confirmDelete = () => {
 }
 
 const handleDelete = async () => {
-  if (!contract.value) return
-  
+  if (!contract.value)
+    return
+
   try {
     await contractsStore.deleteItem(contract.value.id)
     isDeleteDialogVisible.value = false
     router.push({ name: 'contracts-list' })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting contract:', error)
   }
 }
@@ -513,31 +518,34 @@ onMounted(() => {
             <div class="d-flex flex-column gap-3">
               <div class="d-flex justify-space-between align-center">
                 <span class="text-caption text-medium-emphasis">Adeudo Total</span>
-                <span class="text-body-2 font-weight-bold" :class="totalDebt > 0 ? 'text-error' : 'text-success'">{{ formatCurrency(totalDebt) }}</span>
+                <span
+                  class="text-body-2 font-weight-bold"
+                  :class="totalDebt > 0 ? 'text-error' : 'text-success'"
+                >{{ formatCurrency(totalDebt) }}</span>
               </div>
               <VDivider style="border-style: dashed;" />
               <div class="d-flex justify-space-between align-center">
                 <span class="text-caption text-medium-emphasis">Saldo a Favor</span>
                 <span class="text-body-2 font-weight-bold text-success">{{ formatCurrency(contract.positive_balance) }}</span>
               </div>
-               <VDivider style="border-style: dashed;" />
-               <div class="d-flex justify-space-between align-center">
-                 <span class="text-caption text-medium-emphasis">Litigio</span>
-                 <VSwitch
-                   v-if="isEditing"
-                   v-model="editedContract.litigation"
-                   density="compact"
-                   hide-details
-                 />
-                 <VChip
-                   v-else
-                   :color="contract.litigation ? 'error' : 'success'"
-                   size="x-small"
-                   variant="tonal"
-                 >
-                   {{ contract.litigation ? 'SÍ' : 'NO' }}
-                 </VChip>
-               </div>
+              <VDivider style="border-style: dashed;" />
+              <div class="d-flex justify-space-between align-center">
+                <span class="text-caption text-medium-emphasis">Litigio</span>
+                <VSwitch
+                  v-if="isEditing"
+                  v-model="editedContract.litigation"
+                  density="compact"
+                  hide-details
+                />
+                <VChip
+                  v-else
+                  :color="contract.litigation ? 'error' : 'success'"
+                  size="x-small"
+                  variant="tonal"
+                >
+                  {{ contract.litigation ? 'SÍ' : 'NO' }}
+                </VChip>
+              </div>
             </div>
           </VCardText>
         </VCard>
@@ -687,7 +695,7 @@ onMounted(() => {
                 >{{ contract.average_consumption || '0' }} m³</span>
               </div>
               <VDivider style="border-style: dashed;" />
-               <div class="d-flex justify-space-between align-center">
+              <div class="d-flex justify-space-between align-center">
                 <span class="text-caption text-medium-emphasis">m³ Fijos</span>
                 <VTextField
                   v-if="isEditing"
@@ -861,27 +869,27 @@ onMounted(() => {
             { title: 'P. Unitario', key: 'unit_price', align: 'end' },
             { title: 'Subtotal', key: 'subtotal', align: 'end' },
             { title: 'IVA', key: 'iva_amount', align: 'end' },
-            { title: 'Total', key: 'total', align: 'end' }
+            { title: 'Total', key: 'total', align: 'end' },
           ]"
           :items="contract.debt_concepts"
           hide-default-footer
           class="concepts-table"
         >
-          <template v-slot:item.concept_name="{ item }">
+          <template #item.concept_name="{ item }">
             <div class="font-weight-medium">
               {{ getConceptLabel(item) }}
             </div>
           </template>
-          <template v-slot:item.unit_price="{ item }">
+          <template #item.unit_price="{ item }">
             {{ formatCurrency(item.unit_price) }}
           </template>
-          <template v-slot:item.subtotal="{ item }">
+          <template #item.subtotal="{ item }">
             {{ formatCurrency(item.subtotal) }}
           </template>
-          <template v-slot:item.iva_amount="{ item }">
+          <template #item.iva_amount="{ item }">
             {{ formatCurrency(item.iva_amount) }}
           </template>
-          <template v-slot:item.total="{ item }">
+          <template #item.total="{ item }">
             <span class="font-weight-black text-primary">{{ formatCurrency(item.total) }}</span>
           </template>
         </VDataTable>
@@ -903,18 +911,18 @@ onMounted(() => {
           :headers="[
             { title: 'Concepto', key: 'concept_name' },
             { title: 'Código Externo', key: 'external_concept_id' },
-            { title: 'Descargado el', key: 'downloaded_at' }
+            { title: 'Descargado el', key: 'downloaded_at' },
           ]"
           :items="contract.charge_concepts"
           hide-default-footer
           class="concepts-table"
         >
-          <template v-slot:item.concept_name="{ item }">
+          <template #item.concept_name="{ item }">
             <div class="font-weight-medium">
               {{ getConceptLabel(item) }}
             </div>
           </template>
-          <template v-slot:item.external_concept_id="{ item }">
+          <template #item.external_concept_id="{ item }">
             <VChip
               size="x-small"
               variant="outlined"
@@ -923,7 +931,7 @@ onMounted(() => {
               {{ item.external_concept_id }}
             </VChip>
           </template>
-          <template v-slot:item.downloaded_at="{ item }">
+          <template #item.downloaded_at="{ item }">
             {{ formatDateTime(item.downloaded_at) }}
           </template>
         </VDataTable>
@@ -938,11 +946,11 @@ onMounted(() => {
       <VCard>
         <VCardTitle class="d-flex flex-column align-center pa-6">
           <div class="pa-4 bg-error-lighten-5 rounded-circle mb-3">
-             <VIcon
-               icon="tabler-alert-triangle"
-               color="error"
-               size="40"
-             />
+            <VIcon
+              icon="tabler-alert-triangle"
+              color="error"
+              size="40"
+            />
           </div>
           <span class="text-h5 font-weight-bold">Confirmar Eliminación</span>
         </VCardTitle>

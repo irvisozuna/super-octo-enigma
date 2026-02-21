@@ -2,9 +2,9 @@
  * WorkOrders Module Menu Configuration
  */
 
+import { WORK_ORDERS_PERMISSIONS } from './config/permissions'
 import type { VerticalNavItems } from '@layouts/types'
 import { createValidatedMenu } from '@/utils/menuValidator'
-import { WORK_ORDERS_PERMISSIONS } from './config/permissions'
 
 const workOrdersMenu: VerticalNavItems = [
   {

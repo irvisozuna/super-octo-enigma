@@ -3,12 +3,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReportWizardStore } from '../../../stores/reportWizardStore'
 import { useProjectDetailStore } from '../../../stores/projectDetailStore'
+import { useDrillingReportStore } from '../../../stores/drillingReportStore'
 import { REPORT_WIZARD_STEPS } from '../../../../shared/constants'
 
 // Import Molecules
 import WizardBasicInfoMolecule from '../../molecules/WizardBasicInfoMolecule.vue'
 import WizardPersonnelMolecule from '../../molecules/WizardPersonnelMolecule.vue'
 import WizardActivitiesMolecule from '../../molecules/WizardActivitiesMolecule.vue'
+import WizardDirectionalMeasurementsMolecule from '../../molecules/WizardDirectionalMeasurementsMolecule.vue'
 import WizardConsumptionsMolecule from '../../molecules/WizardConsumptionsMolecule.vue'
 import WizardToolsMolecule from '../../molecules/WizardToolsMolecule.vue'
 import WizardReviewMolecule from '../../molecules/WizardReviewMolecule.vue'
@@ -19,6 +21,7 @@ export interface CreateReportWizardProps {
   projectName: string
   wellId: string
   wellName: string
+  reportId?: string
   loading?: boolean
   error?: string | null
 }
@@ -28,6 +31,7 @@ const props = defineProps<CreateReportWizardProps>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'submit': [data: any]
+  'update': [data: { reportId: string; data: any }]
 }>()
 
 const { t } = useI18n()
@@ -35,6 +39,7 @@ const { t } = useI18n()
 // Store
 const wizardStore = useReportWizardStore()
 const detailStore = useProjectDetailStore()
+const drillingReportStore = useDrillingReportStore()
 
 // Form refs
 const step1Form = ref()
@@ -109,9 +114,17 @@ const nextStep = async () => {
     }
   }
 
-  if (wizardStore.currentStep === '5') {
+  if (wizardStore.currentStep === '4') {
+    if (!wizardStore.isDirectionalMeasurementsStepValid) {
+      console.log('❌ Step 4 validation failed - directional measurements step not valid')
+
+      return
+    }
+  }
+
+  if (wizardStore.currentStep === '6') {
     if (!wizardStore.isToolGroupsStepValid) {
-      console.log('❌ Step 5 validation failed - tools step not valid')
+      console.log('❌ Step 6 validation failed - tools step not valid')
 
       return
     }
@@ -196,7 +209,11 @@ const handleSubmit = async () => {
 
   // Important: We don't clear here because we need to wait for the parent's response
   // The parent will call onSuccess() if the save is successful
-  emit('submit', data)
+  if (props.reportId)
+    emit('update', { reportId: props.reportId, data })
+
+  else
+    emit('submit', data)
 }
 
 const handleCancel = () => {
@@ -240,32 +257,119 @@ defineExpose({
   onError,
 })
 
+// Function to load report data when editing
+const loadReportForEditing = async () => {
+  if (!props.reportId) {
+    console.warn('⚠️ loadReportForEditing called but no reportId provided')
+
+    return
+  }
+
+  try {
+    console.log('🔄 Loading report with ID:', props.reportId)
+
+    const response = await drillingReportStore.fetchReportById(props.reportId)
+
+    console.log('📦 Raw API response:', response)
+
+    // The API might return { data: report } or just report
+    const report = response?.data || response
+
+    console.log('📋 Report object extracted:', report)
+    console.log('📋 Report keys:', report ? Object.keys(report) : 'No report object')
+
+    if (!report) {
+      console.error('❌ No report data received')
+      wizardStore.setError('Error', 'No se recibieron datos del reporte')
+
+      return
+    }
+
+    if (!report.id && !report.report_number) {
+      console.error('❌ Invalid report structure:', report)
+      wizardStore.setError('Error', 'El reporte recibido no tiene la estructura esperada')
+
+      return
+    }
+
+    console.log('✅ Valid report received, loading into wizard...')
+
+    // Add tools from the report to toolOptions if they don't exist
+    // This ensures reamers and bits from the report are selectable in dropdowns
+    const reportTools = [
+      ...(report.tools?.reamers || []),
+      ...(report.tools?.bits || []),
+    ].map((item: any) => item.tool).filter(Boolean)
+
+    reportTools.forEach((tool: any) => {
+      if (tool.id && !toolOptions.value.find((opt: any) => opt.value === tool.id)) {
+        toolOptions.value.push({
+          title: tool.serial_number || tool.type,
+          value: tool.id,
+          type: tool.type,
+        })
+        console.log('➕ Added missing tool from report:', tool.serial_number || tool.id)
+      }
+    })
+
+    wizardStore.loadReportData(report)
+    console.log('✅ Report data loaded into wizard successfully')
+  }
+  catch (error: any) {
+    console.error('❌ Error loading report for editing:', error)
+    console.error('❌ Error details:', {
+      message: error?.message,
+      response: error?.response,
+      stack: error?.stack,
+    })
+    wizardStore.setError('Error', error?.message || 'No se pudo cargar el reporte para editar')
+  }
+}
+
 // Watch for dialog open/close
-watch(() => props.modelValue, newValue => {
+watch(() => props.modelValue, async newValue => {
   if (newValue) {
     // Always start fresh
     wizardStore.setStep('1')
     wizardStore.clearError()
 
-    // Load required data
-    loadEquipment()
-    loadEmployees()
-    loadTools()
+    // Load required data first
+    await Promise.all([
+      loadEquipment(),
+      loadEmployees(),
+      loadTools(),
+    ])
 
-    // Try to load draft if exists
-    const draftLoaded = wizardStore.loadDraft(props.projectId, props.wellId)
+    // If editing (reportId exists), load report data
+    if (props.reportId) {
+      console.log('🔧 Edit mode detected, reportId:', props.reportId)
+      await loadReportForEditing()
+    }
+    else {
+      // Try to load draft if exists (only for new reports)
+      const draftLoaded = wizardStore.loadDraft(props.projectId, props.wellId)
 
-    // If no draft loaded, ensure we start with clean form
-    if (!draftLoaded)
-      wizardStore.resetForm()
-
-    else
-      console.log('📋 Draft loaded successfully')
+      // If no draft loaded, ensure we start with clean form
+      if (!draftLoaded)
+        wizardStore.resetForm()
+      else
+        console.log('📋 Draft loaded successfully')
+    }
   }
   else {
     // When dialog closes, ensure everything is clean for next time
     wizardStore.clearError()
+
+    // Reset form when closing to avoid stale data
+    if (!props.reportId)
+      wizardStore.resetForm()
   }
+})
+
+// Watch for reportId changes (in case it changes after dialog opens)
+watch(() => props.reportId, async (newReportId, oldReportId) => {
+  if (props.modelValue && newReportId && newReportId !== oldReportId)
+    await loadReportForEditing()
 })
 
 // Auto-save draft on changes
@@ -318,11 +422,19 @@ watch(() => props.error, newError => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (props.modelValue) {
-    loadEquipment()
-    loadEmployees()
-    loadTools()
+    await Promise.all([
+      loadEquipment(),
+      loadEmployees(),
+      loadTools(),
+    ])
+
+    // If editing and reportId is available, load report data
+    if (props.reportId) {
+      console.log('🔧 Component mounted in edit mode, loading report:', props.reportId)
+      await loadReportForEditing()
+    }
   }
 })
 </script>
@@ -341,7 +453,7 @@ onMounted(() => {
             icon="tabler-file-plus"
             color="primary"
           />
-          <span>Nuevo Reporte de Perforación</span>
+          <span>{{ props.reportId ? 'Editar Reporte de Perforación' : 'Nuevo Reporte de Perforación' }}</span>
         </div>
         <VBtn
           icon="tabler-x"
@@ -454,13 +566,18 @@ onMounted(() => {
               <WizardActivitiesMolecule />
             </VStepperWindowItem>
 
-            <!-- Step 4: Consumos -->
+            <!-- Step 4: Mediciones Direccionales -->
             <VStepperWindowItem value="4">
+              <WizardDirectionalMeasurementsMolecule />
+            </VStepperWindowItem>
+
+            <!-- Step 5: Consumos -->
+            <VStepperWindowItem value="5">
               <WizardConsumptionsMolecule />
             </VStepperWindowItem>
 
-            <!-- Step 5: Herramientas -->
-            <VStepperWindowItem value="5">
+            <!-- Step 6: Herramientas -->
+            <VStepperWindowItem value="6">
               <WizardToolsMolecule
                 :tool-options="toolOptions"
                 :loading-tools="loadingTools"
@@ -468,8 +585,8 @@ onMounted(() => {
               />
             </VStepperWindowItem>
 
-            <!-- Step 6: Revisión Final -->
-            <VStepperWindowItem value="6">
+            <!-- Step 7: Revisión Final -->
+            <VStepperWindowItem value="7">
               <WizardReviewMolecule />
             </VStepperWindowItem>
           </VStepperWindow>

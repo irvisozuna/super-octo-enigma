@@ -1,12 +1,16 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
+import { useReportWizardStore } from '../stores/reportWizardStore'
 
 export const useReportWizardValidation = () => {
+  const wizardStore = useReportWizardStore()
   const step1Form = ref()
   const step2Form = ref()
   const step3Form = ref()
   const step4Form = ref()
   const step5Form = ref()
+  const step6Form = ref()
+  const step7Form = ref()
 
   const validateStep = async (stepNumber: number): Promise<boolean> => {
     let formRef: Ref<any> | null = null
@@ -19,14 +23,20 @@ export const useReportWizardValidation = () => {
         formRef = step2Form
         break
       case 3:
-        formRef = step3Form
-        break
+      // Step 3 (Activities) uses computed validation from store
+        return wizardStore.isActivitiesStepValid
       case 4:
-        formRef = step4Form
-        break
+      // Step 4 (Directional Measurements) uses computed validation from store
+        return wizardStore.isDirectionalMeasurementsStepValid
       case 5:
         formRef = step5Form
         break
+      case 6:
+      // Step 6 (Tools) uses computed validation from store
+        return wizardStore.isToolGroupsStepValid
+      case 7:
+      // Step 7 (Review) is always valid
+        return true
       default:
         return true
     }
@@ -53,6 +63,8 @@ export const useReportWizardValidation = () => {
       validateStep(3),
       validateStep(4),
       validateStep(5),
+      validateStep(6),
+      validateStep(7),
     ])
 
     return results.every(valid => valid)
@@ -64,6 +76,8 @@ export const useReportWizardValidation = () => {
     step3Form.value?.resetValidation()
     step4Form.value?.resetValidation()
     step5Form.value?.resetValidation()
+    step6Form.value?.resetValidation()
+    step7Form.value?.resetValidation()
   }
 
   return {
@@ -73,6 +87,8 @@ export const useReportWizardValidation = () => {
     step3Form,
     step4Form,
     step5Form,
+    step6Form,
+    step7Form,
 
     // Validation methods
     validateStep,

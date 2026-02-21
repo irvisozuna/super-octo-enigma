@@ -2,10 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import BaseDataTable from '@/components/BaseDataTable.vue'
-import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 import { useWorkOrdersStore } from '../stores/workOrdersStore'
 import WorkOrdersFilterDrawer from '../../share/WorkOrdersFilterDrawer.vue'
+import BaseDataTable from '@/components/BaseDataTable.vue'
+import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -16,6 +16,7 @@ const search = ref('')
 const itemsPerPage = ref(workOrdersStore.pagination.per_page)
 const perPageOptions = [10, 25, 50, 100]
 const filterOpen = ref(false)
+
 const filters = ref({
   status: '',
   type: '',
@@ -172,7 +173,7 @@ const handleExport = () => {
     const text = String(value ?? '')
     const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
 
-    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+    return needsEscaping ? `"${text.replace(/"/g, '""')}"` : text
   }
 
   const csvRows = [
@@ -211,6 +212,7 @@ const handleOptionsUpdate = (params: Record<string, any>) => {
     type: filters.value.type,
     priority: filters.value.priority,
   })
+
   requestParams.itemsPerPage = perPage
   workOrdersStore.fetchList(requestParams)
 }
@@ -242,6 +244,7 @@ watch(search, () => {
     local_id: search.value || undefined,
     folio: search.value || undefined,
   })
+
   params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 })
@@ -255,6 +258,7 @@ const applyFilters = () => {
     type: filters.value.type,
     priority: filters.value.priority,
   })
+
   params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 }
@@ -278,6 +282,7 @@ onMounted(() => {
     local_id: search.value || undefined,
     folio: search.value || undefined,
   })
+
   params.itemsPerPage = workOrdersStore.pagination.per_page
   workOrdersStore.fetchList(params)
 })
@@ -304,15 +309,33 @@ onMounted(() => {
 
     <VCard class="workorders-table">
       <VCardText>
-        <div v-if="pageLoading" class="workorders-toolbar">
-          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+        <div
+          v-if="pageLoading"
+          class="workorders-toolbar"
+        >
+          <VSkeletonLoader
+            type="text"
+            class="workorders-toolbar__search"
+          />
           <div class="workorders-toolbar__actions">
-            <VSkeletonLoader type="text" width="140" />
-            <VSkeletonLoader type="text" width="120" />
-            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader
+              type="text"
+              width="140"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
           </div>
         </div>
-        <div v-else class="workorders-toolbar">
+        <div
+          v-else
+          class="workorders-toolbar"
+        >
           <VTextField
             v-model="search"
             variant="outlined"

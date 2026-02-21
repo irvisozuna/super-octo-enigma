@@ -166,6 +166,7 @@ const loadReading = async () => {
   readingLoading.value = true
   try {
     const response = await apiService.getReadingView(readingId.value)
+
     readingData.value = response?.data?.data ?? response?.data ?? response ?? null
   }
   finally {
@@ -218,14 +219,25 @@ onMounted(async () => {
   <div class="reading-detail">
     <VCard class="detail-card">
       <VCardText>
-        <div v-if="pageLoading" class="detail-header">
-          <VSkeletonLoader type="heading" class="mb-2" />
+        <div
+          v-if="pageLoading"
+          class="detail-header"
+        >
+          <VSkeletonLoader
+            type="heading"
+            class="mb-2"
+          />
           <VSkeletonLoader type="text" />
         </div>
-        <div v-else class="detail-header">
+        <div
+          v-else
+          class="detail-header"
+        >
           <div class="detail-hero">
             <div class="detail-hero__main">
-              <div class="detail-hero__eyebrow">Lectura</div>
+              <div class="detail-hero__eyebrow">
+                Lectura
+              </div>
               <div class="detail-hero__title">
                 {{ reading?.external_contract_id || reading?.contract?.external_contract_id || readingId }}
               </div>
@@ -265,19 +277,33 @@ onMounted(async () => {
               class="reading-highlights"
             >
               <div class="reading-highlight">
-                <div class="reading-highlight__label">Lectura anterior</div>
-                <div class="reading-highlight__value">{{ reading.previous_reading ?? '-' }}</div>
+                <div class="reading-highlight__label">
+                  Lectura anterior
+                </div>
+                <div class="reading-highlight__value">
+                  {{ reading.previous_reading ?? '-' }}
+                </div>
               </div>
               <div class="reading-highlight">
-                <div class="reading-highlight__label">Lectura actual</div>
-                <div class="reading-highlight__value">{{ reading.current_reading ?? '-' }}</div>
+                <div class="reading-highlight__label">
+                  Lectura actual
+                </div>
+                <div class="reading-highlight__value">
+                  {{ reading.current_reading ?? '-' }}
+                </div>
               </div>
               <div class="reading-highlight">
-                <div class="reading-highlight__label">Consumo</div>
-                <div class="reading-highlight__value">{{ reading.consumption ?? '-' }}</div>
+                <div class="reading-highlight__label">
+                  Consumo
+                </div>
+                <div class="reading-highlight__value">
+                  {{ reading.consumption ?? '-' }}
+                </div>
               </div>
               <div class="reading-highlight reading-highlight--total">
-                <div class="reading-highlight__label">Total lectura</div>
+                <div class="reading-highlight__label">
+                  Total lectura
+                </div>
                 <div class="reading-highlight__value">
                   $ {{ totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </div>
@@ -289,7 +315,9 @@ onMounted(async () => {
               class="detail-strip detail-strip--single detail-strip--spaced"
             >
               <div class="detail-strip__section">
-                <div class="detail-strip__title">Datos del contrato</div>
+                <div class="detail-strip__title">
+                  Datos del contrato
+                </div>
                 <dl class="detail-list">
                   <div class="detail-list__row">
                     <dt>Contrato</dt>

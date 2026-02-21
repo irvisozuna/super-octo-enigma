@@ -63,6 +63,7 @@ export interface PaginatedContractsResponseDto {
 }
 
 export interface UpdateContractRequestDto {
+
   // Add fields that can be updated
   user_name?: string
   address?: string

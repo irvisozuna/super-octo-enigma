@@ -45,8 +45,14 @@ const clearFilters = () => {
     class="filter-drawer"
   >
     <div class="filter-drawer__header">
-      <div class="filter-drawer__title">{{ title }}</div>
-      <VBtn icon="tabler-x" variant="text" @click="closeDrawer" />
+      <div class="filter-drawer__title">
+        {{ title }}
+      </div>
+      <VBtn
+        icon="tabler-x"
+        variant="text"
+        @click="closeDrawer"
+      />
     </div>
 
     <VDivider />

@@ -303,7 +303,7 @@ export class TenantBootstrapService {
           contentWidth: tenantData.contentWidth || 'fluid',
           appTitle: tenantData.appTitle || tenantData.name || 'Application',
           loginLogo: tenantData.assets?.logo,
-          menuLogo: tenantData.assets?.logo,
+          menuLogo: tenantData.assets?.menu || tenantData.assets?.logo,
           favicon: tenantData.assets?.favicon,
           version: tenantData.version ? Number.parseInt(tenantData.version.toString()) : 1,
           updatedAt: tenantData.updatedAt,

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseDataTable from '@/components/BaseDataTable.vue'
-import BaseListHeader from '@/components/layout/BaseListHeader.vue'
 import { useContractsStore } from '../stores/contractsStore'
 import { useContractsHelpers } from '../composables/useContractsHelpers'
 import ContractsFilterDrawer from '../../share/ContractsFilterDrawer.vue'
+import BaseListHeader from '@/components/layout/BaseListHeader.vue'
+import BaseDataTable from '@/components/BaseDataTable.vue'
 
 const router = useRouter()
 const contractsStore = useContractsStore()
@@ -35,10 +35,12 @@ const catalogOptions = ref({
   rates: [] as any[],
   periods: [] as any[],
 })
+
 const catalogsLoading = ref(false)
 
 const getLocalId = (item: any): string | number | null => {
   const localId = item?.local_id ?? item?.localId ?? item?.contract_local_id ?? item?.contractLocalId ?? null
+
   return localId === undefined || localId === null || localId === '' ? null : localId
 }
 
@@ -172,6 +174,7 @@ const loadCatalogs = async () => {
   catalogsLoading.value = true
   try {
     const catalogs = await contractsStore.fetchCatalogs()
+
     catalogOptions.value = catalogs
   }
   finally {

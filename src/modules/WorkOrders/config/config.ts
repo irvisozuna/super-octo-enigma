@@ -57,4 +57,3 @@ export function isWorkOrdersFeatureEnabled(
 ): boolean {
   return WORK_ORDERS_MODULE_CONFIG.enabled && WORK_ORDERS_MODULE_CONFIG.features[feature]
 }
-

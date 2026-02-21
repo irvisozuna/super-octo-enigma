@@ -15,10 +15,12 @@ export class ContractModuleInstaller {
   async install() {
     try {
       this.addCaslAbilities()
+
       return true
     }
     catch (error) {
       console.error('❌ Error installing ContractModule:', error)
+
       return false
     }
   }
@@ -52,6 +54,7 @@ export class ContractModuleInstaller {
 
 export async function installContractModule(i18n?: I18n) {
   const installer = new ContractModuleInstaller(i18n)
+
   return await installer.install()
 }
 
@@ -59,6 +62,7 @@ export default {
   install: async (app: any) => {
     const i18n = app.config.globalProperties.$i18n
     const installer = new ContractModuleInstaller(i18n)
+
     await installer.install()
     app.config.globalProperties.$contractModule = installer
   },

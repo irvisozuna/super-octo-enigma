@@ -9,6 +9,7 @@ export class ContractMapper {
   static toEntity(dto: ContractDto): ContractEntity {
     return {
       ...dto,
+
       // Ensure specific mappings if necessary
     }
   }

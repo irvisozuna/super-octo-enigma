@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{ 
+const props = withDefaults(defineProps<{
   modelValue: boolean
   title?: string
   showApply?: boolean
@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   showClear: true,
 })
 
-const emit = defineEmits<{ 
+const emit = defineEmits<{
   (event: 'update:modelValue', value: boolean): void
   (event: 'apply'): void
   (event: 'clear'): void
@@ -45,8 +45,14 @@ const clearFilters = () => {
     class="filter-drawer"
   >
     <div class="filter-drawer__header">
-      <div class="filter-drawer__title">{{ title }}</div>
-      <VBtn icon="tabler-x" variant="text" @click="closeDrawer" />
+      <div class="filter-drawer__title">
+        {{ title }}
+      </div>
+      <VBtn
+        icon="tabler-x"
+        variant="text"
+        @click="closeDrawer"
+      />
     </div>
 
     <VDivider />

@@ -10,10 +10,12 @@ export class WorkOrdersModuleInstaller {
   async install() {
     try {
       await this.addTranslations()
+
       return true
     }
     catch (error) {
       console.error('Error installing WorkOrdersModule:', error)
+
       return false
     }
   }

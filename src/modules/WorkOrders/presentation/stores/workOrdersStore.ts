@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useDataTable } from '@/composables/useDataTable'
 import { WorkOrderApiService } from '../../infrastructure/api/services/WorkOrderApiService'
+import { useDataTable } from '@/composables/useDataTable'
 
 export const useWorkOrdersStore = defineStore('workorders', () => {
   const {
@@ -67,9 +67,8 @@ export const useWorkOrdersStore = defineStore('workorders', () => {
           items.value = items.value.slice(0, perPageNum)
 
         pagination.value.per_page = perPageNum
-        if (pagination.value.total) {
+        if (pagination.value.total)
           pagination.value.last_page = Math.max(1, Math.ceil(pagination.value.total / Math.max(perPageNum, 1)))
-        }
       }
     }
     catch (err: any) {
@@ -86,6 +85,7 @@ export const useWorkOrdersStore = defineStore('workorders', () => {
 
     try {
       const response = await apiService.getById(id)
+
       currentItem.value = response?.data || response
     }
     catch (err: any) {

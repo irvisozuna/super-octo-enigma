@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseDataTable from '@/components/BaseDataTable.vue'
 import ReadingsFilterDrawer from '../../share/ReadingsFilterDrawer.vue'
 import { ReadingApiService } from '../../infrastructure/api/services/ReadingApiService'
+import BaseDataTable from '@/components/BaseDataTable.vue'
 
 const apiService = new ReadingApiService()
 const router = useRouter()
@@ -13,6 +13,7 @@ const itemsPerPage = ref(10)
 const perPageOptions = [10, 25, 50, 100]
 const currentPage = ref(1)
 const filtersOpen = ref(false)
+
 const filters = ref({
   sector: '',
   route: '',
@@ -24,11 +25,13 @@ const selectedPeriodId = ref<string | null>(null)
 const downloadedRoutes = ref<any[]>([])
 const loading = ref(false)
 const metrics = ref<any | null>(null)
+
 const catalogs = ref({
   sectors: [] as any[],
   routes: [] as any[],
   workers: [] as any[],
 })
+
 const pageLoading = computed(() => loading.value)
 
 const selectedExternalPeriodId = computed(() => {
@@ -119,8 +122,8 @@ const statCards = computed(() => [
 ])
 
 const globalProgress = computed(() => {
-  const period =
-    metrics.value?.period
+  const period
+    = metrics.value?.period
     || periods.value.find(item =>
       String(item.external_id ?? item.externalId ?? item.id ?? item.period_id ?? item.uuid) === String(selectedPeriodId.value),
     )
@@ -297,6 +300,7 @@ const loadPeriods = async () => {
   loading.value = true
   try {
     const response = await apiService.getPeriods()
+
     periods.value = normalizeArray(response)
   }
   finally {
@@ -315,6 +319,7 @@ const loadDownloadedRoutes = async () => {
   loading.value = true
   try {
     const response = await apiService.getDownloadedRoutes(String(externalPeriodId))
+
     downloadedRoutes.value = normalizeArray(response)
   }
   finally {
@@ -332,6 +337,7 @@ const loadMetrics = async () => {
       return
 
     const response = await apiService.getMetrics(String(externalPeriodId))
+
     metrics.value = response?.data?.data ?? response?.data ?? response
   }
   finally {
@@ -341,6 +347,7 @@ const loadMetrics = async () => {
 const loadCatalogs = async () => {
   try {
     const response = await apiService.getAdvanceCatalogs()
+
     catalogs.value = {
       sectors: normalizeArray(response?.sectors),
       routes: normalizeArray(response?.routes),
@@ -361,6 +368,7 @@ watch(periodOptions, options => {
     return
 
   const active = options.find(option => option.is_active)
+
   selectedPeriodId.value = active?.value || options[0].value
 }, { immediate: true })
 
@@ -414,7 +422,7 @@ const handleExport = () => {
     const text = String(value ?? '')
     const needsEscaping = text.includes(',') || text.includes('"') || text.includes('\n')
 
-    return needsEscaping ? `"${text.replace(/\"/g, '""')}"` : text
+    return needsEscaping ? `"${text.replace(/"/g, '""')}"` : text
   }
 
   const csvRows = [
@@ -444,82 +452,121 @@ onMounted(async () => {
   <div class="advance-page">
     <div class="advance-stats">
       <template v-if="pageLoading">
-        <VCard v-for="index in 5" :key="`skeleton-${index}`" class="advance-stats__card">
+        <VCard
+          v-for="index in 5"
+          :key="`skeleton-${index}`"
+          class="advance-stats__card"
+        >
           <VCardText>
             <VSkeletonLoader type="card" />
           </VCardText>
         </VCard>
       </template>
       <template v-else>
-      <VCard
-        v-for="card in statCards"
-        :key="card.title"
-        class="advance-stats__card"
-      >
-        <VCardText>
-          <div class="stat-card">
-            <div
-              class="stat-card__icon"
-              :class="`stat-card__icon--${card.color}`"
-            >
-              <VIcon :icon="card.icon" size="20" />
-            </div>
-            <div>
-              <div class="stat-card__title">{{ card.title }}</div>
-              <div class="stat-card__subtitle">{{ card.subtitle }}</div>
-              <div class="stat-card__value">{{ card.value }}</div>
+        <VCard
+          v-for="card in statCards"
+          :key="card.title"
+          class="advance-stats__card"
+        >
+          <VCardText>
+            <div class="stat-card">
               <div
-                v-if="card.delta"
-                class="stat-card__delta"
-                :class="`stat-card__delta--${card.color}`"
+                class="stat-card__icon"
+                :class="`stat-card__icon--${card.color}`"
               >
-                {{ card.delta }}
+                <VIcon
+                  :icon="card.icon"
+                  size="20"
+                />
+              </div>
+              <div>
+                <div class="stat-card__title">
+                  {{ card.title }}
+                </div>
+                <div class="stat-card__subtitle">
+                  {{ card.subtitle }}
+                </div>
+                <div class="stat-card__value">
+                  {{ card.value }}
+                </div>
+                <div
+                  v-if="card.delta"
+                  class="stat-card__delta"
+                  :class="`stat-card__delta--${card.color}`"
+                >
+                  {{ card.delta }}
+                </div>
               </div>
             </div>
-          </div>
-        </VCardText>
-      </VCard>
+          </VCardText>
+        </VCard>
 
-      <VCard class="advance-global">
-        <VCardText>
-          <div class="global-card">
-            <div class="global-card__info">
-              <div class="global-card__title">Avance global</div>
-              <div class="global-card__period">{{ globalProgress.period }}</div>
-              <div class="global-card__value">
-                {{ globalProgress.completed.toLocaleString('es-MX') }} /
-                {{ globalProgress.total.toLocaleString('es-MX') }}
+        <VCard class="advance-global">
+          <VCardText>
+            <div class="global-card">
+              <div class="global-card__info">
+                <div class="global-card__title">
+                  Avance global
+                </div>
+                <div class="global-card__period">
+                  {{ globalProgress.period }}
+                </div>
+                <div class="global-card__value">
+                  {{ globalProgress.completed.toLocaleString('es-MX') }} /
+                  {{ globalProgress.total.toLocaleString('es-MX') }}
+                </div>
+                <div class="global-card__volume">
+                  {{ globalProgress.volume }}
+                </div>
+                <div class="global-card__delta">
+                  {{ globalProgress.delta }}
+                </div>
               </div>
-              <div class="global-card__volume">{{ globalProgress.volume }}</div>
-              <div class="global-card__delta">{{ globalProgress.delta }}</div>
+              <div class="global-card__chart">
+                <VProgressCircular
+                  :model-value="progressPercent"
+                  :size="120"
+                  :width="12"
+                  color="success"
+                >
+                  <span class="global-card__percent">{{ progressPercent }}%</span>
+                </VProgressCircular>
+              </div>
             </div>
-            <div class="global-card__chart">
-              <VProgressCircular
-                :model-value="progressPercent"
-                :size="120"
-                :width="12"
-                color="success"
-              >
-                <span class="global-card__percent">{{ progressPercent }}%</span>
-              </VProgressCircular>
-            </div>
-          </div>
-        </VCardText>
-      </VCard>
+          </VCardText>
+        </VCard>
       </template>
     </div>
 
     <VCard class="advance-table">
       <VCardText>
-        <div v-if="pageLoading" class="advance-toolbar">
-          <VSkeletonLoader type="text" class="advance-toolbar__search" />
+        <div
+          v-if="pageLoading"
+          class="advance-toolbar"
+        >
+          <VSkeletonLoader
+            type="text"
+            class="advance-toolbar__search"
+          />
           <div class="advance-toolbar__actions">
-            <VSkeletonLoader type="text" width="140" />
-            <VSkeletonLoader type="text" width="120" />
-            <VSkeletonLoader type="text" width="120" />
+            <VSkeletonLoader
+              type="text"
+              width="140"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
+            <VSkeletonLoader
+              type="text"
+              width="120"
+            />
           </div>
         </div>
-        <div v-else class="advance-toolbar">
+        <div
+          v-else
+          class="advance-toolbar"
+        >
           <VTextField
             v-model="search"
             variant="outlined"
@@ -548,7 +595,12 @@ onMounted(async () => {
             >
               Filtros
             </VBtn>
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="handleExport">
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              prepend-icon="tabler-upload"
+              @click="handleExport"
+            >
               Exportar
             </VBtn>
           </div>
@@ -602,8 +654,15 @@ onMounted(async () => {
         >
           <template #item.lecturista="{ item }">
             <div class="lecturista-cell">
-              <VAvatar size="26" color="primary" variant="tonal">
-                <VIcon :icon="item.avatar" size="16" />
+              <VAvatar
+                size="26"
+                color="primary"
+                variant="tonal"
+              >
+                <VIcon
+                  :icon="item.avatar"
+                  size="16"
+                />
               </VAvatar>
               <span class="lecturista-cell__name">{{ item.lecturista }}</span>
             </div>
@@ -621,17 +680,31 @@ onMounted(async () => {
             </div>
           </template>
           <template #item.estatus="{ item }">
-            <VChip size="small" variant="tonal" color="info">
+            <VChip
+              size="small"
+              variant="tonal"
+              color="info"
+            >
               {{ item.estatus }}
             </VChip>
           </template>
           <template #actions="{ item }">
             <VMenu location="bottom end">
               <template #activator="{ props }">
-                <VBtn v-bind="props" icon="tabler-dots-vertical" variant="text" size="small" color="secondary" />
+                <VBtn
+                  v-bind="props"
+                  icon="tabler-dots-vertical"
+                  variant="text"
+                  size="small"
+                  color="secondary"
+                />
               </template>
               <VList density="compact">
-                <VListItem prepend-icon="tabler-map-2" title="Ver mapa" @click="goToMap(item)" />
+                <VListItem
+                  prepend-icon="tabler-map-2"
+                  title="Ver mapa"
+                  @click="goToMap(item)"
+                />
               </VList>
             </VMenu>
           </template>

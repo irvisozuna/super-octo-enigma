@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { CatalogsReadingsApiService } from '../../infrastructure/api/services/CatalogsReadingsApiService'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
-import { CatalogsReadingsApiService } from '../../infrastructure/api/services/CatalogsReadingsApiService'
 
 const apiService = new CatalogsReadingsApiService()
 
@@ -41,7 +41,7 @@ const normalizeArray = (response: any) => {
   return []
 }
 
-type ColumnDef = {
+interface ColumnDef {
   title: string
   key: string
   sortable?: boolean
@@ -57,10 +57,11 @@ const normalizeLabel = (value: string) =>
 const getValueFromKeys = (item: any, keys: string[]) => {
   for (const key of keys) {
     const value = item?.[key]
-    if (value !== undefined && value !== null && value !== '')
+    if (value !== undefined && value !== null && value !== '') {
       return value && typeof value === 'object'
         ? (value.name ?? value.title ?? value.code ?? value.external_id ?? value.externalId ?? value)
         : value
+    }
   }
 
   return null
@@ -124,7 +125,7 @@ const baseColumns: ColumnDef[] = [
 ]
 
 const catalogColumnOverrides: Record<string, ColumnDef[]> = {
-  periods: [
+  'periods': [
     {
       title: 'Inicio',
       key: 'start_date',
@@ -140,7 +141,7 @@ const catalogColumnOverrides: Record<string, ColumnDef[]> = {
       format: formatDate,
     },
   ],
-  routes: [
+  'routes': [
     {
       title: 'Sector',
       key: 'sector',
@@ -148,7 +149,7 @@ const catalogColumnOverrides: Record<string, ColumnDef[]> = {
       getValue: item => getValueFromKeys(item, ['sector_name', 'sector', 'sectorName']),
     },
   ],
-  workers: [
+  'workers': [
     {
       title: 'Tipo',
       key: 'worker_type',
@@ -207,6 +208,7 @@ const columns = computed(() => {
   const base = [...baseColumns]
   const overrides = catalogColumnOverrides[selectedCatalog.value] ?? []
   const existingKeys = new Set(base.map(col => col.key))
+
   overrides.forEach(col => existingKeys.add(col.key))
 
   const autoColumns = getAutoColumns(items.value, existingKeys)
@@ -280,6 +282,7 @@ const loadCatalog = async () => {
   loading.value = true
   try {
     const response = await apiService.getCatalog(selectedCatalog.value, { itemsPerPage: 500, page: 1 })
+
     items.value = normalizeArray(response)
   }
   finally {

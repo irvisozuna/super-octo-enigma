@@ -168,7 +168,10 @@ const handleRowClick = (event: any, row: any) => {
       v-if="$slots.actions"
       #item.actions="{ item }"
     >
-      <div data-row-action="true" @click.stop>
+      <div
+        data-row-action="true"
+        @click.stop
+      >
         <slot
           name="actions"
           :item="item"

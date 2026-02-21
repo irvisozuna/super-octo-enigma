@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { useDataTable } from '@/composables/useDataTable'
 import type { ReadingEntity } from '../../domain/entities/ReadingEntity'
 import { ReadingApplicationService } from '../../application/services/ReadingApplicationService'
 import { ReadingRepositoryImpl } from '../../infrastructure/persistence/repositories/ReadingRepositoryImpl'
+import { useDataTable } from '@/composables/useDataTable'
 
 export const useReadingsStore = defineStore('readings', () => {
   const {

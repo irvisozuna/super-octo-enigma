@@ -2,14 +2,12 @@
  * Contract API Service - Infrastructure Layer
  */
 
-import { ApiService } from '@/services/apiService'
 import type { ContractDto, PaginatedContractsResponseDto } from '../../../application/dtos/ContractDtos'
+import { ApiService } from '@/services/apiService'
 
 export class ContractApiService {
   async getContracts(params: any): Promise<PaginatedContractsResponseDto> {
-    const response = await ApiService.get('/contracts', { params })
-
-    return response
+    return await ApiService.get('/contracts', { params })
   }
 
   async getContractById(localId: string | number): Promise<ContractDto> {

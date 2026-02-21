@@ -17,7 +17,16 @@ export function useTenantConfig() {
 
   // Logo para el menú
   const menuLogo = computed(() => {
-    return tenantStore.data?.assets?.menu || null
+    const logo = tenantStore.data?.assets?.menu || null
+
+    console.log('🎨 menuLogo computed:', {
+      hasData: !!tenantStore.data,
+      assets: tenantStore.data?.assets,
+      menu: tenantStore.data?.assets?.menu,
+      result: logo,
+    })
+
+    return logo
   })
 
   // Favicon

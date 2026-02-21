@@ -256,9 +256,11 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
 
       switch (tab) {
         case 'reports':
+
           const reportsResponse = await DrillingReportApiService.getReports({
             project_id: projectId,
-        })
+            per_page: 250,
+          })
 
           data = Array.isArray(reportsResponse?.data)
             ? reportsResponse.data
