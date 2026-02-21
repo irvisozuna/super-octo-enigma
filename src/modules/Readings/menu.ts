@@ -14,18 +14,18 @@ const readingsMenu: VerticalNavItems = [
     subject: READINGS_PERMISSIONS.viewReadings,
     children: [
       {
-        title: 'Lista de Lecturas',
-        icon: { icon: 'tabler-list' },
-        to: 'ReadingsList',
-        action: 'manage',
-        subject: READINGS_PERMISSIONS.viewReadings,
-      },
-      {
         title: 'Avance de Lecturistas',
         icon: { icon: 'tabler-chart-pie' },
         to: 'ReadingsAdvance',
         action: 'manage',
         subject: READINGS_PERMISSIONS.viewReadingAdvance,
+      },
+      {
+        title: 'Lista de Lecturas',
+        icon: { icon: 'tabler-list' },
+        to: 'ReadingsList',
+        action: 'manage',
+        subject: READINGS_PERMISSIONS.viewReadings,
       },
       {
         title: 'Mapa de Lecturas',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseListHeader from '@/components/layout/BaseListHeader.vue'
@@ -20,6 +20,7 @@ const loading = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = ref(15)
 const perPageOptions = [10, 15, 25, 50, 100]
+const search = ref('')
 const pageLoading = computed(() => loading.value)
 const linkDialogOpen = ref(false)
 const users = ref<any[]>([])
@@ -120,18 +121,35 @@ const tableItems = computed(() => {
   })
 })
 
+const filteredItems = computed(() => {
+  const query = String(search.value || '').trim().toLowerCase()
+  if (!query)
+    return tableItems.value
+
+  return tableItems.value.filter(item => {
+    const haystack = [
+      item.name,
+      item.employee_code,
+      item.linked_user,
+      item.assigned,
+    ].map(value => String(value ?? '').toLowerCase()).join(' ')
+
+    return haystack.includes(query)
+  })
+})
+
 const pagedItems = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
 
-  return tableItems.value.slice(start, end)
+  return filteredItems.value.slice(start, end)
 })
 
 const pagination = computed(() => ({
   current_page: currentPage.value,
-  last_page: Math.max(1, Math.ceil(tableItems.value.length / itemsPerPage.value)),
+  last_page: Math.max(1, Math.ceil(filteredItems.value.length / itemsPerPage.value)),
   per_page: itemsPerPage.value,
-  total: tableItems.value.length,
+  total: filteredItems.value.length,
 }))
 
 const handleOptionsUpdate = (params: Record<string, any>) => {
@@ -307,6 +325,10 @@ const loadWorkOrders = async () => {
 onMounted(async () => {
   await Promise.all([loadWorkers(), loadWorkOrders(), loadUsers()])
 })
+
+watch(search, () => {
+  currentPage.value = 1
+})
 </script>
 
 <template>
@@ -330,6 +352,34 @@ onMounted(async () => {
 
     <VCard class="workorders-table">
       <VCardText>
+        <div v-if="pageLoading" class="workorders-toolbar">
+          <VSkeletonLoader type="text" class="workorders-toolbar__search" />
+          <div class="workorders-toolbar__actions">
+            <VSkeletonLoader type="text" width="120" />
+          </div>
+        </div>
+        <div v-else class="workorders-toolbar">
+          <VTextField
+            v-model="search"
+            variant="outlined"
+            density="compact"
+            placeholder="Buscar operador"
+            prepend-inner-icon="tabler-search"
+            hide-details
+            class="workorders-toolbar__search"
+          />
+          <div class="workorders-toolbar__actions">
+            <VSelect
+              v-model="itemsPerPage"
+              :items="perPageOptions"
+              density="compact"
+              variant="outlined"
+              hide-details
+              class="workorders-toolbar__select"
+            />
+          </div>
+        </div>
+
         <BaseDataTable
           :headers="headers"
           :items="pagedItems"
@@ -342,6 +392,9 @@ onMounted(async () => {
           @update:options="handleOptionsUpdate"
           @row:click="handleRowClick"
         >
+          <template #item.name="{ item }">
+            <span class="workorders-link">{{ item.name }}</span>
+          </template>
           <template #actions="{ item }">
             <VMenu location="bottom end">
               <template #activator="{ props }">
@@ -402,5 +455,32 @@ onMounted(async () => {
 .workorders-table {
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.workorders-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 12px;
+}
+
+.workorders-toolbar__search {
+  max-inline-size: 280px;
+}
+
+.workorders-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workorders-toolbar__select {
+  max-inline-size: 88px;
+}
+
+.workorders-link {
+  color: #2563eb;
+  font-weight: 600;
 }
 </style>

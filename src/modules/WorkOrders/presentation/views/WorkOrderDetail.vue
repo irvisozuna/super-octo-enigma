@@ -790,10 +790,6 @@ onMounted(async () => {
               >
                 <div class="status-step__dot" />
                 <div class="status-step__label">{{ step.label }}</div>
-                <div
-                  v-if="index < statusSteps.length - 1"
-                  class="status-step__line"
-                />
               </div>
             </div>
           </div>

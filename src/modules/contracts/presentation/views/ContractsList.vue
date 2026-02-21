@@ -64,8 +64,6 @@ const headers = [
   { title: 'ACCIONES', key: 'actions', sortable: false, align: 'center', width: '80px' },
 ]
 
-const normalize = (value: any) => String(value ?? '').toLowerCase()
-
 const getDebtValue = (item: any) => {
   const raw = item?.debt ?? item?.total_debt ?? item?.totalDebt ?? item?.debt_amount ?? item?.debtAmount ?? 0
   const value = typeof raw === 'number' ? raw : Number(raw)
@@ -84,81 +82,57 @@ const sectorOptions = computed(() => toSelectOptions(catalogOptions.value.sector
 const typeOptions = computed(() => toSelectOptions(catalogOptions.value.type_contracts))
 const routeOptions = computed(() => toSelectOptions(catalogOptions.value.routes))
 const rateOptions = computed(() => toSelectOptions(catalogOptions.value.rates))
-const periodOptions = computed(() => toSelectOptions(catalogOptions.value.periods))
+const periodOptions = computed(() => (catalogOptions.value.periods ?? []).map(item => ({
+  title: item.name || item.code || item.external_id || item.externalId || item.id,
+  value: item.id ?? item.period_id ?? item.uuid ?? item.code ?? item.external_id ?? item.externalId,
+})))
 
-const getOptionName = (options: Array<{ value: any; title: any }>, value: string | null) => {
-  if (!value)
-    return null
+const selectedExternalStatusId = computed(() => {
+  if (!selectedStatus.value)
+    return undefined
 
-  const match = options.find(option => normalize(option.value) === normalize(value))
-  return match?.title ? String(match.title) : null
-}
+  const selected = String(selectedStatus.value)
+  const status = (catalogOptions.value.status ?? []).find(item => {
+    const candidates = [
+      item.id,
+      item.code,
+      item.external_id,
+      item.externalId,
+      item.name,
+    ].filter(value => value !== undefined && value !== null && value !== '')
 
-const matchesCatalogValue = (itemValue: any, filterValue: string | null, options?: Array<{ value: any; title: any }>) => {
-  if (!filterValue)
-    return true
-
-  const filter = normalize(filterValue)
-  const candidates = [
-    itemValue?.external_id,
-    itemValue?.externalId,
-    itemValue?.code,
-    itemValue?.name,
-    itemValue,
-  ].filter(Boolean)
-
-  if (candidates.some(candidate => normalize(candidate) === filter))
-    return true
-
-  if (options && typeof itemValue === 'string') {
-    const optionName = getOptionName(options, filterValue)
-    if (optionName && normalize(optionName) === normalize(itemValue))
-      return true
-  }
-
-  return false
-}
-
-const filteredItems = computed(() => {
-  const query = normalize(searchQuery.value).trim()
-
-  return contractsStore.items.filter(item => {
-    if (!matchesCatalogValue(item.status, selectedStatus.value, statusOptions.value))
-      return false
-    if (!matchesCatalogValue(item.system, selectedSystem.value, systemOptions.value))
-      return false
-    if (!matchesCatalogValue(item.sector, selectedSector.value, sectorOptions.value))
-      return false
-    if (!matchesCatalogValue(item.contract_type, selectedTypeContract.value, typeOptions.value))
-      return false
-    if (!matchesCatalogValue(item.route, selectedRoute.value, routeOptions.value))
-      return false
-    if (!matchesCatalogValue(item.rate, selectedRate.value, rateOptions.value))
-      return false
-    if (!matchesCatalogValue(item.period, selectedPeriod.value, periodOptions.value))
-      return false
-
-    if (!query)
-      return true
-
-    const haystack = [
-      item.contract_id,
-      item.contract_number,
-      item.user_name,
-      item.address,
-      item.route,
-      item.rate,
-      item.period,
-    ].filter(Boolean).map(value => normalize(value)).join(' ')
-
-    return haystack.includes(query)
+    return candidates.some(value => String(value) === selected)
   })
+
+  return status?.external_id ?? status?.externalId ?? undefined
 })
 
-const tableItems = computed(() => filteredItems.value)
+const selectedExternalPeriodId = computed(() => {
+  if (!selectedPeriod.value)
+    return undefined
+
+  const selected = String(selectedPeriod.value)
+  const period = (catalogOptions.value.periods ?? []).find(item => {
+    const candidates = [
+      item.id,
+      item.period_id,
+      item.uuid,
+      item.code,
+      item.external_id,
+      item.externalId,
+      item.name,
+    ].filter(value => value !== undefined && value !== null && value !== '')
+
+    return candidates.some(value => String(value) === selected)
+  })
+
+  return period?.external_id ?? period?.externalId ?? undefined
+})
+
+const tableItems = computed(() => contractsStore.items)
 
 const buildParams = () => {
-  const status = selectedStatus.value || undefined
+  const status = selectedExternalStatusId.value
   const system = selectedSystem.value || undefined
   const sector = selectedSector.value || undefined
   const typeContract = selectedTypeContract.value || undefined
@@ -167,12 +141,9 @@ const buildParams = () => {
   return {
     page: page.value,
     per_page: itemsPerPage.value,
-    itemsPerPage: itemsPerPage.value,
     search: query,
     q: query,
     query,
-    status,
-    contract_status: status,
     external_contract_status_id: status,
     sector,
     sector_id: sector,
@@ -188,8 +159,7 @@ const buildParams = () => {
     external_route_id: selectedRoute.value || undefined,
     rate: selectedRate.value || undefined,
     external_rate_id: selectedRate.value || undefined,
-    period: selectedPeriod.value || undefined,
-    external_period_id: selectedPeriod.value || undefined,
+    external_period_id: selectedExternalPeriodId.value,
     type: typeContract,
   }
 }
@@ -538,15 +508,6 @@ onMounted(() => {
         item-title="title"
         item-value="value"
         label="Tarifa"
-        clearable
-      />
-      <AppSelect
-        v-model="selectedPeriod"
-        :items="periodOptions"
-        :loading="catalogsLoading"
-        item-title="title"
-        item-value="value"
-        label="Periodo"
         clearable
       />
     </ContractsFilterDrawer>
