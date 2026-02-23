@@ -368,6 +368,7 @@ onMounted(() => {
               variant="tonal"
               color="secondary"
               prepend-icon="tabler-adjustments"
+              class="workorders-toolbar__filters"
               @click="filterOpen = true"
             >
               Filtros
@@ -388,14 +389,17 @@ onMounted(() => {
           @update:options="handleOptionsUpdate"
           @row:click="handleRowClick"
         >
+          <template #item.folio="{ item }">
+            <span class="workorders-link">{{ item.folio }}</span>
+          </template>
           <template #item.status="{ item }">
-            <VChip
-              size="small"
-              variant="tonal"
-              :color="getStatusColor(item.status)"
-            >
-              {{ getStatusLabel(item.status) }}
-            </VChip>
+            <div class="status-dot">
+              <span
+                class="status-dot__bullet"
+                :class="`status-dot__bullet--${getStatusColor(item.status)}`"
+              />
+              <span class="status-dot__text">{{ getStatusLabel(item.status) }}</span>
+            </div>
           </template>
           <template #item.priority="{ item }">
             <VChip
@@ -497,5 +501,44 @@ onMounted(() => {
 
 .workorders-toolbar__export {
   font-weight: 600;
+}
+
+.workorders-toolbar__filters {
+  font-weight: 600;
+}
+
+.workorders-link {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  gap: 6px;
+}
+
+.status-dot__bullet {
+  border-radius: 50%;
+  background: #10b981;
+  block-size: 6px;
+  inline-size: 6px;
+}
+
+.status-dot__bullet--warning {
+  background: #f59e0b;
+}
+
+.status-dot__bullet--info {
+  background: #2563eb;
+}
+
+.status-dot__bullet--secondary {
+  background: #64748b;
+}
+
+.status-dot__bullet--success {
+  background: #10b981;
 }
 </style>

@@ -179,7 +179,8 @@ const handleDetailsOptions = (params: Record<string, any>) => {
 }
 
 const openPhotos = async () => {
-  if (!readingId.value)
+  const idForPhotos = readingData.value?.local_id ?? readingId.value
+  if (!idForPhotos)
     return
 
   photosDialog.value = true
@@ -188,9 +189,17 @@ const openPhotos = async () => {
 
   photosLoading.value = true
   try {
-    const response = await apiService.getPhotos(readingId.value)
+    const response = await apiService.getPhotos(String(idForPhotos))
+    const apiPhotos = normalizeArray(response)
 
-    photos.value = normalizeArray(response)
+    if (apiPhotos.length) {
+      photos.value = apiPhotos
+      return
+    }
+
+    const fallbackPhoto = readingData.value?.photo_path || readingData.value?.photo_url
+    if (fallbackPhoto)
+      photos.value = [{ path: fallbackPhoto, name: 'Foto de lectura' }]
   }
   finally {
     photosLoading.value = false
