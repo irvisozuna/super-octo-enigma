@@ -1,4 +1,5 @@
 import type { FiltroDef, Opcion, ValoresFiltros } from '../types/reporte'
+import { formatearFecha } from './formato'
 
 export interface Rango {
   desde: unknown
@@ -71,8 +72,9 @@ export function etiquetaValor(def: FiltroDef, valor: unknown, opciones: Opcion[]
 
   if (typeof valor === 'object' && valor !== null) {
     const rango = valor as Rango
+    const textoDe = (v: unknown) => (def.tipo === 'date_range' ? formatearFecha(v) : etiquetaDe(v))
 
-    return [rango.desde, rango.hasta].map(v => (estaVacio(v) ? '…' : etiquetaDe(v))).join(' – ')
+    return [rango.desde, rango.hasta].map(v => (estaVacio(v) ? '…' : textoDe(v))).join(' – ')
   }
 
   if (def.tipo === 'boolean')

@@ -23,6 +23,9 @@ const { t } = useI18n()
 const etiqueta = computed(() => (props.def.requerido ? `${props.def.etiqueta} *` : props.def.etiqueta))
 const items = computed(() => props.opciones ?? props.def.opciones ?? [])
 const placeholder = computed(() => (typeof props.def.config.placeholder === 'string' ? props.def.config.placeholder : undefined))
+
+// Un filtro obligatorio sin valor no puede sugerir "Todos": pide elegir
+const placeholderSeleccion = computed(() => (props.def.requerido ? t('reportes.filtros.selecciona') : (placeholder.value ?? t('reportes.filtros.todos'))))
 const deshabilitado = computed(() => props.deshabilitado || props.def.fijo)
 
 const rango = computed<Rango>(() => {
@@ -64,7 +67,7 @@ watch(busqueda, texto => {
       item-title="label"
       item-value="value"
       :label="etiqueta"
-      :placeholder="placeholder"
+      :placeholder="placeholderSeleccion"
       :loading="cargando"
       :disabled="deshabilitado"
       :error-messages="error"
@@ -80,7 +83,7 @@ watch(busqueda, texto => {
       item-title="label"
       item-value="value"
       :label="etiqueta"
-      :placeholder="placeholder ?? t('reportes.filtros.todos')"
+      :placeholder="placeholderSeleccion"
       :loading="cargando"
       :disabled="deshabilitado"
       :error-messages="error"

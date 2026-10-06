@@ -65,7 +65,7 @@ describe('utils/filtros', () => {
     expect(etiquetaValor(gerencia, [1, 2], opciones)).toBe('LA PAZ, SJC')
     expect(etiquetaValor(gerencia, [1, 2, 3, 4], opciones)).toBe('LA PAZ, SJC, CSL +1')
     expect(etiquetaValor(periodo, 185, [{ value: 185, label: 'SEPTIEMBRE 2026' }])).toBe('SEPTIEMBRE 2026')
-    expect(etiquetaValor(fechas, { desde: '2026-01-01', hasta: null })).toBe('2026-01-01 – …')
+    expect(etiquetaValor(fechas, { desde: '2026-01-01', hasta: null })).toBe('01/01/2026 – …')
     expect(etiquetaValor(activo, true)).toBe('Sí')
   })
 })
