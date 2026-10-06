@@ -1,6 +1,7 @@
 {
   "menu": {
     "reportes": "Reportes",
+    "todos": "Todos los reportes",
     "exportaciones": "Mis exportaciones",
     "administrar": "Administrar reportes"
   },
@@ -9,6 +10,7 @@
     "descripcion": "Consulta y exporta los reportes a los que tienes acceso.",
     "buscar": "Buscar reporte",
     "sinResultados": "Ningún reporte coincide con la búsqueda.",
+    "sinAcceso": "No tienes acceso al reporte \"{clave}\" o ya no existe.",
     "vacioTitulo": "Todavía no tienes reportes asignados",
     "vacioDetalle": "Pide al equipo de sistemas que asigne a tu rol los reportes de tu área.",
     "documentos": "Documentos por contrato",
@@ -17,6 +19,33 @@
       "reporte": "Reporte",
       "tablero": "Tablero"
     }
+  },
+  "visor": {
+    "volver": "Todos los reportes",
+    "filtros": "Filtros",
+    "mostrarFiltros": "Filtros",
+    "consultar": "Consultar",
+    "limpiar": "Limpiar filtros",
+    "seleccionaParaConsultar": "Selecciona {filtro} para consultar",
+    "sinDatos": "No hay datos con los filtros seleccionados",
+    "sinDatosDetalle": "Prueba con otro periodo u otra gerencia.",
+    "enSegundoPlano": "La consulta tarda más de lo normal; la estamos terminando en segundo plano. Puedes seguir en esta pantalla.",
+    "exportar": "Exportar"
+  },
+  "filtros": {
+    "requerido": "Este filtro es obligatorio.",
+    "todos": "Todos",
+    "desde": "Desde",
+    "hasta": "Hasta",
+    "buscar": "Escribe para buscar…",
+    "sinOpciones": "Sin opciones",
+    "quitar": "Quitar filtro"
+  },
+  "tabla": {
+    "total": "TOTAL",
+    "filas": "{n} filas",
+    "filasPorPagina": "Filas por página",
+    "sinResultados": "Sin resultados"
   },
   "comunes": {
     "reintentar": "Reintentar",
@@ -33,6 +62,7 @@
     "TIEMPO_AGOTADO": "La consulta tardó demasiado. Acota el periodo o los filtros e inténtalo de nuevo.",
     "SIN_CONEXION": "No hay conexión con el servidor. Revisa tu red e inténtalo de nuevo.",
     "VALIDACION": "Revisa los filtros marcados.",
+    "DEMASIADAS_FILAS": "La consulta devuelve demasiadas filas. Acota los filtros o usa la exportación a Excel.",
     "LIMITE": "Hay demasiadas consultas en curso. Espera unos segundos e inténtalo de nuevo.",
     "SERVIDOR": "El servidor no pudo procesar la consulta.",
     "SQL": "La fuente de datos devolvió un error.",

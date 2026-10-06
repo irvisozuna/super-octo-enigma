@@ -1,6 +1,7 @@
 import type { RespuestaAbilities, RespuestaMenu } from '../types/api'
 import type { DocumentoDef, DocumentoGenerado, SolicitudDocumento } from '../types/documento'
 import type { Ejecucion, ExportacionCreada, SolicitudExportacion } from '../types/exportacion'
+import type { DefinicionReporte, FuenteResumen, ReporteAdmin } from '../types/admin'
 import type { ConsultaEnCurso, Opcion, ParametrosConsulta, ReporteConfig, ResultadoConsulta, ValoresFiltros } from '../types/reporte'
 import type { DatosWidget, SolicitudDatosWidget, TableroConfig } from '../types/tablero'
 import { rawApi } from '@/services/api'
@@ -67,6 +68,36 @@ export function cancelarEjecucion(id: string): Promise<void> {
 /** Descarga autenticada (Bearer); el archivo se entrega como Blob para guardarlo desde el navegador. */
 export function descargarEjecucion(id: string, { signal }: OpcionesPeticion = {}): Promise<Blob> {
   return rawApi(`${BASE}/executions/${encodeURIComponent(id)}/download`, { responseType: 'blob', signal })
+}
+
+/* Administración (manage reporting) */
+
+export function listarFuentes({ signal }: OpcionesPeticion = {}): Promise<FuenteResumen[]> {
+  return rawApi(`${BASE}/admin/sources`, { signal })
+}
+
+export function listarCategorias({ signal }: OpcionesPeticion = {}): Promise<string[]> {
+  return rawApi(`${BASE}/admin/categories`, { signal })
+}
+
+export function listarReportesAdmin({ signal }: OpcionesPeticion = {}): Promise<ReporteAdmin[]> {
+  return rawApi(`${BASE}/admin/reports`, { signal })
+}
+
+export function crearReporte(definicion: DefinicionReporte): Promise<ReporteAdmin> {
+  return rawApi(`${BASE}/admin/reports`, { method: 'POST', body: definicion })
+}
+
+export function actualizarReporte(clave: string, definicion: DefinicionReporte): Promise<ReporteAdmin> {
+  return rawApi(`${BASE}/admin/reports/${encodeURIComponent(clave)}`, { method: 'PUT', body: definicion })
+}
+
+export function eliminarReporte(clave: string): Promise<{ mensaje: string }> {
+  return rawApi(`${BASE}/admin/reports/${encodeURIComponent(clave)}`, { method: 'DELETE' })
+}
+
+export function previsualizarReporte(definicion: DefinicionReporte, filtros: ValoresFiltros, { signal }: OpcionesPeticion = {}): Promise<ResultadoConsulta> {
+  return rawApi(`${BASE}/admin/reports/preview`, { method: 'POST', body: { ...definicion, filtros, por_pagina: 20 }, signal })
 }
 
 export function obtenerTablero(clave: string, { signal }: OpcionesPeticion = {}): Promise<TableroConfig> {

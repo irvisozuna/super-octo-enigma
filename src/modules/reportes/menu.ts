@@ -1,13 +1,20 @@
 import type { VerticalNavItems } from '@layouts/types'
 
-// Entrada estática del módulo; los reportes, tableros y documentos permitidos llegan de GET /reporting/menu
+// Grupo estático; los reportes permitidos por rol se agregan como hijos desde GET /reporting/menu (useMenuReportes)
 const reportesMenu: VerticalNavItems = [
   {
     title: 'Reportes',
     icon: { icon: 'tabler-report-analytics' },
-    to: 'reportesIndice',
     action: 'read',
     subject: 'reportes',
+    children: [
+      {
+        title: 'Todos los reportes',
+        to: 'reportesIndice',
+        action: 'read',
+        subject: 'reportes',
+      },
+    ],
   },
 ]
 

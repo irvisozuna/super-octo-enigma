@@ -1,10 +1,10 @@
+import { useStorage } from '@vueuse/core'
+import { useTheme } from 'vuetify'
 import { initializeMenus } from '@/navigation'
+import { useMenuReportes } from '@/modules/reportes/composables/useMenuReportes'
 import { useConfigStore } from '@core/stores/config'
 import { cookieRef, namespaceConfig } from '@layouts/stores/config'
 import { themeConfig } from '@themeConfig'
-import { useStorage } from '@vueuse/core'
-import { useTheme } from 'vuetify'
-
 
 const _syncAppRtl = () => {
   const configStore = useConfigStore()
@@ -91,6 +91,9 @@ const initCore = async () => {
   if (themeConfig.app.i18n.enable)
     _syncAppRtl()
   initializeMenus()
+
+  // Reportes permitidos por rol: se agregan al grupo "Reportes" desde el servidor
+  useMenuReportes().iniciar()
 }
 
 export default initCore

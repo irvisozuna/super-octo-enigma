@@ -1,7 +1,7 @@
 // stores/menu.ts
 
 import { defineStore } from 'pinia'
-import type { HorizontalNavItems, VerticalNavItems } from '@/@layouts/types'
+import type { HorizontalNavItems, NavGroup, NavLink, VerticalNavItems } from '@/@layouts/types'
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
@@ -34,6 +34,13 @@ export const useMenuStore = defineStore('menu', {
     },
     setDynamicNavItems(newItems: VerticalNavItems) {
       this.dynamicNavItems = newItems
+    },
+
+    // Reemplaza los hijos de un grupo del menú base (p. ej. "Reportes" con las categorías que trae el servidor)
+    setGroupChildren(title: string, children: (NavLink | NavGroup)[]) {
+      const group = this.baseNavItems.find(item => 'children' in item && item.title === title) as NavGroup | undefined
+      if (group)
+        group.children = children
     },
   },
 })

@@ -1,53 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import EstadoError from '../components/comunes/EstadoError.vue'
 import EstadoVacio from '../components/comunes/EstadoVacio.vue'
-import { normalizarError } from '../services/errores'
-import type { ErrorReporte } from '../services/errores'
-import { obtenerMenu } from '../services/reportesApi'
-import type { CategoriaMenu, DocumentoMenu, ElementoMenu } from '../types/api'
+import { useMenuReportesStore } from '../stores/menuReportesStore'
+import type { ElementoMenu } from '../types/api'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
+const menu = useMenuReportesStore()
 
-const cargando = ref(false)
-const error = ref<ErrorReporte | null>(null)
-const categorias = ref<CategoriaMenu[]>([])
-const documentos = ref<DocumentoMenu[]>([])
 const busqueda = ref('')
-
-let controlador: AbortController | null = null
-
-async function cargar() {
-  controlador?.abort()
-  controlador = new AbortController()
-  cargando.value = true
-  error.value = null
-
-  try {
-    const respuesta = await obtenerMenu({ signal: controlador.signal })
-
-    categorias.value = respuesta.categorias
-    documentos.value = respuesta.documentos
-  }
-  catch (e) {
-    const normalizado = normalizarError(e)
-    if (normalizado.codigo !== 'CANCELADO')
-      error.value = normalizado
-  }
-  finally {
-    cargando.value = false
-  }
-}
+const sinAcceso = computed(() => (typeof route.query.sinAcceso === 'string' ? route.query.sinAcceso : ''))
 
 const categoriasFiltradas = computed(() => {
   const q = busqueda.value.trim().toLowerCase()
   if (!q)
-    return categorias.value
+    return menu.categorias
 
-  return categorias.value
+  return menu.categorias
     .map(categoria => ({
       ...categoria,
       elementos: categoria.elementos.filter(e => e.titulo.toLowerCase().includes(q) || (e.descripcion ?? '').toLowerCase().includes(q)),
@@ -55,17 +28,19 @@ const categoriasFiltradas = computed(() => {
     .filter(categoria => categoria.elementos.length > 0)
 })
 
-const hayElementos = computed(() => categorias.value.some(c => c.elementos.length > 0) || documentos.value.length > 0)
+const hayElementos = computed(() => menu.categorias.some(c => c.elementos.length > 0) || menu.documentos.length > 0)
 
-// Las rutas del visor y de tableros llegan en fases posteriores: mientras no existan, el elemento no navega
+// Las rutas de tableros llegan en la fase 6: mientras no existan, el elemento no navega
 function destino(elemento: ElementoMenu) {
   const nombre = elemento.tipo === 'tablero' ? 'tablerosVista' : 'reportesVisor'
 
   return router.hasRoute(nombre) ? { name: nombre, params: { clave: elemento.key } } : undefined
 }
 
-onMounted(cargar)
-onScopeDispose(() => controlador?.abort())
+onMounted(() => {
+  if (!menu.cargado)
+    menu.cargar()
+})
 </script>
 
 <template>
@@ -88,25 +63,35 @@ onScopeDispose(() => controlador?.abort())
       />
     </div>
 
+    <VAlert
+      v-if="sinAcceso"
+      type="warning"
+      variant="tonal"
+      class="mb-4"
+      closable
+    >
+      {{ t('reportes.indice.sinAcceso', { clave: sinAcceso }) }}
+    </VAlert>
+
     <VProgressLinear
-      v-if="cargando"
+      v-if="menu.cargando && !menu.cargado"
       indeterminate
       class="mb-4"
     />
 
     <EstadoError
-      v-else-if="error"
-      :error="error"
-      @reintentar="cargar"
+      v-else-if="menu.error"
+      :error="menu.error"
+      @reintentar="menu.cargar()"
     />
 
     <EstadoVacio
-      v-else-if="!hayElementos"
+      v-else-if="menu.cargado && !hayElementos"
       :titulo="t('reportes.indice.vacioTitulo')"
       :detalle="t('reportes.indice.vacioDetalle')"
     />
 
-    <template v-else>
+    <template v-else-if="menu.cargado">
       <VRow>
         <VCol
           v-for="categoria in categoriasFiltradas"
@@ -144,7 +129,7 @@ onScopeDispose(() => controlador?.abort())
       </p>
 
       <VCard
-        v-if="documentos.length"
+        v-if="menu.documentos.length"
         class="mt-6"
       >
         <VCardItem>
@@ -153,7 +138,7 @@ onScopeDispose(() => controlador?.abort())
         </VCardItem>
         <VCardText class="d-flex flex-wrap gap-2">
           <VChip
-            v-for="documento in documentos"
+            v-for="documento in menu.documentos"
             :key="documento.key"
             prepend-icon="tabler-file-text"
             label

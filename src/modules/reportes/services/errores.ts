@@ -12,11 +12,15 @@ export type CodigoError =
   | 'TIEMPO_AGOTADO'
   | 'SIN_CONEXION'
   | 'VALIDACION'
+  | 'DEMASIADAS_FILAS'
   | 'LIMITE'
   | 'SERVIDOR'
   | 'SQL'
   | 'CANCELADO'
   | 'GENERICO'
+
+/** Códigos que el API manda en su forma estándar y que se respetan tal cual. */
+const CODIGOS_API = new Set<CodigoError>(['SIN_PERMISO', 'SESION', 'NO_ENCONTRADO', 'TIEMPO_AGOTADO', 'VALIDACION', 'DEMASIADAS_FILAS', 'LIMITE', 'SERVIDOR', 'SQL', 'GENERICO'])
 
 export interface ErrorReporte {
   codigo: CodigoError
@@ -109,8 +113,16 @@ export function normalizarError(error: unknown): ErrorReporte {
   const mensaje = cuerpo.mensaje ?? cuerpo.message ?? (status ? '' : e.message ?? '')
   const detalle = cuerpo.detalle
 
-  if (cuerpo.codigo === 'SQL')
-    return { codigo: 'SQL', mensaje, detalle, reintentable: false, status }
+  if (cuerpo.codigo && CODIGOS_API.has(cuerpo.codigo as CodigoError)) {
+    return {
+      codigo: cuerpo.codigo as CodigoError,
+      mensaje,
+      detalle,
+      reintentable: cuerpo.reintentable ?? false,
+      status,
+      campos: cuerpo.codigo === 'VALIDACION' ? camposDeValidacion(cuerpo.errors) : undefined,
+    }
+  }
 
   if (status === 422)
     return { codigo: 'VALIDACION', mensaje, reintentable: false, status, campos: camposDeValidacion(cuerpo.errors) }
