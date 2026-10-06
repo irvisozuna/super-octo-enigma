@@ -6,7 +6,8 @@ export interface ErrorApi {
   reintentable: boolean
 }
 
-export type TipoElementoMenu = 'reporte' | 'tablero'
+/** `lote`: documento que se genera en lote (recibos de un sector); abre la pantalla del lote. */
+export type TipoElementoMenu = 'reporte' | 'tablero' | 'lote'
 
 export interface ElementoMenu {
   tipo: TipoElementoMenu
@@ -25,6 +26,9 @@ export interface DocumentoMenu {
   key: string
   titulo: string
   descripcion: string | null
+
+  /** También se genera en lote (aparece como elemento del índice). */
+  lote: boolean
 }
 
 /** GET /reporting/menu: ya filtrado por permisos en el servidor. */

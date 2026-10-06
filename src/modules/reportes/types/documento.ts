@@ -1,3 +1,6 @@
+import type { Ejecucion } from './exportacion'
+import type { FiltroDef, ValoresFiltros } from './reporte'
+
 /** Parámetro que pide un documento (p. ej. contrato, periodo). */
 export interface ParametroDocumento {
   nombre: string
@@ -33,4 +36,27 @@ export interface DocumentoGenerado {
   pdf_base64: string
   tamano: number
   expires_at: string | null
+}
+
+/** GET /reporting/documents/{key}/batch: configuración de la generación en lote. */
+export interface LoteConfig {
+  documento: { key: string; titulo: string; descripcion: string | null }
+  titulo: string
+  descripcion: string | null
+  filtros: FiltroDef[]
+  maximo: number
+}
+
+/** POST /reporting/documents/{key}/batch/count */
+export interface LoteConteo {
+  contratos: number
+  maximo: number
+  excede: boolean
+  filtros: ValoresFiltros
+}
+
+/** POST /reporting/documents/{key}/batch → 202: el lote ya es una exportación en cola. */
+export interface LoteCreado {
+  ejecucion_id: string
+  ejecucion: Ejecucion
 }

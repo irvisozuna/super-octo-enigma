@@ -43,9 +43,11 @@ const categoriasFiltradas = computed(() => {
 
 const hayElementos = computed(() => menu.categorias.some(c => c.elementos.length > 0) || menu.documentos.length > 0)
 
-// Las rutas de tableros llegan en la fase 6: mientras no existan, el elemento no navega
+const RUTAS: Record<ElementoMenu['tipo'], string> = { reporte: 'reportesVisor', tablero: 'reportesTablero', lote: 'reportesDocumentoLote' }
+const ICONOS: Record<ElementoMenu['tipo'], string> = { reporte: 'tabler-table', tablero: 'tabler-layout-dashboard', lote: 'tabler-file-stack' }
+
 function destino(elemento: ElementoMenu) {
-  const nombre = elemento.tipo === 'tablero' ? 'reportesTablero' : 'reportesVisor'
+  const nombre = RUTAS[elemento.tipo]
 
   return router.hasRoute(nombre) ? { name: nombre, params: { clave: elemento.key } } : undefined
 }
@@ -133,7 +135,7 @@ onMounted(() => {
             >
               <VListItem
                 :to="destino(elemento)"
-                :prepend-icon="elemento.tipo === 'tablero' ? 'tabler-layout-dashboard' : 'tabler-table'"
+                :prepend-icon="ICONOS[elemento.tipo]"
                 :title="elemento.titulo"
                 :subtitle="elemento.descripcion ?? undefined"
                 lines="two"

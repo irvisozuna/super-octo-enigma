@@ -76,6 +76,24 @@ const reportesRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reportes/documentos/:clave([a-z0-9_]+)/lote',
+    name: 'reportesDocumentoLote',
+    component: () => import('./views/DocumentoLote.vue'),
+    props: true,
+    meta: {
+      action: 'generate',
+      subject: 'documentos',
+    },
+    beforeEnter: to => {
+      const menu = useMenuReportesStore()
+      const clave = String(to.params.clave)
+      if (menu.cargado && !menu.tieneClave(clave, 'lote'))
+        return { name: 'reportesIndice', query: { sinAcceso: clave } }
+
+      return true
+    },
+  },
+  {
     path: '/reportes/:clave([a-z0-9_]+)',
     name: 'reportesVisor',
     component: () => import('./views/ReporteVisor.vue'),

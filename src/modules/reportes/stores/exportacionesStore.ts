@@ -113,6 +113,13 @@ export const useExportacionesStore = defineStore('exportaciones', () => {
     return creada.ejecucion_id
   }
 
+  /** Registra y sigue una ejecución creada por otra pantalla (p. ej. un lote de recibos). */
+  function registrar(ejecucion: Ejecucion) {
+    actualizar(ejecucion)
+    if (!ejecucionTerminada(ejecucion))
+      seguir(ejecucion.id)
+  }
+
   async function cancelar(id: string) {
     detenerSeguimiento(id)
     actualizar(await cancelarEjecucion(id))
@@ -161,6 +168,7 @@ export const useExportacionesStore = defineStore('exportaciones', () => {
     rehidratar,
     asegurar,
     iniciar,
+    registrar,
     seguir,
     cancelar,
     descargar,

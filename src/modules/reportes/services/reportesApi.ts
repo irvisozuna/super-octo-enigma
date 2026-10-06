@@ -1,5 +1,5 @@
 import type { RespuestaAbilities, RespuestaMenu } from '../types/api'
-import type { DocumentoDef, DocumentoGenerado, SolicitudDocumento } from '../types/documento'
+import type { DocumentoDef, DocumentoGenerado, LoteConfig, LoteConteo, LoteCreado, SolicitudDocumento } from '../types/documento'
 import type { Ejecucion, ExportacionCreada, SolicitudExportacion, UrlFirmada } from '../types/exportacion'
 import type { DefinicionReporte, DefinicionTablero, FuenteResumen, MatrizPermisos, ReporteAdmin, RespuestaPermisosRol, TableroAdmin } from '../types/admin'
 import type { ConsultaEnCurso, Opcion, ParametrosConsulta, ReporteConfig, ResultadoConsulta, ValoresFiltros } from '../types/reporte'
@@ -145,6 +145,18 @@ export function listarDocumentos(contrato: string, { signal }: OpcionesPeticion 
 
 export function generarDocumento(clave: string, solicitud: SolicitudDocumento, { signal }: OpcionesPeticion = {}): Promise<DocumentoGenerado> {
   return rawApi(`${BASE}/documents/${encodeURIComponent(clave)}/generate`, { method: 'POST', body: solicitud, signal })
+}
+
+export function obtenerLoteDocumento(clave: string, { signal }: OpcionesPeticion = {}): Promise<LoteConfig> {
+  return rawApi(`${BASE}/documents/${encodeURIComponent(clave)}/batch`, { signal })
+}
+
+export function contarLoteDocumento(clave: string, filtros: ValoresFiltros, { signal }: OpcionesPeticion = {}): Promise<LoteConteo> {
+  return rawApi(`${BASE}/documents/${encodeURIComponent(clave)}/batch/count`, { method: 'POST', body: { filtros }, signal })
+}
+
+export function crearLoteDocumento(clave: string, filtros: ValoresFiltros, { signal }: OpcionesPeticion = {}): Promise<LoteCreado> {
+  return rawApi(`${BASE}/documents/${encodeURIComponent(clave)}/batch`, { method: 'POST', body: { filtros }, signal })
 }
 
 export type { ValoresFiltros }

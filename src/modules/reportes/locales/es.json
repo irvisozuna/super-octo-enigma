@@ -17,7 +17,8 @@
     "documentosDetalle": "Se generan desde la ficha de cada contrato.",
     "tipo": {
       "reporte": "Reporte",
-      "tablero": "Tablero"
+      "tablero": "Tablero",
+      "lote": "Lote"
     }
   },
   "visor": {
@@ -274,5 +275,18 @@
       "agruparPor": "Agrupar por",
       "tituloWidget": "Título"
     }
+  },
+  "lote": {
+    "elige": "Elige el periodo y la gerencia (y acota por sistema, sector o tarifa) para contar los recibos.",
+    "contando": "Contando los recibos del lote…",
+    "recibos": "ningún recibo | un recibo con estos filtros | recibos con estos filtros",
+    "maximo": "Máximo {n} por lote",
+    "sinContratos": "No hay contratos con recibo en ese periodo con estos filtros.",
+    "excede": "Son demasiados para un solo PDF. Acota por sistema, sector o tarifa.",
+    "aviso": "Cada recibo tarda alrededor de un segundo. El PDF se arma en segundo plano y llega a Mis exportaciones; puedes seguir trabajando.",
+    "generar": "Generar PDF en lote",
+    "encolado": "El lote quedó en cola; aquí abajo ves el avance y, al terminar, el botón para descargarlo.",
+    "terminado": "El lote terminó.",
+    "verExportaciones": "Ver mis exportaciones"
   }
 }
