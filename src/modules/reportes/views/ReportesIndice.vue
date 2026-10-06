@@ -18,12 +18,22 @@ const exportaciones = useExportacionesStore()
 const busqueda = ref('')
 const sinAcceso = computed(() => (typeof route.query.sinAcceso === 'string' ? route.query.sinAcceso : ''))
 
+/** Orden de las categorías en el índice: las de uso diario primero; las demás, alfabéticas al final. */
+const ORDEN_CATEGORIAS = ['Facturación', 'Cartera', 'Padrón', 'Operación', 'Trámites']
+
+const categoriasOrdenadas = computed(() => [...menu.categorias].sort((a, b) => {
+  const pa = ORDEN_CATEGORIAS.indexOf(a.nombre)
+  const pb = ORDEN_CATEGORIAS.indexOf(b.nombre)
+
+  return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb) || a.nombre.localeCompare(b.nombre, 'es')
+}))
+
 const categoriasFiltradas = computed(() => {
   const q = busqueda.value.trim().toLowerCase()
   if (!q)
-    return menu.categorias
+    return categoriasOrdenadas.value
 
-  return menu.categorias
+  return categoriasOrdenadas.value
     .map(categoria => ({
       ...categoria,
       elementos: categoria.elementos.filter(e => e.titulo.toLowerCase().includes(q) || (e.descripcion ?? '').toLowerCase().includes(q)),
@@ -96,34 +106,44 @@ onMounted(() => {
     />
 
     <template v-else-if="menu.cargado">
-      <VRow>
-        <VCol
-          v-for="categoria in categoriasFiltradas"
-          :key="categoria.nombre"
-          cols="12"
-          md="6"
-          lg="4"
-        >
-          <VCard>
-            <VCardItem>
-              <VCardTitle>{{ categoria.nombre }}</VCardTitle>
-            </VCardItem>
-            <VList
-              density="comfortable"
-              nav
+      <VCard
+        v-for="categoria in categoriasFiltradas"
+        :key="categoria.nombre"
+        class="mb-4"
+      >
+        <VCardItem class="pb-0">
+          <VCardTitle class="d-flex align-center gap-2">
+            {{ categoria.nombre }}
+            <VChip
+              size="x-small"
+              variant="tonal"
+            >
+              {{ categoria.elementos.length }}
+            </VChip>
+          </VCardTitle>
+        </VCardItem>
+        <VCardText class="pt-2">
+          <VRow dense>
+            <VCol
+              v-for="elemento in categoria.elementos"
+              :key="`${elemento.tipo}-${elemento.key}`"
+              cols="12"
+              sm="6"
+              lg="4"
             >
               <VListItem
-                v-for="elemento in categoria.elementos"
-                :key="`${elemento.tipo}-${elemento.key}`"
                 :to="destino(elemento)"
                 :prepend-icon="elemento.tipo === 'tablero' ? 'tabler-layout-dashboard' : 'tabler-table'"
                 :title="elemento.titulo"
                 :subtitle="elemento.descripcion ?? undefined"
+                lines="two"
+                rounded="lg"
+                class="indice-elemento"
               />
-            </VList>
-          </VCard>
-        </VCol>
-      </VRow>
+            </VCol>
+          </VRow>
+        </VCardText>
+      </VCard>
 
       <p
         v-if="busqueda && categoriasFiltradas.length === 0"
@@ -161,5 +181,10 @@ onMounted(() => {
 .indice-busqueda {
   inline-size: 100%;
   max-inline-size: 320px;
+}
+
+.indice-elemento {
+  block-size: 100%;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 </style>
