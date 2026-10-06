@@ -30,7 +30,8 @@
     "sinDatos": "No hay datos con los filtros seleccionados",
     "sinDatosDetalle": "Prueba con otro periodo u otra gerencia.",
     "enSegundoPlano": "La consulta tarda más de lo normal; la estamos terminando en segundo plano. Puedes seguir en esta pantalla.",
-    "exportar": "Exportar"
+    "exportar": "Exportar",
+    "abrirFiltros": "Elegir filtros"
   },
   "filtros": {
     "requerido": "Este filtro es obligatorio.",
@@ -40,7 +41,8 @@
     "buscar": "Escribe para buscar…",
     "sinOpciones": "Sin opciones",
     "quitar": "Quitar filtro",
-    "selecciona": "Selecciona…"
+    "selecciona": "Selecciona…",
+    "editar": "Cambiar filtros"
   },
   "tabla": {
     "total": "TOTAL",

@@ -131,12 +131,21 @@ watch(() => props.clave, iniciar)
         :definiciones="filtros.defs.value"
         :valores="tablero.filtrosAplicados.value"
         :etiqueta="filtros.etiqueta"
+        :mostrar-acceso="tieneFiltros"
         @quitar="quitarFiltro"
+        @abrir="drawer = true"
       />
 
       <VCard v-if="!tablero.consultado.value">
-        <VCardText class="text-center text-medium-emphasis py-10">
+        <VCardText class="d-flex flex-column align-center text-center text-medium-emphasis py-10 gap-4">
           {{ t('reportes.visor.seleccionaParaConsultar', { filtro: filtros.faltantes.value[0]?.etiqueta ?? '' }) }}
+          <VBtn
+            color="primary"
+            prepend-icon="tabler-adjustments"
+            @click="drawer = true"
+          >
+            {{ t('reportes.visor.abrirFiltros') }}
+          </VBtn>
         </VCardText>
       </VCard>
 
@@ -175,7 +184,7 @@ watch(() => props.clave, iniciar)
       v-model="drawer"
       temporary
       location="end"
-      width="340"
+      width="360"
     >
       <FiltroPanel
         v-if="tablero.config.value"

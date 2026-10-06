@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDisplay } from 'vuetify'
 import EstadoError from '../components/comunes/EstadoError.vue'
 import EstadoVacio from '../components/comunes/EstadoVacio.vue'
 import IndicadorActualizado from '../components/comunes/IndicadorActualizado.vue'
@@ -22,7 +21,6 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { smAndDown } = useDisplay()
 
 const reporte = useReporte(toRef(props, 'clave'))
 const filtros = useFiltros(computed(() => reporte.config.value?.filtros ?? []))
@@ -33,6 +31,7 @@ const enviandoExportacion = ref(false)
 const aviso = ref<string | null>(null)
 
 const columnasVisibles = computed(() => reporte.config.value?.columnas.filter(c => c.visible) ?? [])
+const tieneFiltros = computed(() => filtros.defs.value.some(d => !d.oculto))
 const primerFaltante = computed(() => filtros.faltantes.value[0]?.etiqueta ?? '')
 
 const puedeExportar = computed(() => {
@@ -142,7 +141,7 @@ watch(() => props.clave, iniciar)
           @actualizar="reporte.actualizar"
         />
         <VBtn
-          v-if="smAndDown && reporte.config.value"
+          v-if="tieneFiltros && reporte.config.value"
           variant="tonal"
           prepend-icon="tabler-adjustments"
           @click="drawer = true"
@@ -173,39 +172,16 @@ watch(() => props.clave, iniciar)
     />
 
     <VRow v-else-if="reporte.config.value">
-      <VCol
-        v-if="!smAndDown"
-        cols="12"
-        md="4"
-        lg="3"
-      >
-        <FiltroPanel
-          :definiciones="filtros.defs.value"
-          :valores="filtros.valores.value"
-          :opciones="filtros.opciones.value"
-          :cargando-opciones="filtros.cargandoOpciones.value"
-          :errores="filtros.errores.value"
-          :cargando="reporte.cargando.value"
-          :completo="filtros.completo.value"
-          @cambiar="filtros.establecer"
-          @buscar="buscar"
-          @consultar="consultar"
-          @limpiar="limpiar"
-        />
-      </VCol>
-
-      <VCol
-        cols="12"
-        :md="smAndDown ? 12 : 8"
-        :lg="smAndDown ? 12 : 9"
-      >
+      <VCol cols="12">
         <FiltroChips
           v-if="reporte.consultado.value && reporte.filtrosAplicados.value"
           class="mb-4"
           :definiciones="filtros.defs.value"
           :valores="reporte.filtrosAplicados.value"
           :etiqueta="filtros.etiqueta"
+          :mostrar-acceso="tieneFiltros"
           @quitar="quitarFiltro"
+          @abrir="drawer = true"
         />
 
         <VAlert
@@ -229,7 +205,15 @@ watch(() => props.clave, iniciar)
           <EstadoVacio
             icono="tabler-filter"
             :titulo="t('reportes.visor.seleccionaParaConsultar', { filtro: primerFaltante })"
-          />
+          >
+            <VBtn
+              color="primary"
+              prepend-icon="tabler-adjustments"
+              @click="drawer = true"
+            >
+              {{ t('reportes.visor.abrirFiltros') }}
+            </VBtn>
+          </EstadoVacio>
         </VCard>
 
         <VCard v-else-if="reporte.consultado.value">
@@ -280,11 +264,10 @@ watch(() => props.clave, iniciar)
     </VSnackbar>
 
     <VNavigationDrawer
-      v-if="smAndDown"
       v-model="drawer"
       temporary
       location="end"
-      width="340"
+      width="360"
     >
       <FiltroPanel
         v-if="reporte.config.value"
