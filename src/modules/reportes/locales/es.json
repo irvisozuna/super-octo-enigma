@@ -47,6 +47,45 @@
     "filasPorPagina": "Filas por página",
     "sinResultados": "Sin resultados"
   },
+  "exportar": {
+    "titulo": "Exportar reporte",
+    "filas": "{n} filas con los filtros actuales",
+    "alcance": "¿Qué exportar?",
+    "todo": "Todo el conjunto ({n} filas)",
+    "pagina": "Solo la página actual ({n} filas)",
+    "excedeLimite": "Disponible hasta {n} filas; acota los filtros o usa Excel",
+    "aviso": "Son muchas filas: la exportación puede tardar varios minutos. Te avisamos cuando esté lista.",
+    "cancelar": "Cancelar",
+    "confirmar": "Exportar",
+    "encolada": "Exportación en cola. Cuando esté lista podrás descargarla desde el botón de abajo o en \"Mis exportaciones\"."
+  },
+  "cola": {
+    "titulo": "Mis exportaciones",
+    "descripcion": "Los archivos se conservan 24 horas; después hay que volver a generarlos.",
+    "verTodas": "Ver todas",
+    "limpiar": "Ocultar terminadas",
+    "descargar": "Descargar",
+    "cancelar": "Cancelar",
+    "reintentar": "Reintentar",
+    "vacioTitulo": "No has exportado nada todavía",
+    "vacioDetalle": "Abre un reporte y usa el botón Exportar.",
+    "estados": {
+      "queued": "En cola",
+      "running": "Generando",
+      "done": "Lista",
+      "failed": "Falló",
+      "expired": "Vencida",
+      "canceled": "Cancelada"
+    },
+    "columnas": {
+      "reporte": "Reporte",
+      "formato": "Formato",
+      "estado": "Estado",
+      "filas": "Filas",
+      "creada": "Creada",
+      "vence": "Vence"
+    }
+  },
   "comunes": {
     "reintentar": "Reintentar",
     "cargando": "Cargando…",

@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import EstadoError from '../components/comunes/EstadoError.vue'
 import EstadoVacio from '../components/comunes/EstadoVacio.vue'
+import TareasExportacion from '../components/exportar/TareasExportacion.vue'
+import { useExportacionesStore } from '../stores/exportacionesStore'
 import { useMenuReportesStore } from '../stores/menuReportesStore'
 import type { ElementoMenu } from '../types/api'
 
@@ -11,6 +13,7 @@ const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const menu = useMenuReportesStore()
+const exportaciones = useExportacionesStore()
 
 const busqueda = ref('')
 const sinAcceso = computed(() => (typeof route.query.sinAcceso === 'string' ? route.query.sinAcceso : ''))
@@ -40,6 +43,7 @@ function destino(elemento: ElementoMenu) {
 onMounted(() => {
   if (!menu.cargado)
     menu.cargar()
+  exportaciones.asegurar()
 })
 </script>
 
@@ -148,6 +152,8 @@ onMounted(() => {
         </VCardText>
       </VCard>
     </template>
+
+    <TareasExportacion />
   </div>
 </template>
 

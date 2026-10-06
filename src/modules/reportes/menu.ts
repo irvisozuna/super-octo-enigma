@@ -14,6 +14,12 @@ const reportesMenu: VerticalNavItems = [
         action: 'read',
         subject: 'reportes',
       },
+      {
+        title: 'Mis exportaciones',
+        to: 'reportesExportaciones',
+        action: 'read',
+        subject: 'reportes',
+      },
     ],
   },
 ]

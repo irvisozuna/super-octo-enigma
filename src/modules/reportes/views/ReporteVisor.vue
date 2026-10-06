@@ -5,11 +5,16 @@ import { useDisplay } from 'vuetify'
 import EstadoError from '../components/comunes/EstadoError.vue'
 import EstadoVacio from '../components/comunes/EstadoVacio.vue'
 import IndicadorActualizado from '../components/comunes/IndicadorActualizado.vue'
+import ExportarDialogo from '../components/exportar/ExportarDialogo.vue'
+import TareasExportacion from '../components/exportar/TareasExportacion.vue'
 import FiltroChips from '../components/filtros/FiltroChips.vue'
 import FiltroPanel from '../components/filtros/FiltroPanel.vue'
 import TablaReporte from '../components/tabla/TablaReporte.vue'
 import { useFiltros } from '../composables/useFiltros'
 import { useReporte } from '../composables/useReporte'
+import { normalizarError } from '../services/errores'
+import { useExportacionesStore } from '../stores/exportacionesStore'
+import type { AlcanceExportacion, FormatoExportacion } from '../types/exportacion'
 import type { FiltroDef } from '../types/reporte'
 
 const props = defineProps<{
@@ -21,10 +26,46 @@ const { smAndDown } = useDisplay()
 
 const reporte = useReporte(toRef(props, 'clave'))
 const filtros = useFiltros(computed(() => reporte.config.value?.filtros ?? []))
+const exportaciones = useExportacionesStore()
 const drawer = ref(false)
+const dialogoExportar = ref(false)
+const enviandoExportacion = ref(false)
+const aviso = ref<string | null>(null)
 
 const columnasVisibles = computed(() => reporte.config.value?.columnas.filter(c => c.visible) ?? [])
 const primerFaltante = computed(() => filtros.faltantes.value[0]?.etiqueta ?? '')
+
+const puedeExportar = computed(() => {
+  const config = reporte.config.value
+
+  return !!config && config.permisos.puede_exportar && config.formatos.length > 0 && reporte.consultado.value && reporte.totalFilas.value > 0
+})
+
+async function exportar({ formato, alcance }: { formato: FormatoExportacion; alcance: AlcanceExportacion }) {
+  const config = reporte.config.value
+  if (!config)
+    return
+  enviandoExportacion.value = true
+  try {
+    await exportaciones.iniciar(props.clave, config.titulo, {
+      formato,
+      alcance,
+      filtros: reporte.filtrosAplicados.value ?? {},
+      orden: reporte.orden.value,
+      pagina: reporte.pagina.value,
+      por_pagina: reporte.porPagina.value,
+      consulta_id: reporte.consultaId.value,
+    })
+    dialogoExportar.value = false
+    aviso.value = t('reportes.exportar.encolada')
+  }
+  catch (e) {
+    aviso.value = t(`reportes.errores.${normalizarError(e).codigo}`)
+  }
+  finally {
+    enviandoExportacion.value = false
+  }
+}
 
 async function consultar() {
   if (!filtros.validar())
@@ -60,7 +101,10 @@ async function iniciar() {
     await reporte.consultar(filtros.aPayload())
 }
 
-onMounted(iniciar)
+onMounted(() => {
+  exportaciones.asegurar()
+  iniciar()
+})
 watch(() => props.clave, iniciar)
 </script>
 
@@ -104,6 +148,14 @@ watch(() => props.clave, iniciar)
           @click="drawer = true"
         >
           {{ t('reportes.visor.mostrarFiltros') }}
+        </VBtn>
+        <VBtn
+          v-if="puedeExportar"
+          color="primary"
+          prepend-icon="tabler-download"
+          @click="dialogoExportar = true"
+        >
+          {{ t('reportes.visor.exportar') }}
         </VBtn>
       </div>
     </div>
@@ -205,6 +257,27 @@ watch(() => props.clave, iniciar)
         </VCard>
       </VCol>
     </VRow>
+
+    <ExportarDialogo
+      v-if="reporte.config.value"
+      v-model="dialogoExportar"
+      :formatos="reporte.config.value.formatos"
+      :limites="reporte.config.value.limites_exportacion ?? {}"
+      :total-filas="reporte.totalFilas.value"
+      :por-pagina="reporte.porPagina.value"
+      :enviando="enviandoExportacion"
+      @exportar="exportar"
+    />
+
+    <TareasExportacion />
+
+    <VSnackbar
+      :model-value="aviso !== null"
+      timeout="6000"
+      @update:model-value="aviso = null"
+    >
+      {{ aviso }}
+    </VSnackbar>
 
     <VNavigationDrawer
       v-if="smAndDown"

@@ -1,6 +1,6 @@
 import type { RespuestaAbilities, RespuestaMenu } from '../types/api'
 import type { DocumentoDef, DocumentoGenerado, SolicitudDocumento } from '../types/documento'
-import type { Ejecucion, ExportacionCreada, SolicitudExportacion } from '../types/exportacion'
+import type { Ejecucion, ExportacionCreada, SolicitudExportacion, UrlFirmada } from '../types/exportacion'
 import type { DefinicionReporte, FuenteResumen, ReporteAdmin } from '../types/admin'
 import type { ConsultaEnCurso, Opcion, ParametrosConsulta, ReporteConfig, ResultadoConsulta, ValoresFiltros } from '../types/reporte'
 import type { DatosWidget, SolicitudDatosWidget, TableroConfig } from '../types/tablero'
@@ -61,13 +61,19 @@ export function obtenerEjecucion(id: string, { signal }: OpcionesPeticion = {}):
   return rawApi(`${BASE}/executions/${encodeURIComponent(id)}`, { signal })
 }
 
-export function cancelarEjecucion(id: string): Promise<void> {
+/** Cancela si sigue en cola; si ya terminó, borra el archivo. Devuelve la ejecución actualizada. */
+export function cancelarEjecucion(id: string): Promise<Ejecucion> {
   return rawApi(`${BASE}/executions/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 /** Descarga autenticada (Bearer); el archivo se entrega como Blob para guardarlo desde el navegador. */
 export function descargarEjecucion(id: string, { signal }: OpcionesPeticion = {}): Promise<Blob> {
   return rawApi(`${BASE}/executions/${encodeURIComponent(id)}/download`, { responseType: 'blob', signal })
+}
+
+/** URL firmada temporal (10 min) para abrir el archivo en una pestaña nueva sin encabezados. */
+export function urlFirmadaEjecucion(id: string): Promise<UrlFirmada> {
+  return rawApi(`${BASE}/executions/${encodeURIComponent(id)}/signed-url`)
 }
 
 /* Administración (manage reporting) */

@@ -13,6 +13,15 @@ const reportesRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reportes/exportaciones',
+    name: 'reportesExportaciones',
+    component: () => import('./views/ExportacionesCola.vue'),
+    meta: {
+      action: 'read',
+      subject: 'reportes',
+    },
+  },
+  {
     path: '/reportes/:clave([a-z0-9_]+)',
     name: 'reportesVisor',
     component: () => import('./views/ReporteVisor.vue'),

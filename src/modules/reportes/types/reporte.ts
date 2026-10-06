@@ -59,10 +59,13 @@ export interface ReporteConfig {
   filtros: FiltroDef[]
   orden_default: OrdenDef[]
   formatos: FormatoExportacion[]
+  limites_exportacion: Partial<Record<FormatoExportacion, number>>
   por_pagina_default: number
   por_pagina_max: number
+  modo?: 'materialize' | 'paginate'
+  max_filas?: number
   permisos: PermisosReporte
-  version: number
+  version: number | string
 }
 
 export type ValoresFiltros = Record<string, unknown>

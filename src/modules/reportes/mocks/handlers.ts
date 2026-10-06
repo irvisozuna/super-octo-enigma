@@ -47,6 +47,7 @@ export const reporteEjemplo: ReporteConfig = {
   ],
   orden_default: [{ columna: 'CONCEPTO', dir: 'asc' }],
   formatos: ['xlsx', 'csv', 'pdf'],
+  limites_exportacion: { xlsx: 500_000, csv: 1_000_000, pdf: 5_000 },
   por_pagina_default: 50,
   por_pagina_max: 500,
   permisos: { puede_exportar: true, puede_editar: false },

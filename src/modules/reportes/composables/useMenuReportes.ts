@@ -15,6 +15,7 @@ export function useMenuReportes() {
   function construir(): (NavLink | NavGroup)[] {
     const hijos: (NavLink | NavGroup)[] = [
       { title: 'Todos los reportes', to: 'reportesIndice', action: 'read', subject: 'reportes' },
+      { title: 'Mis exportaciones', to: 'reportesExportaciones', action: 'read', subject: 'reportes' },
     ]
 
     for (const categoria of reportes.categorias) {

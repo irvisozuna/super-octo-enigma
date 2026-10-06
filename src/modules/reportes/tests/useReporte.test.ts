@@ -21,6 +21,7 @@ const config: ReporteConfig = {
   filtros: [],
   orden_default: [{ columna: 'TOTAL', dir: 'desc' }],
   formatos: ['xlsx'],
+  limites_exportacion: { xlsx: 500_000 },
   por_pagina_default: 25,
   por_pagina_max: 500,
   permisos: { puede_exportar: true, puede_editar: false },
