@@ -158,7 +158,11 @@ const formatCellValue = (value: any, field: FieldConfigDTO): string => {
 }
 
 const calculateTotal = (field: FieldConfigDTO): string | null => {
-  if (!props.showTotals || !['number', 'double', 'integer', 'currency'].includes(field.type))
+  // Se totalizan importes (formato moneda/número o tipo decimal) o campos con agregación explícita;
+  // los enteros como periodo o clave no se suman salvo que se configure
+  const isAmount = ['currency', 'number'].includes(String(field.format))
+    || ['double', 'decimal', 'float', 'currency'].includes(String(field.type))
+  if (!props.showTotals || (!isAmount && !field.aggregation))
     return null
 
   const values = props.data.map(row => Number.parseFloat(row[field.field]) || 0)
@@ -298,12 +302,12 @@ const getColumnStyle = (field: FieldConfigDTO) => ({
             class="totals-row"
           >
             <td
-              v-for="field in visibleFields"
+              v-for="(field, index) in visibleFields"
               :key="`total-${field.field}`"
               :style="getColumnStyle(field)"
               class="font-weight-bold text-primary"
             >
-              {{ calculateTotal(field) || '' }}
+              {{ calculateTotal(field) || (index === 0 ? 'TOTAL' : '') }}
             </td>
           </tr>
         </tbody>

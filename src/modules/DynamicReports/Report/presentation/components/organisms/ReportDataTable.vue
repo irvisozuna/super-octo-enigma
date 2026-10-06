@@ -89,6 +89,38 @@ const visibleColumnsConfig = computed(() => {
 })
 
 // Computed para obtener los formatos condicionales
+// Fila de totales: importes (formato moneda/número o tipo decimal) o campos con agregación explícita
+const isAmountColumn = (column: any) =>
+  ['currency', 'number'].includes(String(column.format))
+  || ['double', 'decimal', 'float', 'currency'].includes(String(column.type))
+  || !!column.aggregation
+
+const hasTotals = computed(() =>
+  props.paginatedData.length > 0 && visibleColumnsConfig.value.some(isAmountColumn))
+
+// Solo suma lo que está en pantalla: si hay más páginas se indica en la etiqueta
+const totalsLabel = computed(() => {
+  const totalPages = Number(props.store?.totalPages ?? 1)
+  const totalRecords = Number(props.store?.reportTotalRecords ?? props.store?.total ?? props.paginatedData.length)
+
+  return totalPages > 1 || totalRecords > props.paginatedData.length ? 'Total de la página' : 'TOTAL'
+})
+
+const columnTotal = (column: any): string => {
+  if (!isAmountColumn(column))
+    return ''
+  const values = props.paginatedData.map(row => Number.parseFloat(row[column.field]) || 0)
+  const sum = values.reduce((a, b) => a + b, 0)
+  const result = column.aggregation === 'AVG'
+    ? (values.length ? sum / values.length : 0)
+    : column.aggregation === 'COUNT' ? values.length
+      : column.aggregation === 'MIN' ? Math.min(...values)
+        : column.aggregation === 'MAX' ? Math.max(...values)
+          : sum
+
+  return props.formatCellValue(result, column)
+}
+
 const conditionalFormats = computed(() => {
   return props.reportConfig?.advanced?.conditionalFormats || []
 })
@@ -288,6 +320,18 @@ function getConditionalStyle(row: any, column: any) {
               </td>
             </tr>
           </tbody>
+          <tfoot v-if="hasTotals">
+            <tr class="report-totals-row">
+              <td
+                v-for="(column, i) in visibleColumnsConfig"
+                :key="`total-${column.field}`"
+                class="font-weight-bold text-primary"
+                :style="{ textAlign: isAmountColumn(column) ? (column.align || 'right') : 'left' }"
+              >
+                {{ isAmountColumn(column) ? columnTotal(column) : (i === 0 ? totalsLabel : '') }}
+              </td>
+            </tr>
+          </tfoot>
         </VTable>
 
         <!-- Paginación -->

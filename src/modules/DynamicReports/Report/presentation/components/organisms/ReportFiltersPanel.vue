@@ -35,6 +35,39 @@ const activeAppliedFilters = computed(() =>
 function getFieldConfig(fieldName: string) {
   return props.reportConfig?.selectedFields?.find((f: any) => f.field === fieldName)
 }
+
+// Definición del filtro configurado (busca también dentro de grupos)
+function getFilterConfig(fieldName: string): any {
+  const walk = (items: any[] = []): any => {
+    for (const item of items) {
+      if (item?.type === 'group') {
+        const found = walk(item.children)
+        if (found)
+          return found
+      }
+      else if (item?.field === fieldName) {
+        return item
+      }
+    }
+
+    return undefined
+  }
+
+  return walk(props.reportConfig?.filters)
+}
+
+// "Gerencia: SAN JOSÉ DEL CABO" en lugar de "ENTIDAD_ID: [ 2 ]"
+function chipText(filter: { field: string; value: any }) {
+  const config = getFilterConfig(filter.field)
+  const label = config?.alias || getFieldConfig(filter.field)?.alias || filter.field
+  const options: { value: any; label: string }[] = config?.options || []
+  const values = Array.isArray(filter.value) ? filter.value : [filter.value]
+  const text = values
+    .map(v => options.find(o => String(o.value) === String(v))?.label ?? v)
+    .join(', ')
+
+  return `${label}: ${text}`
+}
 </script>
 
 <template>
@@ -100,7 +133,7 @@ function getFieldConfig(fieldName: string) {
               start
               size="16"
             />
-            {{ getFieldConfig(filter.field)?.alias || filter.field }}: {{ filter.value }}
+            {{ chipText(filter) }}
           </VChip>
         </div>
         <!-- Filtros disponibles usando el componente reutilizable -->
