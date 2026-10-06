@@ -111,5 +111,18 @@
     "detalleTecnico": "Detalle técnico",
     "copiar": "Copiar detalle",
     "copiado": "Detalle copiado"
+  },
+  "documentos": {
+    "boton": "Documentos",
+    "titulo": "Documentos del contrato",
+    "cuenta": "Cuenta {cuenta}",
+    "documento": "Documento",
+    "periodo": "Periodo",
+    "generar": "Generar PDF",
+    "generando": "Generando el documento…",
+    "descargar": "Descargar",
+    "imprimir": "Imprimir",
+    "vacio": "Elige un documento y genera el PDF para verlo aquí.",
+    "sinDocumentos": "No tienes documentos disponibles"
   }
 }

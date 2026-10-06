@@ -7,6 +7,7 @@ import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
 import FiscalDataDialog from './dialog/FiscalDataDialog.vue'
+import DocumentosDialogo from '@/modules/reportes/components/documentos/DocumentosDialogo.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 
 const contractStore = useContractStore()
@@ -37,6 +38,14 @@ function openAddWorkOrderDialog() {
     if (result === 'submit')
       console.log('Work order completed')
   })
+}
+
+// Documentos del contrato (duplicado de recibo, constancias) del módulo de reportes
+function openDocumentosDialog() {
+  openDialog(DocumentosDialogo, {
+    contrato: String(contract.value?.account ?? ''),
+    nombre: contract.value?.nameuser ?? undefined,
+  }, { width: '1100px' })
 }
 
 // Función para abrir el diálogo de estado de cuenta
@@ -198,6 +207,16 @@ function openFiscalDataDialog() {
                         icon="tabler-printer"
                         class="me-2"
                       />{{ $t('account_balance') }}
+                    </VBtn>
+                    <VBtn
+                      v-if="$can('generate', 'documentos')"
+                      variant="outlined"
+                      @click="openDocumentosDialog"
+                    >
+                      <VIcon
+                        icon="tabler-file-text"
+                        class="me-2"
+                      />{{ $t('reportes.documentos.boton') }}
                     </VBtn>
                     <VBtn
                       color="primary"
