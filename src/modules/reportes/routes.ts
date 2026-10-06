@@ -22,6 +22,32 @@ const reportesRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reportes/admin/reportes',
+    name: 'reportesAdminReportes',
+    component: () => import('./views/admin/ReportesAdmin.vue'),
+    meta: { action: 'manage', subject: 'reportes-admin' },
+  },
+  {
+    path: '/reportes/admin/reportes/editor/:clave([a-z0-9_]+)?',
+    name: 'reportesAdminReporteEditor',
+    component: () => import('./views/admin/ConstructorReporte.vue'),
+    props: true,
+    meta: { action: 'manage', subject: 'reportes-admin' },
+  },
+  {
+    path: '/reportes/admin/tableros',
+    name: 'reportesAdminTableros',
+    component: () => import('./views/admin/TablerosAdmin.vue'),
+    meta: { action: 'manage', subject: 'reportes-admin' },
+  },
+  {
+    path: '/reportes/admin/tableros/editor/:clave([a-z0-9_]+)?',
+    name: 'reportesAdminTableroEditor',
+    component: () => import('./views/admin/EditorTablero.vue'),
+    props: true,
+    meta: { action: 'manage', subject: 'reportes-admin' },
+  },
+  {
     path: '/reportes/admin/permisos',
     name: 'reportesAdminPermisos',
     component: () => import('./views/admin/PermisosRoles.vue'),

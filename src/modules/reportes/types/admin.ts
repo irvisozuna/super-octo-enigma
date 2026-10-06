@@ -1,4 +1,5 @@
 import type { TipoElementoMenu } from './api'
+import type { AnchoWidget, TipoWidget } from './tablero'
 import type { FormatoExportacion } from './exportacion'
 import type { FormatoColumna, TipoColumna } from './reporte'
 
@@ -79,4 +80,37 @@ export interface MatrizPermisos {
 export interface RespuestaPermisosRol {
   rol: string
   permisos: string[]
+}
+
+/** Widget tal como se guarda (mismas llaves que el archivo JSON). */
+export interface DefinicionWidget {
+  key: string
+  type: TipoWidget
+  title: string
+  source: string
+  width: AnchoWidget
+  sort_order?: number
+  params_map?: Record<string, string> | null
+  config: Record<string, unknown>
+}
+
+/** Definición de tablero que se guarda desde la pantalla (mismas llaves que el archivo JSON). */
+export interface DefinicionTablero {
+  key?: string | null
+  name: string
+  description?: string | null
+  category?: string | null
+  filters: { filter: string; required?: boolean; fixed?: boolean; hidden?: boolean; default?: unknown }[]
+  widgets: DefinicionWidget[]
+  layout?: Record<string, unknown> | null
+  order?: number
+}
+
+/** Fila de GET /reporting/admin/dashboards */
+export interface TableroAdmin extends DefinicionTablero {
+  key: string
+  version: number
+  origen: 'code' | 'ui'
+  activo: boolean
+  updated_at: string | null
 }

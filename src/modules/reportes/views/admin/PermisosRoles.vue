@@ -224,8 +224,7 @@ onMounted(cargar)
               <th
                 v-for="permiso in grupo.objetos[0].permisos"
                 :key="permiso.accion"
-                class="text-center"
-                style="inline-size: 140px;"
+                class="text-center text-no-wrap"
               >
                 <VCheckbox
                   :model-value="todosDelGrupo(grupo, permiso.accion)"
@@ -282,3 +281,13 @@ onMounted(cargar)
     </VSnackbar>
   </div>
 </template>
+
+<style scoped>
+:deep(th .v-selection-control) {
+  justify-content: center;
+}
+
+:deep(th .v-label) {
+  white-space: nowrap;
+}
+</style>

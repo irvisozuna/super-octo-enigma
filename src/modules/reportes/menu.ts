@@ -21,10 +21,14 @@ const reportesMenu: VerticalNavItems = [
         subject: 'reportes',
       },
       {
-        title: 'Permisos por rol',
-        to: 'reportesAdminPermisos',
+        title: 'Administrar',
         action: 'manage',
         subject: 'reportes-admin',
+        children: [
+          { title: 'Reportes', to: 'reportesAdminReportes', action: 'manage', subject: 'reportes-admin' },
+          { title: 'Tableros', to: 'reportesAdminTableros', action: 'manage', subject: 'reportes-admin' },
+          { title: 'Permisos por rol', to: 'reportesAdminPermisos', action: 'manage', subject: 'reportes-admin' },
+        ],
       },
     ],
   },

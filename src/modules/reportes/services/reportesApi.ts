@@ -1,7 +1,7 @@
 import type { RespuestaAbilities, RespuestaMenu } from '../types/api'
 import type { DocumentoDef, DocumentoGenerado, SolicitudDocumento } from '../types/documento'
 import type { Ejecucion, ExportacionCreada, SolicitudExportacion, UrlFirmada } from '../types/exportacion'
-import type { DefinicionReporte, FuenteResumen, MatrizPermisos, ReporteAdmin, RespuestaPermisosRol } from '../types/admin'
+import type { DefinicionReporte, DefinicionTablero, FuenteResumen, MatrizPermisos, ReporteAdmin, RespuestaPermisosRol, TableroAdmin } from '../types/admin'
 import type { ConsultaEnCurso, Opcion, ParametrosConsulta, ReporteConfig, ResultadoConsulta, ValoresFiltros } from '../types/reporte'
 import type { DatosWidget, SolicitudDatosWidget, TableroConfig } from '../types/tablero'
 import { rawApi } from '@/services/api'
@@ -104,6 +104,22 @@ export function eliminarReporte(clave: string): Promise<{ mensaje: string }> {
 
 export function previsualizarReporte(definicion: DefinicionReporte, filtros: ValoresFiltros, { signal }: OpcionesPeticion = {}): Promise<ResultadoConsulta> {
   return rawApi(`${BASE}/admin/reports/preview`, { method: 'POST', body: { ...definicion, filtros, por_pagina: 20 }, signal })
+}
+
+export function listarTablerosAdmin({ signal }: OpcionesPeticion = {}): Promise<TableroAdmin[]> {
+  return rawApi(`${BASE}/admin/dashboards`, { signal })
+}
+
+export function crearTablero(definicion: DefinicionTablero): Promise<TableroAdmin> {
+  return rawApi(`${BASE}/admin/dashboards`, { method: 'POST', body: definicion })
+}
+
+export function actualizarTablero(clave: string, definicion: DefinicionTablero): Promise<TableroAdmin> {
+  return rawApi(`${BASE}/admin/dashboards/${encodeURIComponent(clave)}`, { method: 'PUT', body: definicion })
+}
+
+export function eliminarTablero(clave: string): Promise<{ mensaje: string }> {
+  return rawApi(`${BASE}/admin/dashboards/${encodeURIComponent(clave)}`, { method: 'DELETE' })
 }
 
 /** Matriz roles × reportes/tableros/documentos (manage reporting). */
