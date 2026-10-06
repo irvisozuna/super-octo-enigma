@@ -22,6 +22,34 @@ const reportesRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reportes/admin/permisos',
+    name: 'reportesAdminPermisos',
+    component: () => import('./views/admin/PermisosRoles.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'reportes-admin',
+    },
+  },
+  {
+    path: '/reportes/tableros/:clave([a-z0-9_]+)',
+    name: 'reportesTablero',
+    component: () => import('./views/TableroVista.vue'),
+    props: true,
+    meta: {
+      action: 'read',
+      subject: 'tableros',
+    },
+    beforeEnter: to => {
+      const menu = useMenuReportesStore()
+      const clave = String(to.params.clave)
+
+      if (menu.cargado && !menu.tieneClave(clave, 'tablero'))
+        return { name: 'reportesIndice', query: { sinAcceso: clave } }
+
+      return true
+    },
+  },
+  {
     path: '/reportes/:clave([a-z0-9_]+)',
     name: 'reportesVisor',
     component: () => import('./views/ReporteVisor.vue'),

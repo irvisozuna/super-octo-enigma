@@ -35,7 +35,7 @@ const hayElementos = computed(() => menu.categorias.some(c => c.elementos.length
 
 // Las rutas de tableros llegan en la fase 6: mientras no existan, el elemento no navega
 function destino(elemento: ElementoMenu) {
-  const nombre = elemento.tipo === 'tablero' ? 'tablerosVista' : 'reportesVisor'
+  const nombre = elemento.tipo === 'tablero' ? 'reportesTablero' : 'reportesVisor'
 
   return router.hasRoute(nombre) ? { name: nombre, params: { clave: elemento.key } } : undefined
 }

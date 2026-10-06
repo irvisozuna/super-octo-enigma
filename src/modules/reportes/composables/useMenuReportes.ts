@@ -18,15 +18,26 @@ export function useMenuReportes() {
       { title: 'Mis exportaciones', to: 'reportesExportaciones', action: 'read', subject: 'reportes' },
     ]
 
+    if (ability.can('manage', 'reportes-admin')) {
+      hijos.push({
+        title: 'Administrar',
+        action: 'manage',
+        subject: 'reportes-admin',
+        children: [
+          { title: 'Permisos por rol', to: 'reportesAdminPermisos', action: 'manage', subject: 'reportes-admin' },
+        ],
+      })
+    }
+
     for (const categoria of reportes.categorias) {
-      // Los tableros entran en la fase 6, cuando exista su ruta
       const enlaces: NavLink[] = categoria.elementos
-        .filter(e => e.tipo === 'reporte')
+        .filter(e => e.tipo === 'reporte' || e.tipo === 'tablero')
         .map(e => ({
           title: e.titulo,
-          to: { name: 'reportesVisor', params: { clave: e.key } },
+          to: { name: e.tipo === 'tablero' ? 'reportesTablero' : 'reportesVisor', params: { clave: e.key } },
+          icon: e.tipo === 'tablero' ? { icon: 'tabler-chart-pie' } : undefined,
           action: 'read',
-          subject: 'reportes',
+          subject: e.tipo === 'tablero' ? 'tableros' : 'reportes',
         }))
 
       if (enlaces.length)

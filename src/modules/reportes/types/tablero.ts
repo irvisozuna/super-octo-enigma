@@ -1,8 +1,15 @@
-import type { ColumnaDef, Fila, FiltroDef, ValoresFiltros } from './reporte'
+import type { Fila, FiltroDef, FormatoColumna, ValoresFiltros } from './reporte'
 
 export type TipoWidget = 'kpi' | 'table' | 'bar' | 'line' | 'pie'
 
 export type AnchoWidget = 3 | 4 | 6 | 12
+
+export interface MetricaWidget {
+  column: string
+  agg: 'sum' | 'count' | 'avg' | 'min' | 'max'
+  format: FormatoColumna
+  label: string | null
+}
 
 export interface WidgetDef {
   id: string
@@ -10,6 +17,7 @@ export interface WidgetDef {
   tipo: TipoWidget
   titulo: string
   ancho: AnchoWidget
+  fuente: string | null
   config: Record<string, unknown>
 }
 
@@ -18,8 +26,10 @@ export interface TableroConfig {
   key: string
   titulo: string
   descripcion: string | null
+  categoria: string | null
   filtros: FiltroDef[]
   widgets: WidgetDef[]
+  layout: Record<string, unknown> | null
   permisos: { puede_editar: boolean }
   version: number
 }
@@ -30,10 +40,25 @@ export interface SolicitudDatosWidget {
   forzar?: boolean
 }
 
+export interface ColumnaWidget {
+  columna: string
+  etiqueta: string
+  formato: FormatoColumna
+}
+
+/** Fila de un KPI: `valor`; de una serie: `dimension`, `valor` y, si hay series apiladas, `series`; de una tabla: las columnas. */
+export type FilaWidget = Fila & {
+  dimension?: string
+  valor?: number | string | null
+  series?: Record<string, number | string | null>
+}
+
 export interface DatosWidget {
-  columnas: ColumnaDef[]
-  filas: Fila[]
+  columnas: ColumnaWidget[]
+  filas: FilaWidget[]
+  filas_fuente: number
   cached_at: string | null
   cache_hit: boolean
   duracion_ms: number
+  filtros: ValoresFiltros
 }

@@ -1,3 +1,4 @@
+import type { TipoElementoMenu } from './api'
 import type { FormatoExportacion } from './exportacion'
 import type { FormatoColumna, TipoColumna } from './reporte'
 
@@ -37,4 +38,45 @@ export interface ReporteAdmin extends DefinicionReporte {
   version: number
   is_active: boolean
   updated_at: string | null
+}
+
+/** Permiso concreto sobre un objeto (ver, exportar, generar). */
+export interface PermisoObjeto {
+  accion: 'read' | 'export' | 'generate'
+  nombre: string
+  etiqueta: string
+}
+
+export interface ObjetoPermisos {
+  tipo: TipoElementoMenu | 'documento'
+  key: string
+  titulo: string
+  categoria: string | null
+  permisos: PermisoObjeto[]
+}
+
+export interface RolPermisos {
+  id: string
+  nombre: string
+  es_admin: boolean
+}
+
+export interface PermisoGeneral {
+  nombre: string
+  etiqueta: string
+  descripcion: string
+}
+
+/** GET /reporting/admin/grants */
+export interface MatrizPermisos {
+  roles: RolPermisos[]
+  generales: PermisoGeneral[]
+  objetos: ObjetoPermisos[]
+  asignaciones: Record<string, string[]>
+}
+
+/** PUT /reporting/admin/roles/{role}/grants */
+export interface RespuestaPermisosRol {
+  rol: string
+  permisos: string[]
 }

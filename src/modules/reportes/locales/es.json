@@ -125,5 +125,25 @@
     "imprimir": "Imprimir",
     "vacio": "Elige un documento y genera el PDF para verlo aquí.",
     "sinDocumentos": "No tienes documentos disponibles"
+  },
+  "tablero": {
+    "filasFuente": "{n} filas de la fuente",
+    "widgetSinDatos": "Sin datos para este widget con los filtros actuales.",
+    "actualizar": "Actualizar tablero"
+  },
+  "admin": {
+    "permisos": {
+      "titulo": "Permisos por rol",
+      "descripcion": "Elige qué reportes, tableros y documentos puede usar cada rol. Los cambios aplican sin volver a iniciar sesión.",
+      "rol": "Rol",
+      "objeto": "Reporte, tablero o documento",
+      "reportes": "Reportes",
+      "tableros": "Tableros",
+      "documentos": "Documentos",
+      "guardar": "Guardar cambios",
+      "descartar": "Descartar",
+      "guardado": "Permisos del rol {rol} guardados.",
+      "administraTodo": "Un rol con \"Administrar\" ve y exporta todo, crea reportes y tableros y asigna permisos; las casillas de abajo no le hacen falta."
+    }
   }
 }
