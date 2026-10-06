@@ -239,4 +239,15 @@ module.exports = {
     },
     'import/order': 'off',
   },
+  overrides: [
+    {
+      // Módulo de reportes: reglas más estrictas que el resto del proyecto
+      files: ['src/modules/reportes/**/*.{ts,vue}'],
+      rules: {
+        'no-console': 'error',
+        '@typescript-eslint/no-explicit-any': 'error',
+        'vue/no-bare-strings-in-template': 'error',
+      },
+    },
+  ],
 }

@@ -79,6 +79,7 @@ export interface ApiOptions {
   body?: any
   headers?: Record<string, string>
   responseType?: 'json' | 'blob' | 'text'
+  signal?: AbortSignal
 }
 
 

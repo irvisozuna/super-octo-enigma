@@ -1,0 +1,45 @@
+{
+  "menu": {
+    "reportes": "Reportes",
+    "exportaciones": "Mis exportaciones",
+    "administrar": "Administrar reportes"
+  },
+  "indice": {
+    "titulo": "Reportes",
+    "descripcion": "Consulta y exporta los reportes a los que tienes acceso.",
+    "buscar": "Buscar reporte",
+    "sinResultados": "Ningún reporte coincide con la búsqueda.",
+    "vacioTitulo": "Todavía no tienes reportes asignados",
+    "vacioDetalle": "Pide al equipo de sistemas que asigne a tu rol los reportes de tu área.",
+    "documentos": "Documentos por contrato",
+    "documentosDetalle": "Se generan desde la ficha de cada contrato.",
+    "tipo": {
+      "reporte": "Reporte",
+      "tablero": "Tablero"
+    }
+  },
+  "comunes": {
+    "reintentar": "Reintentar",
+    "cargando": "Cargando…",
+    "actualizar": "Actualizar",
+    "actualizadoHace": "Actualizado {tiempo}",
+    "desdeCache": "desde caché",
+    "cerrar": "Cerrar"
+  },
+  "errores": {
+    "SIN_PERMISO": "No tienes permiso para ver este reporte.",
+    "SESION": "Tu sesión terminó. Vuelve a iniciar sesión.",
+    "NO_ENCONTRADO": "El reporte no existe o ya no está disponible.",
+    "TIEMPO_AGOTADO": "La consulta tardó demasiado. Acota el periodo o los filtros e inténtalo de nuevo.",
+    "SIN_CONEXION": "No hay conexión con el servidor. Revisa tu red e inténtalo de nuevo.",
+    "VALIDACION": "Revisa los filtros marcados.",
+    "LIMITE": "Hay demasiadas consultas en curso. Espera unos segundos e inténtalo de nuevo.",
+    "SERVIDOR": "El servidor no pudo procesar la consulta.",
+    "SQL": "La fuente de datos devolvió un error.",
+    "CANCELADO": "Consulta cancelada.",
+    "GENERICO": "Ocurrió un error al cargar la información.",
+    "detalleTecnico": "Detalle técnico",
+    "copiar": "Copiar detalle",
+    "copiado": "Detalle copiado"
+  }
+}

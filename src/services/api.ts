@@ -23,6 +23,7 @@ export async function rawApi(
     body,
     headers = {},
     responseType = 'json', // Por defecto queremos JSON
+    signal, // AbortSignal para cancelar la petición (p. ej. una consulta que ya no interesa)
   }: ApiOptions = {},
 ) {
   // 1. Construcción de la URL final (base + endpoint)
@@ -48,6 +49,7 @@ export async function rawApi(
   // 4. Opciones iniciales del fetch
   const fetchOptions: RequestInit = {
     method,
+    signal,
     headers: {
       Accept: 'application/json',
       ...headers, // merge con headers adicionales si los hay
@@ -111,9 +113,13 @@ export async function rawApi(
       ) as Error & {
         status?: number
         errors?: string[]
+        body?: unknown
       }
 
       error.status = response.status
+
+      // Cuerpo completo del error, para respuestas con forma propia ({codigo, mensaje, detalle, reintentable})
+      error.body = errorBody
 
       // Por convención, muchos endpoints devuelven
       // un array de errors en la propiedad `errors`.
@@ -140,8 +146,9 @@ export async function rawApi(
     }
   }
   catch (error) {
-    // 10. Manejo global de errores (logs, analíticas, etc.)
-    console.error(`[rawApi] Error en ${method} ${finalUrl}`, error)
+    // 10. Manejo global de errores (logs, analíticas, etc.); una cancelación con AbortController no es un error
+    if (!(error instanceof DOMException && error.name === 'AbortError'))
+      console.error(`[rawApi] Error en ${method} ${finalUrl}`, error)
     throw error
   }
 }
