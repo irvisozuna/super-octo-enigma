@@ -19,7 +19,7 @@ const busqueda = ref('')
 const sinAcceso = computed(() => (typeof route.query.sinAcceso === 'string' ? route.query.sinAcceso : ''))
 
 /** Orden de las categorías en el índice: las de uso diario primero; las demás, alfabéticas al final. */
-const ORDEN_CATEGORIAS = ['Facturación', 'Cartera', 'Padrón', 'Operación', 'Trámites']
+const ORDEN_CATEGORIAS = ['Facturación', 'Ingresos', 'Cartera', 'Padrón', 'Operación', 'Trámites']
 
 const categoriasOrdenadas = computed(() => [...menu.categorias].sort((a, b) => {
   const pa = ORDEN_CATEGORIAS.indexOf(a.nombre)
