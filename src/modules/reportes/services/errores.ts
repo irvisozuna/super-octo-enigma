@@ -13,6 +13,7 @@ export type CodigoError =
   | 'SIN_CONEXION'
   | 'VALIDACION'
   | 'DEMASIADAS_FILAS'
+  | 'DOCUMENTO_SIN_DATOS'
   | 'LIMITE'
   | 'SERVIDOR'
   | 'SQL'
@@ -20,7 +21,7 @@ export type CodigoError =
   | 'GENERICO'
 
 /** Códigos que el API manda en su forma estándar y que se respetan tal cual. */
-const CODIGOS_API = new Set<CodigoError>(['SIN_PERMISO', 'SESION', 'NO_ENCONTRADO', 'TIEMPO_AGOTADO', 'VALIDACION', 'DEMASIADAS_FILAS', 'LIMITE', 'SERVIDOR', 'SQL', 'GENERICO'])
+const CODIGOS_API = new Set<CodigoError>(['SIN_PERMISO', 'SESION', 'NO_ENCONTRADO', 'TIEMPO_AGOTADO', 'VALIDACION', 'DEMASIADAS_FILAS', 'DOCUMENTO_SIN_DATOS', 'LIMITE', 'SERVIDOR', 'SQL', 'GENERICO'])
 
 export interface ErrorReporte {
   codigo: CodigoError

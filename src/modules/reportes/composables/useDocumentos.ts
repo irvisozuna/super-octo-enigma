@@ -70,7 +70,7 @@ export function useDocumentos(contrato: MaybeRef<string>) {
       documentos.value = docs
       periodos.value = opciones
       seleccionado.value ??= docs[0]?.key ?? null
-      periodo.value ??= opciones[0]?.value ?? null
+      periodo.value ??= docs.find(d => d.periodo_default != null)?.periodo_default ?? opciones[0]?.value ?? null
     }
     catch (e) {
       if (!esCancelacion(e))

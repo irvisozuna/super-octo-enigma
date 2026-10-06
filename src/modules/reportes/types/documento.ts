@@ -12,6 +12,9 @@ export interface DocumentoDef {
   titulo: string
   descripcion: string | null
   requiere_periodo: boolean
+
+  /** Periodo sugerido (el anterior, ya facturado); null si el documento no lleva periodo. */
+  periodo_default: number | string | null
   parametros: ParametroDocumento[]
 }
 

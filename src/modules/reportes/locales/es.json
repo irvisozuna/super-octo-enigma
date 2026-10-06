@@ -103,6 +103,7 @@
     "SIN_CONEXION": "No hay conexión con el servidor. Revisa tu red e inténtalo de nuevo.",
     "VALIDACION": "Revisa los filtros marcados.",
     "DEMASIADAS_FILAS": "La consulta devuelve demasiadas filas. Acota los filtros o usa la exportación a Excel.",
+    "DOCUMENTO_SIN_DATOS": "No hay información para generar este documento.",
     "LIMITE": "Hay demasiadas consultas en curso. Espera unos segundos e inténtalo de nuevo.",
     "SERVIDOR": "El servidor no pudo procesar la consulta.",
     "SQL": "La fuente de datos devolvió un error.",
