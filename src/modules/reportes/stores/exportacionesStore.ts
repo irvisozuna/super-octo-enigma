@@ -83,7 +83,9 @@ export const useExportacionesStore = defineStore('exportaciones', () => {
     try {
       const lista = await listarEjecuciones()
 
-      lista.forEach(actualizar)
+      // El servidor manda la más reciente primero y `actualizar` inserta al inicio: se recorre al revés
+      // para que la más reciente quede arriba también después de rehidratar
+      ;[...lista].reverse().forEach(actualizar)
       lista.filter(t => !ejecucionTerminada(t)).forEach(t => seguir(t.id))
       error.value = null
       cargado.value = true
