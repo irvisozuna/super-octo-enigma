@@ -17,6 +17,14 @@ declare global {
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const avatarText: typeof import('./src/@core/utils/formatters')['avatarText']
   const betweenValidator: typeof import('./src/@core/utils/validators')['betweenValidator']
+  const buildColumnSql: typeof import('./src/composables/useSqlExpressionPreview')['buildColumnSql']
+  const buildFullSql: typeof import('./src/composables/useSqlExpressionPreview')['buildFullSql']
+  const buildFullSqlAndUpdateStore: typeof import('./src/composables/useSqlExpressionPreview')['buildFullSqlAndUpdateStore']
+  const buildGroupByClause: typeof import('./src/composables/useSqlExpressionPreview')['buildGroupByClause']
+  const buildJoinClause: typeof import('./src/composables/useSqlExpressionPreview')['buildJoinClause']
+  const buildOrderByClause: typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']
+  const buildSelectClause: typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']
+  const buildWhereClause: typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -52,9 +60,12 @@ declare global {
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const formatDate: typeof import('./src/@core/utils/formatters')['formatDate']
   const formatDateToMonthShort: typeof import('./src/@core/utils/formatters')['formatDateToMonthShort']
+  const generateTableAlias: typeof import('./src/composables/useSqlExpressionPreview')['generateTableAlias']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
+  const getHighlightedSql: typeof import('./src/composables/useSqlExpressionPreview')['getHighlightedSql']
+  const getSqlPreview: typeof import('./src/composables/useSqlExpressionPreview')['getSqlPreview']
   const h: typeof import('vue')['h']
   const hexToRgb: typeof import('./src/@core/utils/colorConverter')['hexToRgb']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
@@ -242,6 +253,7 @@ declare global {
   const useGamepad: typeof import('@vueuse/core')['useGamepad']
   const useGenerateImageVariant: typeof import('./src/@core/composable/useGenerateImageVariant')['useGenerateImageVariant']
   const useGeolocation: typeof import('@vueuse/core')['useGeolocation']
+  const useGlobalSnackbar: typeof import('./src/composables/useGlobalSnackbar')['useGlobalSnackbar']
   const useI18n: typeof import('vue-i18n')['useI18n']
   const useId: typeof import('vue')['useId']
   const useIdle: typeof import('@vueuse/core')['useIdle']
@@ -312,6 +324,7 @@ declare global {
   const useSorted: typeof import('@vueuse/core')['useSorted']
   const useSpeechRecognition: typeof import('@vueuse/core')['useSpeechRecognition']
   const useSpeechSynthesis: typeof import('@vueuse/core')['useSpeechSynthesis']
+  const useSqlExpressionPreview: typeof import('./src/composables/useSqlExpressionPreview')['useSqlExpressionPreview']
   const useStepper: typeof import('@vueuse/core')['useStepper']
   const useStorage: typeof import('@vueuse/core')['useStorage']
   const useStorageAsync: typeof import('@vueuse/core')['useStorageAsync']
@@ -394,6 +407,14 @@ declare module 'vue' {
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly avatarText: UnwrapRef<typeof import('./src/@core/utils/formatters')['avatarText']>
     readonly betweenValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['betweenValidator']>
+    readonly buildColumnSql: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildColumnSql']>
+    readonly buildFullSql: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildFullSql']>
+    readonly buildFullSqlAndUpdateStore: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildFullSqlAndUpdateStore']>
+    readonly buildGroupByClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildGroupByClause']>
+    readonly buildJoinClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildJoinClause']>
+    readonly buildOrderByClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']>
+    readonly buildSelectClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']>
+    readonly buildWhereClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
     readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>
@@ -428,9 +449,12 @@ declare module 'vue' {
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly formatDate: UnwrapRef<typeof import('./src/@core/utils/formatters')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./src/@core/utils/formatters')['formatDateToMonthShort']>
+    readonly generateTableAlias: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['generateTableAlias']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
+    readonly getHighlightedSql: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['getHighlightedSql']>
+    readonly getSqlPreview: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['getSqlPreview']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hexToRgb: UnwrapRef<typeof import('./src/@core/utils/colorConverter')['hexToRgb']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
@@ -615,6 +639,7 @@ declare module 'vue' {
     readonly useGamepad: UnwrapRef<typeof import('@vueuse/core')['useGamepad']>
     readonly useGenerateImageVariant: UnwrapRef<typeof import('./src/@core/composable/useGenerateImageVariant')['useGenerateImageVariant']>
     readonly useGeolocation: UnwrapRef<typeof import('@vueuse/core')['useGeolocation']>
+    readonly useGlobalSnackbar: UnwrapRef<typeof import('./src/composables/useGlobalSnackbar')['useGlobalSnackbar']>
     readonly useI18n: UnwrapRef<typeof import('vue-i18n')['useI18n']>
     readonly useId: UnwrapRef<typeof import('vue')['useId']>
     readonly useIdle: UnwrapRef<typeof import('@vueuse/core')['useIdle']>
@@ -684,6 +709,7 @@ declare module 'vue' {
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
     readonly useSpeechRecognition: UnwrapRef<typeof import('@vueuse/core')['useSpeechRecognition']>
     readonly useSpeechSynthesis: UnwrapRef<typeof import('@vueuse/core')['useSpeechSynthesis']>
+    readonly useSqlExpressionPreview: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['useSqlExpressionPreview']>
     readonly useStepper: UnwrapRef<typeof import('@vueuse/core')['useStepper']>
     readonly useStorageAsync: UnwrapRef<typeof import('@vueuse/core')['useStorageAsync']>
     readonly useStyleTag: UnwrapRef<typeof import('@vueuse/core')['useStyleTag']>
