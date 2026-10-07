@@ -12,6 +12,16 @@ const monitoreoRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/monitoreo/quiosco',
+    name: 'monitoreoQuiosco',
+    component: () => import('./views/Quiosco.vue'),
+    meta: {
+      layout: 'blank',
+      action: 'read',
+      subject: 'monitoreo',
+    },
+  },
+  {
     path: '/monitoreo/admin/alcances',
     name: 'monitoreoAdminAlcances',
     component: () => import('./views/admin/AlcancesUsuarios.vue'),

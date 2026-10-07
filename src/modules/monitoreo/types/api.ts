@@ -76,3 +76,13 @@ export interface RespuestaSync {
   sincronizadores: { clave: string; ultima_corrida: string | null; filas: number | null; ms: number | null; marca: number; error: string | null }[]
   conteos: { lecturas_periodo_abierto: number; contratos: number; rastreo: number }
 }
+
+/** GET /monitoring/configuracion: parámetros del módulo (solo se usan los efectivos en el monitor). */
+export interface RespuestaConfiguracion {
+  tipos: Record<string, string>
+  defaults: Record<string, unknown>
+  global: Record<string, unknown>
+  por_gerencia: Record<string, Record<string, unknown>>
+  efectivos: Record<string, unknown> & { quiosco_rotacion_s?: number; silencio_min?: number; meta_diaria?: number; distancia_m?: number }
+  puede_editar: boolean
+}

@@ -2,7 +2,8 @@
   "menu": {
     "monitoreo": "Monitoreo",
     "monitor": "Monitor de lecturas",
-    "alcances": "Gerencias por usuario"
+    "alcances": "Gerencias por usuario",
+    "quiosco": "Pantalla grande"
   },
   "inicio": {
     "titulo": "Monitoreo de lecturas",
@@ -387,5 +388,31 @@
     "distancia": "Dist.",
     "verRecorrido": "Ver recorrido en el mapa",
     "sinLecturas": "Sin lecturas este día."
+  },
+  "quiosco": {
+    "titulo": "Monitoreo de lecturas",
+    "todas": "Todas las gerencias",
+    "rotaEn": "cambia en {n} s",
+    "fija": "gerencia fija",
+    "salir": "Salir del quiosco",
+    "actualizado": "Actualizado {hora}",
+    "ultimaLectura": "Última lectura recibida {hace}",
+    "sinDatos": "Sin datos todavía",
+    "syncCaido": "La sincronización con Dolibarr lleva más de 10 minutos sin correr: los datos pueden estar atrasados.",
+    "sinRespuesta": "El servidor no responde desde las {hora}. Se muestra el último estado conocido.",
+    "sinGerencias": "Esta cuenta no tiene gerencias asignadas: no hay nada que mostrar.",
+    "avance": "Avance de campo",
+    "atendidas": "{a} de {e} tomas",
+    "sectores": "Sectores",
+    "lecturistas": "Lecturistas activos",
+    "deConLecturas": "de {n} con lecturas",
+    "lecturasDia": "{n} lecturas hoy",
+    "avisos": "Avisos",
+    "sectoresAtrasados": "Sectores por terminar",
+    "sinSectoresAtrasados": "Todos los sectores terminados.",
+    "lecturistasActivos": "Lecturistas del día",
+    "sinLecturistas": "Nadie ha leído hoy.",
+    "diasActivo": "{n} d",
+    "pendientesN": "{n} pend."
   }
 }

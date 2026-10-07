@@ -1,4 +1,4 @@
-import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
+import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
 import type { RespuestaJornada } from '../types/jornada'
 import type { RespuestaDetalleLectura, RespuestaHistorial } from '../types/lectura'
@@ -118,4 +118,9 @@ export function descargarPendientesSector(sector: number, params: ParametrosMoni
 /** Jornada de un lecturista en un día (404 si no existe o está fuera del alcance). */
 export function obtenerJornada(lecturista: number, dia: string | null, { signal }: OpcionesPeticion = {}): Promise<RespuestaJornada> {
   return rawApi(`${BASE}/lecturistas/${lecturista}`, { params: dia ? { dia } : {}, signal })
+}
+
+/** Parámetros efectivos del módulo (rotación del quiosco, umbrales). */
+export function obtenerConfiguracion({ signal }: OpcionesPeticion = {}): Promise<RespuestaConfiguracion> {
+  return rawApi(`${BASE}/configuracion`, { signal })
 }
