@@ -22,6 +22,15 @@ const monitoreoRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/monitoreo/ranking',
+    name: 'monitoreoRanking',
+    component: () => import('./views/Ranking.vue'),
+    meta: {
+      action: 'read',
+      subject: 'monitoreo',
+    },
+  },
+  {
     path: '/monitoreo/alertas',
     name: 'monitoreoAlertas',
     component: () => import('./views/Alertas.vue'),

@@ -1,3 +1,4 @@
+import type { RespuestaRanking } from '../types/ranking'
 import type { Destinatario, EdicionDestinatario, RespuestaDestinatarios } from '../types/destinatarios'
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
@@ -217,4 +218,15 @@ export function guardarDestinatario(id: string | null, datos: EdicionDestinatari
 
 export function borrarDestinatario(id: string): Promise<{ ok: boolean }> {
   return rawApi(`${BASE}/admin/destinatarios/${id}`, { method: 'DELETE' })
+}
+
+/* Ranking de lecturistas (F2.4) */
+
+export function obtenerRanking(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<RespuestaRanking> {
+  return rawApi(`${BASE}/ranking`, { params, signal })
+}
+
+/** Excel o PDF del ranking con los mismos filtros (descarga autenticada). */
+export function descargarRanking(formato: 'xlsx' | 'pdf', params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/ranking.${formato}`, { params, responseType: 'blob', signal })
 }
