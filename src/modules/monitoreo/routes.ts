@@ -5,7 +5,7 @@ const monitoreoRoutes: RouteRecordRaw[] = [
   {
     path: '/monitoreo',
     name: 'monitoreoInicio',
-    component: () => import('./views/MonitorInicio.vue'),
+    component: () => import('./views/MonitorDia.vue'),
     meta: {
       action: 'read',
       subject: 'monitoreo',

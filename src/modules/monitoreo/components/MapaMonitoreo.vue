@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import maplibregl from 'maplibre-gl'
-import type { ExpressionSpecification, LngLatBoundsLike, MapGeoJSONFeature, Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl'
+import type { ExpressionSpecification, FilterSpecification, LngLatBoundsLike, MapGeoJSONFeature, Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useMapaTomas } from '../composables/useMapaTomas'
@@ -18,7 +18,11 @@ const props = withDefaults(defineProps<{
   gerencia?: number | null
   altura?: string
   refrescoMs?: number
-}>(), { periodo: null, gerencia: null, altura: '560px', refrescoMs: 60000 })
+
+  /** Solo estos sectores (ids) se pintan; null = todos los del alcance. */
+  sectoresFiltro?: number[] | null
+  sectorSeleccionado?: number | null
+}>(), { periodo: null, gerencia: null, altura: '560px', refrescoMs: 60000, sectoresFiltro: null, sectorSeleccionado: null })
 
 const emit = defineEmits<{
   toma: [props: TomaProps, lngLat: [number, number]]
@@ -73,6 +77,7 @@ function crearMapa() {
     mapa.addSource('sectores', { type: 'geojson', data: datos.sectores.value })
     mapa.addLayer({ id: 'sectores-relleno', type: 'fill', source: 'sectores', paint: { 'fill-color': colorSector, 'fill-opacity': 0.08 } }, primeraEtiqueta)
     mapa.addLayer({ id: 'sectores-linea', type: 'line', source: 'sectores', paint: { 'line-color': colorSector, 'line-width': 1.5, 'line-opacity': 0.9 } }, primeraEtiqueta)
+    mapa.addLayer({ id: 'sectores-seleccion', type: 'line', source: 'sectores', filter: ['==', ['get', 's'], -1], paint: { 'line-color': '#1e88e5', 'line-width': 3 } }, primeraEtiqueta)
     mapa.addLayer({
       id: 'sectores-etiqueta',
       type: 'symbol',
@@ -128,7 +133,52 @@ function crearMapa() {
 
     listo.value = true
     aplicarDatos()
+    aplicarFiltroSectores()
+    aplicarSeleccion()
   })
+}
+
+/** Deja visibles solo las tomas y contornos de los sectores filtrados (sin volver a pedir datos). */
+function aplicarFiltroSectores() {
+  if (!mapa || !listo.value)
+    return
+  const ids = props.sectoresFiltro
+  const filtro: FilterSpecification | null = ids ? ['in', ['get', 's'], ['literal', ids]] : null
+  for (const capa of ['tomas-circulos', 'sectores-relleno', 'sectores-linea', 'sectores-etiqueta'])
+    mapa.setFilter(capa, filtro)
+}
+
+function aplicarSeleccion() {
+  if (!mapa || !listo.value)
+    return
+  mapa.setFilter('sectores-seleccion', ['==', ['get', 's'], props.sectorSeleccionado ?? -1])
+}
+
+/** Caja [oeste, sur, este, norte] de una geometría GeoJSON (polígono o multipolígono). */
+function cajaGeometria(coordenadas: unknown): [number, number, number, number] | null {
+  let w = Number.POSITIVE_INFINITY
+  let s = Number.POSITIVE_INFINITY
+  let e = Number.NEGATIVE_INFINITY
+  let n = Number.NEGATIVE_INFINITY
+
+  const visitar = (c: unknown) => {
+    if (!Array.isArray(c))
+      return
+    if (c.length >= 2 && typeof c[0] === 'number' && typeof c[1] === 'number') {
+      w = Math.min(w, c[0])
+      e = Math.max(e, c[0])
+      s = Math.min(s, c[1])
+      n = Math.max(n, c[1])
+
+      return
+    }
+    for (const hijo of c)
+      visitar(hijo)
+  }
+
+  visitar(coordenadas)
+
+  return Number.isFinite(w) ? [w, s, e, n] : null
 }
 
 function aplicarDatos() {
@@ -176,6 +226,8 @@ function alternarSectores() {
 }
 
 watch(() => [props.periodo, props.gerencia], cargar)
+watch(() => props.sectoresFiltro, aplicarFiltroSectores, { deep: true })
+watch(() => props.sectorSeleccionado, aplicarSeleccion)
 
 onMounted(() => {
   crearMapa()
@@ -199,7 +251,20 @@ function irA(centro: [number, number], zoom = 15) {
   mapa?.flyTo({ center: centro, zoom, duration: 600 })
 }
 
-defineExpose({ recargar: cargar, irA })
+/** Encuadra un sector por su contorno o, si no lo tiene, por sus tomas. Devuelve false si no hay nada que encuadrar. */
+function irASector(sectorId: number): boolean {
+  if (!mapa)
+    return false
+  const contorno = datos.sectores.value.features.find(f => f.properties.s === sectorId)
+  const caja = contorno ? cajaGeometria(contorno.geometry.coordinates) : cajaDe(datos.tomas.value.features.filter(f => f.properties.s === sectorId))
+  if (!caja)
+    return false
+  mapa.fitBounds(caja as LngLatBoundsLike, { padding: 48, duration: 700, maxZoom: 16 })
+
+  return true
+}
+
+defineExpose({ recargar: cargar, irA, irASector })
 </script>
 
 <template>

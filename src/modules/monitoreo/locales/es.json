@@ -6,22 +6,8 @@
   },
   "inicio": {
     "titulo": "Monitoreo de lecturas",
-    "descripcion": "Avance de las lecturas por sector y lecturista en las gerencias que tienes asignadas.",
     "sinGerenciasTitulo": "Todavía no tienes gerencias asignadas",
-    "sinGerenciasDetalle": "Tienes permiso para ver el monitoreo, pero nadie te ha asignado una gerencia; por eso no verás datos. Pide al equipo de sistemas que te asigne la tuya en Monitoreo → Gerencias por usuario.",
-    "alcanceTitulo": "Tu alcance",
-    "todasLasGerencias": "Ves todas las gerencias.",
-    "gerenciasAsignadas": "Ves {n} gerencia. | Ves {n} gerencias.",
-    "catalogoNoDisponible": "No se pudo leer el catálogo de gerencias de Dolibarr en este momento.",
-    "permisosTitulo": "Lo que puedes hacer",
-    "permisoVer": "Ver el monitor",
-    "permisoOperar": "Atender alertas y pedir re-lecturas",
-    "permisoAdministrar": "Configurar el módulo",
-    "proximoTitulo": "Qué sigue en esta pantalla",
-    "proximoDetalle": "La base del módulo (permisos, alcance por gerencia y réplica de datos) ya está lista. Sobre ella se construye el monitor del día:",
-    "proximo1": "Mapa con las tomas por estado, los lecturistas y los contornos de cada sector.",
-    "proximo2": "Avance general, sectores atrasados, lecturistas activos y alertas abiertas.",
-    "proximo3": "Detalle de cada lectura, de cada sector y de la jornada de cada lecturista."
+    "sinGerenciasDetalle": "Tienes permiso para ver el monitoreo, pero nadie te ha asignado una gerencia; por eso no verás datos. Pide al equipo de sistemas que te asigne la tuya en Monitoreo → Gerencias por usuario."
   },
   "alcances": {
     "titulo": "Gerencias por usuario",
@@ -61,8 +47,8 @@
     "dias": "hace {n} días"
   },
   "mapa": {
-    "titulo": "Mapa del periodo abierto",
-    "descripcion": "Tomas del padrón por estado y contornos de sector. Se actualiza cada minuto con los cambios que llegan.",
+    "titulo": "Mapa",
+    "descripcion": "Tomas del padrón por estado, contornos de sector y lecturistas. Se actualiza cada minuto con los cambios que llegan.",
     "satelite": "Satélite",
     "calles": "Calles",
     "verSectores": "Sectores",
@@ -77,6 +63,131 @@
       "estimada": "Estimadas",
       "fija": "Tarifa fija",
       "lejos": "Lejos de la toma"
-    }
+    },
+    "tomaElegida": "Toma {id} · {estado}",
+    "detalleProximo": "el detalle de la lectura llega en la siguiente entrega"
+  },
+  "tiempo": {
+    "nunca": "sin datos",
+    "ahora": "hace menos de un minuto",
+    "minutos": "hace {n} min",
+    "horas": "hace {n} h",
+    "dias": "hace {n} días"
+  },
+  "estadosSector": {
+    "pendiente": "Pendientes",
+    "iniciado": "Iniciados",
+    "terminado": "Terminados",
+    "rezagado": "Rezagados",
+    "sin_esperadas": "Sin esperadas",
+    "sin_datos": "Sin datos"
+  },
+  "estadosLecturista": {
+    "activo": "Activos",
+    "silencio": "En silencio",
+    "terminado": "Terminaron",
+    "sin_iniciar": "Sin iniciar",
+    "fuera_de_jornada": "Fuera de jornada"
+  },
+  "avisos": {
+    "silencio": "en silencio",
+    "bateria": "batería baja",
+    "atoradas": "lecturas atoradas",
+    "lejos": "lejos de la toma",
+    "rezagados": "sectores rezagados"
+  },
+  "indicadores": {
+    "avance": "Avance de campo",
+    "conEstimadas": "{pct} % con estimadas",
+    "atendidasDe": "{a} de {e} tomas atendidas",
+    "pendientes": "{n} pendientes",
+    "sectores": "Sectores ({n})",
+    "lecturistasHoy": "Lecturistas activos hoy",
+    "lecturistas": "Lecturistas activos",
+    "activosDe": "de {n} con lecturas",
+    "lecturasDia": "{n} lecturas en el día",
+    "meta": "meta {n} por lecturista",
+    "enMeta": "{n} en meta",
+    "sinIniciar": "{n} sin iniciar",
+    "enSilencio": "{n} en silencio",
+    "avisos": "Avisos abiertos",
+    "sinAvisos": "Nada pendiente de atender.",
+    "verSilencio": "Ver lecturistas en silencio"
+  },
+  "filtros": {
+    "vistaHoy": "Hoy",
+    "vistaPeriodo": "Periodo",
+    "dia": "Día",
+    "diaAnterior": "Día anterior",
+    "diaSiguiente": "Día siguiente",
+    "periodo": "Periodo",
+    "periodoAbierto": "{nombre} (abierto)",
+    "gerencia": "Gerencia",
+    "sistema": "Sistema",
+    "sector": "Sector",
+    "lecturista": "Lecturista",
+    "estadoSector": "Estado del sector",
+    "sinOpciones": "Sin opciones",
+    "limpiar": "Quitar filtros ({n})"
+  },
+  "sectores": {
+    "titulo": "Sectores",
+    "buscar": "Buscar sector, sistema o lecturista",
+    "soloHoy": "Solo con lecturas hoy ({n})",
+    "sector": "Sector",
+    "estado": "Estado",
+    "avance": "Avance",
+    "pendientes": "Pend.",
+    "hoy": "Hoy",
+    "dias": "Días",
+    "lecturistas": "Lecturistas",
+    "ultima": "Última lectura",
+    "sinResultados": "Ningún sector coincide.",
+    "diasParaCerrar": "Días para cerrar: de la primera lectura a la última (o a hoy si sigue abierto)"
+  },
+  "lecturistas": {
+    "tituloHoy": "Lecturistas de hoy",
+    "tituloDia": "Lecturistas del día",
+    "buscar": "Buscar lecturista, gerencia o sector",
+    "nombre": "Lecturista",
+    "estado": "Estado",
+    "ultimaSenal": "Última señal",
+    "lecturas": "Lecturas / meta",
+    "sectores": "Sectores",
+    "anomalias": "Anom.",
+    "lejos": "Lejos",
+    "bateria": "Batería",
+    "pendientes": "Por enviar",
+    "sinActividad": "sin actividad hoy",
+    "sinReporteDesde": "sin reporte desde las {hora}",
+    "ultimaA": "última a las {hora}",
+    "porHora": "{n}/h",
+    "asignados": "{n} sectores asignados, sin lecturas",
+    "sinResultados": "Ningún lecturista coincide."
+  },
+  "barra": {
+    "sinActualizar": "sin actualizar",
+    "actualizadoSegundos": "actualizado hace {n} s",
+    "actualizado": "actualizado {hace}",
+    "pausado": "en pausa (pestaña oculta)",
+    "ultimaLectura": "última lectura recibida {hace}",
+    "sincronizacionCaida": "sincronización atrasada",
+    "refrescar": "Actualizar ahora",
+    "errorRefresco": "No se pudo actualizar: {mensaje}. Se muestran los últimos datos."
+  },
+  "estadoSector": {
+    "pendiente": "Pendiente",
+    "iniciado": "Iniciado",
+    "terminado": "Terminado",
+    "rezagado": "Rezagado",
+    "sin_esperadas": "Sin esperadas",
+    "sin_datos": "Sin datos"
+  },
+  "estadoLecturista": {
+    "activo": "Activo",
+    "silencio": "En silencio",
+    "terminado": "Terminó",
+    "sin_iniciar": "Sin iniciar",
+    "fuera_de_jornada": "Fuera de jornada"
   }
 }

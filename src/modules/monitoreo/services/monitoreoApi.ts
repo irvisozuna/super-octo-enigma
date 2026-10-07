@@ -1,5 +1,6 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { RespuestaCambios, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { ParametrosMonitor, RespuestaCatalogos, RespuestaLecturistas, RespuestaResumen, RespuestaSectores } from '../types/monitor'
 import { rawApi } from '@/services/api'
 
 /*
@@ -31,6 +32,26 @@ export function actualizarAlcance(usuarioId: string, gerencias: number[], { sign
 
 export function obtenerEstadoSync({ signal }: OpcionesPeticion = {}): Promise<RespuestaSync> {
   return rawApi(`${BASE}/sync`, { signal })
+}
+
+/** Opciones de los filtros (periodos, sistemas, sectores, lecturistas) dentro del alcance del usuario. */
+export function obtenerCatalogos({ signal }: OpcionesPeticion = {}): Promise<RespuestaCatalogos> {
+  return rawApi(`${BASE}/catalogos`, { signal })
+}
+
+/** Los cuatro indicadores de la pantalla principal. */
+export function obtenerResumen(params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaResumen> {
+  return rawApi(`${BASE}/resumen`, { params, signal })
+}
+
+/** Avance por sector del periodo (con lecturas del día si se manda `dia`). */
+export function obtenerSectores(params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaSectores> {
+  return rawApi(`${BASE}/sectores`, { params, signal })
+}
+
+/** Lecturistas del día con su jornada, estado y avisos. */
+export function obtenerLecturistas(params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaLecturistas> {
+  return rawApi(`${BASE}/lecturistas`, { params, signal })
 }
 
 function filtrosMapa(periodo: number | null, gerencia: number | null): Record<string, number> {
