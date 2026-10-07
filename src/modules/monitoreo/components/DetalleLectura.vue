@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useAccionesLectura } from '../composables/useAccionesLectura'
 import { useDetalleLectura } from '../composables/useDetalleLectura'
-import { fechaCorta, horaCorta } from '../utils/tiempo'
+import type { MotivoRelectura } from '../types/relecturas'
+import { fechaCorta, haceCuanto, horaCorta } from '../utils/tiempo'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
 /*
@@ -29,6 +31,57 @@ const datos = useDetalleLectura()
 
 const lectura = datos.lectura
 const toma = datos.contrato
+const acciones = useAccionesLectura()
+
+const relativo = (clave: 'nunca' | 'ahora' | 'minutos' | 'horas' | 'dias', valor?: number) => t(`monitoreo.tiempo.${clave}`, { n: valor })
+const MOTIVOS: MotivoRelectura[] = ['consumo_cero', 'consumo_alto', 'consumo_bajo', 'lectura_menor', 'anomalia', 'revisar', 'otro']
+const motivoElegido = ref<MotivoRelectura>('revisar')
+const notaRelectura = ref('')
+const nuevaNota = ref('')
+const puedeOperar = computed(() => datos.detalle.value?.permisos.operar ?? false)
+const relectura = computed(() => datos.detalle.value?.relectura ?? null)
+const sugerencias = computed(() => datos.detalle.value?.sugerencias ?? [])
+const notas = computed(() => datos.detalle.value?.notas ?? [])
+const opcionesMotivo = computed(() => MOTIVOS.map(m => ({ value: m, title: t(`monitoreo.lectura.motivos.${m}`) })))
+
+async function refrescar() {
+  if (props.contrato !== null)
+    await datos.cargar(props.contrato, props.periodo)
+}
+
+async function pedirRelectura(motivo: MotivoRelectura) {
+  const periodo = datos.detalle.value?.periodo?.id
+  if (props.contrato === null || !periodo)
+    return
+  if (await acciones.pedir(props.contrato, periodo, motivo, notaRelectura.value.trim() || null)) {
+    notaRelectura.value = ''
+    await refrescar()
+  }
+}
+
+async function cancelarRelectura() {
+  if (relectura.value && await acciones.cancelar(relectura.value.id))
+    await refrescar()
+}
+
+async function anotar() {
+  if (props.contrato === null || !nuevaNota.value.trim())
+    return
+  if (await acciones.anotar('lectura', props.contrato, datos.detalle.value?.periodo?.id ?? null, nuevaNota.value.trim())) {
+    nuevaNota.value = ''
+    await refrescar()
+  }
+}
+
+async function borrarNota(id: string) {
+  if (await acciones.quitarNota(id))
+    await refrescar()
+}
+
+async function marcarCoordenada(enDuda: boolean) {
+  if (props.contrato !== null && await acciones.marcarCoordenada(props.contrato, enDuda))
+    await refrescar()
+}
 
 const variacionColor = computed(() => {
   const v = lectura.value?.variacion_pct
@@ -684,22 +737,230 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
 
       <!-- Acciones (F2.5) -->
       <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-0">
+        <h6 class="text-subtitle-1 font-weight-medium mb-1">
           {{ t('monitoreo.lectura.acciones') }}
         </h6>
-        <div class="text-caption text-medium-emphasis mb-2">
-          {{ t('monitoreo.lectura.accionesProximas') }}
+        <div
+          v-if="!puedeOperar"
+          class="text-caption text-medium-emphasis mb-2"
+        >
+          {{ t('monitoreo.lectura.soloLecturaAcciones') }}
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <VAlert
+          v-if="acciones.error.value"
+          type="error"
+          variant="tonal"
+          density="compact"
+          class="mb-2"
+          closable
+          @click:close="acciones.error.value = null"
+        >
+          {{ acciones.error.value.mensaje }}
+        </VAlert>
+
+        <!-- Re-lectura: estado vigente -->
+        <VAlert
+          v-if="relectura"
+          :type="relectura.estado === 'solicitada' ? 'warning' : relectura.estado === 'releida' ? 'success' : 'info'"
+          variant="tonal"
+          density="compact"
+          class="mb-2"
+        >
+          <template v-if="relectura.estado === 'solicitada'">
+            {{ t('monitoreo.lectura.relecturaSolicitada', { quien: relectura.pedida_por ?? '—', hace: haceCuanto(relectura.pedida_en, relativo), motivo: relectura.motivo_etiqueta }) }}
+            <span v-if="relectura.nota"> · {{ relectura.nota }}</span>
+            <div v-if="puedeOperar">
+              <VBtn
+                size="x-small"
+                variant="text"
+                class="text-none mt-1"
+                :loading="acciones.ocupado.value === 'cancelar'"
+                @click="cancelarRelectura"
+              >
+                {{ t('monitoreo.lectura.cancelarRelectura') }}
+              </VBtn>
+            </div>
+          </template>
+          <template v-else-if="relectura.estado === 'releida'">
+            {{ t('monitoreo.lectura.relecturaReleida', { hace: haceCuanto(relectura.resuelta_en, relativo), actual: relectura.resultado?.actual ?? '—', consumo: relectura.resultado?.consumo ?? '—' }) }}
+          </template>
+          <template v-else>
+            {{ t('monitoreo.lectura.relecturaCancelada', { motivo: relectura.motivo_etiqueta, quien: relectura.pedida_por ?? '—' }) }}
+          </template>
+        </VAlert>
+
+        <!-- Sugerencias con la lógica del reporte de anomalías -->
+        <div class="text-caption text-medium-emphasis">
+          {{ t('monitoreo.lectura.sugerencias') }} · {{ t('monitoreo.lectura.sugerenciasDetalle') }}
+        </div>
+        <div
+          v-if="sugerencias.length"
+          class="d-flex flex-wrap gap-1 mt-1 mb-2"
+        >
+          <VChip
+            v-for="s in sugerencias"
+            :key="s.motivo"
+            size="small"
+            label
+            color="warning"
+            variant="tonal"
+            :disabled="!puedeOperar || relectura?.estado === 'solicitada' || acciones.ocupado.value === 'relectura'"
+            prepend-icon="tabler-refresh"
+            :title="t('monitoreo.lectura.pedirPor', { motivo: s.etiqueta })"
+            @click="pedirRelectura(s.motivo)"
+          >
+            {{ s.etiqueta }}
+          </VChip>
+        </div>
+        <div
+          v-else
+          class="text-body-2 text-medium-emphasis mb-2"
+        >
+          {{ t('monitoreo.lectura.sinSugerencias') }}
+        </div>
+
+        <!-- Pedir re-lectura con motivo -->
+        <div
+          v-if="puedeOperar && lectura && relectura?.estado !== 'solicitada'"
+          class="d-flex flex-wrap align-center gap-2 mb-3"
+        >
+          <VSelect
+            v-model="motivoElegido"
+            :items="opcionesMotivo"
+            :label="t('monitoreo.lectura.motivo')"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="detalle-lectura__motivo"
+          />
+          <VTextField
+            v-model="notaRelectura"
+            :label="t('monitoreo.lectura.notaOpcional')"
+            density="compact"
+            variant="outlined"
+            hide-details
+            maxlength="500"
+            class="flex-grow-1"
+          />
           <VBtn
-            v-for="accion in ['accionRelectura', 'accionNota', 'accionTicket', 'accionCoordenada']"
-            :key="accion"
+            size="small"
+            color="primary"
+            variant="tonal"
+            class="text-none"
+            prepend-icon="tabler-refresh"
+            :loading="acciones.ocupado.value === 'relectura'"
+            @click="pedirRelectura(motivoElegido)"
+          >
+            {{ t('monitoreo.lectura.pedirRelectura') }}
+          </VBtn>
+        </div>
+
+        <!-- Otras acciones -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <VBtn
+            v-if="urlFicha"
             size="small"
             variant="outlined"
             class="text-none"
-            disabled
+            prepend-icon="tabler-ticket"
+            :href="urlFicha"
+            target="_blank"
+            rel="noopener noreferrer"
+            :title="t('monitoreo.lectura.ticketSoporteDetalle')"
           >
-            {{ t(`monitoreo.lectura.${accion}`) }}
+            {{ t('monitoreo.lectura.ticketSoporte') }}
+          </VBtn>
+          <VBtn
+            v-if="puedeOperar && toma && !toma.coordenada.en_duda"
+            size="small"
+            variant="outlined"
+            class="text-none"
+            prepend-icon="tabler-map-pin-question"
+            :loading="acciones.ocupado.value === 'coordenada'"
+            @click="marcarCoordenada(true)"
+          >
+            {{ t('monitoreo.lectura.marcarCoordenada') }}
+          </VBtn>
+        </div>
+        <VAlert
+          v-if="toma?.coordenada.en_duda"
+          type="info"
+          variant="tonal"
+          density="compact"
+          class="mb-3"
+        >
+          {{ t('monitoreo.lectura.coordenadaMarcada') }}
+          <VBtn
+            v-if="puedeOperar"
+            size="x-small"
+            variant="text"
+            class="text-none ms-1"
+            :loading="acciones.ocupado.value === 'coordenada'"
+            @click="marcarCoordenada(false)"
+          >
+            {{ t('monitoreo.lectura.quitarMarcaCoordenada') }}
+          </VBtn>
+        </VAlert>
+
+        <!-- Anotaciones -->
+        <h6 class="text-subtitle-2 font-weight-medium mb-1">
+          {{ t('monitoreo.lectura.anotaciones') }}
+        </h6>
+        <div
+          v-if="!notas.length"
+          class="text-body-2 text-medium-emphasis"
+        >
+          {{ t('monitoreo.lectura.sinAnotaciones') }}
+        </div>
+        <VList
+          v-else
+          density="compact"
+          class="py-0 detalle-lectura__lista"
+        >
+          <VListItem
+            v-for="nota in notas"
+            :key="nota.id"
+            :title="nota.texto"
+            :subtitle="`${nota.autor ?? '—'} · ${fechaCorta(nota.fecha)} ${horaCorta(nota.fecha)}`"
+          >
+            <template
+              v-if="puedeOperar"
+              #append
+            >
+              <VBtn
+                icon="tabler-trash"
+                size="x-small"
+                variant="text"
+                :title="t('monitoreo.lectura.borrarNota')"
+                :loading="acciones.ocupado.value === 'borrarNota'"
+                @click="borrarNota(nota.id)"
+              />
+            </template>
+          </VListItem>
+        </VList>
+        <div
+          v-if="puedeOperar"
+          class="d-flex align-center gap-2 mt-2"
+        >
+          <VTextField
+            v-model="nuevaNota"
+            :placeholder="t('monitoreo.lectura.nuevaAnotacion')"
+            density="compact"
+            variant="outlined"
+            hide-details
+            maxlength="1000"
+            class="flex-grow-1"
+            @keyup.enter="anotar"
+          />
+          <VBtn
+            size="small"
+            variant="tonal"
+            class="text-none"
+            :disabled="!nuevaNota.trim()"
+            :loading="acciones.ocupado.value === 'nota'"
+            @click="anotar"
+          >
+            {{ t('monitoreo.lectura.anotar') }}
           </VBtn>
         </div>
       </section>
@@ -710,6 +971,11 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
 <style scoped>
 .detalle-lectura__cuerpo {
   overflow-y: auto;
+}
+
+.detalle-lectura__motivo {
+  flex: 0 1 220px;
+  min-inline-size: 180px;
 }
 
 .detalle-lectura__lista :deep(.v-list-item) {

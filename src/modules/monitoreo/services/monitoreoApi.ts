@@ -1,3 +1,4 @@
+import type { MotivoRelectura, Nota, Relectura, RespuestaRelecturas } from '../types/relecturas'
 import type { RespuestaRanking } from '../types/ranking'
 import type { Destinatario, EdicionDestinatario, RespuestaDestinatarios } from '../types/destinatarios'
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
@@ -229,4 +230,38 @@ export function obtenerRanking(params: Record<string, string | number>, { signal
 /** Excel o PDF del ranking con los mismos filtros (descarga autenticada). */
 export function descargarRanking(formato: 'xlsx' | 'pdf', params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<Blob> {
   return rawApi(`${BASE}/ranking.${formato}`, { params, responseType: 'blob', signal })
+}
+
+/* Re-lecturas, anotaciones y acciones (F2.5) */
+
+export function obtenerRelecturas(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<RespuestaRelecturas> {
+  return rawApi(`${BASE}/relecturas`, { params, signal })
+}
+
+export function descargarRelecturasPdf(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/relecturas.pdf`, { params, responseType: 'blob', signal })
+}
+
+export function pedirRelectura(contrato: number, periodo: number, motivo: MotivoRelectura, nota?: string | null): Promise<Relectura> {
+  return rawApi(`${BASE}/lecturas/${contrato}/relectura`, { method: 'POST', body: { periodo, motivo, nota: nota || undefined } })
+}
+
+export function cancelarRelectura(id: string, nota?: string | null): Promise<Relectura> {
+  return rawApi(`${BASE}/relecturas/${id}/cancelar`, { method: 'POST', body: nota ? { nota } : {} })
+}
+
+export function obtenerNotas(tipo: 'lectura' | 'sector', id: number, periodo: number | null, { signal }: OpcionesPeticion = {}): Promise<{ notas: Nota[] }> {
+  return rawApi(`${BASE}/notas`, { params: periodo ? { tipo, id, periodo } : { tipo, id }, signal })
+}
+
+export function crearNota(tipo: 'lectura' | 'sector', id: number, periodo: number | null, texto: string): Promise<Nota> {
+  return rawApi(`${BASE}/notas`, { method: 'POST', body: { tipo, id, periodo: periodo ?? undefined, texto } })
+}
+
+export function borrarNota(id: string): Promise<{ ok: boolean }> {
+  return rawApi(`${BASE}/notas/${id}`, { method: 'DELETE' })
+}
+
+export function marcarCoordenadaEnDuda(contrato: number, enDuda = true): Promise<{ contrato_id: number; coordenada_en_duda: boolean }> {
+  return rawApi(`${BASE}/lecturas/${contrato}/coordenada-en-duda`, { method: 'POST', body: { en_duda: enDuda } })
 }

@@ -169,6 +169,11 @@ function verAvisos() {
 onMounted(async () => {
   await cargarTodo()
   resume()
+
+  // Enlace directo a una lectura (desde re-lecturas o alertas): /monitoreo?contrato=ID&periodo=…
+  const contrato = typeof route.query.contrato === 'string' ? Number.parseInt(route.query.contrato, 10) : Number.NaN
+  if (Number.isFinite(contrato) && contrato > 0)
+    lecturaSeleccionada.value = { contrato, periodo: periodoMapa.value }
 })
 
 onBeforeUnmount(() => {

@@ -27,6 +27,12 @@ const monitoreoMenu: VerticalNavItems = [
         subject: 'monitoreo',
       },
       {
+        title: 'Re-lecturas',
+        to: 'monitoreoRelecturas',
+        action: 'read',
+        subject: 'monitoreo',
+      },
+      {
         title: 'Ranking de lecturistas',
         to: 'monitoreoRanking',
         action: 'read',

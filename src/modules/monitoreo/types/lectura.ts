@@ -1,4 +1,6 @@
-/** GET /monitoring/lecturas/{contrato}?periodo — detalle de la lectura de una toma en un periodo (solo lectura). */
+import type { Nota, Relectura, SugerenciaRelectura } from './relecturas'
+
+/** GET /monitoring/lecturas/{contrato}?periodo — detalle de la lectura de una toma en un periodo. */
 
 export interface ContratoDetalle {
   id: number
@@ -18,7 +20,7 @@ export interface ContratoDetalle {
   tipo_cargo: string | null
   tarifa_fija: boolean
   promedio: number | null
-  coordenada: { lat: string | number | null; lng: string | number | null; valida: boolean; corregida: boolean }
+  coordenada: { lat: string | number | null; lng: string | number | null; valida: boolean; corregida: boolean; en_duda: boolean }
 }
 
 export interface AnomaliaDetalle {
@@ -58,7 +60,12 @@ export interface RespuestaDetalleLectura {
   periodo: { id: number; nombre: string; abierto: boolean } | null
   lectura: LecturaDetalle | null
   otras_lecturas: LecturaDetalle[]
-  permisos: { duplicado: boolean }
+
+  /** F2.5: avisos de consumo con la lógica del reporte de anomalías, orden de re-lectura vigente y anotaciones. */
+  sugerencias: SugerenciaRelectura[]
+  relectura: Relectura | null
+  notas: Nota[]
+  permisos: { duplicado: boolean; operar: boolean }
 }
 
 /** Fila del historial de Support (`GET /supports/getReadingsByContract/{id}`): nombres tal como vienen de Aquasoft Comercial. */
