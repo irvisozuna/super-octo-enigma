@@ -1,5 +1,6 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { RespuestaDetalleLectura, RespuestaHistorial } from '../types/lectura'
 import type { ParametrosMonitor, RespuestaCatalogos, RespuestaLecturistas, RespuestaResumen, RespuestaSectores } from '../types/monitor'
 import { rawApi } from '@/services/api'
 
@@ -90,4 +91,14 @@ export function obtenerLecturistasMapa(params: ParametrosMonitor, { signal }: Op
 /** Recorrido del día de un lecturista (rastreo punto a punto + lecturas con GPS). */
 export function obtenerRecorrido(lecturista: number, params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaRecorrido> {
   return rawApi(`${BASE}/mapa/recorrido`, { params: { ...params, lecturista }, signal })
+}
+
+/** Detalle de la lectura de un contrato en un periodo (404 si no existe o está fuera del alcance). */
+export function obtenerDetalleLectura(contrato: number, periodo: number | null, { signal }: OpcionesPeticion = {}): Promise<RespuestaDetalleLectura> {
+  return rawApi(`${BASE}/lecturas/${contrato}`, { params: periodo ? { periodo } : {}, signal })
+}
+
+/** Historial de lecturas del contrato desde Support (Dolibarr): las últimas `limite`. */
+export function obtenerHistorialContrato(contrato: number, limite = 12, { signal }: OpcionesPeticion = {}): Promise<RespuestaHistorial> {
+  return rawApi(`/supports/getReadingsByContract/${contrato}`, { params: { limit: limite, page: 1 }, signal })
 }

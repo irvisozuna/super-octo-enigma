@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import BarraActualizacion from '../components/BarraActualizacion.vue'
+import DetalleLectura from '../components/DetalleLectura.vue'
 import FiltrosMonitor from '../components/FiltrosMonitor.vue'
 import IndicadoresMonitor from '../components/IndicadoresMonitor.vue'
 import MapaMonitoreo from '../components/MapaMonitoreo.vue'
@@ -38,7 +39,7 @@ const mapa = ref<InstanceType<typeof MapaMonitoreo> | null>(null)
 const sectorSeleccionado = ref<number | null>(null)
 const lecturistaSeleccionado = ref<{ id: number; nombre: string; estado: EstadoLecturista; sinRastreo: boolean } | null>(null)
 const filtroEstadoLecturista = ref<EstadoLecturista | null>(null)
-const tomaSeleccionada = ref<{ props: TomaProps; lngLat: [number, number] } | null>(null)
+const lecturaSeleccionada = ref<{ contrato: number; periodo: number | null } | null>(null)
 
 let controlador: AbortController | null = null
 
@@ -73,6 +74,7 @@ watch(parametros, async (nuevo, viejo) => {
   sincronizarRuta()
   sectorSeleccionado.value = null
   lecturistaSeleccionado.value = null
+  lecturaSeleccionada.value = null
   filtroEstadoLecturista.value = null
   await monitor.cargar(nuevo)
 })
@@ -99,8 +101,9 @@ function sectorDesdeMapa(props: SectorProps) {
   sectorSeleccionado.value = props.s
 }
 
-function tomaDesdeMapa(props: TomaProps, lngLat: [number, number]) {
-  tomaSeleccionada.value = { props, lngLat }
+/** Clic en una toma: abre el detalle de su lectura en el periodo del mapa. */
+function tomaDesdeMapa(props: TomaProps) {
+  lecturaSeleccionada.value = { contrato: props.i, periodo: periodoMapa.value }
 }
 
 function irASectorPorId(id: number) {
@@ -132,7 +135,7 @@ function lecturistaDesdeMapa(p: LecturistaMapaProps) {
 function cerrarTodo() {
   lecturistaSeleccionado.value = null
   sectorSeleccionado.value = null
-  tomaSeleccionada.value = null
+  lecturaSeleccionada.value = null
 }
 
 function filtrarEstado(estado: EstadoSector) {
@@ -295,18 +298,6 @@ onBeforeUnmount(() => {
             </VCardText>
           </VCard>
           <VSnackbar
-            :model-value="tomaSeleccionada !== null"
-            location="bottom"
-            timeout="6000"
-            variant="elevated"
-            @update:model-value="(v: boolean) => { if (!v) tomaSeleccionada = null }"
-          >
-            <span v-if="tomaSeleccionada">
-              {{ t('monitoreo.mapa.tomaElegida', { id: tomaSeleccionada.props.i, estado: t(`monitoreo.mapa.estados.${({ p: 'pendiente', l: 'leida', a: 'anomalia', x: 'estimada', f: 'fija' } as const)[tomaSeleccionada.props.e]}`) }) }}
-              <span class="text-medium-emphasis"> · {{ t('monitoreo.mapa.detalleProximo') }}</span>
-            </span>
-          </VSnackbar>
-          <VSnackbar
             :model-value="lecturistaSeleccionado !== null"
             location="bottom"
             :timeout="-1"
@@ -346,6 +337,14 @@ onBeforeUnmount(() => {
           />
         </VCol>
       </VRow>
+
+      <DetalleLectura
+        :abierto="lecturaSeleccionada !== null"
+        :contrato="lecturaSeleccionada?.contrato ?? null"
+        :periodo="lecturaSeleccionada?.periodo ?? null"
+        @update:abierto="(v: boolean) => { if (!v) lecturaSeleccionada = null }"
+        @ver-en-mapa="(c: [number, number]) => mapa?.irA(c, 17)"
+      />
 
       <div id="monitoreo-lecturistas">
         <TablaLecturistas

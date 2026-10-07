@@ -81,6 +81,12 @@ async function fetchItemData() {
 
       itemData.value = result.data
     }
+
+    // Enlace profundo (p. ej. desde el monitoreo de lecturas): /supports?cuenta=10702033 abre esa cuenta
+    if (typeof route.query.cuenta === 'string' && route.query.cuenta.trim()) {
+      searchQuery.value = route.query.cuenta.trim()
+      await searchContract()
+    }
   }
   catch (error) {
     console.error('Error fetching support data:', error)
