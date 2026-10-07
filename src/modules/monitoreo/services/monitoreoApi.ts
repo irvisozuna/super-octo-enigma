@@ -1,5 +1,6 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { PropuestaCoordenada, RespuestaCoordenadas } from '../types/coordenadas'
 import type { RespuestaJornada } from '../types/jornada'
 import type { RespuestaDetalleLectura, RespuestaHistorial } from '../types/lectura'
 import type { RespuestaDetalleSector } from '../types/sector'
@@ -123,4 +124,19 @@ export function obtenerJornada(lecturista: number, dia: string | null, { signal 
 /** Parámetros efectivos del módulo (rotación del quiosco, umbrales). */
 export function obtenerConfiguracion({ signal }: OpcionesPeticion = {}): Promise<RespuestaConfiguracion> {
   return rawApi(`${BASE}/configuracion`, { signal })
+}
+
+/** Propuestas de coordenada (paginadas) con su resumen. */
+export function obtenerCoordenadas(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<RespuestaCoordenadas> {
+  return rawApi(`${BASE}/coordenadas`, { params, signal })
+}
+
+/** Decide sobre una propuesta (requiere operate monitoring). */
+export function decidirCoordenada(contrato: number, accion: 'aceptar' | 'descartar' | 'reabrir', nota?: string | null): Promise<PropuestaCoordenada> {
+  return rawApi(`${BASE}/coordenadas/${contrato}/${accion}`, { method: 'POST', body: nota ? { nota } : {} })
+}
+
+/** CSV de las propuestas del filtro (descarga autenticada). */
+export function descargarCoordenadasCsv(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/coordenadas.csv`, { params, responseType: 'blob', signal })
 }

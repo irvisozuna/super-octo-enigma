@@ -21,6 +21,12 @@ const monitoreoMenu: VerticalNavItems = [
         subject: 'monitoreo',
       },
       {
+        title: 'Coordenadas de tomas',
+        to: 'monitoreoCoordenadas',
+        action: 'read',
+        subject: 'monitoreo',
+      },
+      {
         title: 'Gerencias por usuario',
         to: 'monitoreoAdminAlcances',
         action: 'manage',

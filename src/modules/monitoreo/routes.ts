@@ -22,6 +22,15 @@ const monitoreoRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/monitoreo/coordenadas',
+    name: 'monitoreoCoordenadas',
+    component: () => import('./views/Coordenadas.vue'),
+    meta: {
+      action: 'read',
+      subject: 'monitoreo',
+    },
+  },
+  {
     path: '/monitoreo/admin/alcances',
     name: 'monitoreoAdminAlcances',
     component: () => import('./views/admin/AlcancesUsuarios.vue'),
