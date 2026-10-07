@@ -1,6 +1,7 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
 import type { RespuestaDetalleLectura, RespuestaHistorial } from '../types/lectura'
+import type { RespuestaDetalleSector } from '../types/sector'
 import type { ParametrosMonitor, RespuestaCatalogos, RespuestaLecturistas, RespuestaResumen, RespuestaSectores } from '../types/monitor'
 import { rawApi } from '@/services/api'
 
@@ -101,4 +102,14 @@ export function obtenerDetalleLectura(contrato: number, periodo: number | null, 
 /** Historial de lecturas del contrato desde Support (Dolibarr): las últimas `limite`. */
 export function obtenerHistorialContrato(contrato: number, limite = 12, { signal }: OpcionesPeticion = {}): Promise<RespuestaHistorial> {
   return rawApi(`/supports/getReadingsByContract/${contrato}`, { params: { limit: limite, page: 1 }, signal })
+}
+
+/** Detalle de un sector en el periodo (404 si no existe o está fuera del alcance). */
+export function obtenerDetalleSector(sector: number, params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaDetalleSector> {
+  return rawApi(`${BASE}/sectores/${sector}`, { params, signal })
+}
+
+/** Pendientes del sector en Excel (descarga autenticada como Blob). */
+export function descargarPendientesSector(sector: number, params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/sectores/${sector}/pendientes.xlsx`, { params, responseType: 'blob', signal })
 }

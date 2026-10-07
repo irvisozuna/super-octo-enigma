@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import BarraActualizacion from '../components/BarraActualizacion.vue'
 import DetalleLectura from '../components/DetalleLectura.vue'
+import DetalleSector from '../components/DetalleSector.vue'
 import FiltrosMonitor from '../components/FiltrosMonitor.vue'
 import IndicadoresMonitor from '../components/IndicadoresMonitor.vue'
 import MapaMonitoreo from '../components/MapaMonitoreo.vue'
@@ -37,6 +38,7 @@ const { filtros, sistemas, sectores, lecturistas, periodos, periodoActual, activ
 
 const mapa = ref<InstanceType<typeof MapaMonitoreo> | null>(null)
 const sectorSeleccionado = ref<number | null>(null)
+const detalleSectorAbierto = ref(false)
 const lecturistaSeleccionado = ref<{ id: number; nombre: string; estado: EstadoLecturista; sinRastreo: boolean } | null>(null)
 const filtroEstadoLecturista = ref<EstadoLecturista | null>(null)
 const lecturaSeleccionada = ref<{ contrato: number; periodo: number | null } | null>(null)
@@ -92,13 +94,21 @@ watch(pausado, p => {
     monitor.refrescar()
 })
 
+/** Elegir un sector (lista o mapa) lo resalta, lo encuadra y abre su detalle. */
 function elegirSector(fila: FilaSector) {
   sectorSeleccionado.value = fila.sector_id
+  detalleSectorAbierto.value = true
   mapa.value?.irASector(fila.sector_id)
 }
 
 function sectorDesdeMapa(props: SectorProps) {
   sectorSeleccionado.value = props.s
+  detalleSectorAbierto.value = true
+}
+
+/** Desde el detalle del sector: una toma pendiente abre su detalle de lectura. */
+function tomaDesdeSector(contrato: number) {
+  lecturaSeleccionada.value = { contrato, periodo: periodoMapa.value }
 }
 
 /** Clic en una toma: abre el detalle de su lectura en el periodo del mapa. */
@@ -108,6 +118,7 @@ function tomaDesdeMapa(props: TomaProps) {
 
 function irASectorPorId(id: number) {
   sectorSeleccionado.value = id
+  detalleSectorAbierto.value = true
   mapa.value?.irASector(id)
 }
 
@@ -135,6 +146,7 @@ function lecturistaDesdeMapa(p: LecturistaMapaProps) {
 function cerrarTodo() {
   lecturistaSeleccionado.value = null
   sectorSeleccionado.value = null
+  detalleSectorAbierto.value = false
   lecturaSeleccionada.value = null
 }
 
@@ -337,6 +349,16 @@ onBeforeUnmount(() => {
           />
         </VCol>
       </VRow>
+
+      <DetalleSector
+        :abierto="detalleSectorAbierto && sectorSeleccionado !== null"
+        :sector="sectorSeleccionado"
+        :parametros="parametros"
+        :ahora="ahora"
+        @update:abierto="(v: boolean) => { detalleSectorAbierto = v }"
+        @ver-en-mapa="(id: number) => mapa?.irASector(id)"
+        @toma="tomaDesdeSector"
+      />
 
       <DetalleLectura
         :abierto="lecturaSeleccionada !== null"
