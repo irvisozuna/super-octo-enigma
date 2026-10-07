@@ -10,6 +10,7 @@ import FiltrosMonitor from '../components/FiltrosMonitor.vue'
 import IndicadoresMonitor from '../components/IndicadoresMonitor.vue'
 import JornadaLecturista from '../components/JornadaLecturista.vue'
 import MapaMonitoreo from '../components/MapaMonitoreo.vue'
+import PanelesPeriodo from '../components/PanelesPeriodo.vue'
 import TablaLecturistas from '../components/TablaLecturistas.vue'
 import TablaSectores from '../components/TablaSectores.vue'
 import { acotaSectores, filtrosDesdeQuery, queryDesdeFiltros, useFiltrosMonitor } from '../composables/useFiltrosMonitor'
@@ -294,6 +295,13 @@ onBeforeUnmount(() => {
         :cargando="monitor.cargando"
         @estado="filtrarEstado"
         @avisos="verAvisos"
+      />
+
+      <PanelesPeriodo
+        :periodo="periodoMapa"
+        :gerencia="filtros.gerencia"
+        :activo="filtros.vista === 'periodo'"
+        @lectura="(c: number) => { lecturaSeleccionada = { contrato: c, periodo: periodoMapa } }"
       />
 
       <VRow class="mb-1">

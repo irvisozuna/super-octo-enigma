@@ -748,5 +748,31 @@
     "verLectura": "Ver lectura",
     "sinFilas": "No hay re-lecturas con esos filtros.",
     "soloLectura": "Puedes ver las re-lecturas; cancelarlas requiere operar el monitoreo."
+  },
+  "paneles": {
+    "refacturaciones": "Refacturaciones del periodo",
+    "refacturacionesDetalle": "{n} refacturaciones · {l} por lectura",
+    "reporte": "Reporte completo",
+    "porQuien": "Quién refacturó",
+    "porMotivo": "Motivos",
+    "ultimas": "Últimas",
+    "sinRefacturaciones": "Sin refacturaciones registradas en el periodo.",
+    "definicionRefacturacion": "Refacturación = registro de Aquasoft Comercial (llx_log_rebill, tipo REFACTURACION) en el periodo, con quién la hizo y el motivo capturado. Solo lectura.",
+    "tarifaFija": "Facturación automática de tarifa fija",
+    "tarifaFijaDetalle": "{pct} % de {f} tomas de tarifa fija facturadas · R12 avisa desde el día {dia}",
+    "gerencia": "Gerencia",
+    "fija": "Tarifa fija",
+    "generadas": "Estimadas",
+    "campo": "Campo",
+    "faltan": "Faltan",
+    "estado": "Estado",
+    "generadasEl": "estimadas generadas el {fecha} {hora}",
+    "estados": {
+      "completa": "Completa",
+      "generada": "Generada",
+      "pendiente": "Pendiente",
+      "faltante": "Faltante"
+    },
+    "alertaR12": "Alerta R12 abierta"
   }
 }

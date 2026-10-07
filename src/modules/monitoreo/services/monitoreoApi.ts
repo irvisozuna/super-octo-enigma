@@ -1,3 +1,4 @@
+import type { RespuestaPaneles } from '../types/paneles'
 import type { MotivoRelectura, Nota, Relectura, RespuestaRelecturas } from '../types/relecturas'
 import type { RespuestaRanking } from '../types/ranking'
 import type { Destinatario, EdicionDestinatario, RespuestaDestinatarios } from '../types/destinatarios'
@@ -264,4 +265,14 @@ export function borrarNota(id: string): Promise<{ ok: boolean }> {
 
 export function marcarCoordenadaEnDuda(contrato: number, enDuda = true): Promise<{ contrato_id: number; coordenada_en_duda: boolean }> {
   return rawApi(`${BASE}/lecturas/${contrato}/coordenada-en-duda`, { method: 'POST', body: { en_duda: enDuda } })
+}
+
+/* Paneles de la vista periodo (F2.8) */
+
+export function obtenerPanelesPeriodo(periodo: number, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<RespuestaPaneles> {
+  return rawApi(`${BASE}/periodo/paneles`, { params: gerencia ? { periodo, gerencia } : { periodo }, signal })
+}
+
+export function descargarPanelPeriodo(panel: 'refacturaciones' | 'tarifa-fija', periodo: number, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/periodo/${panel}.xlsx`, { params: gerencia ? { periodo, gerencia } : { periodo }, responseType: 'blob', signal })
 }
