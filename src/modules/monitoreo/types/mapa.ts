@@ -9,7 +9,7 @@ export const MARCA_CORREGIDA = 8
 
 export interface TomaProps {
 
-  /** Contrato (id_account en Dolibarr). */
+  /** Contrato (id_account en Aquasoft Comercial). */
   i: number
 
   /** Número de cuenta (para el hover). */

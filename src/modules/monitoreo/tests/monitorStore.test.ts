@@ -59,10 +59,10 @@ describe('monitorStore', () => {
     const store = useMonitorStore()
 
     await store.cargar({})
-    api.obtenerResumen.mockRejectedValueOnce({ status: 503, body: { codigo: 'SIN_CONEXION', mensaje: 'Dolibarr no responde' } })
+    api.obtenerResumen.mockRejectedValueOnce({ status: 503, body: { codigo: 'SIN_CONEXION', mensaje: 'Aquasoft Comercial no responde' } })
     await store.refrescar()
 
-    expect(store.error?.mensaje).toContain('Dolibarr no responde')
+    expect(store.error?.mensaje).toContain('Aquasoft Comercial no responde')
     expect(store.sectores).toHaveLength(2)
   })
 

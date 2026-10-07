@@ -9,7 +9,7 @@ import { fechaCorta, haceCuanto, horaCorta } from '../utils/tiempo'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
 /*
- * Panel lateral con el detalle de un sector (respuesta D4): avance del periodo, lecturistas asignados según Dolibarr
+ * Panel lateral con el detalle de un sector (respuesta D4): avance del periodo, lecturistas asignados según Aquasoft Comercial
  * frente a quienes leyeron, línea de tiempo por día y por hora, pendientes por secuencia y exportación a Excel.
  * Solo lectura; la reasignación llega en F3.9.
  */

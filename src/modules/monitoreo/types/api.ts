@@ -1,4 +1,4 @@
-/** Gerencia (entidad de Dolibarr) tal como la muestra el módulo. */
+/** Gerencia (entidad de Aquasoft Comercial) tal como la muestra el módulo. */
 export interface GerenciaRef {
   id: number
   label: string
@@ -55,7 +55,7 @@ export interface UsuarioAlcance {
 export interface RespuestaAlcances {
   usuarios: UsuarioAlcance[]
 
-  /** Catálogo de Dolibarr; vacío cuando no respondió (ver `aviso`). */
+  /** Catálogo de Aquasoft Comercial; vacío cuando no respondió (ver `aviso`). */
   gerencias: Gerencia[]
   aviso: string | null
 }

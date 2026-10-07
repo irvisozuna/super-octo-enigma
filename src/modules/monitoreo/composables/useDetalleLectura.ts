@@ -25,13 +25,13 @@ function numero(v: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-/** Normaliza el historial de Support (nombres de Dolibarr) y lo ordena del periodo más reciente al más viejo. */
+/** Normaliza el historial de Support (nombres de Aquasoft Comercial) y lo ordena del periodo más reciente al más viejo. */
 export function normalizarHistorial(filas: HistorialLectura[]): FilaHistorial[] {
   return filas
     .map(f => ({
       periodoId: Number(f.periodoDeFacturacionID) || 0,
       periodo: String(f.Periodo ?? '').trim(),
-      fecha: f.Fecha ?? null, // ya viene formateada por Dolibarr (dd/mm/aaaa)
+      fecha: f.Fecha ?? null, // ya viene formateada por Aquasoft Comercial (dd/mm/aaaa)
       anomalia: f.Anomalia && f.Anomalia !== 'LECTURA REAL' ? f.Anomalia : null,
       lecturista: f.Lecturista ?? null,
       anterior: numero(f.Anterior),
@@ -51,7 +51,7 @@ function base64ABlob(base64: string, mime: string): Blob {
 }
 
 /**
- * Detalle de la lectura de una toma: el detalle del módulo (réplica), el historial de Support (Dolibarr) y el
+ * Detalle de la lectura de una toma: el detalle del módulo (réplica), el historial de Support (Aquasoft Comercial) y el
  * duplicado de recibo del módulo de reportes. Todo de solo lectura.
  */
 export function useDetalleLectura() {

@@ -97,7 +97,7 @@ describe('useAlcancesAdmin', () => {
 
   it('restaurar vuelve a lo asignado y un error al guardar queda visible sin tocar la lista', async () => {
     vi.mocked(obtenerAlcances).mockResolvedValue(respuesta)
-    vi.mocked(actualizarAlcance).mockRejectedValue(Object.assign(new Error('Sin conexión'), { status: 503, body: { codigo: 'SIN_CONEXION', mensaje: 'Dolibarr no responde', reintentable: true } }))
+    vi.mocked(actualizarAlcance).mockRejectedValue(Object.assign(new Error('Sin conexión'), { status: 503, body: { codigo: 'SIN_CONEXION', mensaje: 'Aquasoft Comercial no responde', reintentable: true } }))
 
     const admin = useAlcancesAdmin()
 
@@ -112,18 +112,18 @@ describe('useAlcancesAdmin', () => {
     admin.seleccionar(fila, [2])
     expect(await admin.guardar(fila)).toBe(false)
     expect(admin.errorGuardado.value?.codigo).toBe('SERVIDOR')
-    expect(admin.errorGuardado.value?.mensaje).toBe('Dolibarr no responde')
+    expect(admin.errorGuardado.value?.mensaje).toBe('Aquasoft Comercial no responde')
     expect(admin.usuarios.value[0].gerencias).toEqual([csl])
   })
 
-  it('con Dolibarr caído muestra el aviso y deshabilita las asignaciones nuevas', async () => {
-    vi.mocked(obtenerAlcances).mockResolvedValue({ ...respuesta, gerencias: [], aviso: 'No se pudo leer el catálogo de gerencias de Dolibarr.' })
+  it('con Aquasoft Comercial caído muestra el aviso y deshabilita las asignaciones nuevas', async () => {
+    vi.mocked(obtenerAlcances).mockResolvedValue({ ...respuesta, gerencias: [], aviso: 'No se pudo leer el catálogo de gerencias de Aquasoft Comercial.' })
 
     const admin = useAlcancesAdmin()
 
     await admin.cargar()
 
-    expect(admin.aviso.value).toContain('Dolibarr')
+    expect(admin.aviso.value).toContain('Aquasoft Comercial')
     expect(admin.catalogoDisponible.value).toBe(false)
   })
 })

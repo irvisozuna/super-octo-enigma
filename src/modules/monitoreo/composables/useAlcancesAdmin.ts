@@ -6,7 +6,7 @@ import type { ErrorReporte } from '@/modules/reportes/services/errores'
 
 /**
  * Pantalla "Gerencias por usuario" (manage monitoring): lista de usuarios de la empresa con sus gerencias,
- * catálogo de Dolibarr y guardado por usuario. La selección se edita por fila y se guarda fila por fila.
+ * catálogo de Aquasoft Comercial y guardado por usuario. La selección se edita por fila y se guarda fila por fila.
  */
 export function useAlcancesAdmin() {
   const usuarios = ref<UsuarioAlcance[]>([])

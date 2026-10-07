@@ -61,7 +61,7 @@ export interface RespuestaDetalleLectura {
   permisos: { duplicado: boolean }
 }
 
-/** Fila del historial de Support (`GET /supports/getReadingsByContract/{id}`): nombres tal como vienen de Dolibarr. */
+/** Fila del historial de Support (`GET /supports/getReadingsByContract/{id}`): nombres tal como vienen de Aquasoft Comercial. */
 export interface HistorialLectura {
   Periodo: string
   Fecha: string | null

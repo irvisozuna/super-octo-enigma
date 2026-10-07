@@ -13,7 +13,7 @@ import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 /*
  * Calendario de lectura por periodo y sector (F2.1): lista editable (programada, límite, lecturista planeado, nota),
  * vista mensual, copia del periodo anterior conservando el día hábil, plantilla e importación desde Excel. Editar
- * requiere administrar el módulo; consultar, solo leer. Dolibarr no se toca.
+ * requiere administrar el módulo; consultar, solo leer. Aquasoft Comercial no se toca.
  */
 const { t, n } = useI18n()
 const alcance = useAlcanceStore()

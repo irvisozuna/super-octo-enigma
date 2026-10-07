@@ -21,7 +21,7 @@ const detalle = {
 }
 
 describe('normalizarHistorial', () => {
-  it('traduce los nombres de Dolibarr, convierte números y ordena del periodo más reciente al más viejo', () => {
+  it('traduce los nombres de Aquasoft Comercial, convierte números y ordena del periodo más reciente al más viejo', () => {
     const filas = normalizarHistorial([
       { Periodo: 'AGOSTO 2026 ', Fecha: '2026-08-15 10:00:00', Anomalia: 'LECTURA REAL', Lecturista: 'X', Anterior: '900', Actual: '905', Consumo: '5', periodoDeFacturacionID: '184' },
       { Periodo: 'SEPTIEMBRE 2026', Fecha: null, Anomalia: 'MEDIDOR DESTRUIDO', Lecturista: null, Anterior: 905, Actual: 909, Consumo: 4, periodoDeFacturacionID: 185 },

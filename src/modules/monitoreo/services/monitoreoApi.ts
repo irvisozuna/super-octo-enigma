@@ -102,7 +102,7 @@ export function obtenerDetalleLectura(contrato: number, periodo: number | null, 
   return rawApi(`${BASE}/lecturas/${contrato}`, { params: periodo ? { periodo } : {}, signal })
 }
 
-/** Historial de lecturas del contrato desde Support (Dolibarr): las últimas `limite`. */
+/** Historial de lecturas del contrato desde Support (Aquasoft Comercial): las últimas `limite`. */
 export function obtenerHistorialContrato(contrato: number, limite = 12, { signal }: OpcionesPeticion = {}): Promise<RespuestaHistorial> {
   return rawApi(`/supports/getReadingsByContract/${contrato}`, { params: { limit: limite, page: 1 }, signal })
 }

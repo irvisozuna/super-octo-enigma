@@ -11,7 +11,7 @@ import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 /*
  * Tomas sin coordenada válida y coordenadas desactualizadas (respuesta D2): propuestas calculadas desde las últimas
  * lecturas con GPS, decisión (aceptar / descartar / reabrir, con `operate monitoring`) y CSV para sistemas. Nada se
- * escribe en Dolibarr: lo aceptado queda como coordenada corregida en Atención.
+ * escribe en Aquasoft Comercial: lo aceptado queda como coordenada corregida en Atención.
  */
 const { t, n } = useI18n()
 const router = useRouter()
