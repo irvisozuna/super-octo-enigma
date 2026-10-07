@@ -121,9 +121,12 @@ export interface RespuestaRecorrido {
     features: {
       type: 'Feature'
       geometry: { type: 'LineString'; coordinates: [number, number][] } | { type: 'Point'; coordinates: [number, number] }
-      properties: { tipo: 'recorrido' | 'inicio' | 'fin'; puntos?: number; desde?: string; hasta?: string; t?: string }
+      properties: { tipo: 'recorrido' | 'inicio' | 'fin' | 'parada'; puntos?: number; desde?: string; hasta?: string; t?: string; ajustado?: boolean; aproximado?: boolean; tramo?: number; minutos?: number }
     }[]
   }
+
+  /** F2.9: cómo se calculó el recorrido guardado (null cuando se arma al vuelo punto a punto). */
+  meta?: { calculado: string; puntos: number; ajustado: boolean; confianza: number | null; aviso: string | null; osrm_ms: number | null; ms?: number; paradas?: number } | null
   lecturas: {
     type: 'FeatureCollection'
     features: {

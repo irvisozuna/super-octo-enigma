@@ -86,7 +86,9 @@
     },
     "lecturistaElegido": "{nombre} · {estado} · recorrido del día en el mapa",
     "recorridoSinRastreo": "Sin rastreo del teléfono: el recorrido se traza con sus lecturas.",
-    "cerrar": "Cerrar"
+    "cerrar": "Cerrar",
+    "recorridoCalle": "Recorrido ajustado a calles ({n} puntos, {p} paradas largas)",
+    "recorridoAproximado": "Recorrido aproximado (punto a punto)"
   },
   "tiempo": {
     "nunca": "sin datos",

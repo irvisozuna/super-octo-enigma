@@ -46,7 +46,7 @@ const SATELITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Ima
 const CENTRO_LOS_CABOS: [number, number] = [-109.82, 23.0]
 const CAPAS_SECTORES = ['sectores-relleno', 'sectores-linea', 'sectores-etiqueta']
 const CAPAS_LECTURISTAS = ['lecturistas-halo', 'lecturistas-puntos', 'lecturistas-etiqueta']
-const CAPAS_RECORRIDO = ['recorrido-lecturas-linea', 'recorrido-linea', 'recorrido-lecturas', 'recorrido-extremos', 'recorrido-extremos-texto']
+const CAPAS_RECORRIDO = ['recorrido-lecturas-linea', 'recorrido-linea', 'recorrido-flechas', 'recorrido-lecturas', 'recorrido-paradas', 'recorrido-paradas-texto', 'recorrido-extremos', 'recorrido-extremos-texto']
 
 const { t } = useI18n()
 const datos = useMapaTomas()
@@ -162,13 +162,50 @@ function crearMapa() {
     // Recorrido del lecturista elegido (encima de las tomas, debajo de los lecturistas)
     mapa.addSource('recorrido', { type: 'geojson', data: recorridoGeoJson() })
     mapa.addLayer({ id: 'recorrido-lecturas-linea', type: 'line', source: 'recorrido', filter: ['==', ['get', 'tipo'], 'lecturas-linea'], paint: { 'line-color': '#6a1b9a', 'line-width': 2, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.9 } })
-    mapa.addLayer({ id: 'recorrido-linea', type: 'line', source: 'recorrido', filter: ['==', ['get', 'tipo'], 'recorrido'], layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#1e88e5', 'line-width': 3, 'line-opacity': 0.9 } })
+    mapa.addLayer({
+      id: 'recorrido-linea',
+      type: 'line',
+      source: 'recorrido',
+      filter: ['==', ['get', 'tipo'], 'recorrido'],
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+
+      // Ajustado a calles: azul continuo; aproximado (punto a punto): azul punteado
+      paint: { 'line-color': '#1e88e5', 'line-width': ['case', ['coalesce', ['get', 'ajustado'], false], 4, 3], 'line-opacity': 0.9, 'line-dasharray': ['case', ['coalesce', ['get', 'ajustado'], false], ['literal', [1, 0]], ['literal', [2, 1.5]]] },
+    })
+
+    // Flechas de dirección sobre la línea (visibles desde zoom de calle)
+    mapa.addLayer({
+      id: 'recorrido-flechas',
+      type: 'symbol',
+      source: 'recorrido',
+      filter: ['==', ['get', 'tipo'], 'recorrido'],
+      minzoom: 13,
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': 60, 'text-field': '▶', 'text-size': 12, 'text-font': ['Noto Sans Bold'], 'text-keep-upright': false, 'text-rotation-alignment': 'map', 'text-pitch-alignment': 'map', 'text-allow-overlap': true, 'text-ignore-placement': true },
+      paint: { 'text-color': '#0d47a1', 'text-halo-color': '#ffffff', 'text-halo-width': 1 },
+    })
     mapa.addLayer({
       id: 'recorrido-lecturas',
       type: 'circle',
       source: 'recorrido',
       filter: ['==', ['get', 'tipo'], 'lectura'],
       paint: { 'circle-color': ['case', ['get', 'a'], '#ef6c00', '#6a1b9a'], 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2.5, 16, 5], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 },
+    })
+
+    // Paradas largas (> pausa_min sin moverse)
+    mapa.addLayer({
+      id: 'recorrido-paradas',
+      type: 'circle',
+      source: 'recorrido',
+      filter: ['==', ['get', 'tipo'], 'parada'],
+      paint: { 'circle-color': '#fbc02d', 'circle-radius': 8, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
+    })
+    mapa.addLayer({
+      id: 'recorrido-paradas-texto',
+      type: 'symbol',
+      source: 'recorrido',
+      filter: ['==', ['get', 'tipo'], 'parada'],
+      layout: { 'text-field': ['concat', ['to-string', ['get', 'minutos']], '′'], 'text-size': 10, 'text-font': ['Noto Sans Bold'], 'text-allow-overlap': true },
+      paint: { 'text-color': '#4e342e' },
     })
     mapa.addLayer({
       id: 'recorrido-extremos',
@@ -596,6 +633,23 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
           <span v-if="resumenLeyenda.sinCoordenada"> · {{ t('monitoreo.mapa.sinCoordenada', { n: resumenLeyenda.sinCoordenada.toLocaleString('es-MX') }) }}</span>
           <span v-if="lecturistas.total.value"> · {{ t('monitoreo.mapa.lecturistasN', { n: lecturistas.total.value }) }}<span v-if="lecturistas.sinRastreo.value"> ({{ t('monitoreo.mapa.sinRastreoN', { n: lecturistas.sinRastreo.value }) }})</span></span>
           <span v-if="datos.actualizado.value"> · {{ t('monitoreo.mapa.actualizado', { hora: datos.actualizado.value.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) }) }}</span>
+        </div>
+        <div
+          v-if="lecturistas.recorrido.value?.meta"
+          class="text-caption mb-1"
+          :class="lecturistas.recorrido.value.meta.ajustado ? 'text-medium-emphasis' : 'text-warning'"
+        >
+          <VIcon
+            :icon="lecturistas.recorrido.value.meta.ajustado ? 'tabler-route' : 'tabler-route-off'"
+            size="14"
+            class="me-1"
+          />
+          <template v-if="lecturistas.recorrido.value.meta.ajustado">
+            {{ t('monitoreo.mapa.recorridoCalle', { n: lecturistas.recorrido.value.meta.puntos, p: lecturistas.recorrido.value.meta.paradas ?? 0 }) }}
+          </template>
+          <template v-else>
+            {{ lecturistas.recorrido.value.meta.aviso ?? t('monitoreo.mapa.recorridoAproximado') }}
+          </template>
         </div>
         <div class="d-flex flex-wrap gap-x-3 gap-y-1">
           <span
