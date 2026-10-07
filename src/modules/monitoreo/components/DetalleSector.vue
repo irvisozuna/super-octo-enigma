@@ -584,8 +584,19 @@ watch(() => datos.detalle.value, d => {
 </template>
 
 <style scoped>
+/* El drawer de Vuetify recorta su contenido (overflow hidden): el panel es una columna a toda la altura y solo el cuerpo
+   se desplaza; overscroll-behavior evita que la rueda arrastre la página de atrás al llegar al final. */
+.detalle-sector :deep(.v-navigation-drawer__content) {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
 .detalle-sector__cuerpo {
+  flex: 1 1 auto;
+  min-block-size: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .detalle-sector__cifras {

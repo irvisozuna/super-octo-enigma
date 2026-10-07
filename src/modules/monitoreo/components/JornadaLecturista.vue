@@ -476,8 +476,19 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
 </template>
 
 <style scoped>
+/* El drawer de Vuetify recorta su contenido (overflow hidden): el panel es una columna a toda la altura y solo el cuerpo
+   se desplaza; overscroll-behavior evita que la rueda arrastre la página de atrás al llegar al final. */
+.jornada-lecturista :deep(.v-navigation-drawer__content) {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
 .jornada-lecturista__cuerpo {
+  flex: 1 1 auto;
+  min-block-size: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .jornada-lecturista__cifras {
