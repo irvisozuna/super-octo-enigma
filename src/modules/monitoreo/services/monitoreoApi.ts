@@ -1,3 +1,4 @@
+import type { Destinatario, EdicionDestinatario, RespuestaDestinatarios } from '../types/destinatarios'
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
 import type { AccionAlerta, Alerta, EventoAlerta, RespuestaAlertas } from '../types/alertas'
@@ -195,4 +196,25 @@ export function obtenerEventosAlerta(id: string, { signal }: OpcionesPeticion = 
 /** Cambia un parámetro del módulo (global o de una gerencia; valor null quita la sobreescritura). Requiere manage. */
 export function guardarConfiguracion(clave: string, valor: unknown, gerencia: number | null): Promise<{ clave: string; efectivos: Record<string, unknown> }> {
   return rawApi(`${BASE}/admin/configuracion`, { method: 'PUT', body: { clave, valor, gerencia: gerencia ?? undefined } })
+}
+
+/** Una alerta por id (enlace directo desde la campana o el correo). */
+export function obtenerAlerta(id: string, { signal }: OpcionesPeticion = {}): Promise<Alerta> {
+  return rawApi(`${BASE}/alertas/${id}`, { signal })
+}
+
+/* Destinatarios de alertas (F2.3, manage) */
+
+export function obtenerDestinatarios({ signal }: OpcionesPeticion = {}): Promise<RespuestaDestinatarios> {
+  return rawApi(`${BASE}/admin/destinatarios`, { signal })
+}
+
+export function guardarDestinatario(id: string | null, datos: EdicionDestinatario): Promise<Destinatario> {
+  const body = { ...datos, email: datos.email || undefined, nombre: datos.nombre || undefined, usuario_id: datos.usuario_id ?? undefined, gerencia_id: datos.gerencia_id ?? undefined }
+
+  return id ? rawApi(`${BASE}/admin/destinatarios/${id}`, { method: 'PUT', body }) : rawApi(`${BASE}/admin/destinatarios`, { method: 'POST', body })
+}
+
+export function borrarDestinatario(id: string): Promise<{ ok: boolean }> {
+  return rawApi(`${BASE}/admin/destinatarios/${id}`, { method: 'DELETE' })
 }

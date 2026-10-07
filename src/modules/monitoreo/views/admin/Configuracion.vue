@@ -30,7 +30,7 @@ const GRUPOS: { clave: 'sectores' | 'lecturistas' | 'lecturas' | 'otros'; claves
   { clave: 'sectores', claves: ['sin_iniciar_hora', 'avance_alerta_h', 'avance_alerta_pct', 'terminado_pct'] },
   { clave: 'lecturistas', claves: ['pausa_min', 'silencio_min', 'atoradas_h', 'bateria_pct', 'distancia_m', 'lecturista_pct_lejos_alerta', 'meta_diaria'] },
   { clave: 'lecturas', claves: ['consumo_alto_factor', 'consumo_bajo_factor', 'anomalias_accion_inmediata', 'sobrescritas_alta_n', 'tarifa_fija_dia'] },
-  { clave: 'otros', claves: ['silenciar_h', 'quiosco_rotacion_s', 'resumen_hora'] },
+  { clave: 'otros', claves: ['correo_alta', 'escalamiento_activo', 'escalamiento_min', 'resumen_hora', 'silenciar_h', 'quiosco_rotacion_s'] },
 ]
 
 const opcionesAmbito = computed(() => [{ value: null, title: t('monitoreo.configuracion.global') }, ...alcance.gerencias.map(g => ({ value: g.id, title: g.label }))])

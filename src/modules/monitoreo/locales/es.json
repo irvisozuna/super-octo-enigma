@@ -625,7 +625,41 @@
       "meta_diaria": "Meta diaria de lecturas por lecturista",
       "silenciar_h": "Horas por defecto al silenciar",
       "quiosco_rotacion_s": "Pantalla grande: segundos por gerencia",
-      "resumen_hora": "Hora del resumen diario"
+      "resumen_hora": "Hora del resumen diario",
+      "escalamiento_activo": "Escalamiento activo (alerta alta sin atender → correo)",
+      "escalamiento_min": "Escalamiento: minutos sin atender",
+      "correo_alta": "Correo inmediato por alerta alta"
     }
+  },
+  "destinatarios": {
+    "titulo": "Destinatarios de alertas",
+    "descripcion": "Quién recibe las alertas y el resumen diario, por gerencia o para todas. Los usuarios de Atención reciben la campana y el correo a su cuenta; un correo externo solo recibe correo. Los cambios surten efecto en el siguiente ciclo sin despliegue.",
+    "agregar": "Agregar destinatario",
+    "editar": "Editar destinatario",
+    "quien": "Destinatario",
+    "gerencia": "Gerencia",
+    "todas": "Todas las gerencias",
+    "canales": "Canales",
+    "activo": "Activo",
+    "usuarioAtencion": "Usuario de Atención",
+    "correoExterno": "Correo externo",
+    "usuario": "Usuario",
+    "email": "Correo",
+    "nombre": "Nombre (opcional)",
+    "canal": {
+      "campana": "Campana",
+      "correo_alta": "Correo por alerta alta",
+      "resumen": "Resumen diario",
+      "escalamiento": "Escalamiento"
+    },
+    "canalDetalle": {
+      "campana": "aviso dentro de Atención por cada alerta de su alcance",
+      "correo_alta": "un correo inmediato por cada alerta de severidad alta",
+      "resumen": "correo a la hora configurada (L–V) con avance, rezagados, lecturistas, anomalías y alertas",
+      "escalamiento": "correo cuando una alerta alta lleva N minutos sin atender (si está activo)"
+    },
+    "sinFilas": "Aún no hay destinatarios: nadie recibe alertas por correo ni en la campana.",
+    "cancelar": "Cancelar",
+    "guardar": "Guardar"
   }
 }

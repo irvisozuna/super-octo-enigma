@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { destinoSujeto, useAlertas } from '../composables/useAlertas'
+import { obtenerAlerta } from '../services/monitoreoApi'
 import { useAlcanceStore } from '../stores/alcanceStore'
 import type { Alerta, EstadoAlerta, EstadoFiltroAlertas, SeveridadAlerta, SujetoAlerta } from '../types/alertas'
 import { fechaCorta, haceCuanto, horaCorta } from '../utils/tiempo'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import { normalizarError } from '@/modules/reportes/services/errores'
 
 /*
  * Bandeja de alertas (F2.2): lo que el motor abrió con las 13 reglas, acotado al alcance por gerencia del usuario.
@@ -14,6 +16,7 @@ import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
  */
 const { t, n } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const alcance = useAlcanceStore()
 const a = useAlertas()
 
@@ -80,6 +83,17 @@ onMounted(async () => {
   if (!alcance.cargado)
     await alcance.cargar()
   await a.cargar()
+
+  // Enlace directo desde la campana o el correo: /monitoreo/alertas?alerta=<id>
+  const id = typeof route.query.alerta === 'string' ? route.query.alerta : null
+  if (id) {
+    try {
+      await abrirDetalle(a.filas.value.find(f => f.id === id) ?? await obtenerAlerta(id))
+    }
+    catch (e) {
+      a.errorAccion.value = normalizarError(e)
+    }
+  }
 })
 onBeforeUnmount(() => {
   a.cancelar()
@@ -320,7 +334,10 @@ onBeforeUnmount(() => {
                 >
                   {{ item.es_evento ? t('monitoreo.alertas.atenderEvento') : t('monitoreo.alertas.atender') }}
                 </VBtn>
-                <VMenu v-if="item.estado !== 'cerrada' && item.estado !== 'silenciada'">
+                <VMenu
+                  v-if="item.estado !== 'cerrada' && item.estado !== 'silenciada'"
+                  location="bottom end"
+                >
                   <template #activator="{ props }">
                     <VBtn
                       v-bind="props"

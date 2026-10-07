@@ -1,88 +1,141 @@
 <script lang="ts" setup>
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 import type { Notification } from '@layouts/types'
+import { borrarNotificacion, marcarLeidas, marcarNoLeidas, obtenerNotificaciones } from '@/services/notificaciones'
+import type { NotificacionApi } from '@/services/notificaciones'
 
-import avatar3 from '@images/avatars/avatar-3.png'
-import avatar4 from '@images/avatars/avatar-4.png'
-import avatar5 from '@images/avatars/avatar-5.png'
-import paypal from '@images/cards/paypal-rounded.png'
+/*
+ * Campana de Atención: notificaciones del usuario (tabla notifications del backend), sondeo cada 60 s mientras la
+ * pestaña esté visible. Reutilizable por cualquier módulo: cada notificación trae título, texto y una url interna.
+ */
+const router = useRouter()
+const filas = ref<NotificacionApi[]>([])
+const noLeidas = ref(0)
+let controlador: AbortController | null = null
 
-const notifications = ref<Notification[]>([
-  {
-    id: 1,
-    img: avatar4,
-    title: 'Congratulation Flora! 🎉',
-    subtitle: 'Won the monthly best seller badge',
-    time: 'Today',
-    isSeen: true,
-  },
-  {
-    id: 2,
-    text: 'Tom Holland',
-    title: 'New user registered.',
-    subtitle: '5 hours ago',
-    time: 'Yesterday',
-    isSeen: false,
-  },
-  {
-    id: 3,
-    img: avatar5,
-    title: 'New message received 👋🏻',
-    subtitle: 'You have 10 unread messages',
-    time: '11 Aug',
-    isSeen: true,
-  },
-  {
-    id: 4,
-    img: paypal,
-    title: 'PayPal',
-    subtitle: 'Received Payment',
-    time: '25 May',
-    isSeen: false,
-    color: 'error',
-  },
-  {
-    id: 5,
-    img: avatar3,
-    title: 'Received Order 📦',
-    subtitle: 'New order received from john',
-    time: '19 Mar',
-    isSeen: true,
-  },
-])
+const ICONO: Record<string, string> = { alta: 'tabler-alert-triangle', media: 'tabler-alert-circle', aviso: 'tabler-info-circle' }
+const COLOR: Record<string, string> = { alta: 'error', media: 'warning', aviso: 'info' }
 
-const removeNotification = (notificationId: number) => {
-  notifications.value.forEach((item, index) => {
-    if (notificationId === item.id)
-      notifications.value.splice(index, 1)
+function relativo(fecha: string | null): string {
+  if (!fecha)
+    return ''
+  const min = Math.max(0, Math.round((Date.now() - new Date(fecha.replace(' ', 'T')).getTime()) / 60_000))
+  if (min < 1)
+    return 'ahora'
+  if (min < 60)
+    return `hace ${min} min`
+  if (min < 48 * 60)
+    return `hace ${Math.round(min / 60)} h`
+
+  return `hace ${Math.round(min / 1440)} días`
+}
+
+function subtitulo(n: NotificacionApi): string {
+  const partes = [n.datos.modulo === 'monitoreo' ? 'Monitoreo de lecturas' : n.tipo, n.datos.regla, n.datos.gerencia].filter(Boolean)
+
+  return partes.join(' · ')
+}
+
+/** El componente de la plantilla usa ids numéricos: se mapea posición ↔ uuid. */
+const notifications = computed<Notification[]>(() => filas.value.map((n, i) => ({
+  id: i + 1,
+  title: (n.datos.titulo as string | undefined) ?? n.tipo,
+  subtitle: subtitulo(n),
+  time: relativo(n.fecha),
+  isSeen: n.leida,
+  icon: ICONO[(n.datos.severidad as string | undefined) ?? ''] ?? 'tabler-bell',
+  color: COLOR[(n.datos.severidad as string | undefined) ?? ''] ?? 'primary',
+})))
+
+const uuidsDe = (ids: number[]) => ids.map(i => filas.value[i - 1]?.id).filter((v): v is string => !!v)
+
+async function cargar() {
+  controlador?.abort()
+  controlador = new AbortController()
+  try {
+    const r = await obtenerNotificaciones(30, controlador.signal)
+
+    filas.value = r.notificaciones
+    noLeidas.value = r.no_leidas
+  }
+  catch {
+    // sin sesión o sin red: la campana simplemente no se actualiza
+  }
+}
+
+async function marcarLeidasLocal(ids: number[]) {
+  const uuids = uuidsDe(ids)
+  if (!uuids.length)
+    return
+  filas.value.forEach(n => {
+    if (uuids.includes(n.id))
+      n.leida = true
   })
+  try {
+    noLeidas.value = (await marcarLeidas(uuids)).no_leidas
+  }
+  catch {}
 }
 
-const markRead = (notificationId: number[]) => {
-  notifications.value.forEach(item => {
-    notificationId.forEach(id => {
-      if (id === item.id)
-        item.isSeen = true
-    })
+async function marcarNoLeidasLocal(ids: number[]) {
+  const uuids = uuidsDe(ids)
+  if (!uuids.length)
+    return
+  filas.value.forEach(n => {
+    if (uuids.includes(n.id))
+      n.leida = false
   })
+  try {
+    noLeidas.value = (await marcarNoLeidas(uuids)).no_leidas
+  }
+  catch {}
 }
 
-const markUnRead = (notificationId: number[]) => {
-  notifications.value.forEach(item => {
-    notificationId.forEach(id => {
-      if (id === item.id)
-        item.isSeen = false
-    })
-  })
+async function quitar(id: number) {
+  const uuid = filas.value[id - 1]?.id
+  if (!uuid)
+    return
+  filas.value = filas.value.filter(n => n.id !== uuid)
+  try {
+    noLeidas.value = (await borrarNotificacion(uuid)).no_leidas
+  }
+  catch {}
 }
 
-const handleNotificationClick = (notification: Notification) => {
-  if (!notification.isSeen)
-    markRead([notification.id])
+async function abrir(notification: Notification) {
+  const fila = filas.value[notification.id - 1]
+  if (!fila)
+    return
+  if (!fila.leida)
+    await marcarLeidasLocal([notification.id])
+  const url = fila.datos.url as string | undefined
+  if (url)
+    router.push(url)
 }
+
+const visible = useDocumentVisibility()
+
+const { pause } = useIntervalFn(() => {
+  if (visible.value === 'visible')
+    cargar()
+}, 60_000)
+
+onMounted(cargar)
+onBeforeUnmount(() => {
+  pause()
+  controlador?.abort()
+})
 </script>
 
 <template>
-  <!-- ACTIVACION BACKEND SETTINGS -->
-  <Notifications v-if="false" :notifications="notifications" @remove="removeNotification" @read="markRead"
-    @unread="markUnRead" @click:notification="handleNotificationClick" />
+  <Notifications
+    :notifications="notifications"
+    :badge-props="{ content: noLeidas > 99 ? '99+' : noLeidas }"
+    @remove="quitar"
+    @read="marcarLeidasLocal"
+    @unread="marcarNoLeidasLocal"
+    @click:notification="abrir"
+  />
 </template>

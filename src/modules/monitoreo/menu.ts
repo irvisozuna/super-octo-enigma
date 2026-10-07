@@ -39,6 +39,12 @@ const monitoreoMenu: VerticalNavItems = [
         subject: 'monitoreo',
       },
       {
+        title: 'Destinatarios de alertas',
+        to: 'monitoreoAdminDestinatarios',
+        action: 'manage',
+        subject: 'monitoreo-admin',
+      },
+      {
         title: 'Umbrales de alertas',
         to: 'monitoreoAdminConfiguracion',
         action: 'manage',
