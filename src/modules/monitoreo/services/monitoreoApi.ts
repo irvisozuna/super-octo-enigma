@@ -1,5 +1,6 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { AccionAlerta, Alerta, EventoAlerta, RespuestaAlertas } from '../types/alertas'
 import type { EdicionCalendario, RespuestaCalendario, ResultadoCopia, ResultadoGuardado, ResultadoImportacion } from '../types/calendario'
 import type { PropuestaCoordenada, RespuestaCoordenadas } from '../types/coordenadas'
 import type { RespuestaJornada } from '../types/jornada'
@@ -166,4 +167,32 @@ export function importarCalendario(periodo: number, archivo: File): Promise<Resu
 
 export function descargarPlantillaCalendario(periodo: number, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<Blob> {
   return rawApi(`${BASE}/admin/calendario/plantilla.xlsx`, { params: filtrosMapa(periodo, gerencia), responseType: 'blob', signal })
+}
+
+/* Alertas (F2.2) */
+
+/** Bandeja de alertas (paginada) con su resumen y las reglas. */
+export function obtenerAlertas(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<RespuestaAlertas> {
+  return rawApi(`${BASE}/alertas`, { params, signal })
+}
+
+/** Atender, silenciar N horas, reabrir o cerrar una alerta (requiere operate monitoring). */
+export function accionarAlerta(id: string, accion: AccionAlerta, { nota, horas }: { nota?: string | null; horas?: number } = {}): Promise<Alerta> {
+  const body: Record<string, unknown> = {}
+  if (nota)
+    body.nota = nota
+  if (horas)
+    body.horas = horas
+
+  return rawApi(`${BASE}/alertas/${id}/${accion}`, { method: 'POST', body })
+}
+
+/** Historial de una alerta: quién la abrió, atendió, silenció o cerró y cuándo. */
+export function obtenerEventosAlerta(id: string, { signal }: OpcionesPeticion = {}): Promise<{ eventos: EventoAlerta[] }> {
+  return rawApi(`${BASE}/alertas/${id}/eventos`, { signal })
+}
+
+/** Cambia un parámetro del módulo (global o de una gerencia; valor null quita la sobreescritura). Requiere manage. */
+export function guardarConfiguracion(clave: string, valor: unknown, gerencia: number | null): Promise<{ clave: string; efectivos: Record<string, unknown> }> {
+  return rawApi(`${BASE}/admin/configuracion`, { method: 'PUT', body: { clave, valor, gerencia: gerencia ?? undefined } })
 }
