@@ -8,6 +8,7 @@ import DetalleLectura from '../components/DetalleLectura.vue'
 import DetalleSector from '../components/DetalleSector.vue'
 import FiltrosMonitor from '../components/FiltrosMonitor.vue'
 import IndicadoresMonitor from '../components/IndicadoresMonitor.vue'
+import JornadaLecturista from '../components/JornadaLecturista.vue'
 import MapaMonitoreo from '../components/MapaMonitoreo.vue'
 import TablaLecturistas from '../components/TablaLecturistas.vue'
 import TablaSectores from '../components/TablaSectores.vue'
@@ -40,6 +41,8 @@ const mapa = ref<InstanceType<typeof MapaMonitoreo> | null>(null)
 const sectorSeleccionado = ref<number | null>(null)
 const detalleSectorAbierto = ref(false)
 const lecturistaSeleccionado = ref<{ id: number; nombre: string; estado: EstadoLecturista; sinRastreo: boolean } | null>(null)
+const jornadaAbierta = ref(false)
+const diaJornada = ref<string | null>(null)
 const filtroEstadoLecturista = ref<EstadoLecturista | null>(null)
 const lecturaSeleccionada = ref<{ contrato: number; periodo: number | null } | null>(null)
 
@@ -76,6 +79,7 @@ watch(parametros, async (nuevo, viejo) => {
   sincronizarRuta()
   sectorSeleccionado.value = null
   lecturistaSeleccionado.value = null
+  jornadaAbierta.value = false
   lecturaSeleccionada.value = null
   filtroEstadoLecturista.value = null
   await monitor.cargar(nuevo)
@@ -122,29 +126,32 @@ function irASectorPorId(id: number) {
   mapa.value?.irASector(id)
 }
 
-/** Elegir un lecturista (en la lista o en el mapa) traza su recorrido del día; volver a elegirlo lo quita. */
+/** Elegir un lecturista (en la lista o en el mapa) traza su recorrido del día y abre su jornada. */
 function elegirLecturista(l: FilaLecturista) {
-  if (lecturistaSeleccionado.value?.id === l.lecturista_id) {
-    lecturistaSeleccionado.value = null
-
-    return
-  }
   lecturistaSeleccionado.value = { id: l.lecturista_id, nombre: l.nombre, estado: l.estado, sinRastreo: l.puntos_rastreo === 0 }
-  document.querySelector('.mapa-monitoreo')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  diaJornada.value = filtros.vista === 'hoy' ? filtros.dia : null
+  jornadaAbierta.value = true
 }
 
 function lecturistaDesdeMapa(p: LecturistaMapaProps) {
-  if (lecturistaSeleccionado.value?.id === p.id) {
-    lecturistaSeleccionado.value = null
-
-    return
-  }
   lecturistaSeleccionado.value = { id: p.id, nombre: p.nombre, estado: p.estado, sinRastreo: p.sin_rastreo }
+  diaJornada.value = filtros.vista === 'hoy' ? filtros.dia : null
+  jornadaAbierta.value = true
+}
+
+/** Desde la jornada: "ver recorrido" cierra el panel y deja el recorrido en el mapa. */
+function verRecorrido(id: number) {
+  jornadaAbierta.value = false
+  if (lecturistaSeleccionado.value?.id !== id)
+    lecturistaSeleccionado.value = { id, nombre: '', estado: 'activo', sinRastreo: false }
+  mapa.value?.irALecturista(id)
+  document.querySelector('.mapa-monitoreo')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
 /** Escape cierra lo abierto (recorrido, selección de sector, aviso de toma) y deja el mapa como está. */
 function cerrarTodo() {
   lecturistaSeleccionado.value = null
+  jornadaAbierta.value = false
   sectorSeleccionado.value = null
   detalleSectorAbierto.value = false
   lecturaSeleccionada.value = null
@@ -349,6 +356,17 @@ onBeforeUnmount(() => {
           />
         </VCol>
       </VRow>
+
+      <JornadaLecturista
+        :abierto="jornadaAbierta && lecturistaSeleccionado !== null"
+        :lecturista="lecturistaSeleccionado?.id ?? null"
+        :dia="diaJornada"
+        :ahora="ahora"
+        @update:abierto="(v: boolean) => { jornadaAbierta = v }"
+        @update:dia="(d: string) => { diaJornada = d }"
+        @ver-recorrido="verRecorrido"
+        @toma="tomaDesdeSector"
+      />
 
       <DetalleSector
         :abierto="detalleSectorAbierto && sectorSeleccionado !== null"
