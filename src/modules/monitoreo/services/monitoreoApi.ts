@@ -1,5 +1,6 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaConfiguracion, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { EdicionCalendario, RespuestaCalendario, ResultadoCopia, ResultadoGuardado, ResultadoImportacion } from '../types/calendario'
 import type { PropuestaCoordenada, RespuestaCoordenadas } from '../types/coordenadas'
 import type { RespuestaJornada } from '../types/jornada'
 import type { RespuestaDetalleLectura, RespuestaHistorial } from '../types/lectura'
@@ -139,4 +140,30 @@ export function decidirCoordenada(contrato: number, accion: 'aceptar' | 'descart
 /** CSV de las propuestas del filtro (descarga autenticada). */
 export function descargarCoordenadasCsv(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<Blob> {
   return rawApi(`${BASE}/coordenadas.csv`, { params, responseType: 'blob', signal })
+}
+
+/* Calendario de lectura (F2.1) */
+
+export function obtenerCalendario(periodo: number | null, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<RespuestaCalendario> {
+  return rawApi(`${BASE}/calendario`, { params: filtrosMapa(periodo, gerencia), signal })
+}
+
+export function guardarCalendario(periodo: number, filas: EdicionCalendario[]): Promise<ResultadoGuardado> {
+  return rawApi(`${BASE}/admin/calendario/${periodo}`, { method: 'PUT', body: { filas } })
+}
+
+export function copiarCalendario(periodo: number, desde: number, sobrescribir = false): Promise<ResultadoCopia> {
+  return rawApi(`${BASE}/admin/calendario/${periodo}/copiar`, { method: 'POST', body: { desde, sobrescribir } })
+}
+
+export function importarCalendario(periodo: number, archivo: File): Promise<ResultadoImportacion> {
+  const cuerpo = new FormData()
+
+  cuerpo.append('archivo', archivo)
+
+  return rawApi(`${BASE}/admin/calendario/${periodo}/importar`, { method: 'POST', body: cuerpo })
+}
+
+export function descargarPlantillaCalendario(periodo: number, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<Blob> {
+  return rawApi(`${BASE}/admin/calendario/plantilla.xlsx`, { params: filtrosMapa(periodo, gerencia), responseType: 'blob', signal })
 }

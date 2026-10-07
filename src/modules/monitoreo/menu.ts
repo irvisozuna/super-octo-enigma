@@ -27,6 +27,12 @@ const monitoreoMenu: VerticalNavItems = [
         subject: 'monitoreo',
       },
       {
+        title: 'Calendario de lectura',
+        to: 'monitoreoAdminCalendario',
+        action: 'read',
+        subject: 'monitoreo',
+      },
+      {
         title: 'Gerencias por usuario',
         to: 'monitoreoAdminAlcances',
         action: 'manage',

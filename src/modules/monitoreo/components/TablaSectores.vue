@@ -221,6 +221,14 @@ function ultima(s: FilaSector): string {
               {{ diasParaCerrar(item) ?? '—' }}
             </div>
             <div
+              v-if="item.fecha_limite"
+              class="text-caption text-no-wrap"
+              :class="item.estado === 'rezagado' ? 'text-error' : 'text-medium-emphasis'"
+              :title="t('monitoreo.sectores.limite')"
+            >
+              {{ t('monitoreo.sectores.limiteCorta', { fecha: fechaCorta(`${item.fecha_limite} 12:00:00`) }) }}
+            </div>
+            <div
               v-if="item.ultima_lectura"
               class="text-caption text-medium-emphasis text-no-wrap"
               :title="t('monitoreo.sectores.ultima')"

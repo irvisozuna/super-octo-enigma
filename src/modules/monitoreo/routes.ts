@@ -31,6 +31,15 @@ const monitoreoRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/monitoreo/admin/calendario',
+    name: 'monitoreoAdminCalendario',
+    component: () => import('./views/admin/Calendario.vue'),
+    meta: {
+      action: 'read',
+      subject: 'monitoreo',
+    },
+  },
+  {
     path: '/monitoreo/admin/alcances',
     name: 'monitoreoAdminAlcances',
     component: () => import('./views/admin/AlcancesUsuarios.vue'),

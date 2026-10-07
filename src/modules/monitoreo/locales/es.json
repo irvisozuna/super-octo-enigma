@@ -4,7 +4,8 @@
     "monitor": "Monitor de lecturas",
     "alcances": "Gerencias por usuario",
     "quiosco": "Pantalla grande",
-    "coordenadas": "Coordenadas de tomas"
+    "coordenadas": "Coordenadas de tomas",
+    "calendario": "Calendario de lectura"
   },
   "inicio": {
     "titulo": "Monitoreo de lecturas",
@@ -163,7 +164,9 @@
     "lecturistas": "Lecturistas",
     "ultima": "Última lectura",
     "sinResultados": "Ningún sector coincide.",
-    "diasParaCerrar": "Días para cerrar: de la primera lectura a la última (o a hoy si sigue abierto)"
+    "diasParaCerrar": "Días para cerrar: de la primera lectura a la última (o a hoy si sigue abierto)",
+    "limite": "Fecha límite del calendario",
+    "limiteCorta": "lím. {fecha}"
   },
   "lecturistas": {
     "tituloHoy": "Lecturistas de hoy",
@@ -462,5 +465,49 @@
     "inactivo": "contrato no activo",
     "verMapa": "Ver en el mapa",
     "paginaDe": "Página {p} de {n} · {total} propuestas"
+  },
+  "calendario": {
+    "titulo": "Calendario de lectura",
+    "descripcion": "Fecha programada y fecha límite de cada sector en el periodo. Pasada la fecha límite sin terminar, el sector se marca rezagado en el monitor. Dolibarr no se toca: el calendario vive en Atención.",
+    "periodo": "Periodo",
+    "gerencia": "Gerencia",
+    "vistaLista": "Lista",
+    "vistaMes": "Calendario",
+    "conFecha": "{n} de {total} sectores con fecha",
+    "soloLectura": "Puedes consultar el calendario; para editarlo hace falta administrar el módulo.",
+    "sector": "Sector",
+    "programada": "Programada",
+    "limite": "Límite",
+    "lecturista": "Lecturista planeado",
+    "nota": "Nota",
+    "avance": "Avance",
+    "sinLecturista": "Sin asignar",
+    "guardar": "Guardar {n} cambios",
+    "descartar": "Descartar cambios",
+    "guardado": "{g} filas guardadas, {b} borradas.",
+    "rechazadas": "{n} rechazadas",
+    "copiar": "Copiar del periodo anterior",
+    "copiarTitulo": "Copiar el calendario de {desde}",
+    "copiarDetalle": "Cada fecha se traslada al mismo día hábil del periodo actual ({n} filas en el origen). Los sectores que ya tienen fecha se conservan salvo que marques sobrescribir.",
+    "sobrescribir": "Sobrescribir las fechas que ya existen",
+    "copiado": "{c} filas copiadas, {o} omitidas por tener fecha.",
+    "sinAnterior": "No hay un periodo anterior con calendario para copiar.",
+    "plantilla": "Plantilla Excel",
+    "importar": "Importar Excel",
+    "importado": "{l} filas leídas, {g} guardadas, {b} borradas.",
+    "fila": "Fila",
+    "motivo": "Motivo",
+    "cerrar": "Cerrar",
+    "cancelar": "Cancelar",
+    "confirmarCopia": "Copiar",
+    "sinFecha": "sin fecha",
+    "vencido": "vencido",
+    "limiteCorta": "Lím.",
+    "programadosDia": "{n} programados",
+    "limitesDia": "{n} límites",
+    "buscar": "Buscar sector o sistema",
+    "sinSectores": "Ningún sector coincide.",
+    "diasHabiles": "Días hábiles: {dias}",
+    "cambiosPendientes": "Tienes cambios sin guardar."
   }
 }
