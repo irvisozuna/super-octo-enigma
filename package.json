@@ -49,6 +49,7 @@
     "laravel-echo": "^1.17.1",
     "lodash": "^4.17.21",
     "mapbox-gl": "3.5.2",
+    "maplibre-gl": "^4",
     "ofetch": "1.4.1",
     "pinia": "2.3.0",
     "prismjs": "1.29.0",

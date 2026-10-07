@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EstadoDatos from '../components/EstadoDatos.vue'
+import MapaMonitoreo from '../components/MapaMonitoreo.vue'
 import { useAlcanceStore } from '../stores/alcanceStore'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
@@ -145,6 +146,21 @@ onBeforeUnmount(() => controlador?.abort())
               >
                 {{ t('monitoreo.inicio.permisoAdministrar') }}
               </VChip>
+            </VCardText>
+          </VCard>
+        </VCol>
+
+        <VCol
+          v-if="!alcance.sinAsignar"
+          cols="12"
+        >
+          <VCard>
+            <VCardItem>
+              <VCardTitle>{{ t('monitoreo.mapa.titulo') }}</VCardTitle>
+              <VCardSubtitle>{{ t('monitoreo.mapa.descripcion') }}</VCardSubtitle>
+            </VCardItem>
+            <VCardText class="pt-0">
+              <MapaMonitoreo altura="560px" />
             </VCardText>
           </VCard>
         </VCol>

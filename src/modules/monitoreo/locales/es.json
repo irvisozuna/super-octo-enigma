@@ -59,5 +59,24 @@
     "minutos": "hace {n} min",
     "horas": "hace {n} h",
     "dias": "hace {n} días"
+  },
+  "mapa": {
+    "titulo": "Mapa del periodo abierto",
+    "descripcion": "Tomas del padrón por estado y contornos de sector. Se actualiza cada minuto con los cambios que llegan.",
+    "satelite": "Satélite",
+    "calles": "Calles",
+    "verSectores": "Sectores",
+    "ocultarSectores": "Ocultar sectores",
+    "tomas": "{n} tomas",
+    "actualizado": "actualizado {hora}",
+    "error": "No se pudo cargar el mapa.",
+    "estados": {
+      "pendiente": "Pendientes",
+      "leida": "Leídas",
+      "anomalia": "Con anomalía",
+      "estimada": "Estimadas",
+      "fija": "Tarifa fija",
+      "lejos": "Lejos de la toma"
+    }
   }
 }

@@ -3,3 +3,4 @@
 export * as monitoreoApi from './services/monitoreoApi'
 export { useAlcanceStore } from './stores/alcanceStore'
 export * from './types/api'
+export * from './types/mapa'
