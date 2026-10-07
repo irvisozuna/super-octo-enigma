@@ -137,5 +137,6 @@ onBeforeUnmount(() => {
     @read="marcarLeidasLocal"
     @unread="marcarNoLeidasLocal"
     @click:notification="abrir"
+    @click:all="router.push('/monitoreo/alertas')"
   />
 </template>

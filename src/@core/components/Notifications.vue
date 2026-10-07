@@ -12,6 +12,7 @@ interface Emit {
   (e: 'unread', value: number[]): void
   (e: 'remove', value: number): void
   (e: 'click:notification', value: Notification): void
+  (e: 'click:all'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -70,7 +71,7 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
         <!-- 👉 Header -->
         <VCardItem class="notification-section">
           <VCardTitle class="text-h6">
-            Notifications
+            Notificaciones
           </VCardTitle>
 
           <template #append>
@@ -80,7 +81,7 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
               color="primary"
               class="me-2"
             >
-              {{ totalUnseenNotifications }} New
+              {{ totalUnseenNotifications }} {{ totalUnseenNotifications === 1 ? 'nueva' : 'nuevas' }}
             </VChip>
             <IconBtn
               v-show="props.notifications.length"
@@ -97,7 +98,7 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
                 activator="parent"
                 location="start"
               >
-                {{ !isAllMarkRead ? 'Mark all as unread' : 'Mark all as read' }}
+                {{ !isAllMarkRead ? 'Marcar todas como no leídas' : 'Marcar todas como leídas' }}
               </VTooltip>
             </IconBtn>
           </template>
@@ -186,7 +187,7 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
               class="text-center text-medium-emphasis"
               style="block-size: 56px;"
             >
-              <VListItemTitle>No Notification Found!</VListItemTitle>
+              <VListItemTitle>Sin notificaciones</VListItemTitle>
             </VListItem>
           </VList>
         </PerfectScrollbar>
@@ -201,8 +202,9 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
           <VBtn
             block
             size="small"
+            @click="$emit('click:all')"
           >
-            View All Notifications
+            Ver todas las alertas
           </VBtn>
         </VCardText>
       </VCard>
