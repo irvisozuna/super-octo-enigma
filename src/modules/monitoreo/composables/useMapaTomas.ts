@@ -1,17 +1,19 @@
 import { computed, ref } from 'vue'
-import { obtenerCambiosMapa, obtenerSectoresMapa, obtenerTomasMapa } from '../services/monitoreoApi'
+import { obtenerCambiosMapa, obtenerSectoresMapa, obtenerSinCoordenada, obtenerTomasMapa } from '../services/monitoreoApi'
 import type { CambioToma, ConteoEstados, SectoresCollection, TomasCollection } from '../types/mapa'
 import { contarEstados, conteoVacio, fusionarCambios } from '../utils/geojson'
 import { normalizarError } from '@/modules/reportes/services/errores'
 import type { ErrorReporte } from '@/modules/reportes/services/errores'
 
 /**
- * Datos del mapa: tomas por estado y contornos de sector de un periodo (acotados por el servidor al alcance del
- * usuario). La carga completa baja una vez (ETag: el navegador revalida solo); después solo se piden los cambios.
+ * Datos del mapa: tomas por estado, contornos de sector y tomas sin coordenada (no se pintan, pero cuentan) de un
+ * periodo, acotados por el servidor al alcance del usuario. La carga completa baja una vez (ETag: el navegador
+ * revalida solo); después solo se piden los cambios.
  */
 export function useMapaTomas() {
   const tomas = ref<TomasCollection>({ type: 'FeatureCollection', features: [] })
   const sectores = ref<SectoresCollection>({ type: 'FeatureCollection', features: [] })
+  const sinCoordenada = ref<Record<string, ConteoEstados> | null>(null)
   const conteos = ref<ConteoEstados>(conteoVacio())
   const cargando = ref(false)
   const error = ref<ErrorReporte | null>(null)
@@ -30,13 +32,15 @@ export function useMapaTomas() {
     try {
       const desde = new Date().toISOString()
 
-      const [t, s] = await Promise.all([
+      const [t, s, sc] = await Promise.all([
         obtenerTomasMapa(periodoId, gerenciaId, { signal }),
         obtenerSectoresMapa(periodoId, gerenciaId, { signal }),
+        obtenerSinCoordenada(periodoId, gerenciaId, { signal }).catch(() => null),
       ])
 
       tomas.value = t
       sectores.value = s
+      sinCoordenada.value = sc?.sectores ?? null
       conteos.value = contarEstados(t.features)
       hasta.value = desde
       actualizado.value = new Date()
@@ -75,5 +79,5 @@ export function useMapaTomas() {
     }
   }
 
-  return { tomas, sectores, conteos, total, cargando, error, hasta, periodo, gerencia, actualizado, cargar, refrescar }
+  return { tomas, sectores, sinCoordenada, conteos, total, cargando, error, hasta, periodo, gerencia, actualizado, cargar, refrescar }
 }

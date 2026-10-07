@@ -1,4 +1,4 @@
-import type { CambioToma, ConteoEstados, EstadoSector, EstadoToma, TomaFeature, TomasCollection } from '../types/mapa'
+import type { CambioToma, ConteoEstados, EstadoSector, EstadoToma, LecturistaMapaProps, TomaFeature, TomasCollection } from '../types/mapa'
 
 /** Colores por estado de toma (los mismos en el mapa y en la leyenda). */
 export const COLORES_ESTADO: Record<EstadoToma, string> = {
@@ -96,4 +96,43 @@ export function cajaDe(features: TomaFeature[]): [number, number, number, number
 
 export function tieneMarca(m: number, marca: number): boolean {
   return (m & marca) === marca
+}
+
+/** Suma dos conteos por estado. */
+export function sumarConteos(a: ConteoEstados, b: ConteoEstados): ConteoEstados {
+  return { p: a.p + b.p, l: a.l + b.l, a: a.a + b.a, x: a.x + b.x, f: a.f + b.f }
+}
+
+/**
+ * Conteos de la leyenda para el filtro vigente: las tomas pintadas (acotadas a los sectores filtrados) más las que no
+ * tienen coordenada (por sector), que no se pintan pero sí cuentan. Devuelve también cuántas no se pintan.
+ */
+export function conteosLeyenda(features: TomaFeature[], sinCoordenada: Record<string, ConteoEstados> | null, sectores: number[] | null): { conteos: ConteoEstados; sinCoordenada: number } {
+  const ids = sectores ? new Set(sectores) : null
+  let conteos = contarEstados(ids ? features.filter(f => f.properties.s !== null && ids.has(f.properties.s)) : features)
+  let ocultas = 0
+  if (sinCoordenada) {
+    for (const [sector, c] of Object.entries(sinCoordenada)) {
+      if (ids && !ids.has(Number(sector)))
+        continue
+      conteos = sumarConteos(conteos, c)
+      ocultas += c.p + c.l + c.a + c.x + c.f
+    }
+  }
+
+  return { conteos, sinCoordenada: ocultas }
+}
+
+/** Color del marcador del lecturista por frescura de la señal: verde < 10 min, amarillo < `silencio` min, rojo sin reporte; azul terminó. */
+export function colorSenal(props: Pick<LecturistaMapaProps, 'estado' | 'minutos'>, silencioMin = 90): string {
+  if (props.estado === 'terminado')
+    return '#1e88e5'
+  if (props.minutos === null)
+    return '#9e9e9e'
+  if (props.minutos < 10)
+    return '#2e7d32'
+  if (props.minutos < silencioMin)
+    return '#f9a825'
+
+  return '#c62828'
 }

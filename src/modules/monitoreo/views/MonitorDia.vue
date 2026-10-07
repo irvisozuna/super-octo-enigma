@@ -12,7 +12,7 @@ import TablaSectores from '../components/TablaSectores.vue'
 import { acotaSectores, filtrosDesdeQuery, queryDesdeFiltros, useFiltrosMonitor } from '../composables/useFiltrosMonitor'
 import { useAlcanceStore } from '../stores/alcanceStore'
 import { useMonitorStore } from '../stores/monitorStore'
-import type { EstadoSector, SectorProps, TomaProps } from '../types/mapa'
+import type { EstadoSector, LecturistaMapaProps, SectorProps, TomaProps } from '../types/mapa'
 import type { EstadoLecturista, FilaLecturista, FilaSector } from '../types/monitor'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
@@ -36,6 +36,7 @@ const { filtros, sistemas, sectores, lecturistas, periodos, periodoActual, activ
 
 const mapa = ref<InstanceType<typeof MapaMonitoreo> | null>(null)
 const sectorSeleccionado = ref<number | null>(null)
+const lecturistaSeleccionado = ref<{ id: number; nombre: string; estado: EstadoLecturista; sinRastreo: boolean } | null>(null)
 const filtroEstadoLecturista = ref<EstadoLecturista | null>(null)
 const tomaSeleccionada = ref<{ props: TomaProps; lngLat: [number, number] } | null>(null)
 
@@ -71,6 +72,7 @@ watch(parametros, async (nuevo, viejo) => {
     return
   sincronizarRuta()
   sectorSeleccionado.value = null
+  lecturistaSeleccionado.value = null
   filtroEstadoLecturista.value = null
   await monitor.cargar(nuevo)
 })
@@ -106,8 +108,31 @@ function irASectorPorId(id: number) {
   mapa.value?.irASector(id)
 }
 
+/** Elegir un lecturista (en la lista o en el mapa) traza su recorrido del día; volver a elegirlo lo quita. */
 function elegirLecturista(l: FilaLecturista) {
-  aplicar({ lecturista: filtros.lecturista === l.lecturista_id ? null : l.lecturista_id })
+  if (lecturistaSeleccionado.value?.id === l.lecturista_id) {
+    lecturistaSeleccionado.value = null
+
+    return
+  }
+  lecturistaSeleccionado.value = { id: l.lecturista_id, nombre: l.nombre, estado: l.estado, sinRastreo: l.puntos_rastreo === 0 }
+  document.querySelector('.mapa-monitoreo')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
+function lecturistaDesdeMapa(p: LecturistaMapaProps) {
+  if (lecturistaSeleccionado.value?.id === p.id) {
+    lecturistaSeleccionado.value = null
+
+    return
+  }
+  lecturistaSeleccionado.value = { id: p.id, nombre: p.nombre, estado: p.estado, sinRastreo: p.sin_rastreo }
+}
+
+/** Escape cierra lo abierto (recorrido, selección de sector, aviso de toma) y deja el mapa como está. */
+function cerrarTodo() {
+  lecturistaSeleccionado.value = null
+  sectorSeleccionado.value = null
+  tomaSeleccionada.value = null
 }
 
 function filtrarEstado(estado: EstadoSector) {
@@ -259,9 +284,13 @@ onBeforeUnmount(() => {
                 :gerencia="filtros.gerencia"
                 :sectores-filtro="sectoresMapa"
                 :sector-seleccionado="sectorSeleccionado"
+                :parametros-lecturistas="parametros"
+                :lecturista-seleccionado="lecturistaSeleccionado?.id ?? null"
                 :refresco-ms="REFRESCO_MS"
                 @toma="tomaDesdeMapa"
                 @sector="sectorDesdeMapa"
+                @lecturista="lecturistaDesdeMapa"
+                @escape="cerrarTodo"
               />
             </VCardText>
           </VCard>
@@ -276,6 +305,30 @@ onBeforeUnmount(() => {
               {{ t('monitoreo.mapa.tomaElegida', { id: tomaSeleccionada.props.i, estado: t(`monitoreo.mapa.estados.${({ p: 'pendiente', l: 'leida', a: 'anomalia', x: 'estimada', f: 'fija' } as const)[tomaSeleccionada.props.e]}`) }) }}
               <span class="text-medium-emphasis"> · {{ t('monitoreo.mapa.detalleProximo') }}</span>
             </span>
+          </VSnackbar>
+          <VSnackbar
+            :model-value="lecturistaSeleccionado !== null"
+            location="bottom"
+            :timeout="-1"
+            variant="elevated"
+            color="surface"
+          >
+            <span v-if="lecturistaSeleccionado">
+              {{ t('monitoreo.mapa.lecturistaElegido', { nombre: lecturistaSeleccionado.nombre, estado: t(`monitoreo.estadoLecturista.${lecturistaSeleccionado.estado}`) }) }}
+              <span
+                v-if="lecturistaSeleccionado.sinRastreo"
+                class="text-medium-emphasis"
+              > · {{ t('monitoreo.mapa.recorridoSinRastreo') }}</span>
+            </span>
+            <template #actions>
+              <VBtn
+                size="small"
+                variant="text"
+                @click="lecturistaSeleccionado = null"
+              >
+                {{ t('monitoreo.mapa.cerrar') }}
+              </VBtn>
+            </template>
           </VSnackbar>
         </VCol>
         <VCol
@@ -298,6 +351,7 @@ onBeforeUnmount(() => {
         <TablaLecturistas
           v-model:filtro-estado="filtroEstadoLecturista"
           :lecturistas="monitor.lecturistas"
+          :seleccionado="lecturistaSeleccionado?.id ?? null"
           :es-hoy="esHoy"
           :ahora="ahora"
           :cargando="monitor.cargando && !monitor.listo"

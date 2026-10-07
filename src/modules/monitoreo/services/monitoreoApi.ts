@@ -1,5 +1,5 @@
 import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
-import type { RespuestaCambios, SectoresCollection, TomasCollection } from '../types/mapa'
+import type { LecturistasCollection, RespuestaCambios, RespuestaRecorrido, RespuestaSinCoordenada, SectoresCollection, TomasCollection } from '../types/mapa'
 import type { ParametrosMonitor, RespuestaCatalogos, RespuestaLecturistas, RespuestaResumen, RespuestaSectores } from '../types/monitor'
 import { rawApi } from '@/services/api'
 
@@ -75,4 +75,19 @@ export function obtenerCambiosMapa(periodo: number | null, gerencia: number | nu
 
 export function obtenerSectoresMapa(periodo: number | null, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<SectoresCollection> {
   return rawApi(`${BASE}/mapa/sectores`, { params: filtrosMapa(periodo, gerencia), signal })
+}
+
+/** Tomas activas sin coordenada por sector y estado: no se pintan, pero cuentan en la leyenda. */
+export function obtenerSinCoordenada(periodo: number | null, gerencia: number | null, { signal }: OpcionesPeticion = {}): Promise<RespuestaSinCoordenada> {
+  return rawApi(`${BASE}/mapa/sin-coordenada`, { params: filtrosMapa(periodo, gerencia), signal })
+}
+
+/** Última posición de los lecturistas del día (mismos filtros que /lecturistas). */
+export function obtenerLecturistasMapa(params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<LecturistasCollection> {
+  return rawApi(`${BASE}/mapa/lecturistas`, { params, signal })
+}
+
+/** Recorrido del día de un lecturista (rastreo punto a punto + lecturas con GPS). */
+export function obtenerRecorrido(lecturista: number, params: ParametrosMonitor, { signal }: OpcionesPeticion = {}): Promise<RespuestaRecorrido> {
+  return rawApi(`${BASE}/mapa/recorrido`, { params: { ...params, lecturista }, signal })
 }

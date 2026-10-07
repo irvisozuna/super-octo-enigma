@@ -11,6 +11,9 @@ export interface TomaProps {
 
   /** Contrato (id_account en Dolibarr). */
   i: number
+
+  /** Número de cuenta (para el hover). */
+  c: string
   s: number | null
   e: EstadoToma
   m: number
@@ -69,3 +72,64 @@ export interface SectoresCollection {
 }
 
 export type ConteoEstados = Record<EstadoToma, number>
+
+/** GET /monitoring/mapa/sin-coordenada: tomas activas sin coordenada válida por sector y estado (cuentan en la leyenda). */
+export interface RespuestaSinCoordenada {
+  total: number
+  sectores: Record<string, ConteoEstados>
+}
+
+/** Propiedades de la última posición de un lecturista (GET /monitoring/mapa/lecturistas). */
+export interface LecturistaMapaProps {
+  id: number
+  nombre: string
+  estado: 'activo' | 'silencio' | 'terminado' | 'sin_iniciar' | 'fuera_de_jornada'
+  minutos: number | null
+  ultima_actividad: string | null
+
+  /** rastreo = último punto GPS del teléfono; lectura = última lectura con GPS (app 010A sin rastreo). */
+  fuente: 'rastreo' | 'lectura'
+  sin_rastreo: boolean
+  posicion_en: string
+  lecturas: number
+  meta: number
+  bateria: number | null
+  sector: string | null
+  avisos: string[]
+}
+
+export interface LecturistaFeature {
+  type: 'Feature'
+  geometry: { type: 'Point'; coordinates: [number, number] }
+  properties: LecturistaMapaProps
+}
+
+export interface LecturistasCollection {
+  type: 'FeatureCollection'
+  features: LecturistaFeature[]
+  dia?: string
+  evaluado?: string
+}
+
+/** GET /monitoring/mapa/recorrido */
+export interface RespuestaRecorrido {
+  lecturista: number
+  dia: string
+  sin_rastreo: boolean
+  recorrido: {
+    type: 'FeatureCollection'
+    features: {
+      type: 'Feature'
+      geometry: { type: 'LineString'; coordinates: [number, number][] } | { type: 'Point'; coordinates: [number, number] }
+      properties: { tipo: 'recorrido' | 'inicio' | 'fin'; puntos?: number; desde?: string; hasta?: string; t?: string }
+    }[]
+  }
+  lecturas: {
+    type: 'FeatureCollection'
+    features: {
+      type: 'Feature'
+      geometry: { type: 'Point'; coordinates: [number, number] }
+      properties: { i: number; c: string | null; t: string; a: boolean; d: number | null; s: number | null }
+    }[]
+  }
+}

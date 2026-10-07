@@ -51,8 +51,6 @@
     "descripcion": "Tomas del padrón por estado, contornos de sector y lecturistas. Se actualiza cada minuto con los cambios que llegan.",
     "satelite": "Satélite",
     "calles": "Calles",
-    "verSectores": "Sectores",
-    "ocultarSectores": "Ocultar sectores",
     "tomas": "{n} tomas",
     "actualizado": "actualizado {hora}",
     "error": "No se pudo cargar el mapa.",
@@ -65,7 +63,29 @@
       "lejos": "Lejos de la toma"
     },
     "tomaElegida": "Toma {id} · {estado}",
-    "detalleProximo": "el detalle de la lectura llega en la siguiente entrega"
+    "detalleProximo": "el detalle de la lectura llega en la siguiente entrega",
+    "capas": "Capas",
+    "capa": {
+      "tomas": "Tomas",
+      "sectores": "Sectores",
+      "lecturistas": "Lecturistas",
+      "recorrido": "Recorrido del lecturista"
+    },
+    "sinCoordenada": "{n} sin coordenada (no se pintan)",
+    "lecturistasN": "{n} lecturistas",
+    "sinRastreoN": "{n} sin rastreo",
+    "sectorN": "sector {n}",
+    "lecturasHoy": "{n} lecturas",
+    "sinRastreo": "sin rastreo: posición de su última lectura",
+    "senal": {
+      "reciente": "Señal < 10 min",
+      "media": "Señal < {n} min",
+      "sinReporte": "Sin reporte",
+      "termino": "Terminó"
+    },
+    "lecturistaElegido": "{nombre} · {estado} · recorrido del día en el mapa",
+    "recorridoSinRastreo": "Sin rastreo del teléfono: el recorrido se traza con sus lecturas.",
+    "cerrar": "Cerrar"
   },
   "tiempo": {
     "nunca": "sin datos",

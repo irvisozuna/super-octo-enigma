@@ -14,7 +14,8 @@ const props = withDefaults(defineProps<{
   ahora: Date
   cargando?: boolean
   filtroEstado?: EstadoLecturista | null
-}>(), { cargando: false, filtroEstado: null })
+  seleccionado?: number | null
+}>(), { cargando: false, filtroEstado: null, seleccionado: null })
 
 const emit = defineEmits<{
   'seleccionar': [lecturista: FilaLecturista]
@@ -145,6 +146,7 @@ function alternarEstado(e: EstadoLecturista) {
       <template #item="{ item }">
         <tr
           class="tabla-lecturistas__fila"
+          :class="{ 'tabla-lecturistas__fila--activa': item.lecturista_id === seleccionado }"
           @click="emit('seleccionar', item)"
         >
           <td>
@@ -236,6 +238,10 @@ function alternarEstado(e: EstadoLecturista) {
 <style scoped>
 .tabla-lecturistas__fila {
   cursor: pointer;
+}
+
+.tabla-lecturistas__fila--activa {
+  background: rgba(var(--v-theme-primary), 0.08);
 }
 
 .tabla-lecturistas__buscar {
