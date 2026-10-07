@@ -214,7 +214,10 @@ onBeforeUnmount(() => p.detener())
           </template>
         </VCardItem>
         <VCardText v-if="p.tarifaFija.value">
-          <VTable density="compact">
+          <VTable
+            density="compact"
+            class="paneles__tabla"
+          >
             <thead>
               <tr>
                 <th>{{ t('monitoreo.paneles.gerencia') }}</th>
@@ -295,5 +298,15 @@ onBeforeUnmount(() => p.detener())
 <style scoped>
 .paneles__motivo {
   max-inline-size: 260px;
+}
+
+.paneles__tabla {
+  overflow-x: auto;
+}
+
+.paneles__tabla :deep(th),
+.paneles__tabla :deep(td) {
+  padding-inline: 8px !important;
+  white-space: nowrap;
 }
 </style>
