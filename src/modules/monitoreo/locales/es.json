@@ -41,5 +41,23 @@
     "guardar": "Guardar",
     "guardado": "Gerencias de {usuario} guardadas.",
     "sinResultados": "Ningún usuario coincide con la búsqueda."
+  },
+  "datos": {
+    "titulo": "Datos replicados",
+    "sinEstado": "No se pudo consultar el estado de los datos.",
+    "sincronizacionCaida": "La sincronización con Dolibarr lleva más de 10 minutos sin correr; los datos pueden estar atrasados.",
+    "sincronizacionConError": "La última sincronización terminó con error; revisa el registro.",
+    "periodo": "Periodo abierto",
+    "actualizado": "Última sincronización",
+    "ultimaLectura": "Última lectura recibida",
+    "ultimaCaptura": "Última captura con hora de la app",
+    "ultimoRastreo": "Último punto de rastreo",
+    "lecturasPeriodo": "Lecturas del periodo",
+    "contratos": "Tomas en el padrón",
+    "nunca": "sin datos",
+    "ahora": "hace menos de un minuto",
+    "minutos": "hace {n} min",
+    "horas": "hace {n} h",
+    "dias": "hace {n} días"
   }
 }

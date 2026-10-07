@@ -65,3 +65,14 @@ export interface RespuestaActualizarAlcance {
   usuario: string
   gerencias: GerenciaRef[]
 }
+
+/** GET /monitoring/sync: hasta dónde llegan los datos replicados. Fechas en hora local de OOMSAPAS ("Y-m-d H:i:s") salvo `ultima_corrida` (ISO). */
+export interface RespuestaSync {
+  periodo_abierto: { id: number; nombre: string; inicio: string | null; fin: string | null } | null
+  ultima_corrida: string | null
+  ultima_lectura_recibida: string | null
+  ultima_captura: string | null
+  ultimo_rastreo: string | null
+  sincronizadores: { clave: string; ultima_corrida: string | null; filas: number | null; ms: number | null; marca: number; error: string | null }[]
+  conteos: { lecturas_periodo_abierto: number; contratos: number; rastreo: number }
+}

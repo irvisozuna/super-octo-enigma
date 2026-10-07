@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import EstadoDatos from '../components/EstadoDatos.vue'
 import { useAlcanceStore } from '../stores/alcanceStore'
 import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
@@ -148,7 +149,17 @@ onBeforeUnmount(() => controlador?.abort())
           </VCard>
         </VCol>
 
-        <VCol cols="12">
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <EstadoDatos />
+        </VCol>
+
+        <VCol
+          cols="12"
+          md="6"
+        >
           <VCard>
             <VCardItem>
               <VCardTitle>{{ t('monitoreo.inicio.proximoTitulo') }}</VCardTitle>

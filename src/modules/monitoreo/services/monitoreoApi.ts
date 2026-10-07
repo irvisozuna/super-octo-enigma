@@ -1,4 +1,4 @@
-import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe } from '../types/api'
+import type { RespuestaActualizarAlcance, RespuestaAlcances, RespuestaGerencias, RespuestaMe, RespuestaSync } from '../types/api'
 import { rawApi } from '@/services/api'
 
 /*
@@ -26,4 +26,8 @@ export function obtenerAlcances({ signal }: OpcionesPeticion = {}): Promise<Resp
 
 export function actualizarAlcance(usuarioId: string, gerencias: number[], { signal }: OpcionesPeticion = {}): Promise<RespuestaActualizarAlcance> {
   return rawApi(`${BASE}/admin/alcances/${encodeURIComponent(usuarioId)}`, { method: 'PUT', body: { gerencias }, signal })
+}
+
+export function obtenerEstadoSync({ signal }: OpcionesPeticion = {}): Promise<RespuestaSync> {
+  return rawApi(`${BASE}/sync`, { signal })
 }
