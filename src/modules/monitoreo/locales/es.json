@@ -1,0 +1,45 @@
+{
+  "menu": {
+    "monitoreo": "Monitoreo",
+    "monitor": "Monitor de lecturas",
+    "alcances": "Gerencias por usuario"
+  },
+  "inicio": {
+    "titulo": "Monitoreo de lecturas",
+    "descripcion": "Avance de las lecturas por sector y lecturista en las gerencias que tienes asignadas.",
+    "sinGerenciasTitulo": "Todavía no tienes gerencias asignadas",
+    "sinGerenciasDetalle": "Tienes permiso para ver el monitoreo, pero nadie te ha asignado una gerencia; por eso no verás datos. Pide al equipo de sistemas que te asigne la tuya en Monitoreo → Gerencias por usuario.",
+    "alcanceTitulo": "Tu alcance",
+    "todasLasGerencias": "Ves todas las gerencias.",
+    "gerenciasAsignadas": "Ves {n} gerencia. | Ves {n} gerencias.",
+    "catalogoNoDisponible": "No se pudo leer el catálogo de gerencias de Dolibarr en este momento.",
+    "permisosTitulo": "Lo que puedes hacer",
+    "permisoVer": "Ver el monitor",
+    "permisoOperar": "Atender alertas y pedir re-lecturas",
+    "permisoAdministrar": "Configurar el módulo",
+    "proximoTitulo": "Qué sigue en esta pantalla",
+    "proximoDetalle": "La base del módulo (permisos, alcance por gerencia y réplica de datos) ya está lista. Sobre ella se construye el monitor del día:",
+    "proximo1": "Mapa con las tomas por estado, los lecturistas y los contornos de cada sector.",
+    "proximo2": "Avance general, sectores atrasados, lecturistas activos y alertas abiertas.",
+    "proximo3": "Detalle de cada lectura, de cada sector y de la jornada de cada lecturista."
+  },
+  "alcances": {
+    "titulo": "Gerencias por usuario",
+    "descripcion": "Define qué gerencias ve cada usuario en el monitoreo. Quien administra el módulo y el rol admin ven todas.",
+    "recargar": "Recargar",
+    "buscar": "Buscar usuario, correo o rol",
+    "soloConMonitoreo": "Solo usuarios con permiso de monitoreo",
+    "usuario": "Usuario",
+    "roles": "Roles",
+    "gerencias": "Gerencias que ve",
+    "acciones": "",
+    "veTodas": "Todas las gerencias",
+    "ninguna": "Ninguna (no ve datos)",
+    "sinPermiso": "Sus roles no incluyen el monitoreo: aunque le asignes gerencias, no verá el módulo.",
+    "sinCatalogo": "Mientras tanto no se pueden asignar gerencias nuevas.",
+    "descartar": "Descartar",
+    "guardar": "Guardar",
+    "guardado": "Gerencias de {usuario} guardadas.",
+    "sinResultados": "Ningún usuario coincide con la búsqueda."
+  }
+}

@@ -1,11 +1,14 @@
 import { createMongoAbility } from '@casl/ability'
 
-export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage' | 'export' | 'generate'
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage' | 'export' | 'generate' | 'operate'
 
 // Sujetos del módulo de reportes: gruesos a propósito (la granularidad por reporte la aplica el servidor)
 export type SubjectsReportes = 'reportes' | 'tableros' | 'documentos' | 'reportes-admin' | 'reportes-fuentes'
 
-export type Subjects = 'Post' | 'Comment' | 'all' | 'Users' | 'Profile' | 'Rebilling' | 'Evidence' | SubjectsReportes
+// Sujetos del monitoreo de lecturas: ver, operar (alertas, re-lecturas) y administrar; el alcance por gerencia lo aplica el servidor
+export type SubjectsMonitoreo = 'monitoreo' | 'monitoreo-operar' | 'monitoreo-admin'
+
+export type Subjects = 'Post' | 'Comment' | 'all' | 'Users' | 'Profile' | 'Rebilling' | 'Evidence' | SubjectsReportes | SubjectsMonitoreo
 
 export interface Rule { action: Actions; subject: Subjects }
 
