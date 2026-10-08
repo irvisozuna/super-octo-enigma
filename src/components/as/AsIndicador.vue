@@ -112,6 +112,7 @@ const iconoDelta = computed(() => (props.delta && props.delta > 0 ? 'tabler-tren
         height="6"
         rounded
         class="my-2"
+        :aria-label="etiqueta"
       />
       <div
         v-if="apoyo"

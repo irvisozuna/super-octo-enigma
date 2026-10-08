@@ -119,7 +119,6 @@ function alternarEstado(e: EstadoLecturista) {
           :color="TOKEN_LECTURISTA[c.estado]"
           :variant="filtroEstado === c.estado ? 'flat' : 'tonal'"
           label
-          :aria-pressed="filtroEstado === c.estado"
           @click="alternarEstado(c.estado)"
         >
           <span class="as-num me-1">{{ c.n }}</span>{{ t(`monitoreo.estadosLecturista.${c.estado}`) }}

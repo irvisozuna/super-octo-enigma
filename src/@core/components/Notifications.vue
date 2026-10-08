@@ -48,7 +48,11 @@ const toggleReadUnread = (isSeen: boolean, Id: number) => {
 </script>
 
 <template>
-  <IconBtn id="notification-btn">
+  <IconBtn
+    id="notification-btn"
+    aria-label="Notificaciones"
+    title="Notificaciones"
+  >
     <VBadge
       v-bind="props.badgeProps"
       :model-value="props.notifications.some(n => !n.isSeen)"

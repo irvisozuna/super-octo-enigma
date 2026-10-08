@@ -176,6 +176,21 @@ function medirDesborde() {
   const envoltura = elementoRaiz()?.querySelector('.v-table__wrapper')
 
   desborda.value = !!envoltura && envoltura.scrollWidth > envoltura.clientWidth + 2
+
+  // Una región desplazable (horizontal o con altura fija) debe poder recibir el foco para moverse con el teclado
+  if (envoltura) {
+    const desplazable = desborda.value || envoltura.scrollHeight > envoltura.clientHeight + 2
+    if (desplazable) {
+      envoltura.setAttribute('tabindex', '0')
+      envoltura.setAttribute('role', 'region')
+      envoltura.setAttribute('aria-label', props.titulo ?? t('as.tabla.desplazar'))
+    }
+    else {
+      envoltura.removeAttribute('tabindex')
+      envoltura.removeAttribute('role')
+      envoltura.removeAttribute('aria-label')
+    }
+  }
 }
 
 onMounted(() => {

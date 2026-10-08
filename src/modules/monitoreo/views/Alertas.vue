@@ -134,7 +134,6 @@ onBeforeUnmount(() => {
           size="small"
           :variant="a.filtros.severidad === s ? 'flat' : 'tonal'"
           :color="TOKEN_SEVERIDAD[s]"
-          :aria-pressed="a.filtros.severidad === s"
           @click="a.aplicar({ severidad: a.filtros.severidad === s ? null : s })"
         >
           <span class="as-num me-1">{{ entero(a.resumen.value.por_severidad[s]) }}</span>{{ t(`monitoreo.alertas.${s}`) }}

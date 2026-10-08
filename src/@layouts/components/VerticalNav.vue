@@ -1,12 +1,12 @@
 <script lang="ts" setup>
+import type { Component } from 'vue'
+import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+import { VNodeRenderer } from './VNodeRenderer'
 import { layoutConfig } from '@layouts'
 import { VerticalNavGroup, VerticalNavLink, VerticalNavSectionTitle } from '@layouts/components'
 import { useLayoutConfigStore } from '@layouts/stores/config'
 import { injectionKeyIsVerticalNavHovered } from '@layouts/symbols'
 import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@layouts/types'
-import type { Component } from 'vue'
-import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
-import { VNodeRenderer } from './VNodeRenderer'
 
 interface Props {
   tag?: string | Component
@@ -98,7 +98,11 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
             class="d-none nav-unpin"
             :class="configStore.isVerticalNavCollapsed && 'd-lg-block'"
             v-bind="layoutConfig.icons.verticalNavUnPinned"
+            role="button"
+            tabindex="0"
+            aria-label="Fijar el menú"
             @click="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
+            @keydown.enter="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
           />
           <Component
             :is="layoutConfig.app.iconRenderer || 'div'"
@@ -106,12 +110,19 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
             class="d-none nav-pin"
             :class="!configStore.isVerticalNavCollapsed && 'd-lg-block'"
             v-bind="layoutConfig.icons.verticalNavPinned"
+            role="button"
+            tabindex="0"
+            aria-label="Contraer el menú"
             @click="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
+            @keydown.enter="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
           />
           <Component
             :is="layoutConfig.app.iconRenderer || 'div'"
             class="d-lg-none"
             v-bind="layoutConfig.icons.close"
+            role="button"
+            tabindex="0"
+            aria-label="Cerrar el menú"
             @click="toggleIsOverlayNavActive(false)"
           />
         </div>
