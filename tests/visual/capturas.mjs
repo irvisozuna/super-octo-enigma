@@ -1,0 +1,187 @@
+#!/usr/bin/env node
+/**
+ * Capturas de referencia del sistema de diseño (Aquasoft Design System 1.0).
+ *
+ * Abre la aplicación en Chromium (Playwright), inicia sesión con el usuario local y guarda una captura a página completa
+ * de cada pantalla, en uno o varios anchos. Se usa antes y después de cada fase para comparar.
+ *
+ *   DS_PASSWORD_FILE=/ruta/al/archivo node tests/visual/capturas.mjs --etiqueta base
+ *   DS_PASSWORD=... node tests/visual/capturas.mjs --etiqueta despues --solo monitor,alertas
+ *
+ * Variables: DS_BASE_URL (http://localhost:5173), DS_USUARIO (admin_oomsapas), DS_PASSWORD o DS_PASSWORD_FILE,
+ * DS_TEMA (light | dark). Salida: tests/visual/capturas/<etiqueta>/<pantalla>@<ancho>.png + manifest.json.
+ * La carpeta de capturas está ignorada por git: las imágenes se revisan en local y se adjuntan a Linear.
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+import { chromium } from 'playwright'
+
+const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
+const args = leerArgs(process.argv.slice(2))
+const etiqueta = args.etiqueta ?? 'base'
+const baseUrl = process.env.DS_BASE_URL ?? 'http://localhost:5173'
+const usuario = process.env.DS_USUARIO ?? 'admin_oomsapas'
+const password = process.env.DS_PASSWORD ?? (process.env.DS_PASSWORD_FILE ? fs.readFileSync(process.env.DS_PASSWORD_FILE, 'utf8').trim() : null)
+const tema = process.env.DS_TEMA ?? 'light'
+const solo = args.solo ? String(args.solo).split(',') : null
+const destino = path.join(RAIZ, 'tests/visual/capturas', etiqueta)
+
+if (!password) {
+  console.error('Falta DS_PASSWORD o DS_PASSWORD_FILE (contraseña del usuario local).')
+  process.exit(1)
+}
+
+const ANCHO_BASE = 1440
+const ANCHOS_PILOTO = [1440, 1280]
+
+/** Abre el panel de un lecturista en el Monitor del día. */
+async function abrirJornada(page) {
+  await page.locator('#monitoreo-lecturistas tbody tr').first().click()
+  await page.waitForTimeout(3500)
+}
+
+/** Abre el detalle del primer sector del Monitor del día. */
+async function abrirSector(page) {
+  await page.evaluate(() => {
+    const raiz = document.querySelector('.monitor-dia')
+    const estado = raiz?.__vueParentComponent?.setupState
+    const primero = estado?.sectores?.[0]
+    if (estado?.irASectorPorId && primero)
+      estado.irASectorPorId(Number(primero.id ?? primero.sector_id))
+  })
+  await page.waitForTimeout(3500)
+}
+
+/** Busca un contrato en la pantalla de Soporte. */
+async function buscarContrato(page) {
+  await page.locator('.v-field input').first().fill('10802150')
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click()
+  await page.waitForSelector('.v-tab', { timeout: 20000 })
+  await page.waitForTimeout(2500)
+}
+
+const PANTALLAS = [
+  { id: 'inicio-soporte', ruta: '/' },
+  { id: 'soporte-contrato', ruta: '/', acciones: buscarContrato },
+  { id: 'monitor-hoy', ruta: '/monitoreo?dia=2026-09-15&periodo=185', piloto: true, espera: 5000 },
+  { id: 'monitor-periodo', ruta: '/monitoreo?vista=periodo&periodo=186', piloto: true, espera: 5000 },
+  { id: 'monitor-detalle-lectura', ruta: '/monitoreo?vista=periodo&periodo=186&sector=330&contrato=40350', piloto: true, espera: 6000 },
+  { id: 'monitor-jornada', ruta: '/monitoreo?dia=2026-09-15&periodo=185&lecturista=568', piloto: true, espera: 5000, acciones: abrirJornada },
+  { id: 'monitor-detalle-sector', ruta: '/monitoreo?dia=2026-09-15&periodo=185', piloto: true, espera: 5000, acciones: abrirSector },
+  { id: 'alertas', ruta: '/monitoreo/alertas', piloto: true },
+  { id: 'ranking', ruta: '/monitoreo/ranking' },
+  { id: 'relecturas', ruta: '/monitoreo/relecturas' },
+  { id: 'coordenadas', ruta: '/monitoreo/coordenadas' },
+  { id: 'calendario', ruta: '/monitoreo/admin/calendario' },
+  { id: 'umbrales', ruta: '/monitoreo/admin/configuracion' },
+  { id: 'destinatarios', ruta: '/monitoreo/admin/destinatarios' },
+  { id: 'reportes-indice', ruta: '/reportes' },
+  { id: 'reporte-visor', ruta: '/reportes/refacturacion_por_lectura', espera: 4000 },
+  { id: 'tablero-lecturas', ruta: '/reportes/tableros/lecturas', espera: 4000 },
+  { id: 'exportaciones', ruta: '/reportes/exportaciones' },
+  { id: 'mandatos', ruta: '/paymentmandates' },
+  { id: 'plantillas', ruta: '/templates' },
+]
+
+const CSS_SIN_ANIMACION = `
+  *, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }
+  .maplibregl-map canvas { image-rendering: auto; }
+`
+
+async function iniciarSesion(context) {
+  const page = await context.newPage()
+
+  await page.goto(`${baseUrl}/login`, { waitUntil: 'networkidle' })
+  await page.locator('input[type="text"]').first().fill(usuario)
+  await page.locator('input[type="password"]').first().fill(password)
+  await page.locator('button[type="submit"]').first().click()
+  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 30000 })
+  await page.waitForTimeout(1500)
+
+  // Tema fijo para que las capturas sean comparables
+  await page.evaluate(t => {
+    document.cookie = `theme=${t}; path=/`
+  }, tema)
+  await page.close()
+}
+
+async function capturar(context, pantalla, ancho) {
+  const page = await context.newPage()
+
+  await page.setViewportSize({ width: ancho, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${baseUrl}${pantalla.ruta}`, { waitUntil: 'networkidle' })
+  await page.addStyleTag({ content: CSS_SIN_ANIMACION })
+  await page.waitForTimeout(pantalla.espera ?? 2500)
+  if (pantalla.acciones) {
+    try {
+      await pantalla.acciones(page)
+    }
+    catch (e) {
+      console.warn(`  ⚠ ${pantalla.id}: la acción falló (${e.message.split('\n')[0]}); se captura el estado alcanzado`)
+    }
+  }
+  const archivo = path.join(destino, `${pantalla.id}@${ancho}.png`)
+
+  await page.screenshot({ path: archivo, fullPage: true })
+
+  const alto = await page.evaluate(() => document.documentElement.scrollHeight)
+
+  await page.close()
+
+  return { id: pantalla.id, ancho, alto, archivo: path.relative(RAIZ, archivo) }
+}
+
+async function main() {
+  fs.mkdirSync(destino, { recursive: true })
+
+  const navegador = await chromium.launch()
+  const context = await navegador.newContext({ viewport: { width: ANCHO_BASE, height: 900 }, locale: 'es-MX', timezoneId: 'America/Mazatlan' })
+
+  await iniciarSesion(context)
+
+  const pantallas = PANTALLAS.filter(p => !solo || solo.some(s => p.id.includes(s)))
+  const resultados = []
+  const inicio = Date.now()
+  for (const pantalla of pantallas) {
+    const anchos = pantalla.piloto ? ANCHOS_PILOTO : [ANCHO_BASE]
+    for (const ancho of anchos) {
+      process.stdout.write(`  ${pantalla.id}@${ancho} … `)
+      try {
+        const r = await capturar(context, pantalla, ancho)
+
+        resultados.push(r)
+        console.log(`ok (${r.alto} px de alto)`)
+      }
+      catch (e) {
+        console.log(`ERROR ${e.message.split('\n')[0]}`)
+        resultados.push({ id: pantalla.id, ancho, error: e.message.split('\n')[0] })
+      }
+    }
+  }
+  await navegador.close()
+
+  const manifest = { etiqueta, generadoEl: new Date().toISOString(), baseUrl, tema, segundos: Math.round((Date.now() - inicio) / 1000), capturas: resultados }
+
+  fs.writeFileSync(path.join(destino, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+  console.log(`\n${resultados.filter(r => !r.error).length} capturas en ${path.relative(RAIZ, destino)} (${manifest.segundos} s)`)
+}
+
+function leerArgs(lista) {
+  const r = {}
+  for (let i = 0; i < lista.length; i++) {
+    if (lista[i].startsWith('--')) {
+      const clave = lista[i].slice(2)
+
+      r[clave] = lista[i + 1] && !lista[i + 1].startsWith('--') ? lista[++i] : true
+    }
+  }
+
+  return r
+}
+
+main().catch(e => {
+  console.error(e)
+  process.exit(1)
+})

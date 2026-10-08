@@ -41,3 +41,6 @@ public/mockServiceWorker.js
 # Env files
 .env*
 !.env.example
+
+# Capturas del sistema de diseño (se revisan en local y se adjuntan a Linear)
+tests/visual/capturas/
