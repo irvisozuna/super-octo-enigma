@@ -30,6 +30,9 @@ module.exports = {
   ],
   ignorePatterns: ['src/plugins/iconify/*.js', 'node_modules', 'dist', '*.d.ts', 'vendor', '*.json', '*.jsonc'],
   rules: {
+    // Aquasoft Design System 1.0: botones de solo icono con etiqueta (aviso hasta cerrar el piloto; error en fase 2.5)
+    'as-boton-icono-con-etiqueta': 'warn',
+
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
 

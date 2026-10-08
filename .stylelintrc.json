@@ -20,6 +20,43 @@
         "**/*.vue"
       ],
       "customSyntax": "postcss-html"
+    },
+    {
+      "files": [
+        "src/modules/**/*.{vue,scss}",
+        "src/components/**/*.{vue,scss}",
+        "src/layouts/**/*.{vue,scss}"
+      ],
+      "rules": {
+        "color-no-hex": [
+          true,
+          {
+            "severity": "warning",
+            "message": "Color fijo: usa un token del tema (rgb(var(--v-theme-…))) o una custom property --as-*"
+          }
+        ],
+        "declaration-no-important": [
+          true,
+          {
+            "severity": "warning",
+            "message": "Evita !important: sube la especificidad o usa una clase del sistema de diseño"
+          }
+        ],
+        "unit-disallowed-list": [
+          [
+            "px"
+          ],
+          {
+            "ignoreProperties": {
+              "px": [
+                "/^(?!font-size$).*/"
+              ]
+            },
+            "severity": "warning",
+            "message": "font-size en px: usa var(--as-fs-*) o una clase tipográfica"
+          }
+        ]
+      }
     }
   ],
   "rules": {

@@ -8,8 +8,9 @@
  *   DS_PASSWORD_FILE=/ruta/al/archivo node tests/visual/capturas.mjs --etiqueta base
  *   DS_PASSWORD=... node tests/visual/capturas.mjs --etiqueta despues --solo monitor,alertas
  *
- * Variables: DS_BASE_URL (http://localhost:5173), DS_USUARIO (admin_oomsapas), DS_PASSWORD o DS_PASSWORD_FILE,
- * DS_TEMA (light | dark). Salida: tests/visual/capturas/<etiqueta>/<pantalla>@<ancho>.png + manifest.json.
+ * Variables: DS_BASE_URL (http://localhost:5173), DS_API_URL (http://localhost:8090/api), DS_TOKEN o DS_TOKEN_FILE (token
+ * local; recomendado), o bien DS_USUARIO (admin_oomsapas) con DS_PASSWORD o DS_PASSWORD_FILE,
+ * DS_TEMA (light | dark), DS_CANAL (chrome | msedge para usar el navegador instalado). Salida: tests/visual/capturas/<etiqueta>/<pantalla>@<ancho>.png + manifest.json.
  * La carpeta de capturas está ignorada por git: las imágenes se revisan en local y se adjuntan a Linear.
  */
 import fs from 'node:fs'
@@ -21,14 +22,16 @@ const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../.
 const args = leerArgs(process.argv.slice(2))
 const etiqueta = args.etiqueta ?? 'base'
 const baseUrl = process.env.DS_BASE_URL ?? 'http://localhost:5173'
+const apiUrl = process.env.DS_API_URL ?? 'http://localhost:8090/api'
 const usuario = process.env.DS_USUARIO ?? 'admin_oomsapas'
 const password = process.env.DS_PASSWORD ?? (process.env.DS_PASSWORD_FILE ? fs.readFileSync(process.env.DS_PASSWORD_FILE, 'utf8').trim() : null)
+const token = process.env.DS_TOKEN ?? (process.env.DS_TOKEN_FILE ? fs.readFileSync(process.env.DS_TOKEN_FILE, 'utf8').trim() : null)
 const tema = process.env.DS_TEMA ?? 'light'
 const solo = args.solo ? String(args.solo).split(',') : null
 const destino = path.join(RAIZ, 'tests/visual/capturas', etiqueta)
 
-if (!password) {
-  console.error('Falta DS_PASSWORD o DS_PASSWORD_FILE (contraseña del usuario local).')
+if (!password && !token) {
+  console.error('Falta DS_TOKEN / DS_TOKEN_FILE (token local de la API) o DS_PASSWORD / DS_PASSWORD_FILE.')
   process.exit(1)
 }
 
@@ -89,14 +92,36 @@ const CSS_SIN_ANIMACION = `
   .maplibregl-map canvas { image-rendering: auto; }
 `
 
+/**
+ * Con DS_TOKEN: arma las mismas cookies que deja el formulario de acceso (accessToken, userData, userAbilityRules,
+ * profile, company) a partir de la API local; así no depende de la validación de credenciales contra Aquasoft Comercial.
+ * Sin token: usa el formulario con usuario y contraseña.
+ */
 async function iniciarSesion(context) {
   const page = await context.newPage()
 
   await page.goto(`${baseUrl}/login`, { waitUntil: 'networkidle' })
-  await page.locator('input[type="text"]').first().fill(usuario)
-  await page.locator('input[type="password"]').first().fill(password)
-  await page.locator('button[type="submit"]').first().click()
-  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 30000 })
+  if (token) {
+    const cabeceras = { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    const sesion = await (await fetch(`${apiUrl}/auth/user`, { headers: cabeceras })).json()
+    if (!sesion?.user)
+      throw new Error('El token local no es válido: /auth/user no devolvió usuario')
+    const habilidades = await fetch(`${apiUrl}/reporting/me/abilities`, { headers: cabeceras }).then(r => r.json()).catch(() => ({}))
+    const reglas = [...(sesion.userAbilityRules ?? []), ...(habilidades.userAbilityRules ?? [])]
+    const cookies = { accessToken: token, userData: sesion.user, userAbilityRules: reglas, profile: sesion.profile, company: sesion.company }
+
+    await page.evaluate(c => {
+      for (const [k, v] of Object.entries(c))
+        document.cookie = `${k}=${encodeURIComponent(JSON.stringify(v))}; path=/`
+    }, cookies)
+    await page.goto(`${baseUrl}/`, { waitUntil: 'networkidle' })
+  }
+  else {
+    await page.locator('input[type="text"]').first().fill(usuario)
+    await page.locator('input[type="password"]').first().fill(password)
+    await page.locator('button[type="submit"]').first().click()
+    await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 30000 })
+  }
   await page.waitForTimeout(1500)
 
   // Tema fijo para que las capturas sean comparables
@@ -136,7 +161,8 @@ async function capturar(context, pantalla, ancho) {
 async function main() {
   fs.mkdirSync(destino, { recursive: true })
 
-  const navegador = await chromium.launch()
+  // DS_CANAL=chrome usa el Chrome instalado en el equipo (sin descargar el Chromium de Playwright)
+  const navegador = await chromium.launch(process.env.DS_CANAL ? { channel: process.env.DS_CANAL } : {})
   const context = await navegador.newContext({ viewport: { width: ANCHO_BASE, height: 900 }, locale: 'es-MX', timezoneId: 'America/Mazatlan' })
 
   await iniciarSesion(context)

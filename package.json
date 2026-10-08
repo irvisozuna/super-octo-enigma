@@ -19,7 +19,8 @@
     "test:coverage": "vitest run --coverage",
     "ds:audit": "node scripts/ds-audit.mjs",
     "ds:capturas": "node tests/visual/capturas.mjs",
-    "ds:comparar": "node tests/visual/comparar.mjs"
+    "ds:comparar": "node tests/visual/comparar.mjs",
+    "lint:estilos": "stylelint \"src/**/*.{scss,vue}\""
   },
   "dependencies": {
     "@casl/ability": "6.7.2",
