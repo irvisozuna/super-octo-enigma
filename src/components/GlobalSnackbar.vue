@@ -42,7 +42,8 @@ const currentSnackbar = computed(() => {
 // Traducción del mensaje usando i18n
 const translatedMessage = computed(() => {
   if (!currentSnackbar.value) return "";
-  const { messageKey, variables } = currentSnackbar.value.message;
+  const { messageKey, variables, texto } = currentSnackbar.value.message;
+  if (texto) return texto;
   return t(messageKey, variables);
 });
 

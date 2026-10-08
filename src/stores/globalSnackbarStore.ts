@@ -9,6 +9,8 @@ export const useGlobalSnackbarStore = defineStore('globalSnackbar', () => {
       message: {
         messageKey: string;
         variables: Record<string, any>;
+        /** Texto ya traducido; si viene, se muestra tal cual en lugar de messageKey. */
+        texto?: string;
       };
       color: 'success' | 'error' | 'info' | 'warning';
       timeout: number;
@@ -27,6 +29,8 @@ export const useGlobalSnackbarStore = defineStore('globalSnackbar', () => {
       message: {
         messageKey: string;
         variables: Record<string, any>;
+        /** Texto ya traducido; si viene, se muestra tal cual en lugar de messageKey. */
+        texto?: string;
       };
       color: 'success' | 'error' | 'info' | 'warning';
       timeout: number;
@@ -46,7 +50,7 @@ export const useGlobalSnackbarStore = defineStore('globalSnackbar', () => {
    */
   function showSnackbar(
     title: string,
-    message: { messageKey: string; variables: Record<string, any> },
+    message: { messageKey: string; variables: Record<string, any>; texto?: string },
     color: 'success' | 'error' | 'info' | 'warning',
     options: {
       timeout?: number;
