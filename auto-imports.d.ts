@@ -7,9 +7,22 @@
 export {}
 declare global {
   const $api: typeof import('./src/utils/api')['$api']
+  const COLOR_ACTIVO: typeof import('./src/utils/estados')['COLOR_ACTIVO']
+  const COLOR_CONFIANZA: typeof import('./src/utils/estados')['COLOR_CONFIANZA']
+  const COLOR_CONVENIO: typeof import('./src/utils/estados')['COLOR_CONVENIO']
+  const COLOR_ESTADO_ALERTA: typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']
+  const COLOR_EXPORTACION: typeof import('./src/utils/estados')['COLOR_EXPORTACION']
+  const COLOR_PROPUESTA: typeof import('./src/utils/estados')['COLOR_PROPUESTA']
+  const COLOR_RELECTURA: typeof import('./src/utils/estados')['COLOR_RELECTURA']
+  const COLOR_TARIFA_FIJA: typeof import('./src/utils/estados')['COLOR_TARIFA_FIJA']
   const COOKIE_MAX_AGE_1_YEAR: typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']
   const CreateUrl: typeof import('./src/@core/composable/CreateUrl')['CreateUrl']
   const EffectScope: typeof import('vue')['EffectScope']
+  const TOKEN_LECTURISTA: typeof import('./src/utils/estados')['TOKEN_LECTURISTA']
+  const TOKEN_SECTOR: typeof import('./src/utils/estados')['TOKEN_SECTOR']
+  const TOKEN_SEVERIDAD: typeof import('./src/utils/estados')['TOKEN_SEVERIDAD']
+  const TOKEN_TOMA: typeof import('./src/utils/estados')['TOKEN_TOMA']
+  const TOKEN_TOMA_LEJOS: typeof import('./src/utils/estados')['TOKEN_TOMA_LEJOS']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const alphaDashValidator: typeof import('./src/@core/utils/validators')['alphaDashValidator']
   const alphaValidator: typeof import('./src/@core/utils/validators')['alphaValidator']
@@ -25,6 +38,7 @@ declare global {
   const buildOrderByClause: typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']
   const buildSelectClause: typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']
   const buildWhereClause: typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']
+  const colorDe: typeof import('./src/utils/estados')['colorDe']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -161,6 +175,9 @@ declare global {
   const toRef: typeof import('vue')['toRef']
   const toRefs: typeof import('vue')['toRefs']
   const toValue: typeof import('vue')['toValue']
+  const tokenAvance: typeof import('./src/utils/estados')['tokenAvance']
+  const tokenMeta: typeof import('./src/utils/estados')['tokenMeta']
+  const tokenSenal: typeof import('./src/utils/estados')['tokenSenal']
   const triggerRef: typeof import('vue')['triggerRef']
   const tryOnBeforeMount: typeof import('@vueuse/core')['tryOnBeforeMount']
   const tryOnBeforeUnmount: typeof import('@vueuse/core')['tryOnBeforeUnmount']
@@ -223,6 +240,7 @@ declare global {
   const useDebounce: typeof import('@vueuse/core')['useDebounce']
   const useDebounceFn: typeof import('@vueuse/core')['useDebounceFn']
   const useDebouncedRefHistory: typeof import('@vueuse/core')['useDebouncedRefHistory']
+  const useDescarga: typeof import('./src/composables/useDescarga')['useDescarga']
   const useDeviceMotion: typeof import('@vueuse/core')['useDeviceMotion']
   const useDeviceOrientation: typeof import('@vueuse/core')['useDeviceOrientation']
   const useDevicePixelRatio: typeof import('@vueuse/core')['useDevicePixelRatio']
@@ -284,6 +302,7 @@ declare global {
   const useMutationObserver: typeof import('@vueuse/core')['useMutationObserver']
   const useNavigatorLanguage: typeof import('@vueuse/core')['useNavigatorLanguage']
   const useNetwork: typeof import('@vueuse/core')['useNetwork']
+  const useNotificacion: typeof import('./src/composables/useNotificacion')['useNotificacion']
   const useNow: typeof import('@vueuse/core')['useNow']
   const useObjectUrl: typeof import('@vueuse/core')['useObjectUrl']
   const useOffsetPagination: typeof import('@vueuse/core')['useOffsetPagination']
@@ -351,6 +370,7 @@ declare global {
   const useToNumber: typeof import('@vueuse/core')['useToNumber']
   const useToString: typeof import('@vueuse/core')['useToString']
   const useToggle: typeof import('@vueuse/core')['useToggle']
+  const useTokensTema: typeof import('./src/composables/useTokensTema')['useTokensTema']
   const useTransition: typeof import('@vueuse/core')['useTransition']
   const useTrunc: typeof import('@vueuse/math')['useTrunc']
   const useUrlSearchParams: typeof import('@vueuse/core')['useUrlSearchParams']
@@ -398,8 +418,21 @@ declare module 'vue' {
   interface GlobalComponents {}
   interface ComponentCustomProperties {
     readonly $api: UnwrapRef<typeof import('./src/utils/api')['$api']>
+    readonly COLOR_ACTIVO: UnwrapRef<typeof import('./src/utils/estados')['COLOR_ACTIVO']>
+    readonly COLOR_CONFIANZA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_CONFIANZA']>
+    readonly COLOR_CONVENIO: UnwrapRef<typeof import('./src/utils/estados')['COLOR_CONVENIO']>
+    readonly COLOR_ESTADO_ALERTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']>
+    readonly COLOR_EXPORTACION: UnwrapRef<typeof import('./src/utils/estados')['COLOR_EXPORTACION']>
+    readonly COLOR_PROPUESTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_PROPUESTA']>
+    readonly COLOR_RELECTURA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_RELECTURA']>
+    readonly COLOR_TARIFA_FIJA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_TARIFA_FIJA']>
     readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']>
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
+    readonly TOKEN_LECTURISTA: UnwrapRef<typeof import('./src/utils/estados')['TOKEN_LECTURISTA']>
+    readonly TOKEN_SECTOR: UnwrapRef<typeof import('./src/utils/estados')['TOKEN_SECTOR']>
+    readonly TOKEN_SEVERIDAD: UnwrapRef<typeof import('./src/utils/estados')['TOKEN_SEVERIDAD']>
+    readonly TOKEN_TOMA: UnwrapRef<typeof import('./src/utils/estados')['TOKEN_TOMA']>
+    readonly TOKEN_TOMA_LEJOS: UnwrapRef<typeof import('./src/utils/estados')['TOKEN_TOMA_LEJOS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly alphaDashValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['alphaDashValidator']>
     readonly alphaValidator: UnwrapRef<typeof import('./src/@core/utils/validators')['alphaValidator']>
@@ -415,6 +448,7 @@ declare module 'vue' {
     readonly buildOrderByClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildOrderByClause']>
     readonly buildSelectClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']>
     readonly buildWhereClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']>
+    readonly colorDe: UnwrapRef<typeof import('./src/utils/estados')['colorDe']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
     readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>
@@ -548,6 +582,9 @@ declare module 'vue' {
     readonly toRef: UnwrapRef<typeof import('vue')['toRef']>
     readonly toRefs: UnwrapRef<typeof import('vue')['toRefs']>
     readonly toValue: UnwrapRef<typeof import('vue')['toValue']>
+    readonly tokenAvance: UnwrapRef<typeof import('./src/utils/estados')['tokenAvance']>
+    readonly tokenMeta: UnwrapRef<typeof import('./src/utils/estados')['tokenMeta']>
+    readonly tokenSenal: UnwrapRef<typeof import('./src/utils/estados')['tokenSenal']>
     readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
     readonly tryOnBeforeMount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeMount']>
     readonly tryOnBeforeUnmount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeUnmount']>
@@ -609,6 +646,7 @@ declare module 'vue' {
     readonly useDebounce: UnwrapRef<typeof import('@vueuse/core')['useDebounce']>
     readonly useDebounceFn: UnwrapRef<typeof import('@vueuse/core')['useDebounceFn']>
     readonly useDebouncedRefHistory: UnwrapRef<typeof import('@vueuse/core')['useDebouncedRefHistory']>
+    readonly useDescarga: UnwrapRef<typeof import('./src/composables/useDescarga')['useDescarga']>
     readonly useDeviceMotion: UnwrapRef<typeof import('@vueuse/core')['useDeviceMotion']>
     readonly useDeviceOrientation: UnwrapRef<typeof import('@vueuse/core')['useDeviceOrientation']>
     readonly useDevicePixelRatio: UnwrapRef<typeof import('@vueuse/core')['useDevicePixelRatio']>
@@ -669,6 +707,7 @@ declare module 'vue' {
     readonly useMutationObserver: UnwrapRef<typeof import('@vueuse/core')['useMutationObserver']>
     readonly useNavigatorLanguage: UnwrapRef<typeof import('@vueuse/core')['useNavigatorLanguage']>
     readonly useNetwork: UnwrapRef<typeof import('@vueuse/core')['useNetwork']>
+    readonly useNotificacion: UnwrapRef<typeof import('./src/composables/useNotificacion')['useNotificacion']>
     readonly useNow: UnwrapRef<typeof import('@vueuse/core')['useNow']>
     readonly useObjectUrl: UnwrapRef<typeof import('@vueuse/core')['useObjectUrl']>
     readonly useOffsetPagination: UnwrapRef<typeof import('@vueuse/core')['useOffsetPagination']>
@@ -734,6 +773,7 @@ declare module 'vue' {
     readonly useToNumber: UnwrapRef<typeof import('@vueuse/core')['useToNumber']>
     readonly useToString: UnwrapRef<typeof import('@vueuse/core')['useToString']>
     readonly useToggle: UnwrapRef<typeof import('@vueuse/core')['useToggle']>
+    readonly useTokensTema: UnwrapRef<typeof import('./src/composables/useTokensTema')['useTokensTema']>
     readonly useTransition: UnwrapRef<typeof import('@vueuse/core')['useTransition']>
     readonly useTrunc: UnwrapRef<typeof import('@vueuse/math')['useTrunc']>
     readonly useUrlSearchParams: UnwrapRef<typeof import('@vueuse/core')['useUrlSearchParams']>

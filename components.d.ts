@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    __pruebaRegla: typeof import('./src/components/__pruebaRegla.vue')['default']
     AddAuthenticatorAppDialog: typeof import('./src/components/dialogs/AddAuthenticatorAppDialog.vue')['default']
     AddEditAddressDialog: typeof import('./src/components/dialogs/AddEditAddressDialog.vue')['default']
     AddEditPermissionDialog: typeof import('./src/components/dialogs/AddEditPermissionDialog.vue')['default']
@@ -26,6 +27,14 @@ declare module 'vue' {
     AppStepper: typeof import('./src/@core/components/AppStepper.vue')['default']
     AppTextarea: typeof import('./src/@core/components/app-form-elements/AppTextarea.vue')['default']
     AppTextField: typeof import('./src/@core/components/app-form-elements/AppTextField.vue')['default']
+    AsBarraFiltros: typeof import('./src/components/as/AsBarraFiltros.vue')['default']
+    AsDialogo: typeof import('./src/components/as/AsDialogo.vue')['default']
+    AsDialogoGlobal: typeof import('./src/components/as/AsDialogoGlobal.vue')['default']
+    AsEncabezadoPagina: typeof import('./src/components/as/AsEncabezadoPagina.vue')['default']
+    AsEstado: typeof import('./src/components/as/AsEstado.vue')['default']
+    AsIndicador: typeof import('./src/components/as/AsIndicador.vue')['default']
+    AsPanelLateral: typeof import('./src/components/as/AsPanelLateral.vue')['default']
+    AsTablaDatos: typeof import('./src/components/as/AsTablaDatos.vue')['default']
     BaseTable: typeof import('./src/components/BaseTable.vue')['default']
     BuyNow: typeof import('./src/@core/components/BuyNow.vue')['default']
     CardAddEditDialog: typeof import('./src/components/dialogs/CardAddEditDialog.vue')['default']
