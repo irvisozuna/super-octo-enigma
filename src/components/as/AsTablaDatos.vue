@@ -53,6 +53,9 @@ const props = withDefaults(defineProps<{
   placeholderBusqueda?: string
   ocultarPie?: boolean
   mostrarDetalleError?: boolean
+
+  /** Clases extra por fila (p. ej. acento de severidad). */
+  claseFila?: (fila: Fila) => string | Record<string, boolean> | undefined
 }>(), { filas: () => [], claveFila: 'id', densidad: 'estandar', porPagina: 25, paginacion: null })
 
 const emit = defineEmits<{
@@ -91,7 +94,6 @@ const headers = computed(() => props.columnas.map(col => {
     align: align as 'start' | 'center' | 'end',
     width: col.ancho,
     minWidth: col.anchoMin ? `${col.anchoMin}px` : undefined,
-    nowrap: true,
     headerProps: { class: ['as-tabla__th', numerica && 'as-tabla__th--num'].filter(Boolean).join(' '), title: col.descripcion },
     cellProps: { class: ['as-tabla__td', numerica && 'as-num', col.truncar && 'as-tabla__td--truncar'].filter(Boolean).join(' ') },
   }
@@ -118,10 +120,13 @@ const propsTabla = computed(() => {
     height: props.altura,
     class: 'as-tabla__nativa',
     rowProps: ({ item }: { item: Fila }) => ({
-      class: {
-        'as-tabla__fila--activa': props.seleccionada !== null && props.seleccionada !== undefined && item[props.claveFila] === props.seleccionada,
-        'as-tabla__fila--clic': props.clicFila,
-      },
+      class: [
+        {
+          'as-tabla__fila--activa': props.seleccionada !== null && props.seleccionada !== undefined && item[props.claveFila] === props.seleccionada,
+          'as-tabla__fila--clic': props.clicFila,
+        },
+        props.claseFila?.(item) ?? '',
+      ],
     }),
   }
 
@@ -448,7 +453,7 @@ const textoFilas = computed(() => (total.value === 1 ? t('as.tabla.fila') : t('a
 
 .as-tabla :deep(td),
 .as-tabla :deep(th) {
-  padding-inline: var(--as-sp-3);
+  padding-inline: var(--as-sp-2);
 }
 
 .as-tabla :deep(td:first-child),
@@ -464,6 +469,7 @@ const textoFilas = computed(() => (total.value === 1 ? t('as.tabla.fila') : t('a
 .as-tabla :deep(td) {
   border-block-end: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.6));
   color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
+  padding-block: var(--as-sp-1);
 }
 
 .as-tabla :deep(tbody tr:last-child td) {

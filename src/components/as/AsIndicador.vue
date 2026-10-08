@@ -141,7 +141,7 @@ const iconoDelta = computed(() => (props.delta && props.delta > 0 ? 'tabler-tren
   margin-block-end: var(--as-sp-1);
 }
 
-.as-indicador__valor {
+.as-indicador :deep(.as-indicador__valor) {
   font-size: var(--as-fs-3xl);
   font-weight: var(--as-peso-semi);
   letter-spacing: -0.01em;

@@ -7,8 +7,11 @@ import { useMapaLecturistas } from '../composables/useMapaLecturistas'
 import { useMapaTomas } from '../composables/useMapaTomas'
 import type { EstadoToma, LecturistaMapaProps, SectorProps, TomaProps } from '../types/mapa'
 import type { ParametrosMonitor } from '../types/monitor'
-import { CLAVES_ESTADO, COLORES_ESTADO, COLORES_SECTOR, ORDEN_ESTADOS, cajaDe, colorSenal, conteosLeyenda } from '../utils/geojson'
+import { CLAVES_ESTADO, ORDEN_ESTADOS, cajaDe, conteosLeyenda } from '../utils/geojson'
 import { haceCuanto } from '../utils/tiempo'
+import { useTokensTema } from '@/composables/useTokensTema'
+import { TOKEN_SECTOR, TOKEN_TOMA, tokenSenal } from '@/utils/estados'
+import { entero, hora } from '@/utils/formato'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 /*
@@ -65,14 +68,64 @@ let ajustado = false
 const expresionEstado: ExpressionSpecification = ['coalesce', ['feature-state', 'e'], ['get', 'e']]
 const expresionMarcas: ExpressionSpecification = ['coalesce', ['feature-state', 'm'], ['get', 'm']]
 
-const colorPorEstado: ExpressionSpecification = ['match', expresionEstado, ...ORDEN_ESTADOS.flatMap(e => [e, COLORES_ESTADO[e]]), '#9e9e9e']
-const colorSector: ExpressionSpecification = ['match', ['get', 'e'], ...Object.entries(COLORES_SECTOR).flat(), '#bdbdbd']
+/*
+ * Colores: todos salen de los tokens del tema (toma-*, sector-*, senal-*, primary…) a través de useTokensTema; al cambiar
+ * de tema (claro/oscuro) se vuelven a aplicar con repintar(). Nada de hex en este archivo.
+ */
+const tokens = useTokensTema()
+const tk = (token: string) => tokens.hex(token)
+const colorPorEstado = (): ExpressionSpecification => ['match', expresionEstado, ...ORDEN_ESTADOS.flatMap(e => [e, tk(TOKEN_TOMA[e])]), tk('toma-pendiente')]
+const colorSector = (): ExpressionSpecification => ['match', ['get', 'e'], ...Object.entries(TOKEN_SECTOR).flatMap(([e, token]) => [e, tk(token)]), tk('sector-sin-esperadas')]
+
+/** Pinturas que dependen del tema, por capa: se aplican al crear y al cambiar de tema. */
+function pinturasDelTema(): [string, string, unknown][] {
+  return [
+    ['sectores-relleno', 'fill-color', colorSector()],
+    ['sectores-linea', 'line-color', colorSector()],
+    ['sectores-seleccion', 'line-color', tk('primary')],
+    ['sectores-etiqueta', 'text-color', tk('on-surface')],
+    ['sectores-etiqueta', 'text-halo-color', tk('surface')],
+    ['tomas-circulos', 'circle-color', colorPorEstado()],
+    ['tomas-circulos', 'circle-stroke-color', tk('toma-lejos')],
+    ['recorrido-lecturas-linea', 'line-color', tk('toma-tarifa-fija')],
+    ['recorrido-linea', 'line-color', tk('primary')],
+    ['recorrido-flechas', 'text-color', tk('primary-darken-1')],
+    ['recorrido-flechas', 'text-halo-color', tk('surface')],
+    ['recorrido-lecturas', 'circle-color', ['case', ['get', 'a'], tk('toma-anomalia'), tk('toma-tarifa-fija')]],
+    ['recorrido-lecturas', 'circle-stroke-color', tk('surface')],
+    ['recorrido-paradas', 'circle-color', tk('sector-iniciado')],
+    ['recorrido-paradas', 'circle-stroke-color', tk('surface')],
+    ['recorrido-paradas-texto', 'text-color', tk('on-sector-iniciado')],
+    ['recorrido-extremos', 'circle-color', ['case', ['==', ['get', 'tipo'], 'inicio'], tk('toma-leida'), tk('toma-lejos')]],
+    ['recorrido-extremos', 'circle-stroke-color', tk('surface')],
+    ['recorrido-extremos-texto', 'text-color', tk('on-toma-leida')],
+    ['lecturistas-halo', 'circle-color', tk('surface')],
+    ['lecturistas-puntos', 'circle-stroke-color', ['case', ['get', 'elegido'], tk('primary'), tk('on-surface')]],
+    ['lecturistas-etiqueta', 'text-color', tk('on-surface')],
+    ['lecturistas-etiqueta', 'text-halo-color', tk('surface')],
+  ]
+}
+
+function repintar() {
+  if (!mapa || !listo.value)
+    return
+  for (const [capa, propiedad, valor] of pinturasDelTema()) {
+    if (mapa.getLayer(capa))
+      mapa.setPaintProperty(capa, propiedad, valor as never)
+  }
+  const fuente = mapa.getSource('lecturistas') as maplibregl.GeoJSONSource | undefined
+
+  fuente?.setData(posicionesEtiquetadas())
+}
+
+tokens.alCambiar(repintar)
 
 const relativo = (clave: 'nunca' | 'ahora' | 'minutos' | 'horas' | 'dias', n?: number) => t(`monitoreo.tiempo.${clave}`, { n })
 
 const nombresSector = computed(() => new Map(datos.sectores.value.features.map(f => [f.properties.s, f.properties.n])))
 const resumenLeyenda = computed(() => conteosLeyenda(datos.tomas.value.features, datos.sinCoordenada.value, props.sectoresFiltro))
-const leyenda = computed(() => ORDEN_ESTADOS.map(e => ({ estado: e, color: COLORES_ESTADO[e], etiqueta: t(`monitoreo.mapa.estados.${CLAVES_ESTADO[e]}`), n: resumenLeyenda.value.conteos[e] })))
+const leyenda = computed(() => ORDEN_ESTADOS.map(e => ({ estado: e, token: TOKEN_TOMA[e], etiqueta: t(`monitoreo.mapa.estados.${CLAVES_ESTADO[e]}`), n: resumenLeyenda.value.conteos[e] })))
+const leyendaSenal = [{ token: 'senal-reciente', clave: 'reciente' }, { token: 'senal-tarde', clave: 'media' }, { token: 'senal-sin-reporte', clave: 'sinReporte' }, { token: 'senal-termino', clave: 'termino' }] as const
 const totalLeyenda = computed(() => Object.values(resumenLeyenda.value.conteos).reduce((a, b) => a + b, 0))
 
 /** Posiciones con la etiqueta ("hace X") ya resuelta, para el símbolo del mapa. */
@@ -85,7 +138,7 @@ function posicionesEtiquetadas() {
       ...f,
       properties: {
         ...f.properties,
-        color: colorSenal(f.properties, props.silencioMin),
+        color: tk(tokenSenal(f.properties.estado, f.properties.minutos, props.silencioMin)),
         hace: f.properties.estado === 'sin_iniciar' ? t('monitoreo.estadoLecturista.sin_iniciar') : haceCuanto(f.properties.ultima_actividad, relativo, ahora),
         elegido: f.properties.id === props.lecturistaSeleccionado,
       },
@@ -131,16 +184,16 @@ function crearMapa() {
     mapa.addLayer({ id: 'satelite', type: 'raster', source: 'satelite', layout: { visibility: 'none' } }, primeraEtiqueta)
 
     mapa.addSource('sectores', { type: 'geojson', data: datos.sectores.value })
-    mapa.addLayer({ id: 'sectores-relleno', type: 'fill', source: 'sectores', paint: { 'fill-color': colorSector, 'fill-opacity': 0.08 } }, primeraEtiqueta)
-    mapa.addLayer({ id: 'sectores-linea', type: 'line', source: 'sectores', paint: { 'line-color': colorSector, 'line-width': 1.5, 'line-opacity': 0.9 } }, primeraEtiqueta)
-    mapa.addLayer({ id: 'sectores-seleccion', type: 'line', source: 'sectores', filter: ['==', ['get', 's'], -1], paint: { 'line-color': '#1e88e5', 'line-width': 3 } }, primeraEtiqueta)
+    mapa.addLayer({ id: 'sectores-relleno', type: 'fill', source: 'sectores', paint: { 'fill-color': colorSector(), 'fill-opacity': 0.08 } }, primeraEtiqueta)
+    mapa.addLayer({ id: 'sectores-linea', type: 'line', source: 'sectores', paint: { 'line-color': colorSector(), 'line-width': 1.5, 'line-opacity': 0.9 } }, primeraEtiqueta)
+    mapa.addLayer({ id: 'sectores-seleccion', type: 'line', source: 'sectores', filter: ['==', ['get', 's'], -1], paint: { 'line-color': tk('primary'), 'line-width': 3 } }, primeraEtiqueta)
     mapa.addLayer({
       id: 'sectores-etiqueta',
       type: 'symbol',
       source: 'sectores',
       minzoom: 13,
       layout: { 'text-field': ['concat', ['get', 'n'], ' · ', ['coalesce', ['to-string', ['get', 'p']], '—'], ' %'], 'text-size': 12, 'text-anchor': 'center' },
-      paint: { 'text-color': '#263238', 'text-halo-color': '#ffffff', 'text-halo-width': 1.2 },
+      paint: { 'text-color': tk('on-surface'), 'text-halo-color': tk('surface'), 'text-halo-width': 1.2 },
     })
 
     mapa.addSource('tomas', { type: 'geojson', data: datos.tomas.value, promoteId: 'i' })
@@ -149,10 +202,10 @@ function crearMapa() {
       type: 'circle',
       source: 'tomas',
       paint: {
-        'circle-color': colorPorEstado,
+        'circle-color': colorPorEstado(),
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 13, 3, 16, 6, 19, 10],
         'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 0.9],
-        'circle-stroke-color': '#c62828',
+        'circle-stroke-color': tk('toma-lejos'),
 
         // El borde rojo marca "lejos de la toma" (bit 1 de las marcas); el zoom solo puede ir en el nivel superior de la expresión
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, ['case', ['==', ['%', expresionMarcas, 2], 1], 0.5, 0], 16, ['case', ['==', ['%', expresionMarcas, 2], 1], 2, 0]],
@@ -161,7 +214,7 @@ function crearMapa() {
 
     // Recorrido del lecturista elegido (encima de las tomas, debajo de los lecturistas)
     mapa.addSource('recorrido', { type: 'geojson', data: recorridoGeoJson() })
-    mapa.addLayer({ id: 'recorrido-lecturas-linea', type: 'line', source: 'recorrido', filter: ['==', ['get', 'tipo'], 'lecturas-linea'], paint: { 'line-color': '#6a1b9a', 'line-width': 2, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.9 } })
+    mapa.addLayer({ id: 'recorrido-lecturas-linea', type: 'line', source: 'recorrido', filter: ['==', ['get', 'tipo'], 'lecturas-linea'], paint: { 'line-color': tk('toma-tarifa-fija'), 'line-width': 2, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.9 } })
     mapa.addLayer({
       id: 'recorrido-linea',
       type: 'line',
@@ -170,7 +223,7 @@ function crearMapa() {
       layout: { 'line-join': 'round', 'line-cap': 'round' },
 
       // Ajustado a calles: azul continuo; aproximado (punto a punto): azul punteado
-      paint: { 'line-color': '#1e88e5', 'line-width': ['case', ['coalesce', ['get', 'ajustado'], false], 4, 3], 'line-opacity': 0.9, 'line-dasharray': ['case', ['coalesce', ['get', 'ajustado'], false], ['literal', [1, 0]], ['literal', [2, 1.5]]] },
+      paint: { 'line-color': tk('primary'), 'line-width': ['case', ['coalesce', ['get', 'ajustado'], false], 4, 3], 'line-opacity': 0.9, 'line-dasharray': ['case', ['coalesce', ['get', 'ajustado'], false], ['literal', [1, 0]], ['literal', [2, 1.5]]] },
     })
 
     // Flechas de dirección sobre la línea (visibles desde zoom de calle)
@@ -181,14 +234,14 @@ function crearMapa() {
       filter: ['==', ['get', 'tipo'], 'recorrido'],
       minzoom: 13,
       layout: { 'symbol-placement': 'line', 'symbol-spacing': 60, 'text-field': '▶', 'text-size': 12, 'text-font': ['Noto Sans Bold'], 'text-keep-upright': false, 'text-rotation-alignment': 'map', 'text-pitch-alignment': 'map', 'text-allow-overlap': true, 'text-ignore-placement': true },
-      paint: { 'text-color': '#0d47a1', 'text-halo-color': '#ffffff', 'text-halo-width': 1 },
+      paint: { 'text-color': tk('primary-darken-1'), 'text-halo-color': tk('surface'), 'text-halo-width': 1 },
     })
     mapa.addLayer({
       id: 'recorrido-lecturas',
       type: 'circle',
       source: 'recorrido',
       filter: ['==', ['get', 'tipo'], 'lectura'],
-      paint: { 'circle-color': ['case', ['get', 'a'], '#ef6c00', '#6a1b9a'], 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2.5, 16, 5], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 },
+      paint: { 'circle-color': ['case', ['get', 'a'], tk('toma-anomalia'), tk('toma-tarifa-fija')], 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2.5, 16, 5], 'circle-stroke-color': tk('surface'), 'circle-stroke-width': 1 },
     })
 
     // Paradas largas (> pausa_min sin moverse)
@@ -197,7 +250,7 @@ function crearMapa() {
       type: 'circle',
       source: 'recorrido',
       filter: ['==', ['get', 'tipo'], 'parada'],
-      paint: { 'circle-color': '#fbc02d', 'circle-radius': 8, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
+      paint: { 'circle-color': tk('sector-iniciado'), 'circle-radius': 8, 'circle-stroke-color': tk('surface'), 'circle-stroke-width': 2 },
     })
     mapa.addLayer({
       id: 'recorrido-paradas-texto',
@@ -205,14 +258,14 @@ function crearMapa() {
       source: 'recorrido',
       filter: ['==', ['get', 'tipo'], 'parada'],
       layout: { 'text-field': ['concat', ['to-string', ['get', 'minutos']], '′'], 'text-size': 10, 'text-font': ['Noto Sans Bold'], 'text-allow-overlap': true },
-      paint: { 'text-color': '#4e342e' },
+      paint: { 'text-color': tk('on-sector-iniciado') },
     })
     mapa.addLayer({
       id: 'recorrido-extremos',
       type: 'circle',
       source: 'recorrido',
       filter: ['in', ['get', 'tipo'], ['literal', ['inicio', 'fin']]],
-      paint: { 'circle-color': ['case', ['==', ['get', 'tipo'], 'inicio'], '#2e7d32', '#c62828'], 'circle-radius': 9, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
+      paint: { 'circle-color': ['case', ['==', ['get', 'tipo'], 'inicio'], tk('toma-leida'), tk('toma-lejos')], 'circle-radius': 9, 'circle-stroke-color': tk('surface'), 'circle-stroke-width': 2 },
     })
     mapa.addLayer({
       id: 'recorrido-extremos-texto',
@@ -220,17 +273,17 @@ function crearMapa() {
       source: 'recorrido',
       filter: ['in', ['get', 'tipo'], ['literal', ['inicio', 'fin']]],
       layout: { 'text-field': ['case', ['==', ['get', 'tipo'], 'inicio'], 'I', 'F'], 'text-size': 11, 'text-font': ['Noto Sans Bold'], 'text-allow-overlap': true },
-      paint: { 'text-color': '#ffffff' },
+      paint: { 'text-color': tk('on-toma-leida') },
     })
 
     // Lecturistas: punto con halo blanco (contraste sobre satélite) y nombre + "hace X"
     mapa.addSource('lecturistas', { type: 'geojson', data: posicionesEtiquetadas() })
-    mapa.addLayer({ id: 'lecturistas-halo', type: 'circle', source: 'lecturistas', paint: { 'circle-color': '#ffffff', 'circle-radius': ['case', ['get', 'elegido'], 13, 10], 'circle-opacity': 0.95 } })
+    mapa.addLayer({ id: 'lecturistas-halo', type: 'circle', source: 'lecturistas', paint: { 'circle-color': tk('surface'), 'circle-radius': ['case', ['get', 'elegido'], 13, 10], 'circle-opacity': 0.95 } })
     mapa.addLayer({
       id: 'lecturistas-puntos',
       type: 'circle',
       source: 'lecturistas',
-      paint: { 'circle-color': ['get', 'color'], 'circle-radius': ['case', ['get', 'elegido'], 9, 7], 'circle-stroke-color': ['case', ['get', 'elegido'], '#1e88e5', '#263238'], 'circle-stroke-width': ['case', ['get', 'elegido'], 3, 1] },
+      paint: { 'circle-color': ['get', 'color'], 'circle-radius': ['case', ['get', 'elegido'], 9, 7], 'circle-stroke-color': ['case', ['get', 'elegido'], tk('primary'), tk('on-surface')], 'circle-stroke-width': ['case', ['get', 'elegido'], 3, 1] },
     })
     mapa.addLayer({
       id: 'lecturistas-etiqueta',
@@ -245,7 +298,7 @@ function crearMapa() {
         'text-max-width': 12,
         'text-optional': true,
       },
-      paint: { 'text-color': '#102027', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 },
+      paint: { 'text-color': tk('on-surface'), 'text-halo-color': tk('surface'), 'text-halo-width': 1.6 },
     })
 
     for (const capa of ['tomas-circulos', 'sectores-relleno', 'lecturistas-puntos']) {
@@ -629,10 +682,10 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
     >
       <VCardText class="py-2 px-3">
         <div class="text-caption text-medium-emphasis mb-1">
-          {{ t('monitoreo.mapa.tomas', { n: totalLeyenda.toLocaleString('es-MX') }) }}
-          <span v-if="resumenLeyenda.sinCoordenada"> · {{ t('monitoreo.mapa.sinCoordenada', { n: resumenLeyenda.sinCoordenada.toLocaleString('es-MX') }) }}</span>
+          {{ t('monitoreo.mapa.tomas', { n: entero(totalLeyenda) }) }}
+          <span v-if="resumenLeyenda.sinCoordenada"> · {{ t('monitoreo.mapa.sinCoordenada', { n: entero(resumenLeyenda.sinCoordenada) }) }}</span>
           <span v-if="lecturistas.total.value"> · {{ t('monitoreo.mapa.lecturistasN', { n: lecturistas.total.value }) }}<span v-if="lecturistas.sinRastreo.value"> ({{ t('monitoreo.mapa.sinRastreoN', { n: lecturistas.sinRastreo.value }) }})</span></span>
-          <span v-if="datos.actualizado.value"> · {{ t('monitoreo.mapa.actualizado', { hora: datos.actualizado.value.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) }) }}</span>
+          <span v-if="datos.actualizado.value"> · {{ t('monitoreo.mapa.actualizado', { hora: hora(datos.actualizado.value) }) }}</span>
         </div>
         <div
           v-if="lecturistas.recorrido.value?.meta"
@@ -658,13 +711,13 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
             class="d-inline-flex align-center text-caption"
           >
             <span
-              class="mapa-monitoreo__punto me-1"
-              :style="{ backgroundColor: item.color }"
+              class="as-punto me-1"
+              :class="`bg-${item.token}`"
             />
-            {{ item.etiqueta }} <strong class="ms-1">{{ item.n.toLocaleString('es-MX') }}</strong>
+            {{ item.etiqueta }} <strong class="ms-1 as-num">{{ entero(item.n) }}</strong>
           </span>
           <span class="d-inline-flex align-center text-caption">
-            <span class="mapa-monitoreo__punto mapa-monitoreo__punto--lejos me-1" />
+            <span class="as-punto mapa-monitoreo__punto--lejos me-1" />
             {{ t('monitoreo.mapa.estados.lejos') }}
           </span>
         </div>
@@ -672,29 +725,15 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
           v-if="capas.lecturistas"
           class="d-flex flex-wrap gap-x-3 gap-y-1 mt-1"
         >
-          <span class="d-inline-flex align-center text-caption">
+          <span
+            v-for="s in leyendaSenal"
+            :key="s.token"
+            class="d-inline-flex align-center text-caption"
+          >
             <span
-              class="mapa-monitoreo__punto mapa-monitoreo__punto--lecturista me-1"
-              style="background: #2e7d32;"
-            />{{ t('monitoreo.mapa.senal.reciente') }}
-          </span>
-          <span class="d-inline-flex align-center text-caption">
-            <span
-              class="mapa-monitoreo__punto mapa-monitoreo__punto--lecturista me-1"
-              style="background: #f9a825;"
-            />{{ t('monitoreo.mapa.senal.media', { n: silencioMin }) }}
-          </span>
-          <span class="d-inline-flex align-center text-caption">
-            <span
-              class="mapa-monitoreo__punto mapa-monitoreo__punto--lecturista me-1"
-              style="background: #c62828;"
-            />{{ t('monitoreo.mapa.senal.sinReporte') }}
-          </span>
-          <span class="d-inline-flex align-center text-caption">
-            <span
-              class="mapa-monitoreo__punto mapa-monitoreo__punto--lecturista me-1"
-              style="background: #1e88e5;"
-            />{{ t('monitoreo.mapa.senal.termino') }}
+              class="as-punto mapa-monitoreo__punto--lecturista me-1"
+              :class="`bg-${s.token}`"
+            />{{ s.clave === 'media' ? t('monitoreo.mapa.senal.media', { n: silencioMin }) : t(`monitoreo.mapa.senal.${s.clave}`) }}
           </span>
         </div>
       </VCardText>
@@ -721,7 +760,7 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
 .mapa-monitoreo {
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--as-radio-md);
   inline-size: 100%;
 }
 
@@ -743,21 +782,14 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
   max-inline-size: 560px;
 }
 
-.mapa-monitoreo__punto {
-  display: inline-block;
-  border-radius: 50%;
-  block-size: 10px;
-  inline-size: 10px;
-}
-
 .mapa-monitoreo__punto--lejos {
-  border: 2px solid #c62828;
+  border: 2px solid rgb(var(--v-theme-toma-lejos));
   background: transparent;
 }
 
 .mapa-monitoreo__punto--lecturista {
-  border: 2px solid #263238;
-  box-shadow: 0 0 0 2px #fff;
+  border: 2px solid rgb(var(--v-theme-on-surface));
+  box-shadow: 0 0 0 2px rgb(var(--v-theme-surface));
 }
 
 .mapa-monitoreo__progreso {
@@ -775,9 +807,10 @@ defineExpose({ recargar: cargar, irA, irASector, irALecturista, instancia })
 }
 
 .mapa-monitoreo :deep(.mapa-monitoreo__popup .maplibregl-popup-content) {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: var(--as-radio-md);
+  font-size: var(--as-fs-xs);
   line-height: 1.35;
+  padding-block: 6px;
+  padding-inline: 10px;
 }
 </style>

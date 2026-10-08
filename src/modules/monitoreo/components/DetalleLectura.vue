@@ -6,13 +6,16 @@ import { useAccionesLectura } from '../composables/useAccionesLectura'
 import { useDetalleLectura } from '../composables/useDetalleLectura'
 import type { MotivoRelectura } from '../types/relecturas'
 import { fechaCorta, haceCuanto, horaCorta } from '../utils/tiempo'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { useTokensTema } from '@/composables/useTokensTema'
+import { COLOR_RELECTURA } from '@/utils/estados'
+import { conSigno, decimal, duracion, entero, moneda } from '@/utils/formato'
 
 /*
  * Panel lateral con el detalle de la lectura de una toma (sección H del cuestionario): toma, lectura (anterior,
  * actual, consumo, promedio, variación, anomalía, comentario), captura y llegada, recibo, lecturista y dispositivo,
- * GPS contra la toma, fotos (pendientes de la app), historial de 12 lecturas con mini gráfica y enlaces. Solo lectura;
- * la botonera de acciones se habilita en F2.5.
+ * GPS contra la toma, fotos (pendientes de la app), historial de 12 lecturas con mini gráfica, enlaces y acciones
+ * (re-lectura, coordenada en duda, anotaciones). Sobre AsPanelLateral con pie fijo para la acción principal.
  */
 const props = defineProps<{
   abierto: boolean
@@ -25,8 +28,9 @@ const emit = defineEmits<{
   'verEnMapa': [centro: [number, number]]
 }>()
 
-const { t, n } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
+const tokens = useTokensTema()
 const datos = useDetalleLectura()
 
 const lectura = datos.lectura
@@ -43,6 +47,7 @@ const relectura = computed(() => datos.detalle.value?.relectura ?? null)
 const sugerencias = computed(() => datos.detalle.value?.sugerencias ?? [])
 const notas = computed(() => datos.detalle.value?.notas ?? [])
 const opcionesMotivo = computed(() => MOTIVOS.map(m => ({ value: m, title: t(`monitoreo.lectura.motivos.${m}`) })))
+const puedePedir = computed(() => puedeOperar.value && !!lectura.value && relectura.value?.estado !== 'solicitada')
 
 async function refrescar() {
   if (props.contrato !== null)
@@ -93,26 +98,37 @@ const variacionColor = computed(() => {
 
 const retraso = computed(() => {
   const m = lectura.value?.retraso_min
-  if (m === null || m === undefined)
-    return '—'
 
-  return m >= 60 ? t('monitoreo.lectura.retrasoHoras', { h: Math.floor(m / 60), m: m % 60 }) : t('monitoreo.lectura.retrasoMin', { n: m })
+  return m === null || m === undefined ? '—' : duracion(m)
+})
+
+const cifrasLectura = computed(() => {
+  const l = lectura.value
+  if (!l)
+    return []
+
+  return [
+    { clave: 'anterior', valor: entero(l.anterior) },
+    { clave: 'actual', valor: entero(l.actual) },
+    { clave: 'consumo', valor: entero(l.consumo), extra: l.consumo_real !== null && l.consumo_real !== l.consumo ? `${t('monitoreo.lectura.consumoReal')} ${entero(l.consumo_real)}` : null },
+    { clave: 'promedio', valor: decimal(l.promedio, 1) },
+  ]
 })
 
 const maxConsumo = computed(() => Math.max(1, ...datos.serieConsumo.value.map(s => s.consumo)))
 
-const urlFicha = computed(() => (toma.value ? router.resolve({ path: '/supports', query: { cuenta: toma.value.cuenta } }).href : null))
+const columnasHistorial = computed<ColumnaTabla[]>(() => [
+  { clave: 'periodo', titulo: t('monitoreo.lectura.periodo'), formato: 'personalizado', ordenable: false },
+  { clave: 'anterior', titulo: t('monitoreo.lectura.anterior'), formato: 'entero', ancho: 80, ordenable: false },
+  { clave: 'actual', titulo: t('monitoreo.lectura.actual'), formato: 'entero', ancho: 80, ordenable: false },
+  { clave: 'consumo', titulo: t('monitoreo.lectura.consumo'), formato: 'entero', ancho: 80, ordenable: false },
+  { clave: 'anomalia', titulo: t('monitoreo.lectura.anomalia'), formato: 'texto', truncar: true, ordenable: false },
+])
 
-function fmt(v: number | null | undefined, decimales = 0): string {
-  return v === null || v === undefined ? '—' : n(v, { maximumFractionDigits: decimales })
-}
+const urlFicha = computed(() => (toma.value ? router.resolve({ path: '/supports', query: { cuenta: toma.value.cuenta } }).href : null))
 
 function fechaHora(valor: string | null | undefined): string {
   return valor ? `${fechaCorta(valor)} ${horaCorta(valor)}` : '—'
-}
-
-function cerrar() {
-  emit('update:abierto', false)
 }
 
 function verEnMapa() {
@@ -133,208 +149,170 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
 </script>
 
 <template>
-  <VNavigationDrawer
-    :model-value="abierto"
-    location="end"
-    temporary
-    :width="520"
+  <AsPanelLateral
+    :abierto="abierto"
+    :sobrelinea="t('monitoreo.lectura.titulo')"
+    :titulo="toma ? `${t('monitoreo.lectura.cuenta')} ${toma.cuenta}` : ''"
+    :subtitulo="toma?.nombre ?? undefined"
+    tamano="lg"
+    :cargando="datos.cargando.value"
     class="detalle-lectura"
-    @update:model-value="(v: boolean) => emit('update:abierto', v)"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >
-    <div class="d-flex align-center justify-space-between px-4 pt-3 pb-2">
-      <div>
-        <div class="text-overline text-medium-emphasis">
-          {{ t('monitoreo.lectura.titulo') }}
-        </div>
-        <div
-          v-if="toma"
-          class="text-h6"
-        >
-          {{ t('monitoreo.lectura.cuenta') }} {{ toma.cuenta }}
-        </div>
-      </div>
+    <template #acciones>
       <VBtn
-        icon="tabler-x"
-        variant="text"
+        v-if="lectura || toma?.coordenada"
         size="small"
-        :aria-label="t('monitoreo.lectura.cerrar')"
-        @click="cerrar"
-      />
-    </div>
-    <VDivider />
+        variant="text"
+        prepend-icon="tabler-current-location"
+        @click="verEnMapa"
+      >
+        {{ t('monitoreo.lectura.verEnMapa') }}
+      </VBtn>
+    </template>
 
-    <VProgressLinear
-      v-if="datos.cargando.value"
-      indeterminate
+    <template
+      v-if="toma"
+      #subencabezado
+    >
+      <div class="as-secundario mb-2">
+        {{ toma.direccion ?? '—' }}
+      </div>
+      <div class="d-flex flex-wrap gap-1">
+        <VChip
+          v-if="toma.sector"
+          size="small"
+          label
+          variant="tonal"
+          prepend-icon="tabler-polygon"
+        >
+          {{ toma.sector }}<span v-if="toma.secuencia !== null"> · {{ t('monitoreo.lectura.secuencia', { n: toma.secuencia }) }}</span>
+        </VChip>
+        <VChip
+          v-if="toma.gerencia"
+          size="small"
+          label
+          variant="tonal"
+          prepend-icon="tabler-map-pin"
+        >
+          {{ toma.gerencia }}
+        </VChip>
+        <VChip
+          v-if="toma.medidor"
+          size="small"
+          label
+          variant="tonal"
+          prepend-icon="tabler-gauge"
+        >
+          {{ t('monitoreo.lectura.medidor', { n: toma.medidor }) }}
+        </VChip>
+        <VChip
+          v-if="toma.tarifa_fija"
+          size="small"
+          label
+          color="toma-tarifa-fija"
+          variant="tonal"
+        >
+          {{ t('monitoreo.lectura.tarifaFija') }}
+        </VChip>
+        <VChip
+          v-if="!toma.activo"
+          size="small"
+          label
+          color="warning"
+          variant="tonal"
+        >
+          {{ t('monitoreo.lectura.inactivo') }}<span v-if="toma.estatus"> · {{ toma.estatus }}</span>
+        </VChip>
+      </div>
+    </template>
+
+    <template v-if="datos.error.value && !toma">
+      <AsEstado
+        v-if="datos.noVisible.value"
+        tipo="sin-permiso"
+        :detalle="t('monitoreo.lectura.noVisible')"
+      />
+      <AsEstado
+        v-else
+        tipo="error"
+        :error="datos.error.value"
+        @reintentar="refrescar"
+      />
+    </template>
+
+    <AsEstado
+      v-else-if="!toma"
+      tipo="cargando"
+      esqueleto="tarjeta"
+      :filas="3"
     />
 
-    <div
-      v-if="datos.error.value && !toma"
-      class="pa-4"
-    >
-      <VAlert
-        v-if="datos.noVisible.value"
-        type="warning"
-        variant="tonal"
-        density="compact"
-      >
-        {{ t('monitoreo.lectura.noVisible') }}
-      </VAlert>
-      <EstadoError
-        v-else
-        :error="datos.error.value"
-        @reintentar="props.contrato !== null && datos.cargar(props.contrato, props.periodo)"
-      />
-    </div>
-
-    <div
-      v-else-if="toma"
-      class="detalle-lectura__cuerpo px-4 pb-6"
-    >
-      <!-- Toma -->
-      <section class="mt-3">
-        <div class="font-weight-medium">
-          {{ toma.nombre ?? '—' }}
-        </div>
-        <div class="text-body-2 text-medium-emphasis">
-          {{ toma.direccion ?? '—' }}
-        </div>
-        <div class="d-flex flex-wrap gap-1 mt-2">
-          <VChip
-            v-if="toma.sector"
-            size="x-small"
-            label
-            variant="tonal"
-            prepend-icon="tabler-polygon"
-          >
-            {{ toma.sector }}<span v-if="toma.secuencia !== null"> · {{ t('monitoreo.lectura.secuencia', { n: toma.secuencia }) }}</span>
-          </VChip>
-          <VChip
-            v-if="toma.gerencia"
-            size="x-small"
-            label
-            variant="tonal"
-            prepend-icon="tabler-map-pin"
-          >
-            {{ toma.gerencia }}
-          </VChip>
-          <VChip
-            v-if="toma.medidor"
-            size="x-small"
-            label
-            variant="tonal"
-            prepend-icon="tabler-gauge"
-          >
-            {{ t('monitoreo.lectura.medidor', { n: toma.medidor }) }}
-          </VChip>
-          <VChip
-            v-if="toma.tarifa_fija"
-            size="x-small"
-            label
-            color="purple"
-            variant="tonal"
-          >
-            {{ t('monitoreo.lectura.tarifaFija') }}
-          </VChip>
-          <VChip
-            v-if="!toma.activo"
-            size="x-small"
-            label
-            color="warning"
-            variant="tonal"
-          >
-            {{ t('monitoreo.lectura.inactivo') }}<span v-if="toma.estatus"> · {{ toma.estatus }}</span>
-          </VChip>
-        </div>
-      </section>
-
+    <template v-else>
       <!-- Lectura -->
-      <section class="mt-5">
-        <div class="d-flex align-center justify-space-between">
-          <h6 class="text-subtitle-1 font-weight-medium mb-0">
-            {{ t('monitoreo.lectura.lecturaDe', { periodo: datos.detalle.value?.periodo?.nombre ?? '—' }) }}
-          </h6>
+      <section>
+        <h3 class="as-seccion">
+          <span>{{ t('monitoreo.lectura.lecturaDe', { periodo: datos.detalle.value?.periodo?.nombre ?? '—' }) }}</span>
           <VChip
             v-if="lectura"
-            size="x-small"
+            size="small"
             label
-            :color="lectura.origen === 'promedio_automatico' ? 'info' : 'success'"
+            :color="lectura.origen === 'promedio_automatico' ? 'toma-estimada' : 'toma-leida'"
             variant="tonal"
           >
             {{ lectura.origen === 'promedio_automatico' ? t('monitoreo.lectura.origenPromedio') : t('monitoreo.lectura.origenCampo') }}
           </VChip>
-        </div>
+        </h3>
 
         <VAlert
           v-if="!lectura"
           type="info"
           variant="tonal"
           density="compact"
-          class="mt-2"
         >
           {{ t('monitoreo.lectura.sinLectura', { periodo: datos.detalle.value?.periodo?.nombre ?? '—' }) }}
         </VAlert>
 
         <template v-else>
-          <VRow
-            dense
-            class="mt-1"
-          >
-            <VCol cols="3">
-              <div class="text-caption text-medium-emphasis">
-                {{ t('monitoreo.lectura.anterior') }}
+          <div class="detalle-lectura__cifras">
+            <div
+              v-for="c in cifrasLectura"
+              :key="c.clave"
+              class="detalle-lectura__cifra"
+            >
+              <div class="as-etiqueta">
+                {{ t(`monitoreo.lectura.${c.clave}`) }}
               </div>
-              <div class="text-h6">
-                {{ fmt(lectura.anterior) }}
-              </div>
-            </VCol>
-            <VCol cols="3">
-              <div class="text-caption text-medium-emphasis">
-                {{ t('monitoreo.lectura.actual') }}
-              </div>
-              <div class="text-h6">
-                {{ fmt(lectura.actual) }}
-              </div>
-            </VCol>
-            <VCol cols="3">
-              <div class="text-caption text-medium-emphasis">
-                {{ t('monitoreo.lectura.consumo') }}
-              </div>
-              <div class="text-h6">
-                {{ fmt(lectura.consumo) }}
+              <div class="detalle-lectura__cifra-valor as-num">
+                {{ c.valor }}
               </div>
               <div
-                v-if="lectura.consumo_real !== null && lectura.consumo_real !== lectura.consumo"
-                class="text-caption text-medium-emphasis"
+                v-if="c.extra"
+                class="text-caption text-medium-emphasis as-num"
               >
-                {{ t('monitoreo.lectura.consumoReal') }} {{ fmt(lectura.consumo_real) }}
+                {{ c.extra }}
               </div>
-            </VCol>
-            <VCol cols="3">
-              <div class="text-caption text-medium-emphasis">
-                {{ t('monitoreo.lectura.promedio') }}
-              </div>
-              <div class="text-h6">
-                {{ fmt(lectura.promedio, 1) }}
-              </div>
-              <VChip
-                v-if="lectura.variacion_pct !== null"
-                size="x-small"
-                label
-                :color="variacionColor"
-                variant="tonal"
-              >
-                {{ lectura.variacion_pct > 0 ? '+' : '' }}{{ n(lectura.variacion_pct, { maximumFractionDigits: 0 }) }} %
-              </VChip>
-              <span
-                v-else
-                class="text-caption text-disabled"
-              >{{ t('monitoreo.lectura.variacionSinPromedio') }}</span>
-            </VCol>
-          </VRow>
+              <template v-if="c.clave === 'promedio'">
+                <VChip
+                  v-if="lectura.variacion_pct !== null"
+                  size="x-small"
+                  label
+                  :color="variacionColor"
+                  variant="tonal"
+                  class="as-num mt-1"
+                >
+                  {{ conSigno(lectura.variacion_pct, 0) }} %
+                </VChip>
+                <span
+                  v-else
+                  class="text-caption text-disabled"
+                >{{ t('monitoreo.lectura.variacionSinPromedio') }}</span>
+              </template>
+            </div>
+          </div>
 
           <div class="mt-3">
-            <div class="text-caption text-medium-emphasis">
+            <div class="as-etiqueta mb-1">
               {{ t('monitoreo.lectura.anomalia') }}
             </div>
             <div
@@ -344,15 +322,18 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
               <VChip
                 size="small"
                 label
-                :color="lectura.anomalia.accion_inmediata ? 'error' : 'warning'"
+                :color="lectura.anomalia.accion_inmediata ? 'alerta-alta' : 'toma-anomalia'"
                 variant="tonal"
               >
-                <span v-if="lectura.anomalia.codigo">{{ lectura.anomalia.codigo }} · </span>{{ lectura.anomalia.etiqueta }}
+                <span
+                  v-if="lectura.anomalia.codigo"
+                  class="as-num"
+                >{{ lectura.anomalia.codigo }} · </span>{{ lectura.anomalia.etiqueta }}
               </VChip>
               <VChip
                 v-if="lectura.anomalia.accion_inmediata"
                 size="x-small"
-                color="error"
+                color="alerta-alta"
                 variant="flat"
                 label
               >
@@ -380,50 +361,55 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
       </section>
 
       <template v-if="lectura">
-        <!-- Tiempos -->
-        <section class="mt-5">
-          <h6 class="text-subtitle-1 font-weight-medium mb-1">
+        <!-- Tiempos y recibo -->
+        <section>
+          <h3 class="as-seccion">
             {{ t('monitoreo.lectura.tiempos') }}
-          </h6>
-          <VList
-            density="compact"
-            class="py-0 detalle-lectura__lista"
-          >
-            <VListItem :title="t('monitoreo.lectura.captura')">
-              <template #append>
-                <span class="font-weight-medium">{{ fechaHora(lectura.captura.hora) }}</span>
-              </template>
-            </VListItem>
-            <VListItem :title="t('monitoreo.lectura.llegada')">
-              <template #append>
-                <span class="font-weight-medium">{{ fechaHora(lectura.llegada) }}</span>
-              </template>
-            </VListItem>
-            <VListItem :title="t('monitoreo.lectura.retraso')">
-              <template #append>
-                <span
-                  class="font-weight-medium"
-                  :class="{ 'text-warning': (lectura.retraso_min ?? 0) > 180 }"
-                >{{ retraso }}</span>
-              </template>
-            </VListItem>
-          </VList>
+          </h3>
+          <dl class="as-datos mb-0">
+            <div class="as-dato">
+              <dt class="as-etiqueta">
+                {{ t('monitoreo.lectura.captura') }}
+              </dt>
+              <dd class="as-valor as-num mb-0">
+                {{ fechaHora(lectura.captura.hora) }}
+              </dd>
+            </div>
+            <div class="as-dato">
+              <dt class="as-etiqueta">
+                {{ t('monitoreo.lectura.llegada') }}
+              </dt>
+              <dd class="as-valor as-num mb-0">
+                {{ fechaHora(lectura.llegada) }}
+              </dd>
+            </div>
+            <div class="as-dato">
+              <dt class="as-etiqueta">
+                {{ t('monitoreo.lectura.retraso') }}
+              </dt>
+              <dd
+                class="as-valor as-num mb-0"
+                :class="{ 'text-warning': (lectura.retraso_min ?? 0) > 180 }"
+              >
+                {{ retraso }}
+              </dd>
+            </div>
+          </dl>
           <VAlert
             v-if="!lectura.captura.confiable"
             type="warning"
             variant="tonal"
             density="compact"
-            class="mt-1"
+            class="mt-2"
           >
             {{ t('monitoreo.lectura.capturaRespaldo') }}
           </VAlert>
         </section>
 
-        <!-- Recibo -->
-        <section class="mt-5">
-          <h6 class="text-subtitle-1 font-weight-medium mb-1">
+        <section>
+          <h3 class="as-seccion">
             {{ t('monitoreo.lectura.recibo') }}
-          </h6>
+          </h3>
           <div class="d-flex flex-wrap align-center gap-2">
             <VChip
               size="small"
@@ -436,24 +422,24 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             </VChip>
             <span
               v-if="lectura.recibo.importe !== null"
-              class="text-body-2"
-            >{{ t('monitoreo.lectura.importe') }} <strong>{{ n(lectura.recibo.importe, { style: 'currency', currency: 'MXN' }) }}</strong></span>
+              class="text-body-2 as-num"
+            >{{ t('monitoreo.lectura.importe') }} <strong>{{ moneda(lectura.recibo.importe) }}</strong></span>
             <span
               v-if="lectura.recibo.impresora"
-              class="text-caption text-medium-emphasis"
+              class="as-secundario"
             >{{ t('monitoreo.lectura.impresora', { n: lectura.recibo.impresora }) }}</span>
             <span
               v-if="lectura.recibo.factura_id"
-              class="text-caption text-medium-emphasis"
+              class="as-secundario as-num"
             >{{ t('monitoreo.lectura.factura', { n: lectura.recibo.factura_id }) }}</span>
           </div>
         </section>
 
-        <!-- Lecturista y dispositivo -->
-        <section class="mt-5">
-          <h6 class="text-subtitle-1 font-weight-medium mb-1">
+        <!-- Lecturista, dispositivo y GPS -->
+        <section>
+          <h3 class="as-seccion">
             {{ t('monitoreo.lectura.lecturista') }}
-          </h6>
+          </h3>
           <div
             v-if="lectura.origen === 'promedio_automatico'"
             class="text-body-2 text-medium-emphasis"
@@ -470,26 +456,28 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             >
               <VChip
                 v-if="lectura.dispositivo.id"
-                size="x-small"
+                size="small"
                 label
                 variant="tonal"
                 prepend-icon="tabler-device-mobile"
+                class="as-num"
               >
                 {{ t('monitoreo.lectura.dispositivo', { id: lectura.dispositivo.id }) }}
               </VChip>
               <VChip
                 v-if="lectura.dispositivo.bateria !== null"
-                size="x-small"
+                size="small"
                 label
                 variant="tonal"
                 :color="lectura.dispositivo.bateria < 15 ? 'error' : undefined"
                 prepend-icon="tabler-battery-2"
+                class="as-num"
               >
                 {{ t('monitoreo.lectura.bateria', { n: lectura.dispositivo.bateria }) }}
               </VChip>
               <VChip
                 v-if="lectura.dispositivo.datos_moviles !== null"
-                size="x-small"
+                size="small"
                 label
                 variant="tonal"
                 :prepend-icon="lectura.dispositivo.datos_moviles ? 'tabler-antenna-bars-5' : 'tabler-antenna-bars-off'"
@@ -498,23 +486,9 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
               </VChip>
             </div>
           </template>
-        </section>
 
-        <!-- GPS -->
-        <section class="mt-5">
-          <div class="d-flex align-center justify-space-between">
-            <h6 class="text-subtitle-1 font-weight-medium mb-0">
-              {{ t('monitoreo.lectura.gps') }}
-            </h6>
-            <VBtn
-              size="x-small"
-              variant="text"
-              prepend-icon="tabler-current-location"
-              class="text-none"
-              @click="verEnMapa"
-            >
-              {{ t('monitoreo.lectura.verEnMapa') }}
-            </VBtn>
+          <div class="as-etiqueta mt-3 mb-1">
+            {{ t('monitoreo.lectura.gps') }}
           </div>
           <div
             v-if="lectura.gps.toma_sin_coordenada"
@@ -530,47 +504,43 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           </div>
           <div
             v-else
-            class="d-flex align-center gap-2"
+            class="d-flex align-center flex-wrap gap-2"
           >
             <VChip
               size="small"
               label
-              :color="lectura.gps.lejos ? 'error' : 'success'"
+              :color="lectura.gps.lejos ? 'toma-lejos' : 'success'"
               variant="tonal"
               :prepend-icon="lectura.gps.lejos ? 'tabler-map-pin-off' : 'tabler-map-pin-check'"
+              class="as-num"
             >
-              {{ lectura.gps.lejos ? t('monitoreo.lectura.lejos', { n: lectura.gps.umbral_m }) : t('monitoreo.lectura.distancia', { n: fmt(lectura.gps.distancia_m) }) }}
+              {{ lectura.gps.lejos ? t('monitoreo.lectura.lejos', { n: lectura.gps.umbral_m }) : t('monitoreo.lectura.distancia', { n: entero(lectura.gps.distancia_m) }) }}
             </VChip>
             <span
               v-if="lectura.gps.lejos"
-              class="text-caption text-medium-emphasis"
-            >{{ t('monitoreo.lectura.distancia', { n: fmt(lectura.gps.distancia_m) }) }}</span>
+              class="as-secundario as-num"
+            >{{ t('monitoreo.lectura.distancia', { n: entero(lectura.gps.distancia_m) }) }}</span>
           </div>
-        </section>
 
-        <!-- Fotos -->
-        <section class="mt-5">
-          <h6 class="text-subtitle-1 font-weight-medium mb-1">
+          <div class="as-etiqueta mt-3 mb-1">
             {{ t('monitoreo.lectura.fotos') }}
-          </h6>
-          <div class="detalle-lectura__fotos text-caption text-medium-emphasis d-flex align-center justify-center">
-            <VIcon
-              icon="tabler-photo-off"
-              size="18"
-              class="me-1"
-            />{{ t('monitoreo.lectura.sinFoto') }}
           </div>
+          <AsEstado
+            tipo="vacio"
+            compacto
+            icono="tabler-photo-off"
+            :titulo="t('monitoreo.lectura.sinFoto')"
+            detalle=""
+            class="detalle-lectura__fotos"
+          />
         </section>
       </template>
 
       <!-- Otras lecturas del periodo -->
-      <section
-        v-if="datos.detalle.value?.otras_lecturas.length"
-        class="mt-5"
-      >
-        <h6 class="text-subtitle-1 font-weight-medium mb-1">
+      <section v-if="datos.detalle.value?.otras_lecturas.length">
+        <h3 class="as-seccion">
           {{ t('monitoreo.lectura.otrasLecturas', { n: datos.detalle.value.otras_lecturas.length }) }}
-        </h6>
+        </h3>
         <VList
           density="compact"
           class="py-0 detalle-lectura__lista"
@@ -579,22 +549,23 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             v-for="otra in datos.detalle.value.otras_lecturas"
             :key="otra.id"
             :title="`${fechaHora(otra.captura.hora)} · ${otra.origen === 'promedio_automatico' ? t('monitoreo.lectura.origenPromedio') : (otra.lecturista?.nombre ?? t('monitoreo.lectura.origenCampo'))}`"
-            :subtitle="`${t('monitoreo.lectura.actual')} ${fmt(otra.actual)} · ${t('monitoreo.lectura.consumo')} ${fmt(otra.consumo)}${otra.anomalia ? ` · ${otra.anomalia.etiqueta}` : ''}`"
+            :subtitle="`${t('monitoreo.lectura.actual')} ${entero(otra.actual)} · ${t('monitoreo.lectura.consumo')} ${entero(otra.consumo)}${otra.anomalia ? ` · ${otra.anomalia.etiqueta}` : ''}`"
           />
         </VList>
       </section>
 
       <!-- Historial -->
-      <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-0">
+      <section>
+        <h3 class="as-seccion mb-0">
           {{ t('monitoreo.lectura.historial') }}
-        </h6>
-        <div class="text-caption text-medium-emphasis mb-2">
+        </h3>
+        <div class="as-secundario mb-2">
           {{ t('monitoreo.lectura.historialDetalle', { n: 12 }) }}
         </div>
-        <VProgressLinear
+        <AsEstado
           v-if="datos.cargandoHistorial.value"
-          indeterminate
+          tipo="cargando"
+          :filas="4"
         />
         <VAlert
           v-else-if="datos.errorHistorial.value"
@@ -619,130 +590,51 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
               :y="48 - Math.max(1, (punto.consumo / maxConsumo) * 46)"
               :width="Math.max(2, 240 / datos.serieConsumo.value.length - 2)"
               :height="Math.max(1, (punto.consumo / maxConsumo) * 46)"
-              :fill="punto.anomalia ? '#ef6c00' : '#1e88e5'"
+              :fill="punto.anomalia ? tokens.hex('toma-anomalia') : tokens.hex('primary')"
               rx="1"
             >
-              <title>{{ punto.periodo }}: {{ fmt(punto.consumo) }}</title>
+              <title>{{ punto.periodo }}: {{ entero(punto.consumo) }}</title>
             </rect>
           </svg>
-          <VTable
-            density="compact"
+          <AsTablaDatos
+            sin-tarjeta
+            densidad="densa"
+            :columnas="columnasHistorial"
+            :filas="datos.historial.value"
+            clave-fila="periodoId"
+            :por-pagina="-1"
+            ocultar-pie
             class="detalle-lectura__tabla"
           >
-            <thead>
-              <tr>
-                <th>{{ t('monitoreo.lectura.periodo') }}</th>
-                <th class="text-end">
-                  {{ t('monitoreo.lectura.anterior') }}
-                </th>
-                <th class="text-end">
-                  {{ t('monitoreo.lectura.actual') }}
-                </th>
-                <th class="text-end">
-                  {{ t('monitoreo.lectura.consumo') }}
-                </th>
-                <th>{{ t('monitoreo.lectura.anomalia') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="fila in datos.historial.value"
-                :key="fila.periodoId"
-              >
-                <td>
-                  <div>{{ fila.periodo }}</div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ fila.fecha ?? '' }}<span v-if="fila.lecturista"> · {{ fila.lecturista }}</span>
-                  </div>
-                </td>
-                <td class="text-end">
-                  {{ fmt(fila.anterior) }}
-                </td>
-                <td class="text-end">
-                  {{ fmt(fila.actual) }}
-                </td>
-                <td class="text-end font-weight-medium">
-                  {{ fmt(fila.consumo) }}
-                </td>
-                <td class="text-caption">
-                  {{ fila.anomalia ?? '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </VTable>
+            <template #celda-periodo="{ fila }">
+              <div>{{ fila.periodo }}</div>
+              <div class="as-secundario">
+                {{ fila.fecha ?? '' }}<span v-if="fila.lecturista"> · {{ fila.lecturista }}</span>
+              </div>
+            </template>
+            <template #celda-consumo="{ texto }">
+              <span class="font-weight-medium">{{ texto }}</span>
+            </template>
+          </AsTablaDatos>
         </template>
-        <div
+        <AsEstado
           v-else
-          class="text-body-2 text-medium-emphasis"
-        >
-          {{ t('monitoreo.lectura.historialVacio') }}
-        </div>
+          tipo="vacio"
+          compacto
+          icono="tabler-history-off"
+          :titulo="t('monitoreo.lectura.historialVacio')"
+          detalle=""
+        />
       </section>
 
-      <!-- Enlaces -->
-      <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-1">
-          {{ t('monitoreo.lectura.enlaces') }}
-        </h6>
-        <div class="d-flex flex-wrap gap-2">
-          <VBtn
-            v-if="urlFicha"
-            size="small"
-            variant="tonal"
-            prepend-icon="tabler-user-square-rounded"
-            class="text-none"
-            :href="urlFicha"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('monitoreo.lectura.fichaContrato') }}
-          </VBtn>
-          <VBtn
-            v-if="datos.detalle.value?.permisos.duplicado && datos.detalle.value?.periodo"
-            size="small"
-            variant="tonal"
-            prepend-icon="tabler-file-type-pdf"
-            class="text-none"
-            :loading="datos.generandoDuplicado.value"
-            @click="datos.abrirDuplicado()"
-          >
-            {{ t('monitoreo.lectura.duplicado') }}
-          </VBtn>
-        </div>
-        <VAlert
-          v-if="datos.errorDuplicado.value"
-          type="error"
-          variant="tonal"
-          density="compact"
-          class="mt-2"
-        >
-          {{ datos.errorDuplicado.value.mensaje || t('monitoreo.lectura.duplicadoError') }}
-        </VAlert>
-        <VAlert
-          v-if="datos.duplicadoBloqueado.value"
-          type="warning"
-          variant="tonal"
-          density="compact"
-          class="mt-2"
-        >
-          {{ t('monitoreo.lectura.duplicadoBloqueado') }}
-          <a
-            :href="datos.duplicadoBloqueado.value"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ms-1"
-          >PDF</a>
-        </VAlert>
-      </section>
-
-      <!-- Acciones (F2.5) -->
-      <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-1">
+      <!-- Acciones -->
+      <section>
+        <h3 class="as-seccion">
           {{ t('monitoreo.lectura.acciones') }}
-        </h6>
+        </h3>
         <div
           v-if="!puedeOperar"
-          class="text-caption text-medium-emphasis mb-2"
+          class="as-secundario mb-2"
         >
           {{ t('monitoreo.lectura.soloLecturaAcciones') }}
         </div>
@@ -762,18 +654,19 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
         <VAlert
           v-if="relectura"
           :type="relectura.estado === 'solicitada' ? 'warning' : relectura.estado === 'releida' ? 'success' : 'info'"
+          :color="COLOR_RELECTURA[relectura.estado as keyof typeof COLOR_RELECTURA]"
           variant="tonal"
           density="compact"
-          class="mb-2"
+          class="mb-3"
         >
           <template v-if="relectura.estado === 'solicitada'">
             {{ t('monitoreo.lectura.relecturaSolicitada', { quien: relectura.pedida_por ?? '—', hace: haceCuanto(relectura.pedida_en, relativo), motivo: relectura.motivo_etiqueta }) }}
             <span v-if="relectura.nota"> · {{ relectura.nota }}</span>
             <div v-if="puedeOperar">
               <VBtn
-                size="x-small"
+                size="small"
                 variant="text"
-                class="text-none mt-1"
+                class="mt-1 px-0"
                 :loading="acciones.ocupado.value === 'cancelar'"
                 @click="cancelarRelectura"
               >
@@ -790,12 +683,12 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
         </VAlert>
 
         <!-- Sugerencias con la lógica del reporte de anomalías -->
-        <div class="text-caption text-medium-emphasis">
+        <div class="as-etiqueta mb-1">
           {{ t('monitoreo.lectura.sugerencias') }} · {{ t('monitoreo.lectura.sugerenciasDetalle') }}
         </div>
         <div
           v-if="sugerencias.length"
-          class="d-flex flex-wrap gap-1 mt-1 mb-2"
+          class="d-flex flex-wrap gap-1 mb-3"
         >
           <VChip
             v-for="s in sugerencias"
@@ -804,7 +697,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             label
             color="warning"
             variant="tonal"
-            :disabled="!puedeOperar || relectura?.estado === 'solicitada' || acciones.ocupado.value === 'relectura'"
+            :disabled="!puedePedir || acciones.ocupado.value === 'relectura'"
             prepend-icon="tabler-refresh"
             :title="t('monitoreo.lectura.pedirPor', { motivo: s.etiqueta })"
             @click="pedirRelectura(s.motivo)"
@@ -814,14 +707,14 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
         </div>
         <div
           v-else
-          class="text-body-2 text-medium-emphasis mb-2"
+          class="text-body-2 text-medium-emphasis mb-3"
         >
           {{ t('monitoreo.lectura.sinSugerencias') }}
         </div>
 
-        <!-- Pedir re-lectura con motivo -->
+        <!-- Motivo y nota de la re-lectura (la acción va en el pie del panel) -->
         <div
-          v-if="puedeOperar && lectura && relectura?.estado !== 'solicitada'"
+          v-if="puedePedir"
           class="d-flex flex-wrap align-center gap-2 mb-3"
         >
           <VSelect
@@ -842,17 +735,6 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             maxlength="500"
             class="flex-grow-1"
           />
-          <VBtn
-            size="small"
-            color="primary"
-            variant="tonal"
-            class="text-none"
-            prepend-icon="tabler-refresh"
-            :loading="acciones.ocupado.value === 'relectura'"
-            @click="pedirRelectura(motivoElegido)"
-          >
-            {{ t('monitoreo.lectura.pedirRelectura') }}
-          </VBtn>
         </div>
 
         <!-- Otras acciones -->
@@ -861,7 +743,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             v-if="urlFicha"
             size="small"
             variant="outlined"
-            class="text-none"
+            color="primary"
             prepend-icon="tabler-ticket"
             :href="urlFicha"
             target="_blank"
@@ -874,7 +756,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             v-if="puedeOperar && toma && !toma.coordenada.en_duda"
             size="small"
             variant="outlined"
-            class="text-none"
+            color="primary"
             prepend-icon="tabler-map-pin-question"
             :loading="acciones.ocupado.value === 'coordenada'"
             @click="marcarCoordenada(true)"
@@ -892,9 +774,9 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           {{ t('monitoreo.lectura.coordenadaMarcada') }}
           <VBtn
             v-if="puedeOperar"
-            size="x-small"
+            size="small"
             variant="text"
-            class="text-none ms-1"
+            class="ms-1"
             :loading="acciones.ocupado.value === 'coordenada'"
             @click="marcarCoordenada(false)"
           >
@@ -903,9 +785,9 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
         </VAlert>
 
         <!-- Anotaciones -->
-        <h6 class="text-subtitle-2 font-weight-medium mb-1">
+        <div class="as-etiqueta mb-1">
           {{ t('monitoreo.lectura.anotaciones') }}
-        </h6>
+        </div>
         <div
           v-if="!notas.length"
           class="text-body-2 text-medium-emphasis"
@@ -929,9 +811,10 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             >
               <VBtn
                 icon="tabler-trash"
-                size="x-small"
+                size="small"
                 variant="text"
                 :title="t('monitoreo.lectura.borrarNota')"
+                :aria-label="t('monitoreo.lectura.borrarNota')"
                 :loading="acciones.ocupado.value === 'borrarNota'"
                 @click="borrarNota(nota.id)"
               />
@@ -945,6 +828,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           <VTextField
             v-model="nuevaNota"
             :placeholder="t('monitoreo.lectura.nuevaAnotacion')"
+            :aria-label="t('monitoreo.lectura.nuevaAnotacion')"
             density="compact"
             variant="outlined"
             hide-details
@@ -955,7 +839,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           <VBtn
             size="small"
             variant="tonal"
-            class="text-none"
+            color="primary"
             :disabled="!nuevaNota.trim()"
             :loading="acciones.ocupado.value === 'nota'"
             @click="anotar"
@@ -964,29 +848,98 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           </VBtn>
         </div>
       </section>
-    </div>
-  </VNavigationDrawer>
+    </template>
+
+    <!-- Pie fijo: enlaces y la acción principal -->
+    <template
+      v-if="toma"
+      #pie
+    >
+      <VBtn
+        v-if="urlFicha"
+        size="small"
+        variant="text"
+        prepend-icon="tabler-user-square-rounded"
+        :href="urlFicha"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ t('monitoreo.lectura.fichaContrato') }}
+      </VBtn>
+      <VBtn
+        v-if="datos.detalle.value?.permisos.duplicado && datos.detalle.value?.periodo"
+        size="small"
+        variant="text"
+        prepend-icon="tabler-file-type-pdf"
+        :loading="datos.generandoDuplicado.value"
+        @click="datos.abrirDuplicado()"
+      >
+        {{ t('monitoreo.lectura.duplicado') }}
+      </VBtn>
+      <VSpacer />
+      <VBtn
+        v-if="puedePedir"
+        size="small"
+        color="primary"
+        variant="flat"
+        prepend-icon="tabler-refresh"
+        :loading="acciones.ocupado.value === 'relectura'"
+        @click="pedirRelectura(motivoElegido)"
+      >
+        {{ t('monitoreo.lectura.pedirRelectura') }}
+      </VBtn>
+      <VAlert
+        v-if="datos.errorDuplicado.value"
+        type="error"
+        variant="tonal"
+        density="compact"
+        class="w-100 mt-1"
+      >
+        {{ datos.errorDuplicado.value.mensaje || t('monitoreo.lectura.duplicadoError') }}
+      </VAlert>
+      <VAlert
+        v-if="datos.duplicadoBloqueado.value"
+        type="warning"
+        variant="tonal"
+        density="compact"
+        class="w-100 mt-1"
+      >
+        {{ t('monitoreo.lectura.duplicadoBloqueado') }}
+        <a
+          :href="datos.duplicadoBloqueado.value"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="ms-1"
+        >PDF</a>
+      </VAlert>
+    </template>
+  </AsPanelLateral>
 </template>
 
 <style scoped>
-/* El drawer de Vuetify recorta su contenido (overflow hidden): el panel es una columna a toda la altura y solo el cuerpo
-   se desplaza; overscroll-behavior evita que la rueda arrastre la página de atrás al llegar al final. */
-.detalle-lectura :deep(.v-navigation-drawer__content) {
-  display: flex;
-  flex-direction: column;
-  block-size: 100%;
+.detalle-lectura__cifras {
+  display: grid;
+  gap: var(--as-sp-2);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.detalle-lectura__cuerpo {
-  flex: 1 1 auto;
-  min-block-size: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+.detalle-lectura__cifra {
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
+  background: rgb(var(--v-theme-surface-variant));
+  padding-block: var(--as-sp-2);
+  padding-inline: var(--as-sp-3);
+}
+
+.detalle-lectura__cifra-valor {
+  font-size: var(--as-fs-lg);
+  font-weight: var(--as-peso-semi);
+  line-height: 1.3;
 }
 
 .detalle-lectura__motivo {
-  flex: 0 1 220px;
-  min-inline-size: 180px;
+  flex: 0 1 var(--as-ancho-filtro-md);
+  min-inline-size: var(--as-ancho-filtro-sm);
 }
 
 .detalle-lectura__lista :deep(.v-list-item) {
@@ -996,20 +949,18 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
 
 .detalle-lectura__fotos {
   border: 1px dashed rgba(var(--v-border-color), var(--v-border-opacity));
-  border-radius: 6px;
-  block-size: 72px;
+  border-radius: var(--as-radio-md);
 }
 
 .detalle-lectura__grafica {
   display: block;
-  inline-size: 100%;
   block-size: 48px;
-  margin-block-end: 6px;
+  inline-size: 100%;
+  margin-block-end: var(--as-sp-2);
 }
 
-.detalle-lectura__tabla :deep(th),
-.detalle-lectura__tabla :deep(td) {
-  padding-inline: 6px !important;
-  white-space: nowrap;
+.detalle-lectura__tabla {
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
 }
 </style>

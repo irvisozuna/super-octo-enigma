@@ -69,14 +69,26 @@
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
-// Sección dentro de un panel: título de 13 px semibold con separación
+// Sección dentro de un panel: título de 14 px semibold con separación arriba
 .as-seccion {
-  margin-block: var(--as-sp-5) var(--as-sp-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
-  font-size: var(--as-fs-sm);
+  font-size: var(--as-fs-base);
   font-weight: var(--as-peso-semi);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  gap: var(--as-sp-2);
+  line-height: 1.4;
+  margin-block: var(--as-sp-5) var(--as-sp-2);
+}
+
+// Celda de la rejilla as-datos: etiqueta arriba, valor abajo
+.as-dato {
+  min-inline-size: 0;
+}
+
+.as-dato .as-valor {
+  overflow-wrap: anywhere;
 }
 
 .as-seccion:first-child {

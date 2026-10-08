@@ -2,13 +2,16 @@
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useJornada } from '../composables/useJornada'
+import type { LecturaJornada } from '../types/jornada'
 import { haceCuanto, horaCorta, hoyLocal } from '../utils/tiempo'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { TOKEN_LECTURISTA } from '@/utils/estados'
+import { decimal, duracion, entero, fechaLarga } from '@/utils/formato'
 
 /*
  * Panel lateral con la jornada de un lecturista en un día (sección F): indicadores del día con su promedio de los
  * últimos tres periodos, línea de tiempo (lecturas, huecos > pausa, tramos sin señal), señales del dispositivo y la
- * lista de lecturas (cada una abre su detalle). Solo lectura.
+ * lista de lecturas (cada una abre su detalle). Solo lectura. Sobre AsPanelLateral y AsTablaDatos.
  */
 const props = defineProps<{
   abierto: boolean
@@ -24,16 +27,20 @@ const emit = defineEmits<{
   'toma': [contrato: number]
 }>()
 
-const { t, n } = useI18n()
+const { t } = useI18n()
 const j = useJornada()
 
 const relativo = (clave: 'nunca' | 'ahora' | 'minutos' | 'horas' | 'dias', valor?: number) => t(`monitoreo.tiempo.${clave}`, { n: valor })
 
-const COLOR_ESTADO: Record<string, string> = { activo: 'success', silencio: 'error', sin_iniciar: 'warning', terminado: 'primary', fuera_de_jornada: 'secondary' }
-
 const d = j.datos
 const hoy = computed(() => hoyLocal())
 const diaActual = computed(() => d.value?.dia ?? props.dia ?? hoy.value)
+
+const textoDia = computed(() => {
+  const texto = fechaLarga(`${diaActual.value} 12:00:00`)
+
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+})
 
 interface Indicador { clave: string; valor: string; promedio: string | null; alerta?: boolean }
 
@@ -42,29 +49,37 @@ const indicadores = computed<Indicador[]>(() => {
   const p = d.value?.promedio
   if (!jd)
     return []
-  const horas = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${min} min`)
 
   return [
-    { clave: 'lecturas', valor: n(jd.lecturas), promedio: p ? n(p.lecturas) : null },
-    { clave: 'porHora', valor: jd.lecturas_por_hora === null ? '—' : n(jd.lecturas_por_hora), promedio: p?.lecturas_por_hora != null ? n(p.lecturas_por_hora) : null },
-    { clave: 'tiempoTotal', valor: horas(jd.minutos_totales), promedio: p ? horas(p.minutos_totales) : null },
-    { clave: 'tiempoMuerto', valor: horas(jd.minutos_muertos), promedio: p ? horas(p.minutos_muertos) : null, alerta: jd.minutos_muertos > 0 },
-    { clave: 'anomalias', valor: n(jd.anomalias), promedio: p ? n(p.anomalias) : null },
-    { clave: 'impresas', valor: n(jd.impresas), promedio: p ? n(p.impresas) : null },
-    { clave: 'lejos', valor: n(jd.lejos), promedio: p ? n(p.lejos) : null, alerta: d.value?.avisos.includes('lejos') },
-    { clave: 'sectores', valor: n(jd.sectores.length), promedio: p ? n(p.sectores) : null },
-    { clave: 'km', valor: jd.km === null ? t('monitoreo.jornada.sinRastreo') : n(jd.km, { maximumFractionDigits: 1 }), promedio: null },
+    { clave: 'lecturas', valor: entero(jd.lecturas), promedio: p ? entero(p.lecturas) : null },
+    { clave: 'porHora', valor: jd.lecturas_por_hora === null ? '—' : decimal(jd.lecturas_por_hora, 1), promedio: p?.lecturas_por_hora != null ? decimal(p.lecturas_por_hora, 1) : null },
+    { clave: 'tiempoTotal', valor: duracion(jd.minutos_totales), promedio: p ? duracion(p.minutos_totales) : null },
+    { clave: 'tiempoMuerto', valor: duracion(jd.minutos_muertos), promedio: p ? duracion(p.minutos_muertos) : null, alerta: jd.minutos_muertos > 0 },
+    { clave: 'anomalias', valor: entero(jd.anomalias), promedio: p ? entero(p.anomalias) : null },
+    { clave: 'impresas', valor: entero(jd.impresas), promedio: p ? entero(p.impresas) : null },
+    { clave: 'lejos', valor: entero(jd.lejos), promedio: p ? entero(p.lejos) : null, alerta: d.value?.avisos.includes('lejos') },
+    { clave: 'sectores', valor: entero(jd.sectores.length), promedio: p ? entero(p.sectores) : null },
+    { clave: 'km', valor: jd.km === null ? t('monitoreo.jornada.sinRastreo') : decimal(jd.km, 1), promedio: null },
   ]
 })
 
 const ticks = computed(() => {
   const out: { pct: number; etiqueta: string }[] = []
   const { desde, hasta } = j.eje.value
-  for (let h = desde; h <= hasta; h++)
+  const paso = hasta - desde > 12 ? 2 : 1
+  for (let h = desde; h <= hasta; h += paso)
     out.push({ pct: ((h - desde) / (hasta - desde)) * 100, etiqueta: `${String(h).padStart(2, '0')}h` })
 
   return out
 })
+
+const columnasLecturas = computed<ColumnaTabla<LecturaJornada>[]>(() => [
+  { clave: 'hora', titulo: t('monitoreo.jornada.hora'), formato: 'hora', ancho: 64 },
+  { clave: 'cuenta', titulo: t('monitoreo.jornada.cuenta'), formato: 'personalizado', ancho: 96 },
+  { clave: 'sector', titulo: t('monitoreo.jornada.sector'), formato: 'texto', truncar: true },
+  { clave: 'anomalia', titulo: t('monitoreo.jornada.anomalia'), formato: 'personalizado', truncar: true },
+  { clave: 'distancia_m', titulo: t('monitoreo.jornada.distancia'), formato: 'personalizado', alineacion: 'end', ancho: 72 },
+])
 
 function etiquetaIndicador(clave: string): string {
   return clave === 'lejos' ? t('monitoreo.jornada.lejos', { n: d.value?.parametros.distancia_m ?? 50 }) : t(`monitoreo.jornada.${clave}`)
@@ -80,8 +95,9 @@ function cambiarDia(delta: number) {
     emit('update:dia', nuevo)
 }
 
-function cerrar() {
-  emit('update:abierto', false)
+function recargar() {
+  if (props.lecturista !== null)
+    j.cargar(props.lecturista, props.dia)
 }
 
 watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, lecturista, dia]) => {
@@ -93,120 +109,103 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
 </script>
 
 <template>
-  <VNavigationDrawer
-    :model-value="abierto"
-    location="end"
-    temporary
-    :width="560"
+  <AsPanelLateral
+    :abierto="abierto"
+    :sobrelinea="t('monitoreo.jornada.titulo')"
+    :titulo="d?.lecturista.nombre ?? ''"
+    :subtitulo="d?.lecturista.gerencia ?? undefined"
+    tamano="lg"
+    :cargando="j.cargando.value"
     class="jornada-lecturista"
-    @update:model-value="(v: boolean) => emit('update:abierto', v)"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >
-    <div class="d-flex align-center justify-space-between px-4 pt-3 pb-2">
-      <div>
-        <div class="text-overline text-medium-emphasis">
-          {{ t('monitoreo.jornada.titulo') }}
-        </div>
-        <div
-          v-if="d"
-          class="text-h6 d-flex align-center flex-wrap gap-2"
-        >
-          {{ d.lecturista.nombre }}
-          <VChip
-            size="x-small"
-            :color="COLOR_ESTADO[d.estado]"
-            variant="tonal"
-            label
-          >
-            {{ t(`monitoreo.estadoLecturista.${d.estado}`) }}
-          </VChip>
-          <span
-            v-if="d.lecturista.gerencia"
-            class="text-body-2 text-medium-emphasis"
-          >{{ d.lecturista.gerencia }}</span>
-        </div>
-      </div>
-      <VBtn
-        icon="tabler-x"
-        variant="text"
+    <template
+      v-if="d"
+      #titulo-extra
+    >
+      <VChip
         size="small"
-        :aria-label="t('monitoreo.jornada.cerrar')"
-        @click="cerrar"
-      />
-    </div>
-    <div class="d-flex align-center justify-space-between px-4 pb-2">
-      <div class="d-flex align-center gap-1">
+        :color="TOKEN_LECTURISTA[d.estado as keyof typeof TOKEN_LECTURISTA] ?? 'secondary'"
+        variant="tonal"
+        label
+      >
+        {{ t(`monitoreo.estadoLecturista.${d.estado}`) }}
+      </VChip>
+    </template>
+
+    <template #acciones>
+      <VBtn
+        v-if="d"
+        size="small"
+        variant="text"
+        prepend-icon="tabler-route"
+        @click="emit('verRecorrido', d.lecturista.id)"
+      >
+        {{ t('monitoreo.jornada.verRecorrido') }}
+      </VBtn>
+    </template>
+
+    <template #subencabezado>
+      <div
+        class="d-flex align-center gap-1"
+        role="group"
+        :aria-label="t('monitoreo.filtros.dia')"
+      >
         <VBtn
           icon="tabler-chevron-left"
-          size="x-small"
+          size="small"
           variant="text"
           :aria-label="t('monitoreo.jornada.diaAnterior')"
           @click="cambiarDia(-1)"
         />
-        <span class="text-body-2 font-weight-medium">{{ new Date(`${diaActual}T12:00:00-07:00`).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Mazatlan' }) }}</span>
+        <span class="text-body-2 font-weight-medium">{{ textoDia }}</span>
         <VBtn
           icon="tabler-chevron-right"
-          size="x-small"
+          size="small"
           variant="text"
           :disabled="diaActual >= hoy"
           :aria-label="t('monitoreo.jornada.diaSiguiente')"
           @click="cambiarDia(1)"
         />
       </div>
-      <VBtn
-        v-if="d"
-        size="small"
-        variant="text"
-        prepend-icon="tabler-route"
-        class="text-none"
-        @click="emit('verRecorrido', d.lecturista.id)"
-      >
-        {{ t('monitoreo.jornada.verRecorrido') }}
-      </VBtn>
-    </div>
-    <VDivider />
+    </template>
 
-    <VProgressLinear
-      v-if="j.cargando.value"
-      indeterminate
+    <template v-if="j.error.value && !d">
+      <AsEstado
+        v-if="j.noVisible.value"
+        tipo="sin-permiso"
+        :detalle="t('monitoreo.jornada.noVisible')"
+      />
+      <AsEstado
+        v-else
+        tipo="error"
+        :error="j.error.value"
+        @reintentar="recargar"
+      />
+    </template>
+
+    <AsEstado
+      v-else-if="!d"
+      tipo="cargando"
+      esqueleto="tarjeta"
+      :filas="3"
     />
 
-    <div
-      v-if="j.error.value && !d"
-      class="pa-4"
-    >
-      <VAlert
-        v-if="j.noVisible.value"
-        type="warning"
-        variant="tonal"
-        density="compact"
-      >
-        {{ t('monitoreo.jornada.noVisible') }}
-      </VAlert>
-      <EstadoError
-        v-else
-        :error="j.error.value"
-        @reintentar="props.lecturista !== null && j.cargar(props.lecturista, props.dia)"
-      />
-    </div>
-
-    <div
-      v-else-if="d"
-      class="jornada-lecturista__cuerpo px-4 pb-6"
-    >
+    <template v-else>
       <VAlert
         v-if="j.sinActividad.value"
         type="info"
         variant="tonal"
         density="compact"
-        class="mt-3"
+        class="mb-3"
       >
         {{ t('monitoreo.jornada.sinActividad', { dia: diaActual }) }}
       </VAlert>
 
       <template v-if="d.jornada">
         <!-- Cabecera del día -->
-        <section class="mt-3">
-          <div class="text-body-2 mb-2">
+        <section>
+          <div class="text-body-2 mb-3 as-num">
             <span class="text-medium-emphasis">{{ t('monitoreo.jornada.primera') }}</span> <strong>{{ horaCorta(d.jornada.primera_lectura) }}</strong>
             <span class="text-medium-emphasis ms-3">{{ t('monitoreo.jornada.ultima') }}</span> <strong>{{ horaCorta(d.jornada.ultima_lectura) }}</strong>
           </div>
@@ -217,23 +216,23 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
               class="jornada-lecturista__cifra"
             >
               <div
-                class="text-h6"
+                class="jornada-lecturista__cifra-valor as-num"
                 :class="{ 'text-warning': ind.alerta }"
               >
                 {{ ind.valor }}
               </div>
-              <div class="text-caption text-medium-emphasis">
+              <div class="as-etiqueta">
                 {{ etiquetaIndicador(ind.clave) }}
               </div>
               <div
                 v-if="ind.promedio !== null"
-                class="text-caption text-disabled"
+                class="text-caption text-disabled as-num"
               >
                 {{ t('monitoreo.jornada.promedio', { n: ind.promedio }) }}
               </div>
             </div>
           </div>
-          <div class="text-caption text-medium-emphasis mt-1">
+          <div class="as-secundario mt-2">
             {{ d.promedio ? t('monitoreo.jornada.promedioDetalle', { n: d.promedio.dias }) : t('monitoreo.jornada.sinPromedio') }}
           </div>
           <div
@@ -243,7 +242,7 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
             <VChip
               v-for="s in d.jornada.sectores"
               :key="s.sector_id"
-              size="x-small"
+              size="small"
               label
               variant="outlined"
             >
@@ -253,11 +252,15 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
         </section>
 
         <!-- Línea de tiempo -->
-        <section class="mt-5">
-          <h6 class="text-subtitle-1 font-weight-medium mb-1">
+        <section>
+          <h3 class="as-seccion">
             {{ t('monitoreo.jornada.lineaTiempo') }}
-          </h6>
-          <div class="jornada-lecturista__eje">
+          </h3>
+          <div
+            class="jornada-lecturista__eje"
+            role="img"
+            :aria-label="t('monitoreo.jornada.lineaTiempo')"
+          >
             <div
               v-for="(seg, i) in j.segmentos.value.filter(s => s.tipo !== 'lectura')"
               :key="`b${i}`"
@@ -266,13 +269,15 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
               :style="{ insetInlineStart: `${seg.inicio}%`, inlineSize: `${Math.max(0.5, seg.fin - seg.inicio)}%` }"
               :title="seg.etiqueta"
             />
-            <div
+            <button
               v-for="(seg, i) in j.segmentos.value.filter(s => s.tipo === 'lectura')"
               :key="`l${i}`"
+              type="button"
               class="jornada-lecturista__marca"
-              :class="{ 'jornada-lecturista__marca--anomalia': seg.anomalia, 'jornada-lecturista__marca--lejos': seg.lejos }"
+              :class="seg.lejos ? 'bg-toma-lejos jornada-lecturista__marca--lejos' : seg.anomalia ? 'bg-toma-anomalia' : 'bg-primary'"
               :style="{ insetInlineStart: `${seg.inicio}%` }"
               :title="seg.etiqueta"
+              :aria-label="seg.etiqueta"
               @click="seg.contrato && emit('toma', seg.contrato)"
             />
           </div>
@@ -280,12 +285,12 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
             <span
               v-for="tick in ticks"
               :key="tick.etiqueta"
-              class="text-caption text-medium-emphasis"
+              class="text-caption text-medium-emphasis as-num"
               :style="{ insetInlineStart: `${tick.pct}%` }"
             >{{ tick.etiqueta }}</span>
           </div>
           <div class="mt-3">
-            <div class="text-caption text-medium-emphasis">
+            <div class="as-etiqueta">
               {{ t('monitoreo.jornada.huecos', { n: d.parametros.pausa_min }) }}
             </div>
             <div
@@ -297,7 +302,7 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
             <div
               v-for="(h, i) in d.jornada.huecos"
               :key="i"
-              class="text-body-2"
+              class="text-body-2 as-num"
             >
               <VIcon
                 icon="tabler-clock-pause"
@@ -311,13 +316,13 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
             v-if="d.dispositivo.tramos_sin_senal.length"
             class="mt-2"
           >
-            <div class="text-caption text-medium-emphasis">
+            <div class="as-etiqueta">
               {{ t('monitoreo.jornada.tramosSinSenal', { n: d.parametros.silencio_min }) }}
             </div>
             <div
               v-for="(tr, i) in d.dispositivo.tramos_sin_senal"
               :key="i"
-              class="text-body-2"
+              class="text-body-2 as-num"
             >
               <VIcon
                 icon="tabler-antenna-bars-off"
@@ -331,10 +336,10 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
       </template>
 
       <!-- Dispositivo -->
-      <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-1">
+      <section>
+        <h3 class="as-seccion">
           {{ t('monitoreo.jornada.dispositivo') }}
-        </h6>
+        </h3>
         <VAlert
           v-if="d.dispositivo.sin_rastreo"
           type="info"
@@ -398,7 +403,7 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
             variant="tonal"
             prepend-icon="tabler-photo-up"
           >
-            {{ t('monitoreo.jornada.fotosPendientes', { n: n(d.dispositivo.fotos_por_enviar) }) }}
+            {{ t('monitoreo.jornada.fotosPendientes', { n: entero(d.dispositivo.fotos_por_enviar) }) }}
           </VChip>
           <VChip
             v-if="d.dispositivo.ultima_senal"
@@ -413,154 +418,130 @@ watch(() => [props.abierto, props.lecturista, props.dia] as const, ([abierto, le
       </section>
 
       <!-- Lecturas del día -->
-      <section class="mt-5">
-        <h6 class="text-subtitle-1 font-weight-medium mb-1">
-          {{ t('monitoreo.jornada.lecturasDia') }}
-          <VChip
-            size="x-small"
-            variant="tonal"
-            class="ms-1"
-          >
-            {{ n(d.lecturas.length) }}
-          </VChip>
-        </h6>
-        <div
+      <section>
+        <h3 class="as-seccion">
+          <span>{{ t('monitoreo.jornada.lecturasDia') }} <span class="as-num text-medium-emphasis font-weight-regular">{{ entero(d.lecturas.length) }}</span></span>
+        </h3>
+        <AsEstado
           v-if="!d.lecturas.length"
-          class="text-body-2 text-medium-emphasis"
-        >
-          {{ t('monitoreo.jornada.sinLecturas') }}
-        </div>
-        <VDataTableVirtual
+          tipo="vacio"
+          compacto
+          icono="tabler-list-details"
+          :titulo="t('monitoreo.jornada.sinLecturas')"
+          detalle=""
+        />
+        <AsTablaDatos
           v-else
-          :headers="[
-            { title: t('monitoreo.jornada.hora'), key: 'hora', width: 70 },
-            { title: t('monitoreo.jornada.cuenta'), key: 'cuenta', width: 100 },
-            { title: t('monitoreo.jornada.sector'), key: 'sector' },
-            { title: t('monitoreo.jornada.anomalia'), key: 'anomalia' },
-            { title: t('monitoreo.jornada.distancia'), key: 'distancia_m', width: 70, align: 'end' },
-          ]"
-          :items="d.lecturas"
-          :height="Math.min(380, 44 + d.lecturas.length * 36)"
-          item-value="id"
-          density="compact"
-          fixed-header
-          hover
+          sin-tarjeta
+          densidad="densa"
+          virtual
+          :altura="Math.min(380, 36 + d.lecturas.length * 36)"
+          :columnas="columnasLecturas"
+          :filas="d.lecturas"
+          clave-fila="id"
+          clic-fila
+          ocultar-pie
           class="jornada-lecturista__tabla"
+          @fila="(f: Record<string, unknown>) => emit('toma', (f as LecturaJornada).contrato_id)"
         >
-          <template #item="{ item }">
-            <tr
-              class="jornada-lecturista__fila"
-              @click="emit('toma', item.contrato_id)"
-            >
-              <td class="text-no-wrap">
-                {{ horaCorta(item.hora) }}
-              </td>
-              <td class="font-weight-medium">
-                {{ item.cuenta ?? '—' }}
-              </td>
-              <td class="text-caption">
-                {{ item.sector ?? '—' }}
-              </td>
-              <td class="text-caption">
-                <span :class="{ 'text-warning': item.anomalia }">{{ item.anomalia ?? '—' }}</span>
-              </td>
-              <td class="text-end text-caption">
-                <span :class="{ 'text-error': item.lejos }">{{ item.distancia_m === null ? '—' : `${item.distancia_m} m` }}</span>
-              </td>
-            </tr>
+          <template #celda-cuenta="{ fila }">
+            <span class="font-weight-medium as-num">{{ fila.cuenta ?? '—' }}</span>
           </template>
-        </VDataTableVirtual>
+          <template #celda-anomalia="{ fila }">
+            <span
+              class="d-block text-truncate"
+              :class="{ 'text-toma-anomalia-darken-1': fila.anomalia }"
+              :title="fila.anomalia ?? ''"
+            >{{ fila.anomalia ?? '—' }}</span>
+          </template>
+          <template #celda-distancia_m="{ fila }">
+            <span
+              class="as-num"
+              :class="{ 'text-error font-weight-medium': fila.lejos }"
+            >{{ fila.distancia_m === null ? '—' : `${fila.distancia_m} m` }}</span>
+          </template>
+        </AsTablaDatos>
       </section>
-    </div>
-  </VNavigationDrawer>
+    </template>
+  </AsPanelLateral>
 </template>
 
 <style scoped>
-/* El drawer de Vuetify recorta su contenido (overflow hidden): el panel es una columna a toda la altura y solo el cuerpo
-   se desplaza; overscroll-behavior evita que la rueda arrastre la página de atrás al llegar al final. */
-.jornada-lecturista :deep(.v-navigation-drawer__content) {
-  display: flex;
-  flex-direction: column;
-  block-size: 100%;
-}
-
-.jornada-lecturista__cuerpo {
-  flex: 1 1 auto;
-  min-block-size: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
 .jornada-lecturista__cifras {
   display: grid;
-  gap: 8px;
+  gap: var(--as-sp-2);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .jornada-lecturista__cifra {
-  padding: 6px 10px;
-  border-radius: 6px;
-  background: rgba(var(--v-theme-on-surface), 0.04);
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
+  background: rgb(var(--v-theme-surface-variant));
+  padding-block: var(--as-sp-2);
+  padding-inline: var(--as-sp-3);
+}
+
+.jornada-lecturista__cifra-valor {
+  font-size: var(--as-fs-lg);
+  font-weight: var(--as-peso-semi);
+  line-height: 1.3;
 }
 
 .jornada-lecturista__eje {
   position: relative;
-  border-radius: 4px;
-  background: rgba(var(--v-theme-on-surface), 0.06);
+  border-radius: var(--as-radio-sm);
+  background: rgb(var(--v-theme-surface-variant));
   block-size: 28px;
-  margin-block-start: 6px;
+  margin-block-start: var(--as-sp-2);
 }
 
 .jornada-lecturista__bloque {
   position: absolute;
-  inset-block: 0;
   border-radius: 3px;
+  inset-block: 0;
 }
 
 .jornada-lecturista__bloque--hueco {
-  background: rgba(249, 168, 37, 0.35);
+  background: rgba(var(--v-theme-warning), 0.3);
 }
 
 .jornada-lecturista__bloque--silencio {
-  background: repeating-linear-gradient(45deg, rgba(198, 40, 40, 0.3) 0 4px, transparent 4px 8px);
+  background: repeating-linear-gradient(45deg, rgba(var(--v-theme-error), 0.3) 0 4px, transparent 4px 8px);
 }
 
 .jornada-lecturista__marca {
   position: absolute;
-  inset-block: 4px;
+  border: 0;
   border-radius: 1px;
-  background: #1e88e5;
   cursor: pointer;
   inline-size: 2px;
+  inset-block: 4px;
+  padding-block: 0;
+  padding-inline: 0;
   transform: translateX(-1px);
 }
 
-.jornada-lecturista__marca--anomalia {
-  background: #ef6c00;
+.jornada-lecturista__marca:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 
 .jornada-lecturista__marca--lejos {
   inset-block: 0;
-  background: #c62828;
 }
 
 .jornada-lecturista__ticks {
   position: relative;
-  block-size: 16px;
+  block-size: 1rem;
 }
 
 .jornada-lecturista__ticks span {
   position: absolute;
-  font-size: 9px !important;
   transform: translateX(-50%);
 }
 
-.jornada-lecturista__fila {
-  cursor: pointer;
-}
-
-.jornada-lecturista__tabla :deep(th),
-.jornada-lecturista__tabla :deep(td) {
-  padding-inline: 6px !important;
+.jornada-lecturista__tabla {
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
 }
 </style>

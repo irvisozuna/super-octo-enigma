@@ -115,12 +115,12 @@ onBeforeUnmount(() => {
         </VListItem>
         <VListItem :title="t('monitoreo.datos.lecturasPeriodo')">
           <template #append>
-            <span class="font-weight-medium">{{ estado.conteos.lecturas_periodo_abierto.toLocaleString('es-MX') }}</span>
+            <span class="font-weight-medium">{{ estado.conteos.lecturas_periodo_abierto }}</span>
           </template>
         </VListItem>
         <VListItem :title="t('monitoreo.datos.contratos')">
           <template #append>
-            <span class="font-weight-medium">{{ estado.conteos.contratos.toLocaleString('es-MX') }}</span>
+            <span class="font-weight-medium">{{ estado.conteos.contratos }}</span>
           </template>
         </VListItem>
       </VList>

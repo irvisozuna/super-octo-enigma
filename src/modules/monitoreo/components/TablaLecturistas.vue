@@ -3,10 +3,14 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { AvisoLecturista, EstadoLecturista, FilaLecturista } from '../types/monitor'
 import { haceCuanto, horaCorta } from '../utils/tiempo'
+import type { ColumnaTabla, OrdenTabla } from '@/components/as/tipos'
+import { TOKEN_LECTURISTA, tokenMeta } from '@/utils/estados'
+import { decimal, entero } from '@/utils/formato'
 
 /*
  * Lecturistas del día: estado (activo, en silencio, terminado, sin iniciar), última señal ("hace 4 min" o
  * "sin reporte desde las 10:12"), lecturas contra la meta, sectores, anomalías, batería y pendientes por enviar.
+ * Sobre AsTablaDatos; los colores de estado salen de los tokens (TOKEN_LECTURISTA).
  */
 const props = withDefaults(defineProps<{
   lecturistas: FilaLecturista[]
@@ -23,27 +27,24 @@ const emit = defineEmits<{
   'update:filtroEstado': [estado: EstadoLecturista | null]
 }>()
 
-const { t, n } = useI18n()
+const { t } = useI18n()
 
 const ORDEN_ESTADOS: EstadoLecturista[] = ['activo', 'silencio', 'sin_iniciar', 'terminado', 'fuera_de_jornada']
-const COLOR_ESTADO: Record<EstadoLecturista, string> = { activo: 'success', silencio: 'error', sin_iniciar: 'warning', terminado: 'primary', fuera_de_jornada: 'secondary' }
 const ICONO_AVISO: Record<AvisoLecturista, string> = { silencio: 'tabler-bell-off', bateria: 'tabler-battery-1', atoradas: 'tabler-cloud-upload', lejos: 'tabler-map-pin-off' }
 
 const busqueda = ref('')
+const orden = ref<OrdenTabla>([{ key: 'lecturas', order: 'desc' }])
 
-type Orden = { key: string; order?: 'asc' | 'desc' | boolean }[]
-const orden = ref<Orden>([{ key: 'lecturas', order: 'desc' }])
-
-const headers = computed(() => [
-  { title: t('monitoreo.lecturistas.nombre'), key: 'nombre', sortable: true },
-  { title: t('monitoreo.lecturistas.estado'), key: 'estado', sortable: true, width: 130 },
-  { title: t('monitoreo.lecturistas.ultimaSenal'), key: 'ultima_actividad', sortable: true, width: 180 },
-  { title: t('monitoreo.lecturistas.lecturas'), key: 'lecturas', sortable: true, width: 190 },
-  { title: t('monitoreo.lecturistas.sectores'), key: 'sectores', sortable: false },
-  { title: t('monitoreo.lecturistas.anomalias'), key: 'anomalias', sortable: true, align: 'end' as const, width: 90 },
-  { title: t('monitoreo.lecturistas.lejos'), key: 'lejos', sortable: true, align: 'end' as const, width: 80 },
-  { title: t('monitoreo.lecturistas.bateria'), key: 'bateria_min', sortable: true, align: 'end' as const, width: 90 },
-  { title: t('monitoreo.lecturistas.pendientes'), key: 'pendientes_enviar', sortable: true, align: 'end' as const, width: 100 },
+const columnas = computed<ColumnaTabla<FilaLecturista>[]>(() => [
+  { clave: 'nombre', titulo: t('monitoreo.lecturistas.nombre'), formato: 'personalizado', anchoMin: 200 },
+  { clave: 'estado', titulo: t('monitoreo.lecturistas.estado'), formato: 'personalizado', ancho: 136 },
+  { clave: 'ultima_actividad', titulo: t('monitoreo.lecturistas.ultimaSenal'), formato: 'personalizado', ancho: 150 },
+  { clave: 'lecturas', titulo: t('monitoreo.lecturistas.lecturas'), formato: 'personalizado', ancho: 190 },
+  { clave: 'sectores', titulo: t('monitoreo.lecturistas.sectores'), formato: 'personalizado', ordenable: false },
+  { clave: 'anomalias', titulo: t('monitoreo.lecturistas.anomalias'), formato: 'entero', ancho: 80 },
+  { clave: 'lejos', titulo: t('monitoreo.lecturistas.lejos'), formato: 'entero', ancho: 72, descripcion: t('monitoreo.lectura.lejos', { n: 50 }) },
+  { clave: 'bateria_min', titulo: t('monitoreo.lecturistas.bateria'), formato: 'personalizado', alineacion: 'end', ancho: 84 },
+  { clave: 'pendientes_enviar', titulo: t('monitoreo.lecturistas.pendientes'), formato: 'entero', ancho: 96 },
 ])
 
 const conteos = computed(() => {
@@ -79,181 +80,153 @@ function senal(l: FilaLecturista): string {
   return haceCuanto(l.ultima_actividad, relativo, props.ahora)
 }
 
-function colorMeta(l: FilaLecturista): string {
-  const p = l.pct_meta ?? 0
-
-  return p >= 100 ? 'success' : p >= 60 ? 'primary' : 'warning'
-}
-
 function alternarEstado(e: EstadoLecturista) {
   emit('update:filtroEstado', props.filtroEstado === e ? null : e)
 }
 </script>
 
 <template>
-  <VCard class="tabla-lecturistas">
-    <VCardItem class="pb-2">
-      <VCardTitle class="d-flex align-center gap-2 flex-wrap">
-        {{ esHoy ? t('monitoreo.lecturistas.tituloHoy') : t('monitoreo.lecturistas.tituloDia') }}
+  <AsTablaDatos
+    class="tabla-lecturistas"
+    :titulo="esHoy ? t('monitoreo.lecturistas.tituloHoy') : t('monitoreo.lecturistas.tituloDia')"
+    :columnas="columnas"
+    :filas="filas"
+    clave-fila="lecturista_id"
+    densidad="estandar"
+    :por-pagina="-1"
+    :orden="orden"
+    :seleccionada="seleccionado"
+    clic-fila
+    :cargando="cargando"
+    :busqueda="busqueda"
+    :placeholder-busqueda="t('monitoreo.lecturistas.buscar')"
+    :vacio-titulo="t('monitoreo.lecturistas.sinResultados')"
+    vacio-detalle=""
+    @update:orden="(o: OrdenTabla) => { orden = o }"
+    @update:busqueda="(q: string) => { busqueda = q }"
+    @fila="(f: Record<string, unknown>) => emit('seleccionar', f as FilaLecturista)"
+  >
+    <template #encabezado-acciones>
+      <div
+        class="d-flex flex-wrap align-center gap-1"
+        role="group"
+        :aria-label="t('monitoreo.lecturistas.estado')"
+      >
+        <VChip
+          v-for="c in conteos"
+          :key="c.estado"
+          size="small"
+          :color="TOKEN_LECTURISTA[c.estado]"
+          :variant="filtroEstado === c.estado ? 'flat' : 'tonal'"
+          label
+          :aria-pressed="filtroEstado === c.estado"
+          @click="alternarEstado(c.estado)"
+        >
+          <span class="as-num me-1">{{ c.n }}</span>{{ t(`monitoreo.estadosLecturista.${c.estado}`) }}
+        </VChip>
+      </div>
+    </template>
+
+    <template #celda-nombre="{ fila }">
+      <div class="font-weight-medium">
+        {{ fila.nombre }}
+      </div>
+      <div class="as-secundario">
+        {{ fila.gerencia ?? '' }}
+      </div>
+    </template>
+
+    <template #celda-estado="{ fila }">
+      <div class="d-flex align-center flex-wrap gap-1">
         <VChip
           size="small"
+          :color="TOKEN_LECTURISTA[fila.estado]"
           variant="tonal"
+          label
         >
-          {{ n(filas.length) }}
+          {{ t(`monitoreo.estadoLecturista.${fila.estado}`) }}
         </VChip>
-      </VCardTitle>
-      <template #append>
-        <div class="d-flex flex-wrap align-center gap-1">
-          <VChip
-            v-for="c in conteos"
-            :key="c.estado"
-            size="small"
-            :color="COLOR_ESTADO[c.estado]"
-            :variant="filtroEstado === c.estado ? 'flat' : 'tonal'"
-            label
-            @click="alternarEstado(c.estado)"
-          >
-            {{ c.n }} {{ t(`monitoreo.estadosLecturista.${c.estado}`) }}
-          </VChip>
-        </div>
-      </template>
-    </VCardItem>
-    <VCardText class="pt-0 pb-2">
-      <VTextField
-        v-model="busqueda"
-        density="compact"
-        variant="outlined"
-        hide-details
-        clearable
-        prepend-inner-icon="tabler-search"
-        :placeholder="t('monitoreo.lecturistas.buscar')"
-        class="tabla-lecturistas__buscar"
-      />
-    </VCardText>
-    <VDataTable
-      v-model:sort-by="orden"
-      :headers="headers"
-      :items="filas"
-      item-value="lecturista_id"
-      density="compact"
-      :items-per-page="-1"
-      hide-default-footer
-      hover
-      :loading="cargando"
-      :no-data-text="t('monitoreo.lecturistas.sinResultados')"
-      class="tabla-lecturistas__tabla"
-    >
-      <template #item="{ item }">
-        <tr
-          class="tabla-lecturistas__fila"
-          :class="{ 'tabla-lecturistas__fila--activa': item.lecturista_id === seleccionado }"
-          @click="emit('seleccionar', item)"
+        <VIcon
+          v-for="a in fila.avisos"
+          :key="a"
+          :icon="ICONO_AVISO[a]"
+          size="16"
+          :color="a === 'silencio' ? 'error' : 'warning'"
+          :title="t(`monitoreo.avisos.${a}`)"
+          :aria-label="t(`monitoreo.avisos.${a}`)"
+        />
+      </div>
+    </template>
+
+    <template #celda-ultima_actividad="{ fila }">
+      <span
+        class="text-body-2"
+        :class="{ 'text-error': fila.estado === 'silencio' }"
+      >{{ senal(fila) }}</span>
+    </template>
+
+    <template #celda-lecturas="{ fila }">
+      <div class="d-flex align-center gap-2">
+        <VProgressLinear
+          :model-value="fila.pct_meta ?? 0"
+          :color="tokenMeta(fila.pct_meta)"
+          height="6"
+          rounded
+          class="flex-grow-1"
+        />
+        <span class="text-body-2 as-num text-no-wrap tabla-lecturistas__meta">{{ entero(fila.lecturas) }} / {{ entero(fila.meta) }}</span>
+      </div>
+      <div
+        v-if="fila.primera_lectura"
+        class="as-secundario as-num"
+      >
+        {{ horaCorta(fila.primera_lectura) }} – {{ horaCorta(fila.ultima_lectura) }}<span v-if="fila.lecturas_por_hora"> · {{ t('monitoreo.lecturistas.porHora', { n: decimal(fila.lecturas_por_hora, 1) }) }}</span>
+      </div>
+    </template>
+
+    <template #celda-sectores="{ fila }">
+      <div class="d-flex flex-wrap gap-1 py-1">
+        <VChip
+          v-for="s in fila.sectores"
+          :key="s.sector_id"
+          size="x-small"
+          variant="outlined"
+          :title="t('monitoreo.sectores.sector')"
+          @click.stop="emit('sector', s.sector_id)"
         >
-          <td>
-            <div class="font-weight-medium">
-              {{ item.nombre }}
-            </div>
-            <div class="text-caption text-medium-emphasis">
-              {{ item.gerencia ?? '' }}
-            </div>
-          </td>
-          <td>
-            <VChip
-              size="x-small"
-              :color="COLOR_ESTADO[item.estado]"
-              variant="tonal"
-              label
-            >
-              {{ t(`monitoreo.estadoLecturista.${item.estado}`) }}
-            </VChip>
-            <span
-              v-for="a in item.avisos"
-              :key="a"
-              class="ms-1"
-            >
-              <VIcon
-                :icon="ICONO_AVISO[a]"
-                size="16"
-                :color="a === 'silencio' ? 'error' : 'warning'"
-                :title="t(`monitoreo.avisos.${a}`)"
-              />
-            </span>
-          </td>
-          <td class="text-caption">
-            <span :class="{ 'text-error': item.estado === 'silencio' }">{{ senal(item) }}</span>
-          </td>
-          <td>
-            <div class="d-flex align-center gap-2">
-              <VProgressLinear
-                :model-value="item.pct_meta ?? 0"
-                :color="colorMeta(item)"
-                height="6"
-                rounded
-                class="flex-grow-1"
-              />
-              <span class="text-caption text-no-wrap tabla-lecturistas__meta">{{ n(item.lecturas) }} / {{ n(item.meta) }}</span>
-            </div>
-            <div
-              v-if="item.primera_lectura"
-              class="text-caption text-medium-emphasis"
-            >
-              {{ horaCorta(item.primera_lectura) }} – {{ horaCorta(item.ultima_lectura) }}<span v-if="item.lecturas_por_hora"> · {{ t('monitoreo.lecturistas.porHora', { n: n(item.lecturas_por_hora) }) }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex flex-wrap gap-1 py-1">
-              <VChip
-                v-for="s in item.sectores"
-                :key="s.sector_id"
-                size="x-small"
-                variant="outlined"
-                @click.stop="emit('sector', s.sector_id)"
-              >
-                {{ s.sector }} <span class="text-medium-emphasis ms-1">{{ s.lecturas }}</span>
-              </VChip>
-              <span
-                v-if="!item.sectores.length && item.sectores_asignados.length"
-                class="text-caption text-disabled"
-              >{{ t('monitoreo.lecturistas.asignados', { n: item.sectores_asignados.length }) }}</span>
-            </div>
-          </td>
-          <td class="text-end">
-            {{ item.anomalias || '—' }}
-          </td>
-          <td class="text-end">
-            <span :class="{ 'text-error': item.avisos.includes('lejos') }">{{ item.lejos || '—' }}</span>
-          </td>
-          <td class="text-end">
-            <span :class="{ 'text-error': item.avisos.includes('bateria') }">{{ item.bateria_min === null ? '—' : `${item.bateria_min} %` }}</span>
-          </td>
-          <td class="text-end">
-            <span :class="{ 'text-warning': item.pendientes_enviar > 0 }">{{ item.pendientes_enviar || '—' }}</span>
-          </td>
-        </tr>
-      </template>
-    </VDataTable>
-  </VCard>
+          {{ s.sector }} <span class="text-medium-emphasis as-num ms-1">{{ s.lecturas }}</span>
+        </VChip>
+        <span
+          v-if="!fila.sectores.length && fila.sectores_asignados.length"
+          class="text-caption text-disabled"
+        >{{ t('monitoreo.lecturistas.asignados', { n: fila.sectores_asignados.length }) }}</span>
+      </div>
+    </template>
+
+    <template #celda-anomalias="{ fila }">
+      {{ fila.anomalias ? entero(fila.anomalias) : '—' }}
+    </template>
+
+    <template #celda-lejos="{ fila }">
+      <span :class="{ 'text-error font-weight-medium': fila.avisos.includes('lejos') }">{{ fila.lejos ? entero(fila.lejos) : '—' }}</span>
+    </template>
+
+    <template #celda-bateria_min="{ fila }">
+      <span
+        class="as-num"
+        :class="{ 'text-error font-weight-medium': fila.avisos.includes('bateria') }"
+      >{{ fila.bateria_min === null ? '—' : `${fila.bateria_min} %` }}</span>
+    </template>
+
+    <template #celda-pendientes_enviar="{ fila }">
+      <span :class="{ 'text-warning font-weight-medium': fila.pendientes_enviar > 0 }">{{ fila.pendientes_enviar ? entero(fila.pendientes_enviar) : '—' }}</span>
+    </template>
+  </AsTablaDatos>
 </template>
 
 <style scoped>
-.tabla-lecturistas__fila {
-  cursor: pointer;
-}
-
-.tabla-lecturistas__fila--activa {
-  background: rgba(var(--v-theme-primary), 0.08);
-}
-
-.tabla-lecturistas__buscar {
-  max-inline-size: 360px;
-}
-
 .tabla-lecturistas__meta {
-  min-inline-size: 72px;
+  min-inline-size: 5em;
   text-align: end;
-}
-
-.tabla-lecturistas__tabla :deep(th) {
-  white-space: nowrap;
 }
 </style>

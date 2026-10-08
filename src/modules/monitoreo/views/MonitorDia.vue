@@ -18,7 +18,6 @@ import { useAlcanceStore } from '../stores/alcanceStore'
 import { useMonitorStore } from '../stores/monitorStore'
 import type { EstadoSector, LecturistaMapaProps, SectorProps, TomaProps } from '../types/mapa'
 import type { EstadoLecturista, FilaLecturista, FilaSector } from '../types/monitor'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
 
 /*
  * Pantalla principal del monitoreo (F1.1): indicadores, filtros, mapa, sectores y lecturistas del día o del periodo.
@@ -186,11 +185,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="monitor-dia">
-    <div class="d-flex flex-wrap align-center justify-space-between gap-3 mb-4">
-      <div class="d-flex align-center flex-wrap gap-2">
-        <h4 class="text-h4 mb-0">
-          {{ t('monitoreo.inicio.titulo') }}
-        </h4>
+    <AsEncabezadoPagina :titulo="t('monitoreo.inicio.titulo')">
+      <template #contexto>
         <VChip
           v-if="periodoActual"
           size="small"
@@ -211,8 +207,8 @@ onBeforeUnmount(() => {
             {{ g.label }}
           </VChip>
         </template>
-      </div>
-      <div class="d-flex align-center gap-2">
+      </template>
+      <template #acciones>
         <BarraActualizacion
           :actualizado="monitor.actualizado"
           :datos="monitor.resumen?.datos ?? null"
@@ -228,12 +224,14 @@ onBeforeUnmount(() => {
           icon="tabler-users-group"
           :to="{ name: 'monitoreoAdminAlcances' }"
           :aria-label="t('monitoreo.menu.alcances')"
+          :title="t('monitoreo.menu.alcances')"
         />
-      </div>
-    </div>
+      </template>
+    </AsEncabezadoPagina>
 
-    <EstadoError
+    <AsEstado
       v-if="alcance.error"
+      tipo="error"
       class="mb-4"
       :error="alcance.error"
       @reintentar="cargarTodo"
@@ -265,8 +263,9 @@ onBeforeUnmount(() => {
         @limpiar="limpiar"
       />
 
-      <EstadoError
+      <AsEstado
         v-if="monitor.error && !monitor.listo"
+        tipo="error"
         class="mb-4"
         :error="monitor.error"
         @reintentar="monitor.cargar(parametros)"
@@ -310,7 +309,10 @@ onBeforeUnmount(() => {
           lg="6"
           xl="7"
         >
-          <VCard>
+          <VCard
+            class="as-tarjeta"
+            variant="flat"
+          >
             <VCardText class="pa-2">
               <MapaMonitoreo
                 ref="mapa"
