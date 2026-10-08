@@ -535,5 +535,37 @@
   "previous_balance": "Previous Balance",
   "advance_type": "Advance Type",
   "has_rebilling": "This reading has a rebilling. Click to view details.",
-  "view_evidence": "View Evidence"
+  "view_evidence": "View Evidence",
+  "as": {
+    "filtros": {
+      "quitar": "Quitar filtros ({n})"
+    },
+    "panel": {
+      "cerrar": "Cerrar panel"
+    },
+    "dialogo": {
+      "cancelar": "Cancelar",
+      "confirmar": "Confirmar",
+      "cerrar": "Cerrar"
+    },
+    "estado": {
+      "cargando": "Cargando…",
+      "vacioTitulo": "Sin resultados",
+      "vacioDetalle": "No hay datos para los filtros elegidos.",
+      "reintentar": "Reintentar",
+      "sinPermisoTitulo": "Sin permiso",
+      "sinPermisoDetalle": "Tu usuario no tiene acceso a esta información.",
+      "errorTitulo": "No se pudo cargar la información",
+      "detalleTecnico": "Detalle técnico",
+      "copiar": "Copiar",
+      "copiado": "Copiado"
+    },
+    "tabla": {
+      "filas": "{n} filas",
+      "fila": "1 fila",
+      "buscar": "Buscar…",
+      "desplazar": "Desplaza a los lados para ver más columnas",
+      "totales": "Totales"
+    }
+  }
 }

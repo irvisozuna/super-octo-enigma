@@ -1,5 +1,5 @@
-// 👉 Table
-.v-table {
+// 👉 Table (las tablas del sistema de diseño, .as-tabla__nativa, traen su propio estilo)
+.v-table:not(.as-tabla__nativa) {
   th {
     color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity)) !important;
     font-size: 0.8125rem;
@@ -14,8 +14,8 @@
 }
 
 // 👉 Datatable
-.v-data-table,
-.v-table {
+.v-data-table:not(.as-tabla__nativa),
+.v-table:not(.as-tabla__nativa) {
   table {
     thead,
     tbody {

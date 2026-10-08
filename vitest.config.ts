@@ -16,5 +16,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+
+    // Vuetify trae CSS dentro de sus módulos: se transforma en lugar de dejarlo como dependencia externa
+    server: { deps: { inline: ['vuetify'] } },
+    css: false,
   },
 })

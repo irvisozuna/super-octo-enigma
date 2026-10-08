@@ -1,0 +1,84 @@
+// Utilidades del Aquasoft Design System 1.0 (prefijo as-). Pocas y con un solo propósito cada una.
+
+// Cifras con dígitos tabulares: columnas numéricas, indicadores, horas
+.as-num {
+  font-variant-numeric: tabular-nums;
+}
+
+// Tarjeta del sistema: superficie blanca, borde sutil, sin sombra en reposo
+.as-tarjeta {
+  border: var(--as-borde);
+  border-radius: var(--as-radio-lg);
+  background: rgb(var(--v-theme-surface));
+  box-shadow: none !important;
+}
+
+// Sobrelínea: 12 px, mayúsculas, semibold, secundaria (categorías, encabezados de panel)
+.as-sobrelinea {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-xs);
+  font-weight: var(--as-peso-semi);
+  letter-spacing: var(--as-tracking-sobrelinea);
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+// Texto secundario de 13 px
+.as-secundario {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-sm);
+  line-height: 1.4;
+}
+
+// Etiqueta de dato (par etiqueta / valor en fichas y paneles)
+.as-etiqueta {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-sm);
+  line-height: 1.3;
+}
+
+.as-valor {
+  font-size: var(--as-fs-base);
+  font-weight: var(--as-peso-medio);
+  line-height: 1.4;
+}
+
+// Acento lateral para alertas en tarjetas y filas
+.as-acento-error {
+  box-shadow: inset 3px 0 0 rgb(var(--v-theme-error));
+}
+
+.as-acento-warning {
+  box-shadow: inset 3px 0 0 rgb(var(--v-theme-warning));
+}
+
+// Punto de color de leyenda (usar con bg-<token>)
+.as-punto {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  block-size: 10px;
+  inline-size: 10px;
+  vertical-align: middle;
+}
+
+// Rejilla de pares etiqueta/valor
+.as-datos {
+  display: grid;
+  gap: var(--as-sp-2) var(--as-sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+// Sección dentro de un panel: título de 13 px semibold con separación
+.as-seccion {
+  margin-block: var(--as-sp-5) var(--as-sp-2);
+  color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
+  font-size: var(--as-fs-sm);
+  font-weight: var(--as-peso-semi);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.as-seccion:first-child {
+  margin-block-start: 0;
+}
