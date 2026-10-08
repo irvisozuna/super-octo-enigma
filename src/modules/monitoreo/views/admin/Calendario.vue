@@ -6,17 +6,20 @@ import { obtenerCatalogos } from '../../services/monitoreoApi'
 import { useAlcanceStore } from '../../stores/alcanceStore'
 import type { FilaCalendario } from '../../types/calendario'
 import type { RespuestaCatalogos } from '../../types/monitor'
-import { COLORES_SECTOR } from '../../utils/geojson'
-import { fechaCorta, hoyLocal } from '../../utils/tiempo'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { useNotificacion } from '@/composables/useNotificacion'
+import { TOKEN_SECTOR, tokenAvance } from '@/utils/estados'
+import { fechaCorta, hoyLocal, porcentaje } from '@/utils/formato'
 
 /*
  * Calendario de lectura por periodo y sector (F2.1): lista editable (programada, límite, lecturista planeado, nota),
  * vista mensual, copia del periodo anterior conservando el día hábil, plantilla e importación desde Excel. Editar
  * requiere administrar el módulo; consultar, solo leer. Aquasoft Comercial no se toca.
+ * Sobre los componentes del sistema de diseño: encabezado, barra de filtros, tabla editable, diálogos y avisos.
  */
-const { t, n } = useI18n()
+const { t } = useI18n()
 const alcance = useAlcanceStore()
+const notificar = useNotificacion()
 const cal = useCalendario()
 
 const catalogos = ref<RespuestaCatalogos | null>(null)
@@ -29,13 +32,13 @@ const dialogoCopia = ref(false)
 const sobrescribir = ref(false)
 const dialogoResultado = ref(false)
 const archivo = ref<File[] | File | null>(null)
-const mensaje = ref<string | null>(null)
 
 const hoy = computed(() => hoyLocal())
-const periodos = computed(() => catalogos.value?.periodos ?? [])
+const periodos = computed(() => (catalogos.value?.periodos ?? []).map(p => ({ value: p.id, title: p.abierto ? `${p.nombre} (abierto)` : p.nombre })))
 const lecturistas = computed(() => (catalogos.value?.lecturistas ?? []).filter(l => gerencia.value === null || l.gerencia_id === gerencia.value || l.gerencia_id === null))
 const opcionesLecturista = computed(() => [{ value: null, title: t('monitoreo.calendario.sinLecturista') }, ...lecturistas.value.map(l => ({ value: l.id, title: l.nombre }))])
 const opcionesGerencia = computed(() => alcance.gerencias.map(g => ({ value: g.id, title: g.label })))
+const filtrosActivos = computed(() => (gerencia.value !== null ? 1 : 0) + (busqueda.value.trim() ? 1 : 0) + (soloSinFecha.value ? 1 : 0))
 
 const filas = computed(() => {
   let lista = cal.filas.value
@@ -48,13 +51,19 @@ const filas = computed(() => {
   return lista
 })
 
-const headers = computed(() => [
-  { title: t('monitoreo.calendario.sector'), key: 'sector', sortable: true },
-  { title: t('monitoreo.calendario.programada'), key: 'programada', sortable: true, width: 170 },
-  { title: t('monitoreo.calendario.limite'), key: 'limite', sortable: true, width: 170 },
-  { title: t('monitoreo.calendario.lecturista'), key: 'lecturista_id', sortable: false, width: 220 },
-  { title: t('monitoreo.calendario.nota'), key: 'nota', sortable: false, width: 200 },
-  { title: t('monitoreo.calendario.avance'), key: 'pct_campo', sortable: true, width: 150 },
+const columnas = computed<ColumnaTabla<FilaCalendario>[]>(() => [
+  { clave: 'sector', titulo: t('monitoreo.calendario.sector'), formato: 'personalizado', anchoMin: 220 },
+  { clave: 'programada', titulo: t('monitoreo.calendario.programada'), formato: 'personalizado', ancho: 180 },
+  { clave: 'limite', titulo: t('monitoreo.calendario.limite'), formato: 'personalizado', ancho: 180 },
+  { clave: 'lecturista_id', titulo: t('monitoreo.calendario.lecturista'), formato: 'personalizado', ordenable: false, ancho: 230 },
+  { clave: 'nota', titulo: t('monitoreo.calendario.nota'), formato: 'personalizado', ordenable: false, ancho: 220 },
+  { clave: 'pct_campo', titulo: t('monitoreo.calendario.avance'), formato: 'personalizado', alineacion: 'end', ancho: 170 },
+])
+
+const columnasRechazadas = computed<ColumnaTabla[]>(() => [
+  { clave: 'fila', titulo: t('monitoreo.calendario.fila'), formato: 'entero', ancho: 80 },
+  { clave: 'sector_id', titulo: t('monitoreo.calendario.sector'), formato: 'entero', ancho: 110 },
+  { clave: 'motivo', titulo: t('monitoreo.calendario.motivo'), formato: 'texto' },
 ])
 
 /** Días del mes del periodo para la vista de calendario (semanas de lunes a domingo). */
@@ -89,12 +98,17 @@ const semanas = computed(() => {
 
 const diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
-function colorEstado(f: FilaCalendario): string {
-  return f.estado ? COLORES_SECTOR[f.estado] ?? '#bdbdbd' : '#bdbdbd'
+/** Token de color del estado del sector (leyenda del monitor); sin estado, el gris de "sin esperadas". */
+function tokenEstado(f: FilaCalendario): string {
+  return f.estado ? TOKEN_SECTOR[f.estado] : 'sector-sin-esperadas'
 }
 
 function vencido(f: FilaCalendario): boolean {
   return !!f.limite && f.limite < hoy.value && f.estado !== 'terminado' && f.estado !== 'sin_esperadas'
+}
+
+function claseFila(fila: Record<string, unknown>) {
+  return vencido(fila as FilaCalendario) ? 'calendario__fila--vencida' : ''
 }
 
 function esHabil(fecha: string): boolean {
@@ -110,13 +124,16 @@ async function recargar() {
     periodo.value = cal.datos.value.periodo.id
 }
 
+function avisarResultado(texto: string, rechazadas: number) {
+  notificar.exito(rechazadas ? `${texto} · ${t('monitoreo.calendario.rechazadas', { n: rechazadas })}` : texto)
+  if (rechazadas)
+    dialogoResultado.value = true
+}
+
 async function guardar() {
   const r = await cal.guardar()
-  if (r) {
-    mensaje.value = t('monitoreo.calendario.guardado', { g: r.guardadas, b: r.borradas }) + (r.rechazadas.length ? ` · ${t('monitoreo.calendario.rechazadas', { n: r.rechazadas.length })}` : '')
-    if (r.rechazadas.length)
-      dialogoResultado.value = true
-  }
+  if (r)
+    avisarResultado(t('monitoreo.calendario.guardado', { g: r.guardadas, b: r.borradas }), r.rechazadas.length)
 }
 
 async function copiar() {
@@ -126,11 +143,8 @@ async function copiar() {
   const r = await cal.copiar(anterior.id, sobrescribir.value)
 
   dialogoCopia.value = false
-  if (r) {
-    mensaje.value = t('monitoreo.calendario.copiado', { c: r.copiadas, o: r.omitidas })
-    if (r.rechazadas.length)
-      dialogoResultado.value = true
-  }
+  if (r)
+    avisarResultado(t('monitoreo.calendario.copiado', { c: r.copiadas, o: r.omitidas }), r.rechazadas.length)
 }
 
 async function importar() {
@@ -140,18 +154,21 @@ async function importar() {
   const r = await cal.importar(f)
 
   archivo.value = null
-  if (r) {
-    mensaje.value = t('monitoreo.calendario.importado', { l: r.leidas, g: r.guardadas, b: r.borradas }) + (r.rechazadas.length ? ` · ${t('monitoreo.calendario.rechazadas', { n: r.rechazadas.length })}` : '')
-    if (r.rechazadas.length)
-      dialogoResultado.value = true
-  }
+  if (r)
+    avisarResultado(t('monitoreo.calendario.importado', { l: r.leidas, g: r.guardadas, b: r.borradas }), r.rechazadas.length)
 }
 
 const rechazadas = computed(() => {
   const r = cal.ultimoResultado.value as { rechazadas?: { fila?: number; sector_id: number | null; motivo: string }[] } | null
 
-  return r?.rechazadas ?? []
+  return (r?.rechazadas ?? []).map((x, i) => ({ id: i, ...x }))
 })
+
+function limpiarFiltros() {
+  gerencia.value = null
+  busqueda.value = ''
+  soloSinFecha.value = false
+}
 
 watch([periodo, gerencia], recargar)
 
@@ -171,37 +188,28 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
 </script>
 
 <template>
-  <div>
-    <div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-4">
-      <div>
-        <h4 class="text-h4 mb-1">
-          {{ t('monitoreo.calendario.titulo') }}
-        </h4>
-        <p class="text-body-2 text-medium-emphasis mb-0">
-          {{ t('monitoreo.calendario.descripcion') }}
-        </p>
-      </div>
-      <div
+  <div class="calendario">
+    <AsEncabezadoPagina
+      :titulo="t('monitoreo.calendario.titulo')"
+      :descripcion="t('monitoreo.calendario.descripcion')"
+    >
+      <template
         v-if="cal.puedeEditar.value"
-        class="d-flex flex-wrap align-center gap-2"
+        #acciones
       >
-        <VBtn
-          variant="tonal"
+        <AsBtnSecundario
           prepend-icon="tabler-copy"
-          class="text-none"
           :disabled="!cal.datos.value?.anterior?.con_calendario"
           @click="dialogoCopia = true"
         >
           {{ t('monitoreo.calendario.copiar') }}
-        </VBtn>
-        <VBtn
-          variant="tonal"
+        </AsBtnSecundario>
+        <AsBtnSecundario
           prepend-icon="tabler-file-spreadsheet"
-          class="text-none"
           @click="cal.plantilla()"
         >
           {{ t('monitoreo.calendario.plantilla') }}
-        </VBtn>
+        </AsBtnSecundario>
         <VFileInput
           v-model="archivo"
           accept=".xlsx"
@@ -214,11 +222,12 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
           class="calendario__archivo"
           @update:model-value="importar"
         />
-      </div>
-    </div>
+      </template>
+    </AsEncabezadoPagina>
 
-    <EstadoError
+    <AsEstado
       v-if="cal.error.value && !cal.datos.value"
+      tipo="error"
       class="mb-4"
       :error="cal.error.value"
       @reintentar="recargar"
@@ -243,250 +252,247 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
     >
       {{ t('monitoreo.calendario.soloLectura') }}
     </VAlert>
-    <VAlert
-      v-if="mensaje"
-      type="success"
-      variant="tonal"
-      density="compact"
-      class="mb-3"
-      closable
-      @click:close="mensaje = null"
-    >
-      {{ mensaje }}
-    </VAlert>
 
-    <VCard>
-      <VCardText class="d-flex flex-wrap align-center gap-3 py-3">
-        <VSelect
-          v-model="periodo"
-          :items="periodos.map(p => ({ value: p.id, title: p.abierto ? `${p.nombre} (abierto)` : p.nombre }))"
-          :label="t('monitoreo.calendario.periodo')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="calendario__campo"
-        />
-        <VSelect
-          v-if="alcance.gerencias.length !== 1"
-          v-model="gerencia"
-          :items="opcionesGerencia"
-          :label="t('monitoreo.calendario.gerencia')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          clearable
-          class="calendario__campo"
-        />
-        <VChipGroup
-          v-model="vista"
-          mandatory
-          selected-class="text-primary"
+    <AsBarraFiltros
+      class="mb-3"
+      :activos="filtrosActivos"
+      @limpiar="limpiarFiltros"
+    >
+      <VSelect
+        v-model="periodo"
+        :items="periodos"
+        :label="t('monitoreo.calendario.periodo')"
+        class="as-filtro--md"
+      />
+      <VSelect
+        v-if="alcance.gerencias.length !== 1"
+        v-model="gerencia"
+        :items="opcionesGerencia"
+        :label="t('monitoreo.calendario.gerencia')"
+        clearable
+        class="as-filtro--sm"
+      />
+      <VChipGroup
+        v-model="vista"
+        mandatory
+        :aria-label="t('monitoreo.calendario.vistaLista')"
+      >
+        <VChip
+          value="lista"
+          filter
+          prepend-icon="tabler-list"
         >
-          <VChip
-            value="lista"
-            label
-            filter
-            prepend-icon="tabler-list"
-          >
-            {{ t('monitoreo.calendario.vistaLista') }}
-          </VChip>
-          <VChip
-            value="mes"
-            label
-            filter
-            prepend-icon="tabler-calendar-month"
-          >
-            {{ t('monitoreo.calendario.vistaMes') }}
-          </VChip>
-        </VChipGroup>
-        <VTextField
-          v-if="vista === 'lista'"
-          v-model="busqueda"
-          density="compact"
-          variant="outlined"
-          hide-details
-          clearable
-          prepend-inner-icon="tabler-search"
-          :placeholder="t('monitoreo.calendario.buscar')"
-          class="calendario__campo"
-        />
-        <VCheckbox
-          v-if="vista === 'lista'"
-          v-model="soloSinFecha"
-          density="compact"
-          hide-details
-          :label="t('monitoreo.calendario.sinFecha')"
-        />
-        <VSpacer />
-        <span
-          v-if="cal.datos.value"
-          class="text-caption text-medium-emphasis"
+          {{ t('monitoreo.calendario.vistaLista') }}
+        </VChip>
+        <VChip
+          value="mes"
+          filter
+          prepend-icon="tabler-calendar-month"
         >
+          {{ t('monitoreo.calendario.vistaMes') }}
+        </VChip>
+      </VChipGroup>
+      <VTextField
+        v-if="vista === 'lista'"
+        v-model="busqueda"
+        clearable
+        prepend-inner-icon="tabler-search"
+        :placeholder="t('monitoreo.calendario.buscar')"
+        :aria-label="t('monitoreo.calendario.buscar')"
+        class="as-filtro--md"
+      />
+      <VCheckbox
+        v-if="vista === 'lista'"
+        v-model="soloSinFecha"
+        :label="t('monitoreo.calendario.sinFecha')"
+      />
+      <template
+        v-if="cal.datos.value"
+        #fin
+      >
+        <span class="as-secundario as-num">
           {{ t('monitoreo.calendario.conFecha', { n: cal.datos.value.con_fecha, total: cal.datos.value.sectores.length }) }} · {{ t('monitoreo.calendario.diasHabiles', { dias: cal.datos.value.dias_habiles.map(d => diasSemana[d - 1]).join(' ') }) }}
         </span>
-      </VCardText>
-      <VDivider />
+      </template>
+    </AsBarraFiltros>
 
+    <VCard
+      variant="flat"
+      class="as-tarjeta calendario__tarjeta"
+    >
       <!-- Barra de cambios pendientes -->
       <VSlideYTransition>
         <div
           v-if="cal.hayCambios.value"
-          class="calendario__cambios d-flex flex-wrap align-center justify-space-between gap-2 px-4 py-2"
+          class="calendario__cambios d-flex flex-wrap align-center justify-space-between gap-2"
+          role="status"
         >
-          <span class="text-body-2">
+          <span class="text-body-2 d-inline-flex align-center gap-1">
             <VIcon
               icon="tabler-alert-circle"
               size="18"
-              class="me-1"
             />{{ t('monitoreo.calendario.cambiosPendientes') }}
           </span>
           <div class="d-flex gap-2">
             <VBtn
               size="small"
               variant="text"
-              class="text-none"
               :disabled="cal.guardando.value"
               @click="cal.descartarCambios()"
             >
               {{ t('monitoreo.calendario.descartar') }}
             </VBtn>
-            <VBtn
+            <AsBtnPrimario
               size="small"
-              color="primary"
-              class="text-none"
               :loading="cal.guardando.value"
               @click="guardar"
             >
               {{ t('monitoreo.calendario.guardar', { n: cal.cambios.value.length }) }}
-            </VBtn>
+            </AsBtnPrimario>
           </div>
         </div>
       </VSlideYTransition>
 
-      <VProgressLinear
-        v-if="cal.cargando.value"
-        indeterminate
-      />
-
       <!-- Lista editable -->
-      <VDataTable
+      <AsTablaDatos
         v-if="vista === 'lista'"
-        :headers="headers"
-        :items="filas"
-        item-value="sector_id"
-        density="compact"
-        :items-per-page="-1"
-        hide-default-footer
-        :no-data-text="t('monitoreo.calendario.sinSectores')"
+        sin-tarjeta
+        :columnas="columnas"
+        :filas="filas"
+        clave-fila="sector_id"
+        densidad="media"
+        :cargando="cal.cargando.value && !cal.filas.value.length"
+        :por-pagina="-1"
+        :clase-fila="claseFila"
+        :vacio-titulo="t('monitoreo.calendario.sinSectores')"
+        vacio-detalle=""
+        vacio-icono="tabler-calendar-off"
         class="calendario__tabla"
       >
-        <template #item="{ item }">
-          <tr :class="{ 'calendario__fila--vencida': vencido(item) }">
-            <td>
-              <div class="d-flex align-center gap-2">
-                <span
-                  class="calendario__punto"
-                  :style="{ backgroundColor: colorEstado(item) }"
-                />
-                <div>
-                  <div class="font-weight-medium">
-                    {{ item.sector }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ item.sistema ?? '' }}<span v-if="item.gerencia"> · {{ item.gerencia }}</span>
-                  </div>
-                </div>
+        <template #celda-sector="{ fila }">
+          <div class="d-flex align-center gap-2">
+            <span
+              class="as-punto"
+              :class="`bg-${tokenEstado(fila as FilaCalendario)}`"
+              :title="fila.estado ? t(`monitoreo.estadoSector.${fila.estado}`) : ''"
+            />
+            <div>
+              <div class="font-weight-medium">
+                {{ fila.sector }}
               </div>
-            </td>
-            <td>
-              <VTextField
-                v-model="item.programada"
-                type="date"
-                density="compact"
-                variant="outlined"
-                hide-details
-                :disabled="!cal.puedeEditar.value"
-                :min="cal.datos.value?.periodo?.inicio ?? undefined"
-              />
-            </td>
-            <td>
-              <VTextField
-                v-model="item.limite"
-                type="date"
-                density="compact"
-                variant="outlined"
-                hide-details
-                :disabled="!cal.puedeEditar.value"
-                :min="item.programada || cal.datos.value?.periodo?.inicio || undefined"
-                :error="!!item.programada && !!item.limite && item.limite < item.programada"
-              />
-              <div
-                v-if="vencido(item)"
-                class="text-caption text-error"
-              >
-                {{ t('monitoreo.calendario.vencido') }}
+              <div class="as-secundario">
+                {{ fila.sistema ?? '' }}<span v-if="fila.gerencia"> · {{ fila.gerencia }}</span>
               </div>
-            </td>
-            <td>
-              <VSelect
-                v-model="item.lecturista_id"
-                :items="opcionesLecturista"
-                density="compact"
-                variant="outlined"
-                hide-details
-                :disabled="!cal.puedeEditar.value"
-              />
-              <div
-                v-if="item.lecturistas_reales.length"
-                class="text-caption text-medium-emphasis text-truncate calendario__reales"
-                :title="item.lecturistas_reales.join(', ')"
-              >
-                <VIcon
-                  icon="tabler-user-check"
-                  size="12"
-                />
-                {{ item.lecturistas_reales.join(', ') }}
-              </div>
-            </td>
-            <td>
-              <VTextField
-                v-model="item.nota"
-                density="compact"
-                variant="outlined"
-                hide-details
-                maxlength="300"
-                :disabled="!cal.puedeEditar.value"
-              />
-            </td>
-            <td>
-              <div
-                v-if="item.estado"
-                class="d-flex align-center gap-2"
-              >
-                <VProgressLinear
-                  :model-value="item.pct_campo ?? 0"
-                  :color="(item.pct_campo ?? 0) >= 98 ? 'success' : (item.pct_campo ?? 0) >= 90 ? 'warning' : 'primary'"
-                  height="6"
-                  rounded
-                  class="flex-grow-1"
-                />
-                <span class="text-caption text-no-wrap">{{ item.pct_campo === null ? '—' : `${n(item.pct_campo)} %` }}</span>
-              </div>
-              <div class="text-caption text-medium-emphasis">
-                {{ item.estado ? t(`monitoreo.estadoSector.${item.estado}`) : '' }}<span v-if="item.ultima_lectura"> · {{ fechaCorta(item.ultima_lectura) }}</span>
-              </div>
-            </td>
-          </tr>
+            </div>
+          </div>
         </template>
-      </VDataTable>
+        <template #celda-programada="{ fila }">
+          <VTextField
+            v-model="fila.programada"
+            type="date"
+            density="compact"
+            variant="outlined"
+            hide-details
+            :aria-label="`${t('monitoreo.calendario.programada')} · ${fila.sector}`"
+            :disabled="!cal.puedeEditar.value"
+            :min="cal.datos.value?.periodo?.inicio ?? undefined"
+          />
+        </template>
+        <template #celda-limite="{ fila }">
+          <VTextField
+            v-model="fila.limite"
+            type="date"
+            density="compact"
+            variant="outlined"
+            hide-details
+            :aria-label="`${t('monitoreo.calendario.limite')} · ${fila.sector}`"
+            :disabled="!cal.puedeEditar.value"
+            :min="fila.programada || cal.datos.value?.periodo?.inicio || undefined"
+            :error="!!fila.programada && !!fila.limite && fila.limite < fila.programada"
+          />
+          <div
+            v-if="vencido(fila as FilaCalendario)"
+            class="as-secundario text-error"
+          >
+            {{ t('monitoreo.calendario.vencido') }}
+          </div>
+        </template>
+        <template #celda-lecturista_id="{ fila }">
+          <VSelect
+            v-model="fila.lecturista_id"
+            :items="opcionesLecturista"
+            density="compact"
+            variant="outlined"
+            hide-details
+            :aria-label="`${t('monitoreo.calendario.lecturista')} · ${fila.sector}`"
+            :disabled="!cal.puedeEditar.value"
+          />
+          <div
+            v-if="fila.lecturistas_reales.length"
+            class="as-secundario text-truncate calendario__reales d-flex align-center gap-1"
+            :title="fila.lecturistas_reales.join(', ')"
+          >
+            <VIcon
+              icon="tabler-user-check"
+              size="12"
+            />
+            <span class="text-truncate">{{ fila.lecturistas_reales.join(', ') }}</span>
+          </div>
+        </template>
+        <template #celda-nota="{ fila }">
+          <VTextField
+            v-model="fila.nota"
+            density="compact"
+            variant="outlined"
+            hide-details
+            maxlength="300"
+            :aria-label="`${t('monitoreo.calendario.nota')} · ${fila.sector}`"
+            :disabled="!cal.puedeEditar.value"
+          />
+        </template>
+        <template #celda-pct_campo="{ fila }">
+          <div
+            v-if="fila.estado"
+            class="d-flex align-center gap-2"
+          >
+            <VProgressLinear
+              :model-value="fila.pct_campo ?? 0"
+              :color="tokenAvance(fila.pct_campo)"
+              height="6"
+              rounded
+              class="flex-grow-1"
+              :aria-label="t('monitoreo.calendario.avance')"
+            />
+            <span class="as-num text-no-wrap">{{ porcentaje(fila.pct_campo, 0) }}</span>
+          </div>
+          <div class="as-secundario">
+            {{ fila.estado ? t(`monitoreo.estadoSector.${fila.estado}`) : '' }}<span v-if="fila.ultima_lectura"> · {{ fechaCorta(fila.ultima_lectura) }}</span>
+          </div>
+        </template>
+      </AsTablaDatos>
 
       <!-- Vista mensual -->
-      <VCardText v-else>
-        <div class="calendario__mes">
+      <div
+        v-else
+        class="calendario__mes-envoltura"
+      >
+        <AsEstado
+          v-if="cal.cargando.value && !cal.filas.value.length"
+          tipo="cargando"
+          esqueleto="tarjeta"
+          :filas="4"
+        />
+        <div
+          v-else
+          class="calendario__mes"
+          role="grid"
+          :aria-label="t('monitoreo.calendario.vistaMes')"
+        >
           <div
             v-for="d in diasSemana"
             :key="d"
-            class="calendario__dia-nombre text-caption text-medium-emphasis text-center"
+            class="as-sobrelinea text-center"
+            role="columnheader"
           >
             {{ d }}
           </div>
@@ -499,8 +505,9 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
               :key="dia.fecha"
               class="calendario__dia"
               :class="{ 'calendario__dia--fuera': !dia.enMes, 'calendario__dia--inhabil': !esHabil(dia.fecha), 'calendario__dia--hoy': dia.fecha === hoy }"
+              role="gridcell"
             >
-              <div class="text-caption font-weight-medium">
+              <div class="as-secundario font-weight-medium as-num">
                 {{ Number(dia.fecha.slice(8, 10)) }}
               </div>
               <template v-if="cal.porDia.value[dia.fecha]">
@@ -508,20 +515,20 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
                   v-for="f in cal.porDia.value[dia.fecha].programados.slice(0, 6)"
                   :key="`p${f.sector_id}`"
                   class="calendario__evento"
-                  :style="{ borderInlineStartColor: colorEstado(f) }"
+                  :style="{ '--as-evento': `rgb(var(--v-theme-${tokenEstado(f)}))` }"
                   :title="`${f.sector} · ${t('monitoreo.calendario.programada')}`"
                 >
                   {{ f.sector }}
                 </div>
                 <div
                   v-if="cal.porDia.value[dia.fecha].programados.length > 6"
-                  class="text-caption text-medium-emphasis"
+                  class="as-secundario as-num"
                 >
                   +{{ cal.porDia.value[dia.fecha].programados.length - 6 }}
                 </div>
                 <div
                   v-if="cal.porDia.value[dia.fecha].limites.length"
-                  class="text-caption text-error"
+                  class="as-secundario text-error"
                   :title="cal.porDia.value[dia.fecha].limites.map(f => f.sector).join(', ')"
                 >
                   {{ t('monitoreo.calendario.limitesDia', { n: cal.porDia.value[dia.fecha].limites.length }) }}
@@ -530,142 +537,95 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
             </div>
           </template>
         </div>
-      </VCardText>
+      </div>
     </VCard>
 
     <!-- Copiar del periodo anterior -->
-    <VDialog
-      v-model="dialogoCopia"
-      max-width="520"
+    <AsDialogo
+      :abierto="dialogoCopia && !!cal.datos.value?.anterior"
+      :titulo="t('monitoreo.calendario.copiarTitulo', { desde: cal.datos.value?.anterior?.nombre ?? '' })"
+      tamano="sm"
+      variante="confirmar"
+      :cargando="cal.guardando.value"
+      :texto-confirmar="t('monitoreo.calendario.confirmarCopia')"
+      :texto-cancelar="t('monitoreo.calendario.cancelar')"
+      @update:abierto="(v: boolean) => { dialogoCopia = v }"
+      @confirmar="copiar"
     >
-      <VCard v-if="cal.datos.value?.anterior">
-        <VCardItem>
-          <VCardTitle>{{ t('monitoreo.calendario.copiarTitulo', { desde: cal.datos.value.anterior.nombre }) }}</VCardTitle>
-        </VCardItem>
-        <VCardText>
-          <p class="mb-3">
-            {{ t('monitoreo.calendario.copiarDetalle', { n: cal.datos.value.anterior.con_calendario }) }}
-          </p>
-          <VCheckbox
-            v-model="sobrescribir"
-            density="compact"
-            hide-details
-            :label="t('monitoreo.calendario.sobrescribir')"
-          />
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            variant="text"
-            class="text-none"
-            @click="dialogoCopia = false"
-          >
-            {{ t('monitoreo.calendario.cancelar') }}
-          </VBtn>
-          <VBtn
-            color="primary"
-            class="text-none"
-            :loading="cal.guardando.value"
-            @click="copiar"
-          >
-            {{ t('monitoreo.calendario.confirmarCopia') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+      <p class="mb-3">
+        {{ t('monitoreo.calendario.copiarDetalle', { n: cal.datos.value?.anterior?.con_calendario ?? 0 }) }}
+      </p>
+      <VCheckbox
+        v-model="sobrescribir"
+        density="compact"
+        hide-details
+        :label="t('monitoreo.calendario.sobrescribir')"
+      />
+    </AsDialogo>
 
     <!-- Filas rechazadas -->
-    <VDialog
-      v-model="dialogoResultado"
-      max-width="640"
+    <AsDialogo
+      :abierto="dialogoResultado"
+      :titulo="t('monitoreo.calendario.rechazadas', { n: rechazadas.length })"
+      tamano="md"
+      variante="informativo"
+      :texto-cancelar="t('monitoreo.calendario.cerrar')"
+      @update:abierto="(v: boolean) => { dialogoResultado = v }"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>{{ t('monitoreo.calendario.rechazadas', { n: rechazadas.length }) }}</VCardTitle>
-        </VCardItem>
-        <VCardText>
-          <VTable density="compact">
-            <thead>
-              <tr>
-                <th>{{ t('monitoreo.calendario.fila') }}</th>
-                <th>{{ t('monitoreo.calendario.sector') }}</th>
-                <th>{{ t('monitoreo.calendario.motivo') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(r, i) in rechazadas"
-                :key="i"
-              >
-                <td>{{ r.fila ?? '—' }}</td>
-                <td>{{ r.sector_id ?? '—' }}</td>
-                <td>{{ r.motivo }}</td>
-              </tr>
-            </tbody>
-          </VTable>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            variant="text"
-            class="text-none"
-            @click="dialogoResultado = false"
-          >
-            {{ t('monitoreo.calendario.cerrar') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+      <AsTablaDatos
+        sin-tarjeta
+        ocultar-pie
+        densidad="densa"
+        :columnas="columnasRechazadas"
+        :filas="rechazadas"
+        clave-fila="id"
+        :por-pagina="-1"
+      />
+    </AsDialogo>
   </div>
 </template>
 
 <style scoped>
-.calendario__campo {
-  flex: 1 1 200px;
-  max-inline-size: 280px;
-  min-inline-size: 170px;
-}
-
 .calendario__archivo {
-  inline-size: 220px;
+  inline-size: var(--as-ancho-filtro-md);
 }
 
 .calendario__cambios {
   background: rgba(var(--v-theme-warning), 0.12);
+  border-block-end: var(--as-borde);
+  padding-block: var(--as-sp-2);
+  padding-inline: var(--as-sp-4);
 }
 
-.calendario__punto {
-  display: inline-block;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  block-size: 10px;
-  inline-size: 10px;
-}
-
-.calendario__fila--vencida td {
-  background: rgba(198, 40, 40, 0.05);
-}
-
-.calendario__reales {
-  max-inline-size: 200px;
+.calendario__tabla :deep(.calendario__fila--vencida td) {
+  background: rgba(var(--v-theme-error), 0.05);
 }
 
 .calendario__tabla :deep(td) {
-  padding-block: 6px !important;
+  padding-block: var(--as-sp-2);
   vertical-align: top;
+}
+
+.calendario__reales {
+  max-inline-size: var(--as-ancho-filtro-md);
+}
+
+.calendario__mes-envoltura {
+  padding: var(--as-sp-4);
 }
 
 .calendario__mes {
   display: grid;
-  gap: 4px;
+  gap: var(--as-sp-1);
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .calendario__dia {
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
   min-block-size: 92px;
-  padding: 4px 6px;
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  border-radius: 6px;
+  padding-block: var(--as-sp-1);
+  padding-inline: var(--as-sp-2);
 }
 
 .calendario__dia--fuera {
@@ -673,7 +633,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
 }
 
 .calendario__dia--inhabil {
-  background: rgba(var(--v-theme-on-surface), 0.03);
+  background: rgb(var(--v-theme-surface-variant));
 }
 
 .calendario__dia--hoy {
@@ -682,10 +642,10 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSalida))
 
 .calendario__evento {
   overflow: hidden;
-  border-inline-start: 3px solid #bdbdbd;
-  font-size: 11px;
+  border-inline-start: 3px solid var(--as-evento, rgb(var(--v-theme-sector-sin-esperadas)));
+  font-size: var(--as-fs-xs);
   line-height: 1.3;
-  padding-inline-start: 4px;
+  padding-inline-start: var(--as-sp-1);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

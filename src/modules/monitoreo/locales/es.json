@@ -21,7 +21,7 @@
     "usuario": "Usuario",
     "roles": "Roles",
     "gerencias": "Gerencias que ve",
-    "acciones": "",
+    "acciones": "Acciones",
     "veTodas": "Todas las gerencias",
     "ninguna": "Ninguna (no ve datos)",
     "sinPermiso": "Sus roles no incluyen el monitoreo: aunque le asignes gerencias, no verá el módulo.",
@@ -657,7 +657,8 @@
       "escalamiento_activo": "Escalamiento activo (alerta alta sin atender → correo)",
       "escalamiento_min": "Escalamiento: minutos sin atender",
       "correo_alta": "Correo inmediato por alerta alta"
-    }
+    },
+    "acciones": "Acciones"
   },
   "destinatarios": {
     "titulo": "Destinatarios de alertas",
@@ -688,7 +689,14 @@
     },
     "sinFilas": "Aún no hay destinatarios: nadie recibe alertas por correo ni en la campana.",
     "cancelar": "Cancelar",
-    "guardar": "Guardar"
+    "guardar": "Guardar",
+    "acciones": "Acciones",
+    "inactivo": "Inactivo",
+    "eliminar": "Quitar",
+    "eliminarTitulo": "¿Quitar a {quien} de los destinatarios?",
+    "eliminarDetalle": "Dejará de recibir alertas y resúmenes a partir del siguiente ciclo.",
+    "guardado": "Destinatario guardado.",
+    "eliminado": "Destinatario quitado."
   },
   "ranking": {
     "titulo": "Ranking de lecturistas",
@@ -719,7 +727,10 @@
     "promedioPropioMuertos": "Promedio propio: {v} min muertos por día en {p} periodo(s)",
     "sinFilas": "Sin jornadas en ese rango.",
     "pie": "Del {desde} al {hasta} · {periodo}",
-    "totales": "Total: {l} lecturas · {a} anomalías · {i} impresas · {m} de tiempo muerto"
+    "totales": "Total: {l} lecturas · {a} anomalías · {i} impresas · {m} de tiempo muerto",
+    "posicion": "Posición en el ranking por lecturas",
+    "lejosDetalle": "Lecturas tomadas a más de {m} m de la coordenada de la toma",
+    "totalesFila": "{l} lecturistas"
   },
   "relecturas": {
     "titulo": "Re-lecturas",
@@ -742,14 +753,20 @@
     "motivo": "Motivo",
     "pedida": "Pedida",
     "resultado": "Resultado",
-    "acciones": "",
+    "acciones": "Acciones",
     "pedidaPor": "{quien} · {hace}",
     "releidaCon": "Lectura {actual} · consumo {consumo} · {hace}",
     "cancelada": "Cancelada",
     "cancelar": "Cancelar",
     "verLectura": "Ver lectura",
     "sinFilas": "No hay re-lecturas con esos filtros.",
-    "soloLectura": "Puedes ver las re-lecturas; cancelarlas requiere operar el monitoreo."
+    "soloLectura": "Puedes ver las re-lecturas; cancelarlas requiere operar el monitoreo.",
+    "secuenciaCompleta": "Secuencia de recorrido dentro del sector",
+    "cancelarTitulo": "¿Cancelar la re-lectura?",
+    "cancelarDetalle": "La orden de la cuenta {cuenta} deja de aparecer en la lista imprimible. Esto no se puede deshacer.",
+    "cancelarConfirmar": "Cancelar re-lectura",
+    "cancelarVolver": "Volver",
+    "cancelado": "Re-lectura cancelada."
   },
   "paneles": {
     "refacturaciones": "Refacturaciones del periodo",

@@ -1,0 +1,305 @@
+{
+  "generadoEl": "2026-10-08T05:52:24.944Z",
+  "alcance": [
+    "src/modules/monitoreo/views/Relecturas.vue",
+    "src/modules/monitoreo/views/Ranking.vue",
+    "src/modules/monitoreo/views/Coordenadas.vue",
+    "src/modules/monitoreo/views/Quiosco.vue",
+    "src/modules/monitoreo/views/admin"
+  ],
+  "archivos": 8,
+  "totales": {
+    "hexEnEstilos": 4,
+    "hexEnScript": 7,
+    "rgbSinVarEnEstilos": 5,
+    "coloresEnLinea": 0,
+    "propsColorLiteral": 0,
+    "estilosEnLinea": 5,
+    "estilosEnLineaDinamicos": 6,
+    "importantEnScoped": 1,
+    "importantEnScss": 0,
+    "fontSizeManual": 13,
+    "fontSizeValores": [
+      "0.4em",
+      "0.95em",
+      "1.05em",
+      "1.15em",
+      "1.2em",
+      "1.75em",
+      "1.8em",
+      "11px",
+      "1em",
+      "2.4em",
+      "3em",
+      "clamp(14px, 0.85vw, 34px)"
+    ],
+    "textoMenor12px": 2,
+    "fontWeightManual": 5,
+    "anchosFijosPx": 20,
+    "anchosDrawer": [],
+    "anchosDialogo": [
+      "520",
+      "560",
+      "640"
+    ],
+    "props": {
+      "size=\"small\"": 16,
+      "size=\"x-small\"": 12,
+      "variant=\"tonal\"": 38,
+      "variant=\"outlined\"": 25,
+      "variant=\"text\"": 17,
+      "variant=\"flat\"": 0,
+      "density=\"compact\"": 51,
+      "density=\"comfortable\"": 1,
+      "text-none": 25
+    },
+    "vbtn": 31,
+    "formatoNumeros": {
+      "toLocaleString": 0,
+      "toFixed": 2,
+      "IntlNumberFormat": 0,
+      "n_i18n": 32,
+      "formatearPropias": 0,
+      "formatCurrency": 0,
+      "formatoCompartido": 0
+    },
+    "formatoFechas": {
+      "dayjs": 0,
+      "toLocaleDateString": 0,
+      "toLocaleTimeString": 3,
+      "IntlDateTimeFormat": 0,
+      "propias": 8,
+      "formatoCompartido": 0
+    },
+    "i18n": {
+      "t": 241,
+      "cabecerasLiterales": 0,
+      "propsLiterales": 0
+    },
+    "iconos": {
+      "tabler": 29,
+      "mdi": 0,
+      "fa": 0,
+      "distintos": 25,
+      "porAccion": {
+        "editar": {
+          "tabler-pencil": 1
+        },
+        "exportar": {
+          "tabler-file-spreadsheet": 2
+        },
+        "filtrar": {},
+        "cerrar": {
+          "tabler-x": 1
+        },
+        "actualizar": {
+          "tabler-refresh": 1
+        },
+        "eliminar": {
+          "tabler-trash": 1
+        }
+      }
+    },
+    "tablas": {
+      "VDataTable": 5,
+      "VDataTableServer": 0,
+      "VDataTableVirtual": 0,
+      "VTable": 4,
+      "tableHtml": 0,
+      "AsTablaDatos": 0
+    },
+    "botonesIcono": 3,
+    "botonesIconoSinEtiqueta": 3,
+    "imagenes": 0,
+    "imagenesSinAlt": 0,
+    "responsive": {
+      "useDisplay": 0,
+      "mediaQueries": 0,
+      "rejilla": 1
+    },
+    "componentesAs": 0,
+    "fontSizeValoresDistintos": 12
+  },
+  "porModulo": {
+    "monitoreo": {
+      "archivos": 8,
+      "lineas": 3254,
+      "hexEnEstilos": 4,
+      "hexEnScript": 7,
+      "estilosEnLinea": 5,
+      "importantEnScoped": 1,
+      "fontSizeManual": 13,
+      "anchosFijosPx": 20,
+      "densityCompact": 51,
+      "textNone": 25,
+      "vbtn": 31,
+      "botonesIconoSinEtiqueta": 3,
+      "cabecerasLiterales": 0,
+      "t": 241
+    }
+  },
+  "archivosMasGrandes": [
+    {
+      "rel": "src/modules/monitoreo/views/admin/Calendario.vue",
+      "lineas": 693,
+      "lineasEstilo": 71
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Quiosco.vue",
+      "lineas": 575,
+      "lineasEstilo": 225
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Coordenadas.vue",
+      "lineas": 412,
+      "lineasEstilo": 25
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Relecturas.vue",
+      "lineas": 355,
+      "lineasEstilo": 7
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Ranking.vue",
+      "lineas": 339,
+      "lineasEstilo": 17
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Destinatarios.vue",
+      "lineas": 334,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Configuracion.vue",
+      "lineas": 330,
+      "lineasEstilo": 6
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue",
+      "lineas": 216,
+      "lineasEstilo": 0
+    }
+  ],
+  "archivosConMasCss": [
+    {
+      "rel": "src/modules/monitoreo/views/Quiosco.vue",
+      "lineas": 575,
+      "lineasEstilo": 225
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Calendario.vue",
+      "lineas": 693,
+      "lineasEstilo": 71
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Coordenadas.vue",
+      "lineas": 412,
+      "lineasEstilo": 25
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Ranking.vue",
+      "lineas": 339,
+      "lineasEstilo": 17
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Relecturas.vue",
+      "lineas": 355,
+      "lineasEstilo": 7
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Configuracion.vue",
+      "lineas": 330,
+      "lineasEstilo": 6
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue",
+      "lineas": 216,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Destinatarios.vue",
+      "lineas": 334,
+      "lineasEstilo": 0
+    }
+  ],
+  "detalles": {
+    "anchosFijosPx": [
+      "src/modules/monitoreo/views/Relecturas.vue:4 max-inline-size: 280px",
+      "src/modules/monitoreo/views/Relecturas.vue:5 min-inline-size: 170px",
+      "src/modules/monitoreo/views/Ranking.vue:4 max-inline-size: 300px",
+      "src/modules/monitoreo/views/Ranking.vue:5 min-inline-size: 180px",
+      "src/modules/monitoreo/views/Ranking.vue:10 max-inline-size: 190px",
+      "src/modules/monitoreo/views/Ranking.vue:11 min-inline-size: 150px",
+      "src/modules/monitoreo/views/Coordenadas.vue:4 max-inline-size: 240px",
+      "src/modules/monitoreo/views/Coordenadas.vue:5 min-inline-size: 150px",
+      "src/modules/monitoreo/views/Coordenadas.vue:10 max-inline-size: 170px",
+      "src/modules/monitoreo/views/Coordenadas.vue:15 max-inline-size: 360px",
+      "src/modules/monitoreo/views/Coordenadas.vue:19 max-inline-size: 240px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:4 max-inline-size: 280px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:5 min-inline-size: 170px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:9 inline-size: 220px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:20 block-size: 10px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:21 inline-size: 10px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:29 max-inline-size: 200px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:44 min-block-size: 92px",
+      "src/modules/monitoreo/views/admin/Configuracion.vue:3 max-inline-size: 320px",
+      "src/modules/monitoreo/views/admin/Configuracion.vue:4 min-inline-size: 220px"
+    ],
+    "botonesIconoSinEtiqueta": [
+      "src/modules/monitoreo/views/Coordenadas.vue:281 <VBtn v-if=\"item.sector_id\" size=\"x-small\" variant=\"text\" icon=\"tabler-map-pin\" :title=\"t(",
+      "src/modules/monitoreo/views/admin/Destinatarios.vue:85 <VBtn icon=\"tabler-pencil\" size=\"small\" variant=\"text\" @click=\"editar(item)\" />",
+      "src/modules/monitoreo/views/admin/Destinatarios.vue:91 <VBtn icon=\"tabler-trash\" size=\"small\" variant=\"text\" color=\"error\" :disabled=\"guardando\" "
+    ],
+    "hexEnEstilos": [
+      "src/modules/monitoreo/views/Quiosco.vue:36 }\n\n.quiosco__rojo {\n  color: #c62828;\n  opacity:",
+      "src/modules/monitoreo/views/Quiosco.vue:101 box-shadow: inset 0.3em 0 0 #c62828, 0 1px 4px r",
+      "src/modules/monitoreo/views/Quiosco.vue:164 .quiosco__estado-n {\n  color: #c62828;\n}\n\n.quiosco",
+      "src/modules/monitoreo/views/admin/Calendario.vue:64 order-inline-start: 3px solid #bdbdbd;\n  font-size"
+    ],
+    "rgbSinVarEnEstilos": [
+      "src/modules/monitoreo/views/Quiosco.vue:78 rgba(249, 168, 37, 0.2);\n  font-size: 1.",
+      "src/modules/monitoreo/views/Quiosco.vue:83 rgba(198, 40, 40, 0.18);\n}\n\n.quiosco__in",
+      "src/modules/monitoreo/views/Quiosco.vue:97 rgba(0, 0, 0, 0.08);\n}\n\n.quiosco__tarjet",
+      "src/modules/monitoreo/views/Quiosco.vue:101 rgba(0, 0, 0, 0.08);\n}\n\n.quiosco__etique",
+      "src/modules/monitoreo/views/admin/Calendario.vue:25 rgba(198, 40, 40, 0.05);\n}\n\n.calendario_"
+    ],
+    "hexEnScript": [
+      "src/modules/monitoreo/views/Quiosco.vue:66 d<string, string> = { activo: '#2e7d32', s",
+      "src/modules/monitoreo/views/Quiosco.vue:66 activo: '#2e7d32', silencio: '#c62828', s",
+      "src/modules/monitoreo/views/Quiosco.vue:66 ncio: '#c62828', sin_iniciar: '#f9a825', t",
+      "src/modules/monitoreo/views/Quiosco.vue:66 niciar: '#f9a825', terminado: '#1e88e5', f",
+      "src/modules/monitoreo/views/Quiosco.vue:66 '#1e88e5', fuera_de_jornada: '#9e9e9e' }",
+      "src/modules/monitoreo/views/admin/Calendario.vue:93 ? COLORES_SECTOR[f.estado] ?? '#bdbdbd' :",
+      "src/modules/monitoreo/views/admin/Calendario.vue:93 CTOR[f.estado] ?? '#bdbdbd' : '#bdbdbd'\n}"
+    ],
+    "fontSizeManual": [
+      "src/modules/monitoreo/views/Quiosco.vue:10 font-size: clamp(14px, 0.85vw, 34px)",
+      "src/modules/monitoreo/views/Quiosco.vue:22 font-size: 1.75em",
+      "src/modules/monitoreo/views/Quiosco.vue:28 font-size: 1.15em",
+      "src/modules/monitoreo/views/Quiosco.vue:41 font-size: 2.4em",
+      "src/modules/monitoreo/views/Quiosco.vue:79 font-size: 1.2em",
+      "src/modules/monitoreo/views/Quiosco.vue:105 font-size: 1em",
+      "src/modules/monitoreo/views/Quiosco.vue:110 font-size: 3em",
+      "src/modules/monitoreo/views/Quiosco.vue:117 font-size: 1em",
+      "src/modules/monitoreo/views/Quiosco.vue:122 font-size: 0.4em",
+      "src/modules/monitoreo/views/Quiosco.vue:154 font-size: 1.8em",
+      "src/modules/monitoreo/views/Quiosco.vue:159 font-size: 0.95em",
+      "src/modules/monitoreo/views/Quiosco.vue:209 font-size: 1.05em",
+      "src/modules/monitoreo/views/admin/Calendario.vue:65 font-size: 11px"
+    ],
+    "textoMenor12px": [
+      "src/modules/monitoreo/views/Quiosco.vue:122 font-size: 0.4em",
+      "src/modules/monitoreo/views/admin/Calendario.vue:65 font-size: 11px"
+    ],
+    "estilosEnLinea": [
+      "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue:60 style=\"max-inline-size: 320px;\"\n            hide-details\n          />",
+      "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue:78 style=\"min-inline-size: 320px;\">\n                {{ t('monitoreo.alca",
+      "src/modules/monitoreo/views/admin/Configuracion.vue:99 style=\"inline-size: 260px;\">\n                  {{ t('monitoreo.config",
+      "src/modules/monitoreo/views/admin/Configuracion.vue:102 style=\"inline-size: 150px;\">\n                  {{ t('monitoreo.config",
+      "src/modules/monitoreo/views/admin/Configuracion.vue:105 style=\"inline-size: 260px;\" />\n              </tr>\n            </thea"
+    ],
+    "importantEnScoped": [
+      "src/modules/monitoreo/views/admin/Calendario.vue:33 padding-block: 6px !important;"
+    ]
+  }
+}

@@ -9,18 +9,20 @@ import { obtenerConfiguracion, obtenerGerencias } from '../services/monitoreoApi
 import { useAlcanceStore } from '../stores/alcanceStore'
 import { useMonitorStore } from '../stores/monitorStore'
 import type { GerenciaRef } from '../types/api'
-import { COLORES_SECTOR } from '../utils/geojson'
-import { haceCuanto, horaCorta, minutosDesde } from '../utils/tiempo'
+import { TOKEN_LECTURISTA, TOKEN_SECTOR } from '@/utils/estados'
+import type { EstadoLecturista, EstadoSector } from '@/utils/estados'
+import { entero, haceCuanto, hora, minutosDesde, porcentaje } from '@/utils/formato'
 
 /*
  * Pantalla grande (quiosco): sin menú ni barra, tipografía grande, mapa + indicadores + sectores por terminar +
  * lecturistas del día. Rota las gerencias del alcance del usuario cada N segundos (parámetro `quiosco_rotacion_s`) o
  * se fija en una con `?gerencia=`. Refresco automático; si el servidor deja de responder, conserva el último estado
  * con su hora y lo avisa. Solo lectura: la cuenta del quiosco solo necesita `read monitoring`.
+ * Colores y formatos desde los tokens del sistema de diseño; el rediseño de la pantalla queda para la fase 3.
  */
 const REFRESCO_MS = 60000
 
-const { t, n } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const alcance = useAlcanceStore()
 const monitor = useMonitorStore()
@@ -39,6 +41,8 @@ const avance = computed(() => resumen.value?.avance ?? null)
 const lect = computed(() => resumen.value?.lecturistas ?? null)
 const avisos = computed(() => resumen.value?.avisos ?? null)
 const porEstado = computed(() => resumen.value?.sectores.por_estado ?? null)
+
+const ESTADOS_SECTOR = ['pendiente', 'iniciado', 'terminado', 'rezagado'] as const
 
 const sectoresPorTerminar = computed(() => [...monitor.sectores]
   .filter(s => s.estado === 'rezagado' || s.estado === 'iniciado' || s.estado === 'pendiente')
@@ -63,7 +67,8 @@ const syncCaido = computed(() => {
 
 const relativo = (clave: 'nunca' | 'ahora' | 'minutos' | 'horas' | 'dias', valor?: number) => t(`monitoreo.tiempo.${clave}`, { n: valor })
 
-const COLOR_ESTADO_LECTURISTA: Record<string, string> = { activo: '#2e7d32', silencio: '#c62828', sin_iniciar: '#f9a825', terminado: '#1e88e5', fuera_de_jornada: '#9e9e9e' }
+const tokenSector = (estado: string) => TOKEN_SECTOR[estado as EstadoSector] ?? 'sector-sin-esperadas'
+const tokenLecturista = (estado: string) => TOKEN_LECTURISTA[estado as EstadoLecturista] ?? 'senal-sin-datos'
 
 async function cargar() {
   await monitor.cargar(parametros.value)
@@ -169,10 +174,10 @@ onBeforeUnmount(() => {
       </div>
       <div class="text-end">
         <div class="quiosco__reloj">
-          {{ ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Mazatlan' }) }}
+          {{ hora(ahora) }}
         </div>
         <div class="quiosco__subtitulo quiosco__tenue">
-          {{ ultimoExito ? t('monitoreo.quiosco.actualizado', { hora: ultimoExito.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) }) : t('monitoreo.quiosco.sinDatos') }}
+          {{ ultimoExito ? t('monitoreo.quiosco.actualizado', { hora: hora(ultimoExito) }) : t('monitoreo.quiosco.sinDatos') }}
           <span v-if="resumen?.datos.ultima_lectura_recibida"> · {{ t('monitoreo.quiosco.ultimaLectura', { hace: haceCuanto(resumen.datos.ultima_lectura_recibida, relativo, ahora) }) }}</span>
         </div>
       </div>
@@ -180,6 +185,7 @@ onBeforeUnmount(() => {
         :to="{ name: 'monitoreoInicio' }"
         class="quiosco__salir"
         :title="t('monitoreo.quiosco.salir')"
+        :aria-label="t('monitoreo.quiosco.salir')"
       >
         <VIcon
           icon="tabler-x"
@@ -192,13 +198,14 @@ onBeforeUnmount(() => {
       v-if="sinRespuesta || syncCaido"
       class="quiosco__aviso"
       :class="{ 'quiosco__aviso--grave': sinRespuesta }"
+      role="status"
     >
       <VIcon
         :icon="sinRespuesta ? 'tabler-plug-connected-x' : 'tabler-clock-exclamation'"
         size="28"
         class="me-3"
       />
-      {{ sinRespuesta ? t('monitoreo.quiosco.sinRespuesta', { hora: ultimoExito ? ultimoExito.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }) : '—' }) : t('monitoreo.quiosco.syncCaido') }}
+      {{ sinRespuesta ? t('monitoreo.quiosco.sinRespuesta', { hora: ultimoExito ? hora(ultimoExito) : '—' }) : t('monitoreo.quiosco.syncCaido') }}
     </div>
 
     <div
@@ -215,7 +222,7 @@ onBeforeUnmount(() => {
             {{ t('monitoreo.quiosco.avance') }}
           </div>
           <div class="quiosco__valor">
-            {{ avance?.pct_campo == null ? '—' : `${n(avance.pct_campo)} %` }}
+            {{ porcentaje(avance?.pct_campo) }}
           </div>
           <div class="quiosco__barra">
             <div
@@ -224,7 +231,7 @@ onBeforeUnmount(() => {
             />
           </div>
           <div class="quiosco__detalle">
-            {{ avance ? t('monitoreo.quiosco.atendidas', { a: n(avance.atendidas), e: n(avance.esperadas) }) : '' }}
+            {{ avance ? t('monitoreo.quiosco.atendidas', { a: entero(avance.atendidas), e: entero(avance.esperadas) }) : '' }}
           </div>
         </div>
         <div class="quiosco__tarjeta">
@@ -233,16 +240,16 @@ onBeforeUnmount(() => {
           </div>
           <div class="quiosco__estados">
             <div
-              v-for="e in (['pendiente', 'iniciado', 'terminado', 'rezagado'] as const)"
+              v-for="e in ESTADOS_SECTOR"
               :key="e"
               class="quiosco__estado"
               :class="{ 'quiosco__estado--alerta': e === 'rezagado' && (porEstado?.[e] ?? 0) > 0 }"
             >
               <span
                 class="quiosco__punto-estado"
-                :style="{ backgroundColor: COLORES_SECTOR[e] }"
+                :class="`bg-${tokenSector(e)}`"
               />
-              <span class="quiosco__estado-n">{{ n(porEstado?.[e] ?? 0) }}</span>
+              <span class="quiosco__estado-n">{{ entero(porEstado?.[e] ?? 0) }}</span>
               <span class="quiosco__estado-t">{{ t(`monitoreo.estadosSector.${e}`) }}</span>
             </div>
           </div>
@@ -252,10 +259,10 @@ onBeforeUnmount(() => {
             {{ t('monitoreo.quiosco.lecturistas') }}
           </div>
           <div class="quiosco__valor">
-            {{ lect ? n(lect.activos) : '—' }} <span class="quiosco__detalle-inline">{{ lect ? t('monitoreo.quiosco.deConLecturas', { n: n(lect.con_lecturas) }) : '' }}</span>
+            {{ lect ? entero(lect.activos) : '—' }} <span class="quiosco__detalle-inline">{{ lect ? t('monitoreo.quiosco.deConLecturas', { n: entero(lect.con_lecturas) }) : '' }}</span>
           </div>
           <div class="quiosco__detalle">
-            {{ lect ? t('monitoreo.quiosco.lecturasDia', { n: n(lect.lecturas_dia) }) : '' }}
+            {{ lect ? t('monitoreo.quiosco.lecturasDia', { n: entero(lect.lecturas_dia) }) : '' }}
           </div>
         </div>
         <div
@@ -266,14 +273,14 @@ onBeforeUnmount(() => {
             {{ t('monitoreo.quiosco.avisos') }}
           </div>
           <div class="quiosco__valor">
-            {{ avisos ? n(avisos.total) : '—' }}
+            {{ avisos ? entero(avisos.total) : '—' }}
           </div>
           <div class="quiosco__detalle">
             <template v-if="avisos">
-              <span v-if="avisos.silencio">{{ avisos.silencio }} {{ t('monitoreo.avisos.silencio') }}</span>
-              <span v-if="avisos.atoradas"> · {{ avisos.atoradas }} {{ t('monitoreo.avisos.atoradas') }}</span>
-              <span v-if="avisos.bateria"> · {{ avisos.bateria }} {{ t('monitoreo.avisos.bateria') }}</span>
-              <span v-if="avisos.rezagados"> · {{ avisos.rezagados }} {{ t('monitoreo.avisos.rezagados') }}</span>
+              <span v-if="avisos.silencio">{{ entero(avisos.silencio) }} {{ t('monitoreo.avisos.silencio') }}</span>
+              <span v-if="avisos.atoradas"> · {{ entero(avisos.atoradas) }} {{ t('monitoreo.avisos.atoradas') }}</span>
+              <span v-if="avisos.bateria"> · {{ entero(avisos.bateria) }} {{ t('monitoreo.avisos.bateria') }}</span>
+              <span v-if="avisos.rezagados"> · {{ entero(avisos.rezagados) }} {{ t('monitoreo.avisos.rezagados') }}</span>
             </template>
           </div>
         </div>
@@ -307,11 +314,11 @@ onBeforeUnmount(() => {
             >
               <span
                 class="quiosco__punto-estado"
-                :style="{ backgroundColor: COLORES_SECTOR[s.estado] }"
+                :class="`bg-${tokenSector(s.estado)}`"
               />
               <span class="quiosco__fila-nombre">{{ s.sector }} <span class="quiosco__tenue">· {{ s.sistema }}</span></span>
-              <span class="quiosco__fila-dato">{{ s.pct_campo === null ? '—' : `${n(s.pct_campo)} %` }}</span>
-              <span class="quiosco__fila-dato quiosco__tenue">{{ t('monitoreo.quiosco.pendientesN', { n: n(s.pendientes) }) }}</span>
+              <span class="quiosco__fila-dato">{{ porcentaje(s.pct_campo, 0) }}</span>
+              <span class="quiosco__fila-dato quiosco__tenue">{{ t('monitoreo.quiosco.pendientesN', { n: entero(s.pendientes) }) }}</span>
             </div>
           </div>
           <div class="quiosco__panel">
@@ -331,14 +338,14 @@ onBeforeUnmount(() => {
             >
               <span
                 class="quiosco__punto-estado"
-                :style="{ backgroundColor: COLOR_ESTADO_LECTURISTA[l.estado] }"
+                :class="`bg-${tokenLecturista(l.estado)}`"
               />
               <span class="quiosco__fila-nombre">{{ l.nombre }}</span>
-              <span class="quiosco__fila-dato">{{ n(l.lecturas) }} <span class="quiosco__tenue">/ {{ n(l.meta) }}</span></span>
+              <span class="quiosco__fila-dato">{{ entero(l.lecturas) }} <span class="quiosco__tenue">/ {{ entero(l.meta) }}</span></span>
               <span
                 class="quiosco__fila-dato quiosco__tenue"
                 :class="{ quiosco__rojo: l.estado === 'silencio' }"
-              >{{ l.ultima_actividad ? (l.estado === 'silencio' ? horaCorta(l.ultima_actividad) : haceCuanto(l.ultima_actividad, relativo, ahora)) : '—' }}</span>
+              >{{ l.ultima_actividad ? (l.estado === 'silencio' ? hora(l.ultima_actividad) : haceCuanto(l.ultima_actividad, relativo, ahora)) : '—' }}</span>
             </div>
           </div>
         </aside>
@@ -348,28 +355,31 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Tipografía escalada a la pantalla: ~16 px en 1080p, ~32 px en 4K */
+/* Tipografía escalada a la pantalla: ~14 px en 1080p, ~34 px en 4K; el resto va en em sobre esa base */
 .quiosco {
   display: flex;
   flex-direction: column;
-  padding: 1rem 1.25rem;
   background: rgb(var(--v-theme-background));
   block-size: 100vh;
   color: rgb(var(--v-theme-on-background));
+
+  /* stylelint-disable-next-line unit-disallowed-list -- escala con la pantalla (1080p a 4K); el rediseño del quiosco va en la fase 3 */
   font-size: clamp(14px, 0.85vw, 34px);
-  gap: 0.75rem;
+  gap: var(--as-sp-3);
+  padding-block: var(--as-sp-4);
+  padding-inline: var(--as-sp-5);
 }
 
 .quiosco__cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--as-sp-4);
 }
 
 .quiosco__titulo {
   font-size: 1.75em;
-  font-weight: 700;
+  font-weight: var(--as-peso-semi);
   line-height: 1.1;
 }
 
@@ -378,18 +388,17 @@ onBeforeUnmount(() => {
 }
 
 .quiosco__tenue {
-  opacity: 0.65;
+  color: rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity));
 }
 
 .quiosco__rojo {
-  color: #c62828;
-  opacity: 1;
+  color: rgb(var(--v-theme-error));
 }
 
 .quiosco__reloj {
   font-size: 2.4em;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: var(--as-peso-semi);
   line-height: 1;
 }
 
@@ -413,70 +422,74 @@ onBeforeUnmount(() => {
 .quiosco__salir {
   color: inherit;
   opacity: 0.4;
+  transition: opacity var(--as-dur-rapida) var(--as-ease);
 }
 
-.quiosco__salir:hover {
+.quiosco__salir:hover,
+.quiosco__salir:focus-visible {
   opacity: 1;
 }
 
 .quiosco__aviso {
   display: flex;
   align-items: center;
-  padding: 0.6em 1em;
-  border-radius: 0.5em;
-  background: rgba(249, 168, 37, 0.2);
+  border-radius: var(--as-radio-lg);
+  background: rgba(var(--v-theme-warning), 0.2);
   font-size: 1.2em;
+  padding-block: 0.6em;
+  padding-inline: 1em;
 }
 
 .quiosco__aviso--grave {
-  background: rgba(198, 40, 40, 0.18);
+  background: rgba(var(--v-theme-error), 0.18);
 }
 
 .quiosco__indicadores {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--as-sp-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .quiosco__tarjeta,
 .quiosco__panel {
-  padding: 0.8em 1em;
-  border-radius: 0.6em;
+  border: var(--as-borde);
+  border-radius: var(--as-radio-xl);
   background: rgb(var(--v-theme-surface));
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding-block: 0.8em;
+  padding-inline: 1em;
 }
 
 .quiosco__tarjeta--alerta {
-  box-shadow: inset 0.3em 0 0 #c62828, 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0.3em 0 0 rgb(var(--v-theme-error));
 }
 
 .quiosco__etiqueta {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: 1em;
-  opacity: 0.7;
 }
 
 .quiosco__valor {
   font-size: 3em;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: var(--as-peso-semi);
   line-height: 1.1;
 }
 
 .quiosco__detalle {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: 1em;
-  opacity: 0.8;
 }
 
 .quiosco__detalle-inline {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: 0.4em;
-  font-weight: 400;
-  opacity: 0.7;
+  font-weight: var(--as-peso-normal);
 }
 
 .quiosco__barra {
   overflow: hidden;
   border-radius: 0.3em;
-  background: rgba(var(--v-theme-on-surface), 0.1);
+  background: rgba(var(--v-track-bg));
   block-size: 0.5em;
   margin-block: 0.4em;
 }
@@ -501,16 +514,17 @@ onBeforeUnmount(() => {
 
 .quiosco__estado-n {
   font-size: 1.8em;
-  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--as-peso-semi);
 }
 
 .quiosco__estado-t {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: 0.95em;
-  opacity: 0.7;
 }
 
 .quiosco__estado--alerta .quiosco__estado-n {
-  color: #c62828;
+  color: rgb(var(--v-theme-error));
 }
 
 .quiosco__punto-estado {
@@ -524,21 +538,22 @@ onBeforeUnmount(() => {
 .quiosco__contenido {
   display: grid;
   flex: 1 1 auto;
-  gap: 0.75rem;
+  gap: var(--as-sp-3);
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   min-block-size: 0;
 }
 
 .quiosco__mapa {
   overflow: hidden;
-  border-radius: 0.6em;
+  border: var(--as-borde);
+  border-radius: var(--as-radio-xl);
   min-block-size: 0;
 }
 
 .quiosco__lateral {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--as-sp-3);
   min-block-size: 0;
 }
 
@@ -553,15 +568,15 @@ onBeforeUnmount(() => {
 .quiosco__fila {
   display: flex;
   align-items: center;
-  gap: 0.6em;
-  border-block-start: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  border-block-start: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   font-size: 1.05em;
+  gap: 0.6em;
   padding-block: 0.35em;
 }
 
 .quiosco__fila-nombre {
-  flex: 1 1 auto;
   overflow: hidden;
+  flex: 1 1 auto;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

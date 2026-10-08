@@ -79,6 +79,8 @@ const PANTALLAS = [
   { id: 'calendario', ruta: '/monitoreo/admin/calendario' },
   { id: 'umbrales', ruta: '/monitoreo/admin/configuracion' },
   { id: 'destinatarios', ruta: '/monitoreo/admin/destinatarios' },
+  { id: 'alcances', ruta: '/monitoreo/admin/alcances' },
+  { id: 'quiosco', ruta: '/monitoreo/quiosco', espera: 6000 },
   { id: 'reportes-indice', ruta: '/reportes' },
   { id: 'reporte-visor', ruta: '/reportes/refacturacion_por_lectura', espera: 4000 },
   { id: 'tablero-lecturas', ruta: '/reportes/tableros/lecturas', espera: 4000 },
@@ -188,9 +190,13 @@ async function main() {
   }
   await navegador.close()
 
-  const manifest = { etiqueta, generadoEl: new Date().toISOString(), baseUrl, tema, segundos: Math.round((Date.now() - inicio) / 1000), capturas: resultados }
+  // Con --solo se conservan en el manifiesto las capturas anteriores de las pantallas que no se repitieron
+  const rutaManifest = path.join(destino, 'manifest.json')
+  const previas = solo && fs.existsSync(rutaManifest) ? JSON.parse(fs.readFileSync(rutaManifest, 'utf8')).capturas ?? [] : []
+  const conservadas = previas.filter(c => !resultados.some(r => r.id === c.id && r.ancho === c.ancho))
+  const manifest = { etiqueta, generadoEl: new Date().toISOString(), baseUrl, tema, segundos: Math.round((Date.now() - inicio) / 1000), capturas: [...conservadas, ...resultados] }
 
-  fs.writeFileSync(path.join(destino, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+  fs.writeFileSync(rutaManifest, `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`\n${resultados.filter(r => !r.error).length} capturas en ${path.relative(RAIZ, destino)} (${manifest.segundos} s)`)
 }
 

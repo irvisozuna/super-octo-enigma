@@ -1,0 +1,246 @@
+{
+  "generadoEl": "2026-10-08T06:06:27.097Z",
+  "alcance": [
+    "src/modules/monitoreo/views/Relecturas.vue",
+    "src/modules/monitoreo/views/Ranking.vue",
+    "src/modules/monitoreo/views/Coordenadas.vue",
+    "src/modules/monitoreo/views/Quiosco.vue",
+    "src/modules/monitoreo/views/admin"
+  ],
+  "archivos": 8,
+  "totales": {
+    "hexEnEstilos": 0,
+    "hexEnScript": 0,
+    "rgbSinVarEnEstilos": 0,
+    "coloresEnLinea": 1,
+    "propsColorLiteral": 0,
+    "estilosEnLinea": 0,
+    "estilosEnLineaDinamicos": 2,
+    "importantEnScoped": 0,
+    "importantEnScss": 0,
+    "fontSizeManual": 12,
+    "fontSizeValores": [
+      "0.4em",
+      "0.95em",
+      "1.05em",
+      "1.15em",
+      "1.2em",
+      "1.75em",
+      "1.8em",
+      "1em",
+      "2.4em",
+      "3em",
+      "clamp(14px, 0.85vw, 34px)"
+    ],
+    "textoMenor12px": 1,
+    "fontWeightManual": 5,
+    "anchosFijosPx": 2,
+    "anchosDrawer": [],
+    "anchosDialogo": [],
+    "props": {
+      "size=\"small\"": 27,
+      "size=\"x-small\"": 3,
+      "variant=\"tonal\"": 24,
+      "variant=\"outlined\"": 6,
+      "variant=\"text\"": 14,
+      "variant=\"flat\"": 3,
+      "density=\"compact\"": 26,
+      "density=\"comfortable\"": 0,
+      "text-none": 0
+    },
+    "vbtn": 17,
+    "formatoNumeros": {
+      "toLocaleString": 0,
+      "toFixed": 0,
+      "IntlNumberFormat": 0,
+      "n_i18n": 8,
+      "formatearPropias": 0,
+      "formatCurrency": 0,
+      "formatoCompartido": 5
+    },
+    "formatoFechas": {
+      "dayjs": 0,
+      "toLocaleDateString": 0,
+      "toLocaleTimeString": 0,
+      "IntlDateTimeFormat": 0,
+      "propias": 3,
+      "formatoCompartido": 5
+    },
+    "i18n": {
+      "t": 271,
+      "cabecerasLiterales": 0,
+      "propsLiterales": 0
+    },
+    "iconos": {
+      "tabler": 39,
+      "mdi": 0,
+      "fa": 0,
+      "distintos": 32,
+      "porAccion": {
+        "editar": {
+          "tabler-pencil": 1
+        },
+        "exportar": {
+          "tabler-file-spreadsheet": 2
+        },
+        "filtrar": {},
+        "cerrar": {
+          "tabler-x": 1
+        },
+        "actualizar": {
+          "tabler-refresh": 1
+        },
+        "eliminar": {
+          "tabler-trash": 2
+        }
+      }
+    },
+    "tablas": {
+      "VDataTable": 0,
+      "VDataTableServer": 0,
+      "VDataTableVirtual": 0,
+      "VTable": 0,
+      "tableHtml": 0,
+      "AsTablaDatos": 9
+    },
+    "botonesIcono": 3,
+    "botonesIconoSinEtiqueta": 0,
+    "imagenes": 0,
+    "imagenesSinAlt": 0,
+    "responsive": {
+      "useDisplay": 0,
+      "mediaQueries": 0,
+      "rejilla": 0
+    },
+    "componentesAs": 46,
+    "fontSizeValoresDistintos": 11
+  },
+  "porModulo": {
+    "monitoreo": {
+      "archivos": 8,
+      "lineas": 3250,
+      "hexEnEstilos": 0,
+      "hexEnScript": 0,
+      "estilosEnLinea": 0,
+      "importantEnScoped": 0,
+      "fontSizeManual": 12,
+      "anchosFijosPx": 2,
+      "densityCompact": 26,
+      "textNone": 0,
+      "vbtn": 17,
+      "botonesIconoSinEtiqueta": 0,
+      "cabecerasLiterales": 0,
+      "t": 271
+    }
+  },
+  "archivosMasGrandes": [
+    {
+      "rel": "src/modules/monitoreo/views/admin/Calendario.vue",
+      "lineas": 652,
+      "lineasEstilo": 64
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Quiosco.vue",
+      "lineas": 585,
+      "lineasEstilo": 228
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Relecturas.vue",
+      "lineas": 389,
+      "lineasEstilo": 14
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Configuracion.vue",
+      "lineas": 375,
+      "lineasEstilo": 24
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Destinatarios.vue",
+      "lineas": 359,
+      "lineasEstilo": 7
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Coordenadas.vue",
+      "lineas": 345,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Ranking.vue",
+      "lineas": 323,
+      "lineasEstilo": 15
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue",
+      "lineas": 222,
+      "lineasEstilo": 10
+    }
+  ],
+  "archivosConMasCss": [
+    {
+      "rel": "src/modules/monitoreo/views/Quiosco.vue",
+      "lineas": 585,
+      "lineasEstilo": 228
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Calendario.vue",
+      "lineas": 652,
+      "lineasEstilo": 64
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Configuracion.vue",
+      "lineas": 375,
+      "lineasEstilo": 24
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Ranking.vue",
+      "lineas": 323,
+      "lineasEstilo": 15
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Relecturas.vue",
+      "lineas": 389,
+      "lineasEstilo": 14
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/AlcancesUsuarios.vue",
+      "lineas": 222,
+      "lineasEstilo": 10
+    },
+    {
+      "rel": "src/modules/monitoreo/views/Coordenadas.vue",
+      "lineas": 345,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/monitoreo/views/admin/Destinatarios.vue",
+      "lineas": 359,
+      "lineasEstilo": 7
+    }
+  ],
+  "detalles": {
+    "anchosFijosPx": [
+      "src/modules/monitoreo/views/Coordenadas.vue:3 max-inline-size: 260px",
+      "src/modules/monitoreo/views/admin/Calendario.vue:37 min-block-size: 92px"
+    ],
+    "fontSizeManual": [
+      "src/modules/monitoreo/views/Quiosco.vue:10 font-size: clamp(14px, 0.85vw, 34px)",
+      "src/modules/monitoreo/views/Quiosco.vue:22 font-size: 1.75em",
+      "src/modules/monitoreo/views/Quiosco.vue:28 font-size: 1.15em",
+      "src/modules/monitoreo/views/Quiosco.vue:40 font-size: 2.4em",
+      "src/modules/monitoreo/views/Quiosco.vue:80 font-size: 1.2em",
+      "src/modules/monitoreo/views/Quiosco.vue:107 font-size: 1em",
+      "src/modules/monitoreo/views/Quiosco.vue:111 font-size: 3em",
+      "src/modules/monitoreo/views/Quiosco.vue:119 font-size: 1em",
+      "src/modules/monitoreo/views/Quiosco.vue:124 font-size: 0.4em",
+      "src/modules/monitoreo/views/Quiosco.vue:155 font-size: 1.8em",
+      "src/modules/monitoreo/views/Quiosco.vue:162 font-size: 0.95em",
+      "src/modules/monitoreo/views/Quiosco.vue:212 font-size: 1.05em"
+    ],
+    "textoMenor12px": [
+      "src/modules/monitoreo/views/Quiosco.vue:124 font-size: 0.4em"
+    ],
+    "coloresEnLinea": [
+      "src/modules/monitoreo/views/admin/Calendario.vue:329 :style=\"{ '--as-evento': `rgb(var(--v-theme-${tokenEstado(f)}))` }\""
+    ]
+  }
+}

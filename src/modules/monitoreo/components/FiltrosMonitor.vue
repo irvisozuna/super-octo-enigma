@@ -99,6 +99,7 @@ function moverDia(delta: number) {
           v-model="dia"
           type="date"
           :label="t('monitoreo.filtros.dia')"
+          :aria-label="t('monitoreo.filtros.dia')"
           :max="hoy"
           :disabled="deshabilitado"
           class="filtros-monitor__dia"

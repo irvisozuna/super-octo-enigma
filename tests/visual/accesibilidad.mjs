@@ -28,6 +28,14 @@ const PANTALLAS = [
   { id: 'monitor-detalle-lectura', ruta: '/monitoreo?vista=periodo&periodo=186&sector=330&contrato=40350', espera: 6000 },
   { id: 'alertas', ruta: '/monitoreo/alertas', espera: 4000 },
   { id: 'guia-ds', ruta: '/_ds', espera: 3000 },
+  { id: 'ranking', ruta: '/monitoreo/ranking', espera: 4000 },
+  { id: 'relecturas', ruta: '/monitoreo/relecturas', espera: 3000 },
+  { id: 'coordenadas', ruta: '/monitoreo/coordenadas', espera: 4000 },
+  { id: 'calendario', ruta: '/monitoreo/admin/calendario', espera: 4000 },
+  { id: 'umbrales', ruta: '/monitoreo/admin/configuracion', espera: 3000 },
+  { id: 'destinatarios', ruta: '/monitoreo/admin/destinatarios', espera: 3000 },
+  { id: 'alcances', ruta: '/monitoreo/admin/alcances', espera: 3000 },
+  { id: 'quiosco', ruta: '/monitoreo/quiosco', espera: 6000 },
 ]
 
 async function iniciarSesion(page) {

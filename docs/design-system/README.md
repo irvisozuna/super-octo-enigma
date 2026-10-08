@@ -50,5 +50,8 @@ npm run lint && npm run lint:estilos                      # guardarraíles (hex,
 
 - Fase 0 (cimientos) y fase 1 (piloto: Monitor de lecturas, Alertas, DetalleSector, DetalleLectura, JornadaLecturista) hechas
   en la rama `design-system` el 2026-10-07. Métricas: `metricas-base.json` → `metricas-piloto.json`.
-- Fase 2 (resto de Monitoreo, Soporte, Reportes, CRUD, defaults globales, poda de demos) espera la aprobación del piloto.
+- Piloto aprobado por Irvis el 2026-10-07. Fase 2.1 (2026-10-08): el resto de Monitoreo (Re-lecturas, Ranking, Coordenadas,
+  Destinatarios, Umbrales, Gerencias por usuario, Calendario; Pantalla grande solo tokens y formato) sobre `As*`. Métricas:
+  `metricas-fase2-1-antes.json` → `metricas-fase2-1-despues.json`; comparación `tests/visual/capturas/comparacion-base-fase2-1.html`.
+- Siguen 2.2 Soporte (mapa a MapLibre), 2.3 Reportes, 2.4 CRUD, 2.5 defaults globales y 2.6 poda de demos.
 - Fase 3: modo oscuro para todos (hoy solo administradores), quiosco sobre tokens, logotipo para fondo oscuro.

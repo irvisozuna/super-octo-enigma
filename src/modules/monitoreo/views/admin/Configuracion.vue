@@ -4,25 +4,37 @@ import { useI18n } from 'vue-i18n'
 import { guardarConfiguracion, obtenerConfiguracion } from '../../services/monitoreoApi'
 import { useAlcanceStore } from '../../stores/alcanceStore'
 import type { RespuestaConfiguracion } from '../../types/api'
-import { normalizarError } from '@/modules/reportes/services/errores'
-import type { ErrorReporte } from '@/modules/reportes/services/errores'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { useNotificacion } from '@/composables/useNotificacion'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
 
 /*
  * Umbrales del motor de alertas y parámetros del monitor (F2.2): valor global o por gerencia, con el origen de cada
  * valor efectivo. Un cambio surte efecto en el siguiente ciclo del motor sin despliegue.
+ * Sobre los componentes del sistema de diseño: encabezado, barra de ámbito, tablas por grupo y avisos globales.
  */
 const { t } = useI18n()
 const alcance = useAlcanceStore()
+const notificar = useNotificacion()
 
 const datos = ref<RespuestaConfiguracion | null>(null)
 const cargando = ref(false)
 const error = ref<ErrorReporte | null>(null)
 const guardando = ref<string | null>(null)
-const mensaje = ref<string | null>(null)
 const errorGuardado = ref<ErrorReporte | null>(null)
 const gerencia = ref<number | null>(null)
 const borrador = ref<Record<string, string>>({})
+
+type Origen = 'default' | 'global' | 'gerencia'
+
+interface FilaParametro {
+  clave: string
+  etiqueta: string
+  tipo: string
+  valor: unknown
+  origen: Origen
+}
 
 const REGLAS = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13']
 
@@ -33,10 +45,19 @@ const GRUPOS: { clave: 'sectores' | 'lecturistas' | 'lecturas' | 'otros'; claves
   { clave: 'otros', claves: ['correo_alta', 'escalamiento_activo', 'escalamiento_min', 'resumen_hora', 'silenciar_h', 'quiosco_rotacion_s'] },
 ]
 
+const COLOR_ORIGEN: Record<Origen, string | undefined> = { gerencia: 'primary', global: 'info', default: undefined }
+
 const opcionesAmbito = computed(() => [{ value: null, title: t('monitoreo.configuracion.global') }, ...alcance.gerencias.map(g => ({ value: g.id, title: g.label }))])
 
+const columnas = computed<ColumnaTabla<FilaParametro>[]>(() => [
+  { clave: 'etiqueta', titulo: t('monitoreo.configuracion.parametro'), formato: 'personalizado', ordenable: false },
+  { clave: 'valor', titulo: t('monitoreo.configuracion.valor'), formato: 'personalizado', ordenable: false, ancho: 280 },
+  { clave: 'origen', titulo: t('monitoreo.configuracion.origen'), formato: 'personalizado', ordenable: false, ancho: 170 },
+  { clave: 'acciones', titulo: t('monitoreo.configuracion.acciones'), formato: 'personalizado', ordenable: false, alineacion: 'end', ancho: 270 },
+])
+
 /** Valor efectivo para el ámbito elegido y de dónde sale. */
-function efectivo(clave: string): { valor: unknown; origen: 'default' | 'global' | 'gerencia' } {
+function efectivo(clave: string): { valor: unknown; origen: Origen } {
   const d = datos.value
   if (!d)
     return { valor: null, origen: 'default' }
@@ -48,6 +69,18 @@ function efectivo(clave: string): { valor: unknown; origen: 'default' | 'global'
 
   return { valor: d.defaults[clave], origen: 'default' }
 }
+
+/** Filas de cada grupo: solo las claves que el servidor conoce, con su valor efectivo y su origen. */
+const grupos = computed(() => {
+  const d = datos.value
+  if (!d)
+    return []
+
+  return GRUPOS.map(g => ({
+    clave: g.clave,
+    filas: g.claves.filter(c => c in d.tipos).map<FilaParametro>(clave => ({ clave, etiqueta: t(`monitoreo.configuracion.claves.${clave}`), tipo: d.tipos[clave], ...efectivo(clave) })),
+  })).filter(g => g.filas.length)
+})
 
 function aTexto(v: unknown): string {
   if (v === null || v === undefined)
@@ -87,6 +120,11 @@ function aValor(clave: string, entrada: string): unknown {
   return limpio
 }
 
+/** Se puede quitar la sobreescritura cuando el valor efectivo viene del ámbito que se está editando. */
+function quitable(origen: Origen): boolean {
+  return (gerencia.value !== null && origen === 'gerencia') || (gerencia.value === null && origen === 'global')
+}
+
 const jornadaTexto = computed(() => {
   const j = efectivo('jornada').valor as { inicio?: string; fin?: string; dias?: number[] } | null
   if (!j || !j.inicio)
@@ -122,7 +160,7 @@ async function guardar(clave: string, valor: unknown) {
   try {
     await guardarConfiguracion(clave, valor, gerencia.value)
     delete borrador.value[clave]
-    mensaje.value = t('monitoreo.configuracion.guardado', { clave })
+    notificar.exito(t('monitoreo.configuracion.guardado', { clave }))
     await cargar()
   }
   catch (e) {
@@ -150,21 +188,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="mb-4">
-      <h4 class="text-h4 mb-1">
-        {{ t('monitoreo.configuracion.titulo') }}
-      </h4>
-      <p class="text-body-2 text-medium-emphasis mb-0">
-        {{ t('monitoreo.configuracion.descripcion') }}
-      </p>
-    </div>
+  <div class="configuracion">
+    <AsEncabezadoPagina
+      :titulo="t('monitoreo.configuracion.titulo')"
+      :descripcion="t('monitoreo.configuracion.descripcion')"
+    />
 
-    <EstadoError
+    <AsEstado
       v-if="error && !datos"
+      tipo="error"
       class="mb-4"
       :error="error"
       @reintentar="cargar"
+    />
+    <AsEstado
+      v-else-if="cargando && !datos"
+      tipo="cargando"
+      :filas="6"
     />
     <VAlert
       v-if="errorGuardado"
@@ -177,153 +217,158 @@ onMounted(async () => {
     >
       {{ errorGuardado.mensaje }}
     </VAlert>
-    <VAlert
-      v-if="mensaje"
-      type="success"
-      variant="tonal"
-      density="compact"
-      class="mb-3"
-      closable
-      @click:close="mensaje = null"
-    >
-      {{ mensaje }}
-    </VAlert>
 
-    <VCard v-if="datos">
-      <VCardText class="d-flex flex-wrap align-center gap-3 py-3">
+    <template v-if="datos">
+      <AsBarraFiltros class="mb-3">
         <VSelect
           v-model="gerencia"
           :items="opcionesAmbito"
           :label="t('monitoreo.configuracion.ambito')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="configuracion__ambito"
+          class="as-filtro--lg"
           @update:model-value="borrador = {}"
         />
-        <span
-          v-if="jornadaTexto"
-          class="text-caption text-medium-emphasis"
-        >
-          {{ jornadaTexto }}
-        </span>
-      </VCardText>
-      <VDivider />
-      <VProgressLinear
-        v-if="cargando"
-        indeterminate
-      />
-
-      <VCardText>
-        <h6 class="text-subtitle-1 mb-1">
-          {{ t('monitoreo.configuracion.reglas') }}
-        </h6>
-        <p class="text-caption text-medium-emphasis mb-2">
-          {{ t('monitoreo.configuracion.reglasDetalle') }}
-        </p>
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          <VChip
-            v-for="r in REGLAS"
-            :key="r"
-            label
-            filter
-            :model-value="reglasActivas.includes(r)"
-            :color="reglasActivas.includes(r) ? 'primary' : undefined"
-            :disabled="!datos.puede_editar || guardando === 'reglas_apagadas'"
-            @update:model-value="(v: boolean | null) => alternarRegla(r, v)"
-          >
-            {{ r }}
-          </VChip>
-        </div>
-
         <template
-          v-for="g in GRUPOS"
-          :key="g.clave"
+          v-if="jornadaTexto"
+          #fin
         >
-          <h6 class="text-subtitle-1 mt-4 mb-2">
-            {{ t(`monitoreo.configuracion.grupos.${g.clave}`) }}
-          </h6>
-          <VTable density="compact">
-            <thead>
-              <tr>
-                <th>{{ t('monitoreo.configuracion.parametro') }}</th>
-                <th style="inline-size: 260px;">
-                  {{ t('monitoreo.configuracion.valor') }}
-                </th>
-                <th style="inline-size: 150px;">
-                  {{ t('monitoreo.configuracion.origen') }}
-                </th>
-                <th style="inline-size: 260px;" />
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="clave in g.claves.filter(c => c in datos!.tipos)"
-                :key="clave"
-              >
-                <td>
-                  <div>{{ t(`monitoreo.configuracion.claves.${clave}`) }}</div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ clave }} · {{ datos.tipos[clave] }}
-                  </div>
-                </td>
-                <td>
-                  <VTextField
-                    :model-value="texto(clave)"
-                    density="compact"
-                    variant="outlined"
-                    hide-details
-                    :disabled="!datos.puede_editar"
-                    @update:model-value="(v: string) => borrador[clave] = v"
-                    @keyup.enter="cambiado(clave) && guardar(clave, aValor(clave, texto(clave)))"
-                  />
-                </td>
-                <td>
-                  <VChip
-                    size="x-small"
-                    label
-                    variant="tonal"
-                    :color="efectivo(clave).origen === 'gerencia' ? 'primary' : efectivo(clave).origen === 'global' ? 'secondary' : undefined"
-                  >
-                    {{ t(`monitoreo.configuracion.origen${efectivo(clave).origen.charAt(0).toUpperCase()}${efectivo(clave).origen.slice(1)}`) }}
-                  </VChip>
-                </td>
-                <td class="text-end text-no-wrap">
-                  <VBtn
-                    v-if="datos.puede_editar"
-                    size="small"
-                    color="primary"
-                    variant="tonal"
-                    class="text-none"
-                    :disabled="!cambiado(clave)"
-                    :loading="guardando === clave"
-                    @click="guardar(clave, aValor(clave, texto(clave)))"
-                  >
-                    {{ t('monitoreo.configuracion.guardar') }}
-                  </VBtn>
-                  <VBtn
-                    v-if="datos.puede_editar && ((gerencia !== null && efectivo(clave).origen === 'gerencia') || (gerencia === null && efectivo(clave).origen === 'global'))"
-                    size="small"
-                    variant="text"
-                    class="text-none ms-1"
-                    :loading="guardando === clave"
-                    @click="guardar(clave, null)"
-                  >
-                    {{ t('monitoreo.configuracion.quitar') }}
-                  </VBtn>
-                </td>
-              </tr>
-            </tbody>
-          </VTable>
+          <span class="as-secundario as-num">{{ jornadaTexto }}</span>
         </template>
-      </VCardText>
-    </VCard>
+      </AsBarraFiltros>
+
+      <VCard
+        variant="flat"
+        class="as-tarjeta configuracion__tarjeta"
+        :loading="cargando"
+      >
+        <section class="configuracion__seccion">
+          <h2 class="as-seccion">
+            {{ t('monitoreo.configuracion.reglas') }}
+          </h2>
+          <p class="as-secundario mb-3">
+            {{ t('monitoreo.configuracion.reglasDetalle') }}
+          </p>
+          <div
+            class="d-flex flex-wrap gap-2"
+            role="group"
+            :aria-label="t('monitoreo.configuracion.reglas')"
+          >
+            <VChip
+              v-for="r in REGLAS"
+              :key="r"
+              label
+              filter
+              size="small"
+              class="as-num"
+              :model-value="reglasActivas.includes(r)"
+              :color="reglasActivas.includes(r) ? 'primary' : undefined"
+              :disabled="!datos.puede_editar || guardando === 'reglas_apagadas'"
+              @update:model-value="(v: boolean | null) => alternarRegla(r, v)"
+            >
+              {{ r }}
+            </VChip>
+          </div>
+        </section>
+
+        <section
+          v-for="g in grupos"
+          :key="g.clave"
+          class="configuracion__seccion configuracion__seccion--tabla"
+        >
+          <h2 class="as-seccion">
+            {{ t(`monitoreo.configuracion.grupos.${g.clave}`) }}
+          </h2>
+          <AsTablaDatos
+            sin-tarjeta
+            ocultar-pie
+            densidad="media"
+            :columnas="columnas"
+            :filas="g.filas"
+            clave-fila="clave"
+            :por-pagina="-1"
+            class="configuracion__tabla"
+          >
+            <template #celda-etiqueta="{ fila }">
+              <div>{{ fila.etiqueta }}</div>
+              <div class="as-secundario as-num">
+                {{ fila.clave }} · {{ fila.tipo }}
+              </div>
+            </template>
+            <template #celda-valor="{ fila }">
+              <VTextField
+                :model-value="texto(fila.clave)"
+                density="compact"
+                variant="outlined"
+                hide-details
+                :aria-label="fila.etiqueta"
+                :disabled="!datos.puede_editar"
+                @update:model-value="(v: string) => borrador[fila.clave] = v"
+                @keyup.enter="cambiado(fila.clave) && guardar(fila.clave, aValor(fila.clave, texto(fila.clave)))"
+              />
+            </template>
+            <template #celda-origen="{ fila }">
+              <VChip
+                size="small"
+                label
+                :variant="fila.origen === 'default' ? 'outlined' : 'tonal'"
+                :color="COLOR_ORIGEN[fila.origen as Origen]"
+              >
+                {{ t(`monitoreo.configuracion.origen${fila.origen.charAt(0).toUpperCase()}${fila.origen.slice(1)}`) }}
+              </VChip>
+            </template>
+            <template #celda-acciones="{ fila }">
+              <div
+                v-if="datos.puede_editar"
+                class="d-flex align-center justify-end gap-1 text-no-wrap"
+              >
+                <VBtn
+                  v-if="quitable(fila.origen as Origen)"
+                  size="small"
+                  variant="text"
+                  :loading="guardando === fila.clave"
+                  @click="guardar(fila.clave, null)"
+                >
+                  {{ t('monitoreo.configuracion.quitar') }}
+                </VBtn>
+                <VBtn
+                  size="small"
+                  color="primary"
+                  variant="tonal"
+                  :disabled="!cambiado(fila.clave)"
+                  :loading="guardando === fila.clave"
+                  @click="guardar(fila.clave, aValor(fila.clave, texto(fila.clave)))"
+                >
+                  {{ t('monitoreo.configuracion.guardar') }}
+                </VBtn>
+              </div>
+            </template>
+          </AsTablaDatos>
+        </section>
+      </VCard>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.configuracion__ambito {
-  max-inline-size: 320px;
-  min-inline-size: 220px;
+.configuracion__seccion {
+  padding-block: var(--as-sp-3) var(--as-sp-4);
+  padding-inline: var(--as-sp-4);
+}
+
+.configuracion__seccion + .configuracion__seccion {
+  border-block-start: var(--as-borde);
+}
+
+.configuracion__seccion--tabla {
+  padding-block-end: 0;
+  padding-inline: 0;
+}
+
+.configuracion__seccion--tabla .as-seccion {
+  padding-inline: var(--as-sp-4);
+}
+
+.configuracion__tabla :deep(td) {
+  padding-block: var(--as-sp-2);
+  vertical-align: middle;
 }
 </style>

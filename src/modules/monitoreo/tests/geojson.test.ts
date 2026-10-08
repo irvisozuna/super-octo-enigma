@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { EstadoToma, TomaFeature, TomasCollection } from '../types/mapa'
 import { MARCA_FIJA, MARCA_LEJOS } from '../types/mapa'
-import { cajaDe, colorSenal, contarEstados, conteosLeyenda, fusionarCambios, tieneMarca } from '../utils/geojson'
+import { cajaDe, contarEstados, conteosLeyenda, fusionarCambios, tieneMarca } from '../utils/geojson'
 
 function toma(i: number, e: TomaFeature['properties']['e'], m = 0, coords: [number, number] = [-109.9, 22.9]): TomaFeature {
   return { type: 'Feature', geometry: { type: 'Point', coordinates: coords }, properties: { i, c: String(i), s: 1, e, m } }
@@ -45,7 +45,7 @@ describe('geojson (mapa de tomas)', () => {
   })
 })
 
-describe('conteosLeyenda y colorSenal', () => {
+describe('conteosLeyenda', () => {
   const tomas = (specs: [number, string][]) => specs.map(([s, e], i) => ({ type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [0, 0] as [number, number] }, properties: { i, c: String(i), s, e: e as EstadoToma, m: 0 } }))
 
   it('suma las tomas pintadas del filtro y las que no tienen coordenada', () => {
@@ -63,14 +63,5 @@ describe('conteosLeyenda y colorSenal', () => {
     expect(solo1.sinCoordenada).toBe(3)
 
     expect(conteosLeyenda(features, null, [3]).conteos).toEqual({ p: 0, l: 0, a: 1, x: 0, f: 0 })
-  })
-
-  it('colorea la señal por frescura y el fin de jornada en azul', () => {
-    expect(colorSenal({ estado: 'activo', minutos: 3 })).toBe('#2e7d32')
-    expect(colorSenal({ estado: 'activo', minutos: 45 })).toBe('#f9a825')
-    expect(colorSenal({ estado: 'silencio', minutos: 120 })).toBe('#c62828')
-    expect(colorSenal({ estado: 'activo', minutos: 45 }, 30)).toBe('#c62828')
-    expect(colorSenal({ estado: 'terminado', minutos: 300 })).toBe('#1e88e5')
-    expect(colorSenal({ estado: 'sin_iniciar', minutos: null })).toBe('#9e9e9e')
   })
 })

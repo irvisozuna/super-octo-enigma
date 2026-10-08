@@ -1,16 +1,29 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAlcancesAdmin } from '../../composables/useAlcancesAdmin'
 import type { UsuarioAlcance } from '../../types/api'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { useNotificacion } from '@/composables/useNotificacion'
 
-/* Gerencias por usuario (manage monitoring): quién ve qué gerencia en el monitoreo. Admin y quien administra ven todas. */
+/*
+ * Gerencias por usuario (manage monitoring): quién ve qué gerencia en el monitoreo. Admin y quien administra ven todas.
+ * Sobre los componentes del sistema de diseño: encabezado, barra de filtros, tabla y avisos globales.
+ */
 const { t } = useI18n()
 const admin = useAlcancesAdmin()
-const aviso = ref<string | null>(null)
+const notificar = useNotificacion()
 
 let controlador: AbortController | null = null
+
+const filtrosActivos = computed(() => (admin.busqueda.value.trim() ? 1 : 0) + (admin.soloConMonitoreo.value ? 0 : 1))
+
+const columnas = computed<ColumnaTabla<UsuarioAlcance>[]>(() => [
+  { clave: 'nombre', titulo: t('monitoreo.alcances.usuario'), formato: 'personalizado', anchoMin: 240 },
+  { clave: 'roles', titulo: t('monitoreo.alcances.roles'), formato: 'personalizado', ordenable: false, ancho: 220 },
+  { clave: 'gerencias', titulo: t('monitoreo.alcances.gerencias'), formato: 'personalizado', ordenable: false, anchoMin: 320 },
+  { clave: 'acciones', titulo: t('monitoreo.alcances.acciones'), formato: 'personalizado', ordenable: false, alineacion: 'end', ancho: 200 },
+])
 
 function cargar() {
   controlador?.abort()
@@ -20,7 +33,12 @@ function cargar() {
 
 async function guardar(usuario: UsuarioAlcance) {
   if (await admin.guardar(usuario))
-    aviso.value = t('monitoreo.alcances.guardado', { usuario: usuario.nombre })
+    notificar.exito(t('monitoreo.alcances.guardado', { usuario: usuario.nombre }))
+}
+
+function limpiarFiltros() {
+  admin.busqueda.value = ''
+  admin.soloConMonitoreo.value = true
 }
 
 onMounted(cargar)
@@ -28,188 +46,176 @@ onBeforeUnmount(() => controlador?.abort())
 </script>
 
 <template>
-  <div>
-    <div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-6">
-      <div>
-        <h4 class="text-h4 mb-1">
-          {{ t('monitoreo.alcances.titulo') }}
-        </h4>
-        <p class="text-body-1 text-medium-emphasis mb-0">
-          {{ t('monitoreo.alcances.descripcion') }}
-        </p>
-      </div>
-      <VBtn
-        variant="tonal"
-        prepend-icon="tabler-refresh"
-        :loading="admin.cargando.value"
-        @click="cargar"
-      >
-        {{ t('monitoreo.alcances.recargar') }}
-      </VBtn>
-    </div>
+  <div class="alcances">
+    <AsEncabezadoPagina
+      :titulo="t('monitoreo.alcances.titulo')"
+      :descripcion="t('monitoreo.alcances.descripcion')"
+    >
+      <template #acciones>
+        <AsBtnSecundario
+          prepend-icon="tabler-refresh"
+          :loading="admin.cargando.value"
+          @click="cargar"
+        >
+          {{ t('monitoreo.alcances.recargar') }}
+        </AsBtnSecundario>
+      </template>
+    </AsEncabezadoPagina>
 
-    <VProgressLinear
-      v-if="admin.cargando.value && !admin.usuarios.value.length"
-      indeterminate
-      class="mb-4"
-    />
-
-    <EstadoError
+    <AsEstado
       v-if="admin.error.value"
+      tipo="error"
       class="mb-4"
       :error="admin.error.value"
       mostrar-detalle
       @reintentar="cargar"
     />
-
     <VAlert
       v-if="admin.aviso.value"
       type="warning"
       variant="tonal"
-      class="mb-4"
+      density="compact"
+      class="mb-3"
     >
       {{ admin.aviso.value }} {{ t('monitoreo.alcances.sinCatalogo') }}
     </VAlert>
-
-    <EstadoError
+    <VAlert
       v-if="admin.errorGuardado.value"
-      class="mb-4"
-      :error="admin.errorGuardado.value"
-      mostrar-detalle
-    />
-
-    <template v-if="admin.usuarios.value.length">
-      <VCard class="mb-4">
-        <VCardText class="d-flex flex-wrap gap-4 align-center">
-          <AppTextField
-            v-model="admin.busqueda.value"
-            :placeholder="t('monitoreo.alcances.buscar')"
-            prepend-inner-icon="tabler-search"
-            clearable
-            style="max-inline-size: 320px;"
-            hide-details
-          />
-          <VSwitch
-            v-model="admin.soloConMonitoreo.value"
-            :label="t('monitoreo.alcances.soloConMonitoreo')"
-            color="primary"
-            hide-details
-          />
-        </VCardText>
-      </VCard>
-
-      <VCard>
-        <VTable density="comfortable">
-          <thead>
-            <tr>
-              <th>{{ t('monitoreo.alcances.usuario') }}</th>
-              <th>{{ t('monitoreo.alcances.roles') }}</th>
-              <th style="min-inline-size: 320px;">
-                {{ t('monitoreo.alcances.gerencias') }}
-              </th>
-              <th class="text-end">
-                {{ t('monitoreo.alcances.acciones') }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="usuario in admin.filtrados.value"
-              :key="usuario.id"
-            >
-              <td>
-                <div class="font-weight-medium">
-                  {{ usuario.nombre }}
-                </div>
-                <div class="text-caption text-medium-emphasis">
-                  {{ usuario.email }}
-                </div>
-                <div
-                  v-if="!usuario.tiene_monitoreo && !usuario.es_admin"
-                  class="text-caption text-warning"
-                >
-                  {{ t('monitoreo.alcances.sinPermiso') }}
-                </div>
-              </td>
-              <td>
-                <div class="d-flex flex-wrap gap-1">
-                  <VChip
-                    v-for="rol in usuario.roles"
-                    :key="rol"
-                    size="small"
-                    variant="tonal"
-                  >
-                    {{ rol }}
-                  </VChip>
-                </div>
-              </td>
-              <td>
-                <VChip
-                  v-if="usuario.ve_todas"
-                  color="primary"
-                  variant="tonal"
-                  prepend-icon="tabler-world"
-                >
-                  {{ t('monitoreo.alcances.veTodas') }}
-                </VChip>
-                <VSelect
-                  v-else
-                  :model-value="admin.seleccion.value[usuario.id] ?? admin.asignadas(usuario)"
-                  :items="admin.gerencias.value"
-                  item-title="label"
-                  item-value="id"
-                  multiple
-                  chips
-                  closable-chips
-                  density="compact"
-                  hide-details
-                  :disabled="!admin.catalogoDisponible.value"
-                  :placeholder="t('monitoreo.alcances.ninguna')"
-                  @update:model-value="(ids: number[]) => admin.seleccionar(usuario, ids)"
-                />
-              </td>
-              <td class="text-end text-no-wrap">
-                <template v-if="!usuario.ve_todas">
-                  <VBtn
-                    size="small"
-                    variant="text"
-                    :disabled="!admin.cambio(usuario) || admin.guardando.value.has(usuario.id)"
-                    @click="admin.restaurar(usuario)"
-                  >
-                    {{ t('monitoreo.alcances.descartar') }}
-                  </VBtn>
-                  <VBtn
-                    size="small"
-                    color="primary"
-                    :loading="admin.guardando.value.has(usuario.id)"
-                    :disabled="!admin.cambio(usuario) || !admin.catalogoDisponible.value"
-                    @click="guardar(usuario)"
-                  >
-                    {{ t('monitoreo.alcances.guardar') }}
-                  </VBtn>
-                </template>
-              </td>
-            </tr>
-            <tr v-if="!admin.filtrados.value.length">
-              <td
-                colspan="4"
-                class="text-center text-medium-emphasis py-6"
-              >
-                {{ t('monitoreo.alcances.sinResultados') }}
-              </td>
-            </tr>
-          </tbody>
-        </VTable>
-      </VCard>
-    </template>
-
-    <VSnackbar
-      :model-value="!!aviso"
-      :timeout="3000"
-      color="success"
-      @update:model-value="aviso = null"
+      type="error"
+      variant="tonal"
+      density="compact"
+      class="mb-3"
+      closable
+      @click:close="admin.errorGuardado.value = null"
     >
-      {{ aviso }}
-    </VSnackbar>
+      {{ admin.errorGuardado.value.mensaje }}
+    </VAlert>
+
+    <AsBarraFiltros
+      class="mb-3"
+      :activos="filtrosActivos"
+      @limpiar="limpiarFiltros"
+    >
+      <VTextField
+        v-model="admin.busqueda.value"
+        :placeholder="t('monitoreo.alcances.buscar')"
+        :aria-label="t('monitoreo.alcances.buscar')"
+        prepend-inner-icon="tabler-search"
+        clearable
+        class="as-filtro--lg"
+      />
+      <VSwitch
+        v-model="admin.soloConMonitoreo.value"
+        :label="t('monitoreo.alcances.soloConMonitoreo')"
+        color="primary"
+        inset
+      />
+    </AsBarraFiltros>
+
+    <AsTablaDatos
+      :columnas="columnas"
+      :filas="admin.filtrados.value"
+      clave-fila="id"
+      densidad="estandar"
+      :cargando="admin.cargando.value && !admin.usuarios.value.length"
+      :por-pagina="-1"
+      :vacio-titulo="t('monitoreo.alcances.sinResultados')"
+      vacio-detalle=""
+      vacio-icono="tabler-users-group"
+      class="alcances__tabla"
+    >
+      <template #celda-nombre="{ fila }">
+        <div class="font-weight-medium">
+          {{ fila.nombre }}
+        </div>
+        <div class="as-secundario">
+          {{ fila.email }}
+        </div>
+        <div
+          v-if="!fila.tiene_monitoreo && !fila.es_admin"
+          class="as-secundario text-warning"
+        >
+          {{ t('monitoreo.alcances.sinPermiso') }}
+        </div>
+      </template>
+      <template #celda-roles="{ fila }">
+        <div class="d-flex flex-wrap gap-1 py-1">
+          <VChip
+            v-for="rol in fila.roles"
+            :key="rol"
+            size="small"
+            label
+            variant="tonal"
+          >
+            {{ rol }}
+          </VChip>
+        </div>
+      </template>
+      <template #celda-gerencias="{ fila }">
+        <VChip
+          v-if="fila.ve_todas"
+          color="primary"
+          variant="tonal"
+          size="small"
+          label
+          prepend-icon="tabler-world"
+        >
+          {{ t('monitoreo.alcances.veTodas') }}
+        </VChip>
+        <VSelect
+          v-else
+          :model-value="admin.seleccion.value[fila.id] ?? admin.asignadas(fila)"
+          :items="admin.gerencias.value"
+          item-title="label"
+          item-value="id"
+          multiple
+          chips
+          closable-chips
+          density="compact"
+          hide-details
+          class="alcances__gerencias"
+          :disabled="!admin.catalogoDisponible.value"
+          :placeholder="t('monitoreo.alcances.ninguna')"
+          :aria-label="t('monitoreo.alcances.gerencias')"
+          @update:model-value="(ids: number[]) => admin.seleccionar(fila, ids)"
+        />
+      </template>
+      <template #celda-acciones="{ fila }">
+        <div
+          v-if="!fila.ve_todas"
+          class="d-flex align-center justify-end gap-1 text-no-wrap"
+        >
+          <VBtn
+            size="small"
+            variant="text"
+            :disabled="!admin.cambio(fila) || admin.guardando.value.has(fila.id)"
+            @click="admin.restaurar(fila)"
+          >
+            {{ t('monitoreo.alcances.descartar') }}
+          </VBtn>
+          <VBtn
+            size="small"
+            variant="tonal"
+            color="primary"
+            :loading="admin.guardando.value.has(fila.id)"
+            :disabled="!admin.cambio(fila) || !admin.catalogoDisponible.value"
+            @click="guardar(fila)"
+          >
+            {{ t('monitoreo.alcances.guardar') }}
+          </VBtn>
+        </div>
+      </template>
+    </AsTablaDatos>
   </div>
 </template>
+
+<style scoped>
+.alcances__tabla :deep(td) {
+  padding-block: var(--as-sp-2);
+  vertical-align: top;
+}
+
+.alcances__gerencias {
+  min-inline-size: var(--as-ancho-filtro-lg);
+}
+</style>

@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import type { RouteLocationRaw } from 'vue-router'
 import { comparacion, useRanking } from '../composables/useRanking'
 import { obtenerCatalogos } from '../services/monitoreoApi'
 import { useAlcanceStore } from '../stores/alcanceStore'
 import type { RespuestaCatalogos } from '../types/monitor'
 import type { FilaRanking } from '../types/ranking'
-import { fechaCorta } from '../utils/tiempo'
-import EstadoError from '@/modules/reportes/components/comunes/EstadoError.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { decimal, duracion, entero, fechaCorta } from '@/utils/formato'
 
 /*
  * Ranking y comparativos de lecturistas (F2.4): suma de jornadas por lecturista en un rango de días del periodo, por
  * gerencia, con la comparación contra su propio promedio de los tres periodos anteriores. Exporta a Excel y PDF.
+ * Sobre los componentes del sistema de diseño: encabezado, barra de filtros y tabla con fila de totales.
  */
-const { t, n } = useI18n()
-const router = useRouter()
+const { t } = useI18n()
 const alcance = useAlcanceStore()
 const r = useRanking()
 const catalogos = ref<RespuestaCatalogos | null>(null)
@@ -23,39 +23,61 @@ const catalogos = ref<RespuestaCatalogos | null>(null)
 const periodos = computed(() => (catalogos.value?.periodos ?? []).map(p => ({ value: p.id, title: p.abierto ? `${p.nombre} (abierto)` : p.nombre })))
 const opcionesGerencia = computed(() => alcance.gerencias.map(g => ({ value: g.id, title: g.label })))
 const nombreGerencia = (id: number | null) => (id === null ? '—' : alcance.gerencias.find(g => g.id === id)?.label ?? `#${id}`)
+const distancia = computed(() => r.datos.value?.distancia_m ?? 50)
+const esUnDia = computed(() => !!r.filtros.desde && r.filtros.desde === r.filtros.hasta)
+const mostrarGerencia = computed(() => !r.filtros.gerencia && alcance.gerencias.length !== 1)
 
-const headers = computed(() => [
-  { title: '#', key: 'posicion', width: 56, align: 'end' as const },
-  { title: t('monitoreo.ranking.lecturista'), key: 'nombre' },
-  { title: t('monitoreo.ranking.dias'), key: 'dias', align: 'end' as const, width: 70 },
-  { title: t('monitoreo.ranking.lecturas'), key: 'lecturas', align: 'end' as const, width: 100 },
-  { title: t('monitoreo.ranking.lecturasDia'), key: 'lecturas_dia', align: 'end' as const, width: 150 },
-  { title: t('monitoreo.ranking.lecturasHora'), key: 'lecturas_hora', align: 'end' as const, width: 130 },
-  { title: t('monitoreo.ranking.minTotales'), key: 'min_totales', align: 'end' as const, width: 100 },
-  { title: t('monitoreo.ranking.minMuertos'), key: 'min_muertos', align: 'end' as const, width: 130 },
-  { title: t('monitoreo.ranking.anomalias'), key: 'anomalias', align: 'end' as const, width: 100 },
-  { title: t('monitoreo.ranking.impresas'), key: 'impresas', align: 'end' as const, width: 90 },
-  { title: t('monitoreo.ranking.lejos', { m: r.datos.value?.distancia_m ?? 50 }), key: 'lejos', align: 'end' as const, width: 90 },
-  { title: t('monitoreo.ranking.apego'), key: 'apego_pct', align: 'end' as const, width: 90 },
-  { title: t('monitoreo.ranking.sectores'), key: 'sectores', align: 'end' as const, width: 90 },
+const columnas = computed<ColumnaTabla<FilaRanking>[]>(() => [
+  { clave: 'posicion', titulo: '#', formato: 'entero', ancho: 56, descripcion: t('monitoreo.ranking.posicion') },
+  { clave: 'nombre', titulo: t('monitoreo.ranking.lecturista'), formato: 'personalizado', anchoMin: 220 },
+  { clave: 'dias', titulo: t('monitoreo.ranking.dias'), formato: 'entero', ancho: 72 },
+  { clave: 'lecturas', titulo: t('monitoreo.ranking.lecturas'), formato: 'entero', ancho: 100 },
+  { clave: 'lecturas_dia', titulo: t('monitoreo.ranking.lecturasDia'), formato: 'personalizado', alineacion: 'end', ancho: 170, descripcion: t('monitoreo.ranking.referencia', { periodos: r.datos.value?.referencia_periodos.join(', ') ?? '' }) },
+  { clave: 'lecturas_hora', titulo: t('monitoreo.ranking.lecturasHora'), formato: 'personalizado', alineacion: 'end', ancho: 150 },
+  { clave: 'min_totales', titulo: t('monitoreo.ranking.minTotales'), formato: 'personalizado', alineacion: 'end', ancho: 120 },
+  { clave: 'min_muertos', titulo: t('monitoreo.ranking.minMuertos'), formato: 'personalizado', alineacion: 'end', ancho: 150 },
+  { clave: 'anomalias', titulo: t('monitoreo.ranking.anomalias'), formato: 'entero', ancho: 100 },
+  { clave: 'impresas', titulo: t('monitoreo.ranking.impresas'), formato: 'entero', ancho: 96 },
+  { clave: 'lejos', titulo: t('monitoreo.ranking.lejos', { m: distancia.value }), formato: 'personalizado', alineacion: 'end', ancho: 100, descripcion: t('monitoreo.ranking.lejosDetalle', { m: distancia.value }) },
+  { clave: 'apego_pct', titulo: t('monitoreo.ranking.apego'), formato: 'porcentaje', decimales: 0, ancho: 90 },
+  { clave: 'sectores', titulo: t('monitoreo.ranking.sectores'), formato: 'entero', ancho: 90 },
 ])
 
-const esUnDia = computed(() => r.filtros.desde && r.filtros.desde === r.filtros.hasta)
+/** Fila de totales: lo que suma el periodo; los promedios y tiempos ya formateados. */
+const totales = computed(() => {
+  const tot = r.totales.value
+  if (!tot)
+    return null
 
-function minutos(v: number): string {
-  if (v < 60)
-    return `${v} min`
-  const h = Math.floor(v / 60)
+  return {
+    nombre: t('monitoreo.ranking.totalesFila', { l: entero(tot.lecturistas) }),
+    lecturas: tot.lecturas,
+    lecturas_dia: decimal(tot.lecturas_dia, 1),
+    lecturas_hora: decimal(tot.lecturas_hora, 1),
+    min_totales: duracion(tot.min_totales),
+    min_muertos: duracion(tot.min_muertos),
+    anomalias: tot.anomalias,
+    impresas: tot.impresas,
+    lejos: entero(tot.lejos),
+  }
+})
 
-  return `${h} h ${String(v % 60).padStart(2, '0')}`
-}
+const resumen = computed(() => {
+  const tot = r.totales.value
 
-function verJornada(fila: FilaRanking) {
-  router.push({ name: 'monitoreoInicio', query: { lecturista: String(fila.lecturista_id), ...(esUnDia.value ? { dia: r.filtros.desde as string } : {}) } })
+  return tot ? t('monitoreo.ranking.resumen', { l: entero(tot.lecturistas), n: entero(tot.lecturas), d: decimal(tot.lecturas_dia, 1), h: decimal(tot.lecturas_hora, 1) }) : ''
+})
+
+function destinoJornada(fila: FilaRanking): RouteLocationRaw {
+  return { name: 'monitoreoInicio', query: { lecturista: String(fila.lecturista_id), ...(esUnDia.value ? { dia: r.filtros.desde as string } : {}) } }
 }
 
 function iconoComparacion(flecha: 'arriba' | 'abajo' | 'igual' | null): string {
   return flecha === 'arriba' ? 'tabler-arrow-up-right' : flecha === 'abajo' ? 'tabler-arrow-down-right' : 'tabler-minus'
+}
+
+function colorComparacion(mejor: boolean | null): string | undefined {
+  return mejor === null ? undefined : mejor ? 'success' : 'error'
 }
 
 onMounted(async () => {
@@ -68,42 +90,34 @@ onBeforeUnmount(() => r.cancelar())
 </script>
 
 <template>
-  <div>
-    <div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-4">
-      <div>
-        <h4 class="text-h4 mb-1">
-          {{ t('monitoreo.ranking.titulo') }}
-        </h4>
-        <p class="text-body-2 text-medium-emphasis mb-0">
-          {{ t('monitoreo.ranking.descripcion') }}
-        </p>
-      </div>
-      <div class="d-flex align-center gap-2">
-        <VBtn
-          variant="tonal"
+  <div class="ranking">
+    <AsEncabezadoPagina
+      :titulo="t('monitoreo.ranking.titulo')"
+      :descripcion="t('monitoreo.ranking.descripcion')"
+    >
+      <template #acciones>
+        <AsBtnSecundario
           prepend-icon="tabler-file-spreadsheet"
-          class="text-none"
           :loading="r.exportando.value === 'xlsx'"
           :disabled="!r.filas.value.length"
           @click="r.exportar('xlsx')"
         >
           Excel
-        </VBtn>
-        <VBtn
-          variant="tonal"
+        </AsBtnSecundario>
+        <AsBtnSecundario
           prepend-icon="tabler-file-type-pdf"
-          class="text-none"
           :loading="r.exportando.value === 'pdf'"
           :disabled="!r.filas.value.length"
           @click="r.exportar('pdf')"
         >
           PDF
-        </VBtn>
-      </div>
-    </div>
+        </AsBtnSecundario>
+      </template>
+    </AsEncabezadoPagina>
 
-    <EstadoError
+    <AsEstado
       v-if="r.error.value && !r.datos.value"
+      tipo="error"
       class="mb-4"
       :error="r.error.value"
       @reintentar="r.cargar()"
@@ -120,219 +134,191 @@ onBeforeUnmount(() => r.cancelar())
       {{ r.errorExportacion.value.mensaje }}
     </VAlert>
 
-    <VCard>
-      <VCardText class="d-flex flex-wrap align-center gap-3 py-3">
-        <VSelect
-          :model-value="r.filtros.periodo"
-          :items="periodos"
-          :label="t('monitoreo.ranking.periodo')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="ranking__campo"
-          @update:model-value="(v: number | null) => r.aplicar({ periodo: v })"
-        />
-        <VSelect
-          v-if="alcance.gerencias.length !== 1"
-          :model-value="r.filtros.gerencia"
-          :items="opcionesGerencia"
-          :label="t('monitoreo.ranking.gerencia')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          clearable
-          class="ranking__campo"
-          @update:model-value="(v: number | null) => r.aplicar({ gerencia: v })"
-        />
-        <VTextField
-          :model-value="r.filtros.desde"
-          type="date"
-          :label="t('monitoreo.ranking.desde')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          :min="r.datos.value?.periodo?.inicio"
-          :max="r.datos.value?.periodo?.fin"
-          class="ranking__fecha"
-          @update:model-value="(v: string) => r.aplicar({ desde: v || null })"
-        />
-        <VTextField
-          :model-value="r.filtros.hasta"
-          type="date"
-          :label="t('monitoreo.ranking.hasta')"
-          density="compact"
-          variant="outlined"
-          hide-details
-          :min="r.filtros.desde ?? r.datos.value?.periodo?.inicio"
-          :max="r.datos.value?.periodo?.fin"
-          class="ranking__fecha"
-          @update:model-value="(v: string) => r.aplicar({ hasta: v || null })"
-        />
-        <VBtn
-          variant="text"
-          size="small"
-          class="text-none"
-          @click="r.aplicar({ desde: r.datos.value?.hasta ?? null, hasta: r.datos.value?.hasta ?? null })"
-        >
-          {{ t('monitoreo.ranking.soloUltimoDia') }}
-        </VBtn>
-        <VBtn
-          variant="text"
-          size="small"
-          class="text-none"
-          @click="r.aplicar({ desde: r.datos.value?.periodo?.inicio ?? null, hasta: null })"
-        >
-          {{ t('monitoreo.ranking.todoElPeriodo') }}
-        </VBtn>
-        <VSpacer />
-        <span
-          v-if="r.totales.value"
-          class="text-caption text-medium-emphasis"
-        >
-          {{ t('monitoreo.ranking.resumen', { l: r.totales.value.lecturistas, n: n(r.totales.value.lecturas), d: r.totales.value.lecturas_dia ?? '—', h: r.totales.value.lecturas_hora ?? '—' }) }}
-        </span>
-      </VCardText>
-      <VDivider />
-      <VProgressLinear
-        v-if="r.cargando.value"
-        indeterminate
+    <AsBarraFiltros class="mb-3">
+      <VSelect
+        :model-value="r.filtros.periodo"
+        :items="periodos"
+        :label="t('monitoreo.ranking.periodo')"
+        class="as-filtro--md"
+        @update:model-value="(v: number | null) => r.aplicar({ periodo: v })"
       />
-      <div
-        v-if="r.datos.value"
-        class="px-4 py-2 text-caption text-medium-emphasis"
+      <VSelect
+        v-if="alcance.gerencias.length !== 1"
+        :model-value="r.filtros.gerencia"
+        :items="opcionesGerencia"
+        :label="t('monitoreo.ranking.gerencia')"
+        clearable
+        class="as-filtro--sm"
+        @update:model-value="(v: number | null) => r.aplicar({ gerencia: v })"
+      />
+      <VTextField
+        :model-value="r.filtros.desde"
+        type="date"
+        :label="t('monitoreo.ranking.desde')"
+        :aria-label="t('monitoreo.ranking.desde')"
+        :min="r.datos.value?.periodo?.inicio"
+        :max="r.datos.value?.periodo?.fin"
+        class="as-filtro--sm"
+        @update:model-value="(v: string) => r.aplicar({ desde: v || null })"
+      />
+      <VTextField
+        :model-value="r.filtros.hasta"
+        type="date"
+        :label="t('monitoreo.ranking.hasta')"
+        :aria-label="t('monitoreo.ranking.hasta')"
+        :min="r.filtros.desde ?? r.datos.value?.periodo?.inicio"
+        :max="r.datos.value?.periodo?.fin"
+        class="as-filtro--sm"
+        @update:model-value="(v: string) => r.aplicar({ hasta: v || null })"
+      />
+      <VBtn
+        variant="text"
+        size="small"
+        @click="r.aplicar({ desde: r.datos.value?.hasta ?? null, hasta: r.datos.value?.hasta ?? null })"
       >
-        <template v-if="r.datos.value.referencia_periodos.length">
-          {{ t('monitoreo.ranking.referencia', { periodos: r.datos.value.referencia_periodos.join(', ') }) }}
-        </template>
-        <template v-else>
-          {{ t('monitoreo.ranking.sinReferenciaPeriodos') }}
-        </template>
-      </div>
+        {{ t('monitoreo.ranking.soloUltimoDia') }}
+      </VBtn>
+      <VBtn
+        variant="text"
+        size="small"
+        @click="r.aplicar({ desde: r.datos.value?.periodo?.inicio ?? null, hasta: null })"
+      >
+        {{ t('monitoreo.ranking.todoElPeriodo') }}
+      </VBtn>
+      <template
+        v-if="resumen"
+        #fin
+      >
+        <span class="as-secundario as-num">{{ resumen }}</span>
+      </template>
+    </AsBarraFiltros>
 
-      <VDataTable
-        :headers="headers"
-        :items="r.filas.value"
-        item-value="lecturista_id"
-        density="compact"
-        :items-per-page="-1"
-        hide-default-footer
-        :no-data-text="t('monitoreo.ranking.sinFilas')"
-        class="ranking__tabla"
-        hover
+    <AsTablaDatos
+      :columnas="columnas"
+      :filas="r.filas.value"
+      clave-fila="lecturista_id"
+      densidad="estandar"
+      :cargando="r.cargando.value"
+      :por-pagina="-1"
+      :totales="totales"
+      :vacio-titulo="t('monitoreo.ranking.sinFilas')"
+      vacio-detalle=""
+      vacio-icono="tabler-trophy"
+      class="ranking__tabla"
+    >
+      <template
+        v-if="r.datos.value"
+        #encabezado
       >
-        <template #item.posicion="{ item }">
-          <span class="font-weight-medium">{{ item.posicion }}</span>
-        </template>
-        <template #item.nombre="{ item }">
-          <a
-            class="text-primary text-decoration-none font-weight-medium"
-            href="#"
-            @click.prevent="verJornada(item)"
-          >{{ item.nombre }}</a>
-          <div
-            v-if="!r.filtros.gerencia && alcance.gerencias.length !== 1"
-            class="text-caption text-medium-emphasis"
+        <span class="as-secundario">
+          <template v-if="r.datos.value.referencia_periodos.length">
+            {{ t('monitoreo.ranking.referencia', { periodos: r.datos.value.referencia_periodos.join(', ') }) }}
+          </template>
+          <template v-else>
+            {{ t('monitoreo.ranking.sinReferenciaPeriodos') }}
+          </template>
+        </span>
+      </template>
+
+      <template #celda-nombre="{ fila }">
+        <RouterLink
+          :to="destinoJornada(fila)"
+          class="ranking__enlace font-weight-medium"
+        >
+          {{ fila.nombre }}
+        </RouterLink>
+        <div
+          v-if="mostrarGerencia"
+          class="as-secundario"
+        >
+          {{ nombreGerencia(fila.gerencia_id) }}
+        </div>
+      </template>
+      <template #celda-lecturas_dia="{ fila }">
+        <span class="d-inline-flex align-center gap-1 as-num">
+          <span>{{ decimal(fila.lecturas_dia, 1) }}</span>
+          <VChip
+            v-if="fila.referencia && comparacion(fila, 'lecturas_dia').flecha"
+            size="x-small"
+            label
+            variant="tonal"
+            :color="colorComparacion(comparacion(fila, 'lecturas_dia').mejor)"
+            :prepend-icon="iconoComparacion(comparacion(fila, 'lecturas_dia').flecha)"
+            :title="t('monitoreo.ranking.promedioPropio', { v: decimal(fila.referencia.lecturas_dia, 1), p: fila.referencia.periodos })"
           >
-            {{ nombreGerencia(item.gerencia_id) }}
-          </div>
-        </template>
-        <template #item.lecturas="{ item }">
-          {{ n(item.lecturas) }}
-        </template>
-        <template #item.lecturas_dia="{ item }">
-          <div class="d-flex align-center justify-end gap-1">
-            <span>{{ item.lecturas_dia ?? '—' }}</span>
-            <template v-if="item.referencia">
-              <VChip
-                size="x-small"
-                label
-                variant="tonal"
-                :color="comparacion(item, 'lecturas_dia').mejor === null ? undefined : comparacion(item, 'lecturas_dia').mejor ? 'success' : 'error'"
-                :prepend-icon="iconoComparacion(comparacion(item, 'lecturas_dia').flecha)"
-                :title="t('monitoreo.ranking.promedioPropio', { v: item.referencia.lecturas_dia ?? '—', p: item.referencia.periodos })"
-              >
-                {{ comparacion(item, 'lecturas_dia').texto }}
-              </VChip>
-            </template>
-            <span
-              v-else
-              class="text-caption text-medium-emphasis"
-            >{{ t('monitoreo.ranking.sinReferencia') }}</span>
-          </div>
-        </template>
-        <template #item.lecturas_hora="{ item }">
-          <div class="d-flex align-center justify-end gap-1">
-            <span>{{ item.lecturas_hora ?? '—' }}</span>
-            <VChip
-              v-if="item.referencia && comparacion(item, 'lecturas_hora').flecha"
-              size="x-small"
-              label
-              variant="tonal"
-              :color="comparacion(item, 'lecturas_hora').mejor === null ? undefined : comparacion(item, 'lecturas_hora').mejor ? 'success' : 'error'"
-              :prepend-icon="iconoComparacion(comparacion(item, 'lecturas_hora').flecha)"
-              :title="t('monitoreo.ranking.promedioPropio', { v: item.referencia.lecturas_hora ?? '—', p: item.referencia.periodos })"
-            >
-              {{ comparacion(item, 'lecturas_hora').texto }}
-            </VChip>
-          </div>
-        </template>
-        <template #item.min_totales="{ item }">
-          {{ minutos(item.min_totales) }}
-        </template>
-        <template #item.min_muertos="{ item }">
-          <div class="d-flex align-center justify-end gap-1">
-            <span>{{ minutos(item.min_muertos) }}</span>
-            <VChip
-              v-if="item.referencia && comparacion(item, 'min_muertos_dia').flecha"
-              size="x-small"
-              label
-              variant="tonal"
-              :color="comparacion(item, 'min_muertos_dia').mejor === null ? undefined : comparacion(item, 'min_muertos_dia').mejor ? 'success' : 'error'"
-              :prepend-icon="iconoComparacion(comparacion(item, 'min_muertos_dia').flecha)"
-              :title="t('monitoreo.ranking.promedioPropioMuertos', { v: item.referencia.min_muertos_dia ?? '—', p: item.referencia.periodos })"
-            >
-              {{ comparacion(item, 'min_muertos_dia').texto }}
-            </VChip>
-          </div>
-        </template>
-        <template #item.lejos="{ item }">
-          {{ item.lejos }}<span
-            v-if="item.pct_lejos !== null"
-            class="text-caption text-medium-emphasis"
-          > ({{ item.pct_lejos }} %)</span>
-        </template>
-        <template #item.apego_pct="{ item }">
-          {{ item.apego_pct === null ? '—' : `${item.apego_pct} %` }}
-        </template>
-        <template #bottom>
-          <VDivider />
-          <div
-            v-if="r.totales.value && r.datos.value"
-            class="d-flex flex-wrap justify-space-between align-center px-4 py-2 text-caption text-medium-emphasis"
+            {{ comparacion(fila, 'lecturas_dia').texto }}
+          </VChip>
+          <span
+            v-else-if="!fila.referencia"
+            class="as-secundario"
+          >{{ t('monitoreo.ranking.sinReferencia') }}</span>
+        </span>
+      </template>
+      <template #celda-lecturas_hora="{ fila }">
+        <span class="d-inline-flex align-center gap-1 as-num">
+          <span>{{ decimal(fila.lecturas_hora, 1) }}</span>
+          <VChip
+            v-if="fila.referencia && comparacion(fila, 'lecturas_hora').flecha"
+            size="x-small"
+            label
+            variant="tonal"
+            :color="colorComparacion(comparacion(fila, 'lecturas_hora').mejor)"
+            :prepend-icon="iconoComparacion(comparacion(fila, 'lecturas_hora').flecha)"
+            :title="t('monitoreo.ranking.promedioPropio', { v: decimal(fila.referencia.lecturas_hora, 1), p: fila.referencia.periodos })"
           >
-            <span>{{ t('monitoreo.ranking.pie', { desde: fechaCorta(`${r.datos.value.desde} 12:00:00`), hasta: fechaCorta(`${r.datos.value.hasta} 12:00:00`), periodo: r.datos.value.periodo?.nombre ?? '' }) }}</span>
-            <span>{{ t('monitoreo.ranking.totales', { l: n(r.totales.value.lecturas), a: n(r.totales.value.anomalias), i: n(r.totales.value.impresas), m: minutos(r.totales.value.min_muertos) }) }}</span>
-          </div>
-        </template>
-      </VDataTable>
-    </VCard>
+            {{ comparacion(fila, 'lecturas_hora').texto }}
+          </VChip>
+        </span>
+      </template>
+      <template #celda-min_totales="{ fila }">
+        <span class="as-num">{{ duracion(fila.min_totales) }}</span>
+      </template>
+      <template #celda-min_muertos="{ fila }">
+        <span class="d-inline-flex align-center gap-1 as-num">
+          <span>{{ duracion(fila.min_muertos) }}</span>
+          <VChip
+            v-if="fila.referencia && comparacion(fila, 'min_muertos_dia').flecha"
+            size="x-small"
+            label
+            variant="tonal"
+            :color="colorComparacion(comparacion(fila, 'min_muertos_dia').mejor)"
+            :prepend-icon="iconoComparacion(comparacion(fila, 'min_muertos_dia').flecha)"
+            :title="t('monitoreo.ranking.promedioPropioMuertos', { v: decimal(fila.referencia.min_muertos_dia, 1), p: fila.referencia.periodos })"
+          >
+            {{ comparacion(fila, 'min_muertos_dia').texto }}
+          </VChip>
+        </span>
+      </template>
+      <template #celda-lejos="{ fila }">
+        <span class="as-num">{{ entero(fila.lejos) }}</span>
+        <span
+          v-if="fila.pct_lejos !== null"
+          class="as-secundario as-num"
+        > ({{ decimal(fila.pct_lejos, 0) }} %)</span>
+      </template>
+
+      <template
+        v-if="r.datos.value"
+        #pie
+      >
+        <span>{{ t('monitoreo.ranking.pie', { desde: fechaCorta(`${r.datos.value.desde} 12:00:00`), hasta: fechaCorta(`${r.datos.value.hasta} 12:00:00`), periodo: r.datos.value.periodo?.nombre ?? '' }) }}</span>
+      </template>
+    </AsTablaDatos>
   </div>
 </template>
 
 <style scoped>
-.ranking__campo {
-  flex: 1 1 220px;
-  max-inline-size: 300px;
-  min-inline-size: 180px;
-}
-
-.ranking__fecha {
-  flex: 0 1 170px;
-  max-inline-size: 190px;
-  min-inline-size: 150px;
-}
-
 .ranking__tabla :deep(td) {
   white-space: nowrap;
+}
+
+.ranking__enlace {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+
+.ranking__enlace:hover,
+.ranking__enlace:focus-visible {
+  text-decoration: underline;
 }
 </style>
