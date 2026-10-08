@@ -1,197 +1,109 @@
 <script setup lang="ts">
-import BaseTable from '@/components/BaseTable.vue'; // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager';
-import { useNotification } from '@/helpers/notificationHelper';
-import { useContractStore } from '@/modules/support/stores/contractStore';
-import { onMounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import AddNoteDialog from './dialog/AddNoteDialog.vue';
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useListaContrato } from '../composables/useListaContrato'
+import { useContractStore } from '../stores/contractStore'
+import AddNoteDialog from './dialog/AddNoteDialog.vue'
+import MensajeDialogo from './MensajeDialogo.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
 
-// Props para personalizar el título y descripción
-const props = defineProps({
-  activeTab: { type: Number, required: true },
-})
+/* Notas de atención del contrato: bitácora de quien atendió, con alta desde la misma pestaña. */
+const props = defineProps<{ activa: boolean }>()
 
-const { t } = useI18n()
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
-const { showSuccess, showError } = useNotification()
-const { openDialog } = useAppManager()
+const { t, te } = useI18n()
+const store = useContractStore()
+const lista = useListaContrato((id, p) => store.getNotesByContract(id, p), () => props.activa)
 
-const notes = ref([])
-const loading = ref(true)
-const showAddNoteDialog = ref(false)
-const showMessageDialog = ref(false)
-const selectedMessage = ref('')
+const notaAbierta = ref(false)
+const mensajeAbierto = ref(false)
+const mensaje = ref('')
 
-const pagination = ref({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-})
+const asunto = (v: unknown) => (v && te(String(v)) ? t(String(v)) : String(v || '—'))
 
-// Encabezados de la tabla
-const headers = [
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'subject', titulo: t('support.notas.asunto'), formato: 'personalizado', ancho: 220 },
+  { clave: 'content', titulo: t('support.notas.contenido'), formato: 'personalizado', anchoMin: 260 },
+  { clave: 'datec', titulo: t('support.notas.fecha'), formato: 'fechaHora', ancho: 150 },
+  { clave: 'author_name', titulo: t('support.notas.autor'), formato: 'texto', truncar: true, ancho: 200 },
+].map(c => ({ ...c, ordenable: false })))
 
-  { title: t('subject'), value: 'subject' },
-  { title: t('content'), value: 'content' },
-  { title: t('date'), value: 'datec' },
-  { title: t('author'), value: 'author_name' },
-]
-
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.offset = (newPage - 1) * pagination.value.limit
-  fetchData()
+function verMensaje(html: string) {
+  mensaje.value = html
+  mensajeAbierto.value = true
 }
-
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para cargar los datos
-async function fetchData() {
-  loading.value = true
-  try {
-    const response = await contractStore.getNotesByContract(contractStore.item.id_account, pagination.value)
-
-    notes.value = response.data
-    pagination.value = response.pagination
-  }
-  catch (error) {
-    console.error('Error al cargar las notas:', error)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-function showFullMessage(message: string) {
-  selectedMessage.value = message
-  showMessageDialog.value = true
-}
-function openAddNoteDialog() {
-  openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
-    if (result === 'submit') {
-      console.log('Nota creada, refrescando datos...')
-      fetchData()
-    }
-  })
-}
-
-// Montar datos al iniciar el componente
-onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
-watch(() => props.activeTab, newTab => {
-  if (newTab === 7) { // Ajusta este número según el índice de tu tab de notas
-    fetchData()
-  }
-})
 </script>
 
 <template>
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <div class="d-flex justify-end mb-4">
-        <VBtn
-          color="primary"
-          prepend-icon="tabler-plus"
-          @click="openAddNoteDialog"
-        >
-          {{ t('add_note') }}
-        </VBtn>
-      </div>
-
-      <!-- Tabla de notas -->
-      <BaseTable
-        v-if="!loading"
-        :headers="headers"
-        :items="notes"
-        :total="pagination.total"
-        :page="pagination.offset / pagination.limit + 1"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #subject="{ item }">
-          <div class="d-flex align-center">
-            {{ $t(item.subject) }}
-          </div>
-        </template>
-        <template #content="{ item }">
-          <div class="d-flex align-center">
-            <div
-              class="text-truncate"
-              style="max-inline-size: 200px;"
-              v-html="item.content"
-            />
-            <VIcon
-              v-if="item.content"
-              icon="tabler-eye"
-              size="small"
-              class="ms-2 cursor-pointer"
-              @click="showFullMessage(item.content)"
-            />
-          </div>
-        </template>
-        <template #datec="{ item }">
-          {{ $formatDate(item.datec, {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-          }) || 'N/A' }}
-        </template>
-      </BaseTable>
-
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="text-center py-6"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
-        />
-        <p class="mt-2">
-          {{ t('loading') }}...
-        </p>
-      </div>
-    </VCardText>
-    <!-- Agregar el diálogo para mostrar el mensaje completo -->
-    <VDialog
-      v-model="showMessageDialog"
-      max-width="600"
+  <div class="d-flex justify-end px-4 pt-3">
+    <AsBtnPrimario
+      prepend-icon="tabler-plus"
+      @click="notaAbierta = true"
     >
-      <VCard>
-        <VCardTitle>{{ t('message') }}</VCardTitle>
-        <VCardText>
-          <div v-html="selectedMessage" />
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="primary"
-            @click="showMessageDialog = false"
-          >
-            {{ t('close') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-  </VCard>
+      {{ t('support.nota.titulo') }}
+    </AsBtnPrimario>
+  </div>
+
+  <AsTablaDatos
+    sin-tarjeta
+    :columnas="columnas"
+    :filas="lista.filas.value"
+    clave-fila="_k"
+    densidad="estandar"
+    :cargando="lista.cargando.value"
+    :error="lista.error.value"
+    :paginacion="lista.paginacion.value"
+    :vacio-titulo="t('support.lista.sinFilas')"
+    vacio-detalle=""
+    vacio-icono="tabler-note-off"
+    class="notas__tabla"
+    @update:pagina="lista.cambiarPagina"
+    @reintentar="lista.cargar"
+  >
+    <template #vacio-acciones>
+      <AsBtnSecundario
+        prepend-icon="tabler-plus"
+        @click="notaAbierta = true"
+      >
+        {{ t('support.nota.titulo') }}
+      </AsBtnSecundario>
+    </template>
+    <template #celda-subject="{ fila }">
+      {{ asunto(fila.subject) }}
+    </template>
+    <template #celda-content="{ fila }">
+      <div class="d-flex align-center gap-1">
+        <!-- eslint-disable vue/no-v-html -- contenido ya saneado por Aquasoft Comercial -->
+        <span
+          class="text-truncate notas__contenido"
+          v-html="fila.content"
+        />
+        <!-- eslint-enable vue/no-v-html -->
+        <VBtn
+          v-if="fila.content"
+          icon="tabler-eye"
+          size="x-small"
+          variant="text"
+          :title="t('support.lista.verMensaje')"
+          :aria-label="t('support.lista.verMensaje')"
+          @click="verMensaje(fila.content)"
+        />
+      </div>
+    </template>
+  </AsTablaDatos>
+
+  <AddNoteDialog
+    v-model:abierto="notaAbierta"
+    @guardado="lista.cargar()"
+  />
+  <MensajeDialogo
+    v-model:abierto="mensajeAbierto"
+    :html="mensaje"
+  />
 </template>
 
 <style scoped>
-.cursor-pointer {
-  cursor: pointer;
+.notas__contenido {
+  display: inline-block;
+  max-inline-size: var(--as-ancho-filtro-lg);
 }
 </style>

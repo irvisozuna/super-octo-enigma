@@ -566,6 +566,13 @@
       "buscar": "Buscar…",
       "desplazar": "Desplaza a los lados para ver más columnas",
       "totales": "Totales"
+    },
+    "mapa": {
+      "sinCoordenada": "No coordinates",
+      "sinCoordenadaDetalle": "This service point has no valid location on record.",
+      "calles": "Streets",
+      "satelite": "Satellite",
+      "etiqueta": "Location map"
     }
   }
 }

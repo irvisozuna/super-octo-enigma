@@ -6,7 +6,7 @@ import type { TamanoDialogo } from './tipos'
 /*
  * Diálogo del sistema de diseño. Variantes: formulario (Cancelar / Confirmar), confirmar (misma botonera, color
  * de confirmación destacado, persistente) e informativo (solo Cerrar). Título fijo, cuerpo desplazable, pie fijo.
- * Anchos: sm 480 · md 640 · lg 880. Para confirmaciones imperativas, ver useDialogo().
+ * Anchos: sm 480 · md 640 · lg 880 · xl 1100 (tablas anchas). Para confirmaciones imperativas, ver useDialogo().
  */
 const props = withDefaults(defineProps<{
   abierto: boolean

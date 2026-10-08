@@ -1,143 +1,136 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNotification } from '@/helpers/notificationHelper'
-import { useContractStore } from '@/modules/support/stores/contractStore'
-import { useAppManager } from '@/composables/useAppManager'
+import { useContractStore } from '../../stores/contractStore'
+import { useNotificacion } from '@/composables/useNotificacion'
 
+/*
+ * Nota de atención del contrato (asunto del catálogo + descripción). Con `obligatoria`, el diálogo es persistente y
+ * solo un administrador puede cerrarlo sin guardar: sirve para exigir la bitácora de una atención.
+ */
 const props = defineProps<{
-  isMandatory?: boolean
+  abierto: boolean
+  obligatoria?: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:abierto': [valor: boolean]
+  'guardado': []
 }>()
 
 const { t } = useI18n()
-const { showSuccess, showError } = useNotification()
-const contractStore = useContractStore()
-const { closeDialog } = useAppManager()
-const { aquasoft_id, name } = useCookie('userData').value
+const notificar = useNotificacion()
+const store = useContractStore()
+const { aquasoft_id: usuarioAquasoft, name: nombreUsuario } = (useCookie('userData').value ?? {}) as { aquasoft_id?: string; name?: string }
 
-// Computed para determinar si el usuario es admin
-const isAdmin = computed(() => name === 'admin')
+const esAdmin = computed(() => nombreUsuario === 'admin')
+const puedeCancelar = computed(() => !props.obligatoria || esAdmin.value)
+const guardando = ref(false)
+const nota = reactive({ subject: '', content: '' })
 
-// Estado interno del diálogo
-const internalDialog = ref(true)
+const tipos = computed(() => [
+  { value: 'info', title: t('general_info_query') },
+  { value: 'balance', title: t('balance_clarification') },
+  { value: 'adjustment', title: t('adjustment_request') },
+  { value: 'agreement', title: t('agreements') },
+  { value: 'complaint', title: t('complaints_comments') },
+  { value: 'leak', title: t('leak_report') },
+  { value: 'work_order', title: t('work_order') },
+  { value: 'debt_letter', title: t('no_debt_letter') },
+  { value: 'error_reading', title: t('error_reading') },
+])
 
-// Objeto para la nota
-const note = ref({
-  subject: '',
-  content: '',
+const valido = computed(() => !!nota.subject && nota.content.trim().length > 0)
+
+watch(() => props.abierto, v => {
+  if (v) {
+    nota.subject = ''
+    nota.content = ''
+  }
 })
 
-// Agregar las opciones para el tipo de nota
-const noteTypes = [
-  { value: 'info', text: t('general_info_query') },
-  { value: 'balance', text: t('balance_clarification') },
-  { value: 'adjustment', text: t('adjustment_request') },
-  { value: 'agreement', text: t('agreements') },
-  { value: 'complaint', text: t('complaints_comments') },
-  { value: 'leak', text: t('leak_report') },
-  { value: 'work_order', text: t('work_order') },
-  { value: 'debt_letter', text: t('no_debt_letter') },
-  { value: 'error_reading', text: t('error_reading') },
-]
+function cerrar() {
+  emit('update:abierto', false)
+}
 
-// Función que se ejecuta al enviar el formulario
-async function onSubmit() {
-  // Validar que si no tiene el aquasoft, no se pueda crear la nota que diga que cierre sesion y vuelva abrir
-  if (!aquasoft_id) {
-    showError(t('error_creating_note'))
+async function guardar() {
+  if (!usuarioAquasoft) {
+    notificar.error(t('support.cargo.sinSesion'))
 
     return
   }
-
+  guardando.value = true
   try {
-    const noteData = {
-      subject: note.value.subject,
-      content: note.value.content,
-      account: contractStore.item?.id_account,
-      user_id: aquasoft_id,
-    }
-
-    await contractStore.createNote(noteData, '/notes')
-    showSuccess(t('note_created_successfully'))
-    closeDialog('submit')
+    await store.createNote({ subject: nota.subject, content: nota.content.trim(), account: store.item?.id_account, user_id: usuarioAquasoft }, '/notes')
+    notificar.exito(t('support.nota.creada'))
+    cerrar()
+    emit('guardado')
   }
-  catch (error) {
-    showError(t('error_creating_note'))
-    console.error('Error al crear la nota:', error)
+  catch (e) {
+    notificar.error(e, t('support.nota.errorCrear'))
+  }
+  finally {
+    guardando.value = false
   }
 }
-
-// Función para cancelar y cerrar el diálogo
-function onCancel() {
-  if (props.isMandatory && !isAdmin.value) {
-    showError(t('note_required'))
-
-    return
-  }
-  closeDialog('cancel')
-}
-
-// Opcional: Cierra el diálogo cuando se termine la animación y resuelve la promesa
-watch(internalDialog, val => {
-  if (!val && props.isMandatory && !isAdmin.value)
-    internalDialog.value = true // Forzar a mantener el diálogo abierto
-})
 </script>
 
 <template>
-  <DialogCloseBtn
-    v-if="!isMandatory || isAdmin"
-    @click="closeDialog"
-  />
-  <VCard>
-    <VCardTitle>
-      {{ t('add_note') }}
-      <span
-        v-if="isMandatory && !isAdmin"
-        class="text-error"
-      >*</span>
-    </VCardTitle>
-    <VForm @submit.prevent="onSubmit">
-      <VCardText>
-        <VSelect
-          v-model="note.subject"
-          :items="noteTypes"
-          item-title="text"
-          item-value="value"
-          :label="t('subject')"
-          required
-          class="mb-4"
-        />
-        <VTextarea
-          v-model="note.content"
-          :label="t('content')"
-          required
-          rows="4"
-        />
-        <div
-          v-if="isMandatory && !isAdmin"
-          class="text-caption text-error mt-2"
-        >
-          {{ t('note_required_message') }}
-        </div>
-      </VCardText>
-      <VCardActions>
-        <VSpacer />
-        <VBtn
-          v-if="!isMandatory || isAdmin"
-          color="secondary"
-          variant="text"
-          @click="onCancel"
-        >
-          {{ t('cancel') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          type="submit"
-        >
-          {{ t('save') }}
-        </VBtn>
-      </VCardActions>
+  <AsDialogo
+    :abierto="abierto"
+    :titulo="t('support.nota.titulo')"
+    :subtitulo="store.item ? `${store.item.account} · ${store.item.nameuser}` : undefined"
+    tamano="sm"
+    :persistente="!puedeCancelar"
+    :cargando="guardando"
+    @update:abierto="(v: boolean) => { if (!v && puedeCancelar) cerrar() }"
+  >
+    <VForm
+      class="d-flex flex-column gap-4"
+      @submit.prevent="valido && guardar()"
+    >
+      <VSelect
+        v-model="nota.subject"
+        :items="tipos"
+        :label="t('support.nota.asunto')"
+        :aria-label="t('support.nota.asunto')"
+        density="compact"
+        hide-details
+        autofocus
+      />
+      <VTextarea
+        v-model="nota.content"
+        :label="t('support.nota.contenido')"
+        :aria-label="t('support.nota.contenido')"
+        density="compact"
+        rows="4"
+        auto-grow
+        hide-details
+      />
+      <p
+        v-if="!puedeCancelar"
+        class="as-secundario text-warning mb-0"
+      >
+        {{ t('support.nota.obligatoria') }}
+      </p>
     </VForm>
-  </VCard>
+
+    <template #acciones>
+      <VBtn
+        v-if="puedeCancelar"
+        variant="text"
+        :disabled="guardando"
+        @click="cerrar"
+      >
+        {{ t('as.dialogo.cancelar') }}
+      </VBtn>
+      <AsBtnPrimario
+        :loading="guardando"
+        :disabled="!valido"
+        @click="guardar"
+      >
+        {{ t('save') }}
+      </AsBtnPrimario>
+    </template>
+  </AsDialogo>
 </template>

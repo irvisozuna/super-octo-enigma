@@ -1,73 +1,101 @@
-<template>
-  <DialogCloseBtn @click="closeDialog" />
-  <VCard>
-    <VCardTitle class="headline">
-      {{ $t('account_balance') }}
-    </VCardTitle>
-    <VCardText>
-      <VRow>
-        <VCol cols="12" >
-          <!-- Mostrar un spinner mientras carga el PDF -->
-           <div class="text-center" v-if="loading">
-              <VProgressCircular
-              
-              indeterminate
-              color="primary"
-              size="50"
-            />
-           </div>
-
-
-          <!-- Una vez cargado, mostrar el PDF dentro de un iframe (o tu método preferido) -->
-          <iframe
-            v-else
-            :src="pdfSrc"
-            width="100%"
-            height="600px"
-          ></iframe>
-        </VCol>
-      </VRow>
-    </VCardText>
-    <VCardActions>
-      <VBtn
-        text
-        @click="closeDialog"
-      >
-        {{ $t('close') }}
-      </VBtn>
-    </VCardActions>
-  </VCard>
-</template>
-
 <script setup lang="ts">
-import { useAppManager } from '@/composables/useAppManager'
-import { onMounted, ref } from 'vue'
-// Asumiendo que tienes un store "contractStore" con la función getPdFBalance
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useContractStore } from '../../stores/contractStore'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
 
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
+/* Estado de cuenta del contrato en PDF (lo genera Aquasoft Comercial): visor con descarga. */
+const props = defineProps<{ abierto: boolean }>()
 
-// Prop o variable que identifique tu "account"
-const account = contractStore.item?.account
+const emit = defineEmits<{
+  'update:abierto': [valor: boolean]
+}>()
 
-const loading = ref(true)
-const pdfSrc = ref('') // contendrá la URL o el base64 del PDF
+const { t } = useI18n()
+const store = useContractStore()
+const cargando = ref(false)
+const error = ref<ErrorReporte | null>(null)
+const pdf = ref('')
 
-onMounted(async () => {
+const cuenta = computed(() => store.item?.account ?? '')
+const nombreArchivo = computed(() => `estado-cuenta-${cuenta.value}.pdf`)
+
+async function cargar() {
+  if (!cuenta.value)
+    return
+  cargando.value = true
+  error.value = null
+  pdf.value = ''
   try {
-    // Obtiene la URL o base64 desde tu store
-    const pdfUrl = await contractStore.getPdFBalance(account)
-    // Si es URL (e.g. 'https://...' o algo similar)
-    // pdfSrc.value = pdfUrl
+    const base64 = await store.getPdFBalance(cuenta.value)
 
-    // O si recibes un base64, concatenar con 'data:application/pdf;base64,'
-    pdfSrc.value = 'data:application/pdf;base64,' + pdfUrl
-
-  } catch (error) {
-    console.error('Error al cargar PDF:', error)
-  } finally {
-    loading.value = false
+    pdf.value = `data:application/pdf;base64,${base64}`
   }
+  catch (e) {
+    error.value = normalizarError(e)
+  }
+  finally {
+    cargando.value = false
+  }
+}
+
+watch(() => props.abierto, v => {
+  if (v)
+    cargar()
+  else
+    pdf.value = ''
 })
 </script>
+
+<template>
+  <AsDialogo
+    :abierto="abierto"
+    :titulo="t('support.saldo.titulo')"
+    :subtitulo="cuenta"
+    tamano="lg"
+    variante="informativo"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
+  >
+    <AsEstado
+      v-if="cargando"
+      tipo="cargando"
+      esqueleto="tarjeta"
+      :filas="3"
+    />
+    <AsEstado
+      v-else-if="error"
+      tipo="error"
+      :error="error"
+      :detalle="t('support.saldo.error')"
+      @reintentar="cargar"
+    />
+    <iframe
+      v-else-if="pdf"
+      :src="pdf"
+      :title="t('support.saldo.visor')"
+      class="saldo__visor"
+    />
+
+    <template #acciones-inicio>
+      <AsBtnSecundario
+        prepend-icon="tabler-download"
+        :href="pdf"
+        :download="nombreArchivo"
+        :disabled="!pdf"
+      >
+        {{ t('support.saldo.descargar') }}
+      </AsBtnSecundario>
+    </template>
+  </AsDialogo>
+</template>
+
+<style scoped>
+.saldo__visor {
+  display: block;
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
+  block-size: 70vh;
+  inline-size: 100%;
+}
+</style>

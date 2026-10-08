@@ -9,6 +9,7 @@ import type { EstadoToma, LecturistaMapaProps, SectorProps, TomaProps } from '..
 import type { ParametrosMonitor } from '../types/monitor'
 import { CLAVES_ESTADO, ORDEN_ESTADOS, cajaDe, conteosLeyenda } from '../utils/geojson'
 import { haceCuanto } from '../utils/tiempo'
+import { ATRIBUCION_SATELITE, CENTRO_LOS_CABOS, ESTILO_CALLES, SATELITE } from '@/components/as/mapa'
 import { useTokensTema } from '@/composables/useTokensTema'
 import { TOKEN_SECTOR, TOKEN_TOMA, tokenSenal } from '@/utils/estados'
 import { entero, hora } from '@/utils/formato'
@@ -44,9 +45,6 @@ const emit = defineEmits<{
   escape: []
 }>()
 
-const ESTILO_CALLES = 'https://tiles.openfreemap.org/styles/liberty'
-const SATELITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-const CENTRO_LOS_CABOS: [number, number] = [-109.82, 23.0]
 const CAPAS_SECTORES = ['sectores-relleno', 'sectores-linea', 'sectores-etiqueta']
 const CAPAS_LECTURISTAS = ['lecturistas-halo', 'lecturistas-puntos', 'lecturistas-etiqueta']
 const CAPAS_RECORRIDO = ['recorrido-lecturas-linea', 'recorrido-linea', 'recorrido-linea-aprox', 'recorrido-flechas', 'recorrido-lecturas', 'recorrido-paradas', 'recorrido-paradas-texto', 'recorrido-extremos', 'recorrido-extremos-texto']
@@ -181,7 +179,7 @@ function crearMapa() {
       return
     const primeraEtiqueta = mapa.getStyle().layers?.find(l => l.type === 'symbol')?.id
 
-    mapa.addSource('satelite', { type: 'raster', tiles: [SATELITE], tileSize: 256, attribution: 'Imágenes: Esri, Maxar, Earthstar Geographics' })
+    mapa.addSource('satelite', { type: 'raster', tiles: [SATELITE], tileSize: 256, attribution: ATRIBUCION_SATELITE })
     mapa.addLayer({ id: 'satelite', type: 'raster', source: 'satelite', layout: { visibility: 'none' } }, primeraEtiqueta)
 
     mapa.addSource('sectores', { type: 'geojson', data: datos.sectores.value })

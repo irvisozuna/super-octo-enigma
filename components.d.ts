@@ -33,6 +33,7 @@ declare module 'vue' {
     AsEncabezadoPagina: typeof import('./src/components/as/AsEncabezadoPagina.vue')['default']
     AsEstado: typeof import('./src/components/as/AsEstado.vue')['default']
     AsIndicador: typeof import('./src/components/as/AsIndicador.vue')['default']
+    AsMapaUbicacion: typeof import('./src/components/as/AsMapaUbicacion.vue')['default']
     AsPanelLateral: typeof import('./src/components/as/AsPanelLateral.vue')['default']
     AsTablaDatos: typeof import('./src/components/as/AsTablaDatos.vue')['default']
     BaseTable: typeof import('./src/components/BaseTable.vue')['default']

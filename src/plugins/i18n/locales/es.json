@@ -655,6 +655,13 @@
       "buscar": "Buscar…",
       "desplazar": "Desplaza a los lados para ver más columnas",
       "totales": "Totales"
+    },
+    "mapa": {
+      "sinCoordenada": "Sin coordenada",
+      "sinCoordenadaDetalle": "Esta toma no tiene una ubicación válida registrada.",
+      "calles": "Calles",
+      "satelite": "Satélite",
+      "etiqueta": "Mapa de ubicación"
     }
   }
 }

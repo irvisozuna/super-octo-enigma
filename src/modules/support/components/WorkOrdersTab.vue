@@ -1,196 +1,98 @@
 <script setup lang="ts">
-import BaseTable from '@/components/BaseTable.vue'
-import { useAppManager } from '@/composables/useAppManager'
-import { useContractStore } from '@/modules/support/stores/contractStore'
-import { onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useListaContrato } from '../composables/useListaContrato'
+import { useContractStore } from '../stores/contractStore'
+import MensajeDialogo from './MensajeDialogo.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { COLOR_PRIORIDAD_ORDEN, colorDe } from '@/utils/estados'
 
-// Props para personalizar el título y descripción
-const props = defineProps({
-  activeTab: { type: Number, required: true },
-})
+/* Órdenes de trabajo del contrato (tickets de Aquasoft Comercial): prioridad, tipo, resolución y mensajes completos. */
+const props = defineProps<{ activa: boolean }>()
 
-const { t } = useI18n()
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
+const { t, te } = useI18n()
+const store = useContractStore()
+const lista = useListaContrato((id, p) => store.getWorkOrdersByContract(id, p), () => props.activa)
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
-const searchQuery = ref('')
-const showMessageDialog = ref(false)
-const selectedMessage = ref('')
+const mensajeAbierto = ref(false)
+const mensaje = ref('')
 
-const pagination = ref({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-})
+const prioridad = (v: unknown) => (te(`support.orden.prioridades.${String(v)}`) ? t(`support.orden.prioridades.${String(v)}`) : String(v ?? '—'))
+const tipo = (v: unknown) => (v && te(String(v)) ? t(String(v)) : String(v || '—'))
 
-// Encabezados de la tabla
-const headers = [
-  { title: t('date'), value: 'datec' },
-  { title: t('reference'), value: 'ref' },
-  { title: t('subject'), value: 'subject' },
-  { title: t('priority'), value: 'severity_code' },
-  { title: t('type'), value: 'type_code' },
-  { title: t('resolution'), value: 'resolution' },
-  { title: t('author'), value: 'reported_by' },
-  { title: t('message'), value: 'message' },
-  { title: t('closed_comments'), value: 'closed_comments' },
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'datec', titulo: t('support.ordenes.fecha'), formato: 'fecha', ancho: 120 },
+  { clave: 'ref', titulo: t('support.ordenes.referencia'), formato: 'texto', ancho: 120 },
+  { clave: 'subject', titulo: t('support.ordenes.asunto'), formato: 'texto', truncar: true, anchoMin: 200 },
+  { clave: 'severity_code', titulo: t('support.ordenes.prioridad'), formato: 'estado', ancho: 120, colorEstado: v => colorDe(COLOR_PRIORIDAD_ORDEN, String(v)), textoEstado: prioridad },
+  { clave: 'type_code', titulo: t('support.ordenes.tipo'), formato: 'personalizado', ancho: 150 },
+  { clave: 'resolution', titulo: t('support.ordenes.resolucion'), formato: 'texto', truncar: true },
+  { clave: 'reported_by', titulo: t('support.ordenes.autor'), formato: 'texto', truncar: true, ancho: 160 },
+  { clave: 'message', titulo: t('support.ordenes.mensaje'), formato: 'personalizado', anchoMin: 220 },
+  { clave: 'closed_comments', titulo: t('support.ordenes.cierre'), formato: 'texto', truncar: true },
+  { clave: 'status', titulo: t('support.ordenes.estado'), formato: 'texto', ancho: 120 },
+].map(c => ({ ...c, ordenable: false })))
 
-  // { title: t('closed'), value: 'totalPaid' },
-  { title: t('status'), value: 'status' },
-]
-
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.page = newPage
-  fetchData()
+function verMensaje(html: string) {
+  mensaje.value = html
+  mensajeAbierto.value = true
 }
-
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
-// Función para cargar los datos
-async function fetchData() {
-  loading.value = true
-  try {
-    const response = await contractStore.getWorkOrdersByContract(contractStore.item.id_account, pagination.value)
-
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
-    pagination.value = response.pagination
-  }
-  catch (error) {
-    console.error('Error al cargar los Pagos:', error)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
-  })
-}
-
-// Agregar esta nueva función antes del onMounted
-function showFullMessage(message: string) {
-  selectedMessage.value = message
-  showMessageDialog.value = true
-}
-
-// Montar datos al iniciar el componente
-onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
-watch(() => props.activeTab, newTab => {
-  if (newTab === 4) { // Suponiendo que el tab de BillingHistory es el índice 1
-    fetchData()
-  }
-})
 </script>
 
 <template>
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <!-- Tabla de contratos -->
-      <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
-        :items="contracts"
-        :total="pagination.total"
-        :page="pagination.offset / pagination.limit + 1"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #message="{ item }">
-          <div class="d-flex align-center">
-            <div
-              class="text-truncate"
-              style="max-inline-size: 200px;"
-              v-html="item.message"
-            />
-            <VIcon
-              v-if="item.message"
-              icon="tabler-eye"
-              size="small"
-              class="ms-2 cursor-pointer"
-              @click="showFullMessage(item.message)"
-            />
-          </div>
-        </template>
-        <template #type_code="{ item }">
-          {{ $t(item.type_code) }}
-        </template>
-        <template #datec="{ item }">
-          {{ $formatDate(item.datec) }}
-        </template>
-      </BaseTable>
-
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="text-center py-6"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
+  <AsTablaDatos
+    sin-tarjeta
+    :columnas="columnas"
+    :filas="lista.filas.value"
+    clave-fila="_k"
+    densidad="estandar"
+    :cargando="lista.cargando.value"
+    :error="lista.error.value"
+    :paginacion="lista.paginacion.value"
+    :vacio-titulo="t('support.lista.sinFilas')"
+    vacio-detalle=""
+    vacio-icono="tabler-clipboard-off"
+    class="ordenes__tabla"
+    @update:pagina="lista.cambiarPagina"
+    @reintentar="lista.cargar"
+  >
+    <template #celda-type_code="{ fila }">
+      {{ tipo(fila.type_code) }}
+    </template>
+    <template #celda-message="{ fila }">
+      <div class="d-flex align-center gap-1">
+        <!-- eslint-disable vue/no-v-html -- contenido ya saneado por Aquasoft Comercial -->
+        <span
+          class="text-truncate ordenes__mensaje"
+          v-html="fila.message"
         />
-        <p class="mt-2">
-          {{ t('loading') }}...
-        </p>
+        <!-- eslint-enable vue/no-v-html -->
+        <VBtn
+          v-if="fila.message"
+          icon="tabler-eye"
+          size="x-small"
+          variant="text"
+          :title="t('support.lista.verMensaje')"
+          :aria-label="t('support.lista.verMensaje')"
+          @click="verMensaje(fila.message)"
+        />
       </div>
-    </VCardText>
+    </template>
+  </AsTablaDatos>
 
-    <!-- Agregar el diálogo para mostrar el mensaje completo -->
-    <VDialog
-      v-model="showMessageDialog"
-      max-width="600"
-    >
-      <VCard>
-        <VCardTitle>{{ t('message') }}</VCardTitle>
-        <VCardText>
-          <div v-html="selectedMessage" />
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="primary"
-            @click="showMessageDialog = false"
-          >
-            {{ t('close') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-  </VCard>
+  <MensajeDialogo
+    v-model:abierto="mensajeAbierto"
+    :html="mensaje"
+  />
 </template>
 
 <style scoped>
-.cursor-pointer {
-  cursor: pointer;
+.ordenes__mensaje {
+  display: inline-block;
+  max-inline-size: var(--as-ancho-filtro-md);
+}
+
+.ordenes__tabla :deep(.as-tabla__td--truncar) {
+  max-inline-size: var(--as-ancho-filtro-md);
 }
 </style>

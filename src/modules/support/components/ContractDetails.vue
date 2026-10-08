@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useAbility } from '@casl/vue'
+import { computed, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Account } from '../types/Contract'
 import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
 import AccountMapDialog from './dialog/AccountMapDialog.vue'
@@ -7,559 +9,461 @@ import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
 import FiscalDataDialog from './dialog/FiscalDataDialog.vue'
+import { useAppManager } from '@/composables/useAppManager'
 import DocumentosDialogo from '@/modules/reportes/components/documentos/DocumentosDialogo.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
+import { colorEstadoContrato } from '@/utils/estados'
+import { entero, fecha, moneda, texto } from '@/utils/formato'
 
-const contractStore = useContractStore()
-const contract = computed<Account | null>(() => contractStore.item)
+/*
+ * Información general del contrato: identidad y ubicación, acciones (cargo, nota, orden, estado de cuenta, documentos,
+ * mapa), indicadores de saldo y los datos generales, del servicio y fiscales. Los diálogos propios van sobre AsDialogo;
+ * el de documentos es del módulo de reportes y se abre con el gestor de diálogos hasta que ese módulo migre.
+ */
+interface Dato {
+  etiqueta: string
+  valor: string
+  num?: boolean
+}
+
+const { t } = useI18n()
+const ability = useAbility()
+const store = useContractStore()
 const { openDialog } = useAppManager()
 
-// Envuélvelo en computed
-const statisticsHorizontal = computed(() => {
+const contrato = computed<Account | null>(() => store.item)
+const dialogos = reactive({ mapa: false, orden: false, saldo: false, cargo: false, nota: false, fiscales: false })
+const puedeDocumentos = computed(() => ability.can('generate', 'documentos'))
+
+const ubicacion = computed<Dato[]>(() => {
+  const c = contrato.value
+
   return [
-    {
-      title: 'Convenio Activo',
-      color: 'secondary',
-      icon: 'tabler-edit',
-      stats: contract.value?.ref_agreement || 'N/A',
-    },
-    {
-      title: 'Orden de trabajo',
-      color: 'secondary',
-      icon: 'tabler-clipboard',
-      stats: contract.value?.ref || 'N/A', // o lo que necesites
-    },
+    { etiqueta: t('support.ficha.comunidad'), valor: texto(c?.community ?? c?.source_entity) },
+    { etiqueta: t('support.ficha.sistema'), valor: texto(c?.c_system) },
+    { etiqueta: t('support.ficha.sector'), valor: texto(c?.sector) },
+    ...(c?.route ? [{ etiqueta: t('support.ficha.ruta'), valor: c.route }] : []),
+    ...(c?.clave_loc ? [{ etiqueta: t('support.ficha.claveLoc'), valor: c.clave_loc, num: true }] : []),
   ]
 })
 
-// Función para abrir el diálogo de Orden de Trabajo
-function openAddWorkOrderDialog() {
-  openDialog(AddWorkOrderDialog, {}, { width: '100%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('Work order completed')
-  })
+const datosGenerales = computed<Dato[]>(() => {
+  const c = contrato.value
+
+  return [
+    { etiqueta: t('support.ficha.tipoContrato'), valor: texto(c?.code_type_contrat) },
+    { etiqueta: t('support.ficha.fechaContrato'), valor: fecha(c?.date_created), num: true },
+    { etiqueta: t('support.ficha.estadoContrato'), valor: texto(c?.status) },
+    { etiqueta: t('support.ficha.medidor'), valor: texto(c?.measurer), num: true },
+    { etiqueta: t('support.ficha.tarifa'), valor: texto(c?.rate_type) },
+    { etiqueta: t('support.ficha.actividad'), valor: texto(c?.business_activity) },
+    { etiqueta: t('support.ficha.pensionado'), valor: texto(c?.pensionary) },
+    { etiqueta: t('support.ficha.vigenciaPensionado'), valor: fecha(c?.due_date_pensioner), num: true },
+    { etiqueta: t('support.ficha.discapacitado'), valor: texto(c?.handicapped) },
+    { etiqueta: t('support.ficha.vigenciaDiscapacitado'), valor: fecha(c?.due_date_handicapped), num: true },
+    ...(c?.lps && c.lps.total > 0 ? [{ etiqueta: t('support.ficha.lps'), valor: `${entero(c.lps.total)} · ${texto(c.lps.lps_contratados)}`, num: true }] : []),
+  ]
+})
+
+const servicio = computed<Dato[]>(() => [
+  { etiqueta: t('support.ficha.metrica'), valor: texto(contrato.value?.type_charge) },
+  { etiqueta: t('support.ficha.servicios'), valor: texto(contrato.value?.type_services) },
+])
+
+const fiscales = computed<Dato[]>(() => {
+  const s = contrato.value?.societe
+
+  return [
+    { etiqueta: t('support.ficha.razonSocial'), valor: texto(s?.sat_cname) },
+    { etiqueta: t('support.ficha.rfc'), valor: texto(s?.sat_taxid), num: true },
+    { etiqueta: t('support.ficha.codigoPostal'), valor: texto(s?.sat_zip), num: true },
+    { etiqueta: t('support.ficha.regimen'), valor: texto(s?.fiscal_regime) },
+    { etiqueta: t('support.ficha.usoCfdi'), valor: texto(s?.usecfdi) },
+    { etiqueta: t('support.ficha.correo'), valor: texto(s?.emails) },
+    { etiqueta: t('support.ficha.telefono'), valor: texto(s?.phone), num: true },
+  ]
+})
+
+const ultimasLecturas = computed(() => (contrato.value?.readings?.rows ?? []).slice(0, 3))
+const mesesAdeudo = computed(() => Number(contrato.value?.months_debt) || 0)
+
+function abrirDocumentos() {
+  openDialog(DocumentosDialogo, { contrato: String(contrato.value?.account ?? ''), nombre: contrato.value?.nameuser ?? undefined }, { width: '1100px' })
 }
 
-// Documentos del contrato (duplicado de recibo, constancias) del módulo de reportes
-function openDocumentosDialog() {
-  openDialog(DocumentosDialogo, {
-    contrato: String(contract.value?.account ?? ''),
-    nombre: contract.value?.nameuser ?? undefined,
-  }, { width: '1100px' })
-}
-
-// Función para abrir el diálogo de estado de cuenta
-function openAccountBalanceDialog() {
-  openDialog(AccountBalanceDialog, {}, { width: '100%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('AccountBalanceDialog completed')
-  })
-}
-
-// Función para abrir el diálogo nuevo cargo
-function openAddChargeDialog() {
-  openDialog(AddChargeDialog, {}, { width: '100%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('AddChargeDialog completed')
-  })
-}
-
-// Función para abrir el diálogo ubicación
-function openShowLocationDialog() {
-  openDialog(AccountMapDialog, {}, { width: '100%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('AccountMapDialog completed')
-  })
-}
-
-// Función para abrir el diálogo ubicación
-function openAddNoteDialog() {
-  openDialog(AddNoteDialog, {}, { width: '50%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('Nota creada, refrescando datos...')
-  })
-}
-
-// Función para abrir el diálogo de datos fiscales
-function openFiscalDataDialog() {
-  openDialog(FiscalDataDialog, {}, { width: '50%', persistent: true }).then(async result => {
-    if (result === 'submit') {
-      console.log('Datos fiscales actualizados')
-
-      // Recargar los datos del contrato
-      if (contractStore.item?.account)
-        await contractStore.getContract(contractStore.item.account)
-    }
-  })
+async function recargar() {
+  if (store.item?.account)
+    await store.getContract(store.item.account)
 }
 </script>
 
 <template>
-  <div>
-    <!-- Información del contrato -->
-    <VRow>
-      <VCol>
-        <VCard>
-          <VCardTitle>
-            <VSheet class="d-flex mb-6">
-              <VSheet class="ma-2 pa-2 me-auto">
-                <span class="text-h6">{{ $t('account') }}:</span>
-                <span class="text-h6 ms-2">
-                  <VChip color="primary">{{ contract?.account }}</VChip></span>
-                <span class="text-h6 ms-4">{{ $t('user') }}:</span>
-                <span class="text-h6 ms-2 "><VChip color="primary">{{ contract?.nameuser }}</VChip></span>
-              </VSheet>
-              <VSheet class="ma-2 pa-2">
-                <VChip :style="{ color: `${contract?.color_hex} !important` }">
-                  {{ contract?.status }}
-                </VChip>
-              </VSheet>
-            </VSheet>
-          </VCardTitle>
-          <VCardText>
-            <VRow>
-              <!-- Dirección y datos de comunidad -->
-              <VCol align-self="end">
-                <div>
-                  <span class="text-h6 font-weight-500">
-                    <VIcon
-                      icon="tabler-map-pin"
-                      class="me-2"
-                    />{{ $t('address') }}:
-                  </span>
-                  {{ contract?.address }}
-                </div>
-                <div class="d-flex flex-wrap mt-2">
-                  <span class="flex-1-1-100">
-                    <span class="text-h6 font-weight-500">
-                      <VIcon
-                        icon="tabler-map-2"
-                        class="me-2"
-                      />{{ $t('community') }}:
-                    </span>
-                    {{ contract?.community ?? contract?.source_entity }}
-                  </span>
-                  <span class="flex-1-0">
-                    <span class="text-h6 font-weight-500">
-                      <VIcon
-                        icon="tabler-map-2"
-                        class="me-2"
-                      />{{ $t('system') }}:
-                    </span>
-                    {{ contract?.c_system }}
-                    <span class="text-h6 font-weight-500">{{ $t('sector') }}:</span>
-                    {{ contract?.sector }}
-                  </span>
-                  <span
-                    v-if="contract?.route"
-                    class="flex-1-0"
-                  >
-                    <span class="text-h6 font-weight-500">
-                      <VIcon
-                        icon="tabler-route-2"
-                        class="me-2"
-                      />{{ $t('route') }}:
-                    </span>
-                    {{ contract?.route }}
-                  </span>
-                  <span
-                    v-if="contract?.clave_loc"
-                    class="flex-1-0"
-                  >
-                    <span class="text-h6 font-weight-500">
-                      <VIcon
-                        icon="tabler-brackets-contain"
-                        class="me-2"
-                      />{{ $t('clave_loc') }}:
-                    </span>
-                    {{ contract?.clave_loc }}
-                  </span>
-                </div>
-              </VCol>
-
-              <!-- Botones de acciones -->
-              <VCol align-self="end">
-                <VRow>
-                  <VCol class="d-flex flex-wrap ga-3">
-                    <VBtn
-                      variant="outlined"
-                      @click="openShowLocationDialog"
-                    >
-                      <VIcon
-                        icon="tabler-map-pin"
-                        class="me"
-                      />
-                    </VBtn>
-                    <VBtn
-                      variant="outlined"
-                      @click="openAddWorkOrderDialog"
-                    >
-                      <VIcon
-                        icon="tabler-tool"
-                        class="me-2"
-                      />{{ $t('workorder') }}
-                    </VBtn>
-                    <VBtn
-                      variant="outlined"
-                      @click="openAccountBalanceDialog"
-                    >
-                      <VIcon
-                        icon="tabler-printer"
-                        class="me-2"
-                      />{{ $t('account_balance') }}
-                    </VBtn>
-                    <VBtn
-                      v-if="$can('generate', 'documentos')"
-                      variant="outlined"
-                      @click="openDocumentosDialog"
-                    >
-                      <VIcon
-                        icon="tabler-file-text"
-                        class="me-2"
-                      />{{ $t('reportes.documentos.boton') }}
-                    </VBtn>
-                    <VBtn
-                      color="primary"
-                      @click="openAddChargeDialog"
-                    >
-                      <VIcon
-                        icon="tabler-plus"
-                        class="me-2"
-                      />{{ $t('add_charge') }}
-                    </VBtn>
-                    <VBtn
-                      color="secondary"
-                      variant="outlined"
-                      prepend-icon="tabler-note"
-                      @click="openAddNoteDialog"
-                    >
-                      {{ $t('add_note') }}
-                    </VBtn>
-                  </VCol>
-                </VRow>
-              </VCol>
-            </VRow>
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
-
-    <!-- Estadísticas y detalles -->
-    <VRow>
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VRow>
-          <VCol>
-            <VCard>
-              <VCardText>
-                <VRow class="d-flex justify-center align-center">
-                  <VCol
-                    cols="12"
-                    sm="6"
-                    md="4"
-                    class="d-flex justify-center align-center"
-                  >
-                    <div
-                      class="border border-dashed d-flex flex-column justify-center align-center cursor-pointer rounded py-4 px-3"
-                      style="aspect-ratio: 1; inline-size: 100%;"
-                      @click="toggle"
-                    >
-                      <h6 class="text-base mb-0">
-                        {{ contract?.debt }}
-                      </h6>
-                      <h6 class="text-base text-center font-weight-light mb-0">
-                        {{ $t('balance_due') }}
-                      </h6>
-                    </div>
-                  </VCol>
-                  <VCol
-                    cols="12"
-                    sm="6"
-                    md="4"
-                    class="d-flex justify-center align-center"
-                  >
-                    <div
-                      class="border border-dashed d-flex flex-column justify-center align-center cursor-pointer rounded py-4 px-3"
-                      style="aspect-ratio: 1; inline-size: 100%;"
-                      @click="toggle"
-                    >
-                      <h6 class="text-base mb-0">
-                        {{ contract?.positive_balance }}
-                      </h6>
-                      <h6 class="text-base text-center font-weight-light mb-0">
-                        {{ $t('positive_balance') }}
-                      </h6>
-                    </div>
-                  </VCol>
-                  <VCol
-                    cols="12"
-                    sm="12"
-                    md="4"
-                    class="d-flex justify-center align-center"
-                  >
-                    <div
-                      class="border border-dashed d-flex flex-column justify-center align-center cursor-pointer rounded py-4 px-3"
-                      style="aspect-ratio: 1; inline-size: 100%;"
-                      @click="toggle"
-                    >
-                      <h6 class="text-base mb-0">
-                        {{ contract?.months_debt }}
-                      </h6>
-                      <h6 class="text-base text-center font-weight-light mb-0">
-                        {{ $t('months_due') }}
-                      </h6>
-                    </div>
-                  </VCol>
-                </VRow>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol
-            v-for="statistics in statisticsHorizontal"
-            :key="statistics.title"
-            cols="12"
-            sm="6"
-            md="6"
+  <div
+    v-if="contrato"
+    class="ficha"
+  >
+    <header class="ficha__cabecera">
+      <div class="ficha__identidad">
+        <div class="as-sobrelinea">
+          {{ t('support.ficha.cuenta') }}
+        </div>
+        <div class="d-flex align-center flex-wrap gap-2">
+          <span class="ficha__cuenta as-num">{{ contrato.account }}</span>
+          <VChip
+            size="small"
+            label
+            variant="tonal"
+            :color="colorEstadoContrato(contrato.status)"
           >
-            <CardStatisticsVerticalSimple v-bind="statistics" />
-          </VCol>
-        </VRow>
-        <VRow>
-          <VCol>
-            <VCard>
-              <VCardText>
-                <VRow>
-                  <VCol
-                    v-if="contract?.average_consumption"
-                    cols="12"
-                    md="6"
-                  >
-                    <div class="d-flex align-center">
-                      <VIcon
-                        icon="tabler-droplet"
-                        class="me-2"
-                      />
-                      <div>
-                        <div class="text-subtitle-2">
-                          {{ $t('average_consumption') }}
-                        </div>
-                        <div class="text-h6">
-                          {{ contract.average_consumption }} m³
-                        </div>
-                      </div>
-                    </div>
-                  </VCol>
-                  <VCol
-                    v-if="contract?.readings?.rows?.length > 0"
-                    cols="12"
-                    md="6"
-                  >
-                    <div>
-                      <div class="text-subtitle-2 mb-2">
-                        {{ $t('last_intakes') }}
-                      </div>
-                      <VList>
-                        <VListItem
-                          v-for="reading in contract.readings.rows.slice(0, 3)"
-                          :key="reading.ref"
-                          class="pa-0"
-                        >
-                          <VListItemTitle>
-                            <div class="d-flex align-center">
-                              <VIcon
-                                icon="tabler-gauge"
-                                size="small"
-                                class="me-2"
-                              />
-                              <span>{{ reading.Consumo }} m³</span>
-                            </div>
-                          </VListItemTitle>
-                          <VListItemSubtitle class="text-caption">
-                            {{ reading.Periodo }}
-                          </VListItemSubtitle>
-                        </VListItem>
-                      </VList>
-                    </div>
-                  </VCol>
-                </VRow>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
-      </VCol>
+            {{ contrato.status }}
+          </VChip>
+        </div>
+        <div class="ficha__titular">
+          {{ contrato.nameuser }}
+        </div>
+        <div class="ficha__direccion d-flex align-start gap-1 mt-2">
+          <VIcon
+            icon="tabler-map-pin"
+            size="16"
+            class="text-medium-emphasis mt-1"
+          />
+          <span>{{ texto(contrato.address) }}</span>
+        </div>
+        <dl class="as-datos ficha__ubicacion mt-3 mb-0">
+          <div
+            v-for="d in ubicacion"
+            :key="d.etiqueta"
+            class="as-dato"
+          >
+            <dt class="as-etiqueta">
+              {{ d.etiqueta }}
+            </dt>
+            <dd
+              class="as-valor mb-0"
+              :class="{ 'as-num': d.num }"
+            >
+              {{ d.valor }}
+            </dd>
+          </div>
+        </dl>
+      </div>
 
-      <VCol>
-        <VCard class="pa-4">
-          <VCardTitle class="text-h6">
-            {{ $t('contract_general_data') }}
-          </VCardTitle>
-          <VCardText>
-            <VList dense>
-              <VListItem>
-                <VIcon
-                  icon="tabler-droplet"
-                  class="me-2"
-                />{{ $t('contract_type') }}: {{ contract?.code_type_contrat }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('contract_date') }}: {{ contract?.date_created }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-activity"
-                  class="me-2"
-                />{{ $t('contract_status') }}: {{ contract?.status }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-hash"
-                  class="me-2"
-                />{{ $t('meter_number') }}: {{ contract?.measurer }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-percentage"
-                  class="me-2"
-                />{{ $t('pensionary') }}: {{ contract?.pensionary }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-clock"
-                  class="me-2"
-                />{{ $t('validity') }}: {{ contract?.due_date_pensioner }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-users"
-                  class="me-2"
-                />{{ $t('handicapped') }}: {{ contract?.handicapped }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-toggle-left"
-                  class="me-2"
-                />{{ $t('validity') }}: {{ contract?.due_date_handicapped }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-bookmark"
-                  class="me-2"
-                />{{ $t('business_activity') }}: <VChip color="primary">
-                  {{ contract?.business_activity }}
-                </VChip>
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-tag"
-                  class="me-2"
-                />{{ $t('rate') }}: {{ contract?.rate_type }}
-              </VListItem>
-              <VListItem v-if="contract && contract?.lps && contract?.lps.total > 0">
-                <VIcon
-                  icon="tabler-droplet"
-                  class="me-2"
-                /><span class="text-body-1">{{ $t('lps') }}:</span> <span class="text-body-1">{{ contract?.lps.total }}</span>
-                <p class="text-body-2">
-                  {{ contract?.lps.lps_contratados }}
-                </p>
-              </VListItem>
-            </VList>
-          </VCardText>
-        </VCard>
+      <div
+        class="ficha__acciones"
+        role="group"
+        :aria-label="t('actionslabel')"
+      >
+        <AsBtnPrimario
+          prepend-icon="tabler-plus"
+          @click="dialogos.cargo = true"
+        >
+          {{ t('support.ficha.agregarCargo') }}
+        </AsBtnPrimario>
+        <AsBtnSecundario
+          prepend-icon="tabler-note"
+          @click="dialogos.nota = true"
+        >
+          {{ t('support.ficha.agregarNota') }}
+        </AsBtnSecundario>
+        <AsBtnSecundario
+          prepend-icon="tabler-tool"
+          @click="dialogos.orden = true"
+        >
+          {{ t('support.ficha.ordenNueva') }}
+        </AsBtnSecundario>
+        <AsBtnSecundario
+          prepend-icon="tabler-file-invoice"
+          @click="dialogos.saldo = true"
+        >
+          {{ t('support.ficha.estadoCuenta') }}
+        </AsBtnSecundario>
+        <AsBtnSecundario
+          v-if="puedeDocumentos"
+          prepend-icon="tabler-file-text"
+          @click="abrirDocumentos"
+        >
+          {{ t('reportes.documentos.boton') }}
+        </AsBtnSecundario>
+        <AsBtnTerciario
+          prepend-icon="tabler-map-pin"
+          @click="dialogos.mapa = true"
+        >
+          {{ t('support.ficha.ubicacion') }}
+        </AsBtnTerciario>
+      </div>
+    </header>
+
+    <VRow
+      dense
+      class="mt-1"
+    >
+      <VCol
+        cols="6"
+        md="4"
+        lg
+      >
+        <AsIndicador
+          :etiqueta="t('support.ficha.saldoVencido')"
+          :valor="moneda(contrato.debt)"
+          icono="tabler-alert-circle"
+          :estado="mesesAdeudo > 0 ? 'alerta' : 'normal'"
+        />
+      </VCol>
+      <VCol
+        cols="6"
+        md="4"
+        lg
+      >
+        <AsIndicador
+          :etiqueta="t('support.ficha.saldoFavor')"
+          :valor="moneda(contrato.positive_balance)"
+          icono="tabler-coin"
+        />
+      </VCol>
+      <VCol
+        cols="6"
+        md="4"
+        lg
+      >
+        <AsIndicador
+          :etiqueta="t('support.ficha.mesesAdeudo')"
+          :valor="mesesAdeudo"
+          formato="entero"
+          icono="tabler-calendar-due"
+          :estado="mesesAdeudo > 0 ? 'advertencia' : 'normal'"
+        />
+      </VCol>
+      <VCol
+        cols="6"
+        md="6"
+        lg
+      >
+        <AsIndicador
+          :etiqueta="t('support.ficha.convenioActivo')"
+          :valor="contrato.ref_agreement || null"
+          :apoyo="contrato.ref_agreement ? undefined : t('support.ficha.sinConvenio')"
+          icono="tabler-file-like"
+        />
       </VCol>
       <VCol
         cols="12"
-        md="4"
+        md="6"
+        lg
       >
-        <VCard class="pa-4">
-          <!-- Resumen de servicios -->
-          <VCardTitle class="text-h6">
-            {{ $t('service_summary') }}
-          </VCardTitle>
-          <VCardText>
-            <VList dense>
-              <VListItem>
-                <VIcon
-                  icon="tabler-star"
-                  class="me-2"
-                />{{ $t('metric') }}: {{ contract?.type_charge }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('services') }}: {{ contract?.type_services }}
-              </VListItem>
-            </VList>
-          </VCardText>
+        <AsIndicador
+          :etiqueta="t('support.ficha.ordenTrabajo')"
+          :valor="contrato.ref || null"
+          :apoyo="contrato.ref ? undefined : t('support.ficha.sinOrden')"
+          icono="tabler-clipboard"
+        />
+      </VCol>
+    </VRow>
 
-          <!-- Datos fiscales -->
-          <VCardTitle class="text-h6 mt-4 d-flex align-center">
-            {{ $t('fiscal_data') }}
-            <VBtn
-              icon
-              variant="plain"
-              class="ms-2"
-              @click="openFiscalDataDialog"
+    <VRow
+      dense
+      class="mt-1"
+    >
+      <VCol
+        cols="12"
+        lg="5"
+      >
+        <VCard
+          variant="flat"
+          class="as-tarjeta ficha__tarjeta h-100"
+        >
+          <h2 class="as-seccion">
+            {{ t('support.ficha.datosGenerales') }}
+          </h2>
+          <dl class="as-datos mb-0">
+            <div
+              v-for="d in datosGenerales"
+              :key="d.etiqueta"
+              class="as-dato"
             >
-              <VIcon icon="tabler-edit" />
-            </VBtn>
-          </VCardTitle>
-          <VCardText>
-            <VList dense>
-              <VListItem>
-                <VIcon
-                  icon="tabler-star"
-                  class="me-2"
-                />{{ $t('business_name') }}: {{ contract?.societe?.sat_cname }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-devices-2"
-                  class="me-2"
-                />{{ $t('tax_id') }}: {{ contract?.societe?.sat_taxid }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-activity"
-                  class="me-2"
-                />{{ $t('postal_code') }}: {{ contract?.societe?.sat_zip }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('regime_fiscal') }}: {{ contract?.societe?.fiscal_regime }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('cfdi_use') }}: {{ contract?.societe?.usecfdi }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('email') }}: {{ contract?.societe?.emails }}
-              </VListItem>
-              <VListItem>
-                <VIcon
-                  icon="tabler-calendar"
-                  class="me-2"
-                />{{ $t('phone') }}: {{ contract?.societe?.phone }}
-              </VListItem>
-            </VList>
-          </VCardText>
+              <dt class="as-etiqueta">
+                {{ d.etiqueta }}
+              </dt>
+              <dd
+                class="as-valor mb-0"
+                :class="{ 'as-num': d.num }"
+              >
+                {{ d.valor }}
+              </dd>
+            </div>
+          </dl>
+        </VCard>
+      </VCol>
+
+      <VCol
+        cols="12"
+        md="6"
+        lg="3"
+      >
+        <VCard
+          variant="flat"
+          class="as-tarjeta ficha__tarjeta h-100"
+        >
+          <h2 class="as-seccion">
+            {{ t('support.ficha.resumenServicio') }}
+          </h2>
+          <dl class="as-datos mb-0">
+            <div
+              v-for="d in servicio"
+              :key="d.etiqueta"
+              class="as-dato"
+            >
+              <dt class="as-etiqueta">
+                {{ d.etiqueta }}
+              </dt>
+              <dd class="as-valor mb-0">
+                {{ d.valor }}
+              </dd>
+            </div>
+          </dl>
+
+          <h2 class="as-seccion">
+            {{ t('support.ficha.consumo') }}
+          </h2>
+          <dl class="as-datos mb-0">
+            <div class="as-dato">
+              <dt class="as-etiqueta">
+                {{ t('support.ficha.consumoPromedio') }}
+              </dt>
+              <dd class="as-valor as-num mb-0">
+                {{ contrato.average_consumption ? `${texto(contrato.average_consumption)} m³` : '—' }}
+              </dd>
+            </div>
+            <div
+              v-if="ultimasLecturas.length"
+              class="as-dato"
+            >
+              <dt class="as-etiqueta">
+                {{ t('support.ficha.ultimasLecturas') }}
+              </dt>
+              <dd class="mb-0">
+                <ul class="ficha__lecturas">
+                  <li
+                    v-for="l in ultimasLecturas"
+                    :key="l.Periodo"
+                    class="d-flex justify-space-between gap-2"
+                  >
+                    <span class="as-secundario">{{ l.Periodo }}</span>
+                    <span class="as-valor as-num">{{ entero(l.Consumo) }} m³</span>
+                  </li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </VCard>
+      </VCol>
+
+      <VCol
+        cols="12"
+        md="6"
+        lg="4"
+      >
+        <VCard
+          variant="flat"
+          class="as-tarjeta ficha__tarjeta h-100"
+        >
+          <h2 class="as-seccion">
+            <span>{{ t('support.ficha.datosFiscales') }}</span>
+            <AsBtnTerciario
+              size="small"
+              prepend-icon="tabler-edit"
+              @click="dialogos.fiscales = true"
+            >
+              {{ t('support.ficha.editarFiscales') }}
+            </AsBtnTerciario>
+          </h2>
+          <dl class="as-datos mb-0">
+            <div
+              v-for="d in fiscales"
+              :key="d.etiqueta"
+              class="as-dato"
+            >
+              <dt class="as-etiqueta">
+                {{ d.etiqueta }}
+              </dt>
+              <dd
+                class="as-valor mb-0"
+                :class="{ 'as-num': d.num }"
+              >
+                {{ d.valor }}
+              </dd>
+            </div>
+          </dl>
         </VCard>
       </VCol>
     </VRow>
+
+    <AccountMapDialog v-model:abierto="dialogos.mapa" />
+    <AddWorkOrderDialog v-model:abierto="dialogos.orden" />
+    <AccountBalanceDialog v-model:abierto="dialogos.saldo" />
+    <AddChargeDialog
+      v-model:abierto="dialogos.cargo"
+      @guardado="recargar"
+    />
+    <AddNoteDialog v-model:abierto="dialogos.nota" />
+    <FiscalDataDialog
+      v-model:abierto="dialogos.fiscales"
+      @guardado="recargar"
+    />
   </div>
 </template>
+
+<style scoped>
+.ficha {
+  padding: var(--as-sp-4);
+}
+
+.ficha__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--as-sp-4);
+  margin-block-end: var(--as-sp-3);
+}
+
+.ficha__identidad {
+  flex: 1 1 var(--as-panel-md);
+  min-inline-size: 0;
+}
+
+.ficha__cuenta {
+  font-size: var(--as-fs-2xl);
+  font-weight: var(--as-peso-semi);
+  line-height: 1.2;
+}
+
+.ficha__titular {
+  font-size: var(--as-fs-md);
+  font-weight: var(--as-peso-medio);
+  line-height: 1.4;
+}
+
+.ficha__ubicacion {
+  grid-template-columns: repeat(auto-fit, minmax(140px, max-content));
+}
+
+.ficha__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--as-sp-2);
+}
+
+.ficha__tarjeta {
+  padding-block: var(--as-sp-3) var(--as-sp-4);
+  padding-inline: var(--as-sp-4);
+}
+
+.ficha__lecturas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--as-sp-1);
+  list-style: none;
+  padding-inline-start: 0;
+}
+</style>

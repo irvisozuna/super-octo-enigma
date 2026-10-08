@@ -1,0 +1,232 @@
+{
+  "generadoEl": "2026-10-08T18:10:57.668Z",
+  "alcance": [
+    "src/modules/support"
+  ],
+  "archivos": 28,
+  "totales": {
+    "hexEnEstilos": 0,
+    "hexEnScript": 0,
+    "rgbSinVarEnEstilos": 0,
+    "coloresEnLinea": 0,
+    "propsColorLiteral": 0,
+    "estilosEnLinea": 0,
+    "estilosEnLineaDinamicos": 0,
+    "importantEnScoped": 0,
+    "importantEnScss": 0,
+    "fontSizeManual": 0,
+    "fontSizeValores": [],
+    "textoMenor12px": 0,
+    "fontWeightManual": 2,
+    "anchosFijosPx": 0,
+    "anchosDrawer": [],
+    "anchosDialogo": [
+      "90vw"
+    ],
+    "props": {
+      "size=\"small\"": 12,
+      "size=\"x-small\"": 3,
+      "variant=\"tonal\"": 5,
+      "variant=\"outlined\"": 5,
+      "variant=\"text\"": 9,
+      "variant=\"flat\"": 5,
+      "density=\"compact\"": 30,
+      "density=\"comfortable\"": 0,
+      "text-none": 0
+    },
+    "vbtn": 12,
+    "formatoNumeros": {
+      "toLocaleString": 0,
+      "toFixed": 0,
+      "IntlNumberFormat": 0,
+      "n_i18n": 22,
+      "formatearPropias": 0,
+      "formatCurrency": 0,
+      "formatoCompartido": 8
+    },
+    "formatoFechas": {
+      "dayjs": 0,
+      "toLocaleDateString": 0,
+      "toLocaleTimeString": 0,
+      "IntlDateTimeFormat": 0,
+      "propias": 0,
+      "formatoCompartido": 8
+    },
+    "i18n": {
+      "t": 305,
+      "cabecerasLiterales": 1,
+      "propsLiterales": 0
+    },
+    "iconos": {
+      "tabler": 58,
+      "mdi": 0,
+      "fa": 0,
+      "distintos": 43,
+      "porAccion": {
+        "editar": {
+          "tabler-edit": 1
+        },
+        "exportar": {
+          "tabler-download": 2
+        },
+        "filtrar": {
+          "tabler-adjustments": 2,
+          "tabler-filter": 2
+        },
+        "cerrar": {
+          "tabler-x": 1
+        },
+        "actualizar": {},
+        "eliminar": {
+          "tabler-trash": 1
+        }
+      }
+    },
+    "tablas": {
+      "VDataTable": 0,
+      "VDataTableServer": 0,
+      "VDataTableVirtual": 0,
+      "VTable": 0,
+      "tableHtml": 0,
+      "AsTablaDatos": 11
+    },
+    "botonesIcono": 9,
+    "botonesIconoSinEtiqueta": 0,
+    "imagenes": 2,
+    "imagenesSinAlt": 2,
+    "responsive": {
+      "useDisplay": 0,
+      "mediaQueries": 0,
+      "rejilla": 57
+    },
+    "componentesAs": 59,
+    "fontSizeValoresDistintos": 0
+  },
+  "porModulo": {
+    "support": {
+      "archivos": 28,
+      "lineas": 3793,
+      "hexEnEstilos": 0,
+      "hexEnScript": 0,
+      "estilosEnLinea": 0,
+      "importantEnScoped": 0,
+      "fontSizeManual": 0,
+      "anchosFijosPx": 0,
+      "densityCompact": 30,
+      "textNone": 0,
+      "vbtn": 12,
+      "botonesIconoSinEtiqueta": 0,
+      "cabecerasLiterales": 1,
+      "t": 305
+    }
+  },
+  "archivosMasGrandes": [
+    {
+      "rel": "src/modules/support/components/ContractDetails.vue",
+      "lineas": 470,
+      "lineasEstilo": 55
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractSearchDialog.vue",
+      "lineas": 357,
+      "lineasEstilo": 25
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddWorkOrderDialog.vue",
+      "lineas": 302,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddChargeDialog.vue",
+      "lineas": 274,
+      "lineasEstilo": 26
+    },
+    {
+      "rel": "src/modules/support/components/dialog/FiscalDataDialog.vue",
+      "lineas": 231,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/views/index.vue",
+      "lineas": 208,
+      "lineasEstilo": 19
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractImagesDialog.vue",
+      "lineas": 197,
+      "lineasEstilo": 37
+    },
+    {
+      "rel": "src/modules/support/components/dialog/RebillingDetailDialog.vue",
+      "lineas": 179,
+      "lineasEstilo": 26
+    },
+    {
+      "rel": "src/modules/support/components/AgreementDetails.vue",
+      "lineas": 144,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddNoteDialog.vue",
+      "lineas": 135,
+      "lineasEstilo": 0
+    }
+  ],
+  "archivosConMasCss": [
+    {
+      "rel": "src/modules/support/components/ContractDetails.vue",
+      "lineas": 470,
+      "lineasEstilo": 55
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractImagesDialog.vue",
+      "lineas": 197,
+      "lineasEstilo": 37
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddChargeDialog.vue",
+      "lineas": 274,
+      "lineasEstilo": 26
+    },
+    {
+      "rel": "src/modules/support/components/dialog/RebillingDetailDialog.vue",
+      "lineas": 179,
+      "lineasEstilo": 26
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractSearchDialog.vue",
+      "lineas": 357,
+      "lineasEstilo": 25
+    },
+    {
+      "rel": "src/modules/support/views/index.vue",
+      "lineas": 208,
+      "lineasEstilo": 19
+    },
+    {
+      "rel": "src/modules/support/components/WorkOrdersTab.vue",
+      "lineas": 99,
+      "lineasEstilo": 10
+    },
+    {
+      "rel": "src/modules/support/components/MensajeDialogo.vue",
+      "lineas": 44,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AccountBalanceDialog.vue",
+      "lineas": 102,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/support/components/NotesTab.vue",
+      "lineas": 110,
+      "lineasEstilo": 6
+    }
+  ],
+  "detalles": {
+    "cabecerasLiterales": [
+      "src/modules/support/menu.ts:5 title: 'Soporte'"
+    ]
+  }
+}

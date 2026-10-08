@@ -93,7 +93,22 @@ export interface Account {
   positive_balance: string
   debt: string
   ref: string | null
-  latitude: number
-  longitude: number
+  latitude: number | string | null
+  longitude: number | string | null
   societe: societe | null
+
+  /** Color del estado en Aquasoft Comercial; la ficha usa los tokens del tema en su lugar. */
+  color_hex?: string
+
+  /** Litros por segundo contratados (solo tomas con caudal). */
+  lps?: { total: number; lps_contratados: string | null } | null
+
+  /** Últimas lecturas resumidas (periodo y consumo) para la ficha. */
+  readings?: { rows: LecturaResumen[] } | null
+}
+
+export interface LecturaResumen {
+  ref?: string
+  Periodo: string
+  Consumo: number | string | null
 }

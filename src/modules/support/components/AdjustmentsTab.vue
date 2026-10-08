@@ -1,170 +1,64 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import BaseTable from '@/components/BaseTable.vue' // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager'
-import { useContractStore } from '@/modules/support/stores/contractStore'
+import { useListaContrato } from '../composables/useListaContrato'
+import { useContractStore } from '../stores/contractStore'
+import type { ColumnaTabla } from '@/components/as/tipos'
 
-// Props para personalizar el título y descripción
-const props = defineProps({
-  activeTab: { type: Number, required: true },
-})
+/* Ajustes aplicados al contrato (cargos y abonos) con su motivo, importe y archivo de respaldo. */
+const props = defineProps<{ activa: boolean }>()
 
-const { t } = useI18n()
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
+const { t, te } = useI18n()
+const store = useContractStore()
+const lista = useListaContrato((id, p) => store.getAdjustmentsByContract(id, p), () => props.activa)
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
-const searchQuery = ref('')
+const tipo = (v: unknown) => (v && te(`${String(v)}_amount`) ? t(`${String(v)}_amount`) : String(v || '—'))
 
-const pagination = ref({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-})
-
-// Encabezados de la tabla
-const headers = [
-  { title: t('description'), value: 'label' },
-  { title: t('type'), value: 'adjustment_type' },
-  { title: t('reason'), value: 'adjustment_reason_desc' },
-  { title: t('amount'), value: 'adjustment_amount' },
-  { title: t('date'), value: 'date_creation' },
-  { title: t('file'), value: 'file' },
-]
-
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.page = newPage
-  fetchData()
-}
-
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
-// Función para cargar los datos
-async function fetchData() {
-  loading.value = true
-  try {
-    const response = await contractStore.getAdjustmentsByContract(contractStore.item.id_account, pagination.value)
-
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
-    pagination.value = response.pagination
-  }
-  catch (error) {
-    console.error('Error al cargar los Pagos:', error)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
-  })
-}
-
-// Montar datos al iniciar el componente
-onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
-watch(() => props.activeTab, newTab => {
-  if (newTab === 6) { // Suponiendo que el tab de BillingHistory es el índice 1
-    fetchData()
-  }
-})
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'label', titulo: t('support.ajustes.descripcion'), formato: 'personalizado', anchoMin: 220 },
+  { clave: 'adjustment_type', titulo: t('support.ajustes.tipo'), formato: 'personalizado', ancho: 140 },
+  { clave: 'adjustment_reason_desc', titulo: t('support.ajustes.motivo'), formato: 'texto', truncar: true },
+  { clave: 'adjustment_amount', titulo: t('support.ajustes.monto'), formato: 'moneda', ancho: 140 },
+  { clave: 'date_creation', titulo: t('support.ajustes.fecha'), formato: 'fechaHora', ancho: 150 },
+  { clave: 'file', titulo: t('support.ajustes.archivo'), formato: 'personalizado', alineacion: 'center', ancho: 110 },
+].map(c => ({ ...c, ordenable: false })))
 </script>
 
 <template>
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <!-- Tabla de contratos -->
-      <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
-        :items="contracts"
-        :total="pagination.total"
-        :page="pagination.offset / pagination.limit + 1"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #file="{ item }">
-          <VBtn
-            v-if="item.file"
-            variant="text"
-            :href="item.file"
-            target="_blank"
-            color="primary"
-            small
-          >
-            {{ t('download') }}
-          </VBtn>
-        </template>
-        <template #adjustment_amount="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.adjustment_amount) || 'N/A' }}
-          </div>
-        </template>
-        <template #label="{ item }">
-          <div class="text-start">
-            {{ item.label || 'SIN DESCRIPCIÓN' }}
-          </div>
-        </template>
-        <template #adjustment_type="{ item }">
-          <div class="text-start">
-            {{ $t(`${item.adjustment_type}_amount`) }}
-          </div>
-        </template>
-        <template #date_creation="{ item }">
-          {{ $formatDate(item.date_creation, {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-          }) || 'N/A' }}
-        </template>
-      </BaseTable>
-
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="text-center py-6"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
-        />
-        <p class="mt-2">
-          {{ t('loading') }}...
-        </p>
-      </div>
-    </VCardText>
-  </VCard>
+  <AsTablaDatos
+    sin-tarjeta
+    :columnas="columnas"
+    :filas="lista.filas.value"
+    clave-fila="_k"
+    densidad="estandar"
+    :cargando="lista.cargando.value"
+    :error="lista.error.value"
+    :paginacion="lista.paginacion.value"
+    :vacio-titulo="t('support.lista.sinFilas')"
+    vacio-detalle=""
+    vacio-icono="tabler-adjustments-off"
+    @update:pagina="lista.cambiarPagina"
+    @reintentar="lista.cargar"
+  >
+    <template #celda-label="{ fila }">
+      <span :class="{ 'as-secundario': !fila.label }">{{ fila.label || t('support.lista.sinDescripcion') }}</span>
+    </template>
+    <template #celda-adjustment_type="{ fila }">
+      {{ tipo(fila.adjustment_type) }}
+    </template>
+    <template #celda-file="{ fila }">
+      <VBtn
+        v-if="fila.file"
+        icon="tabler-download"
+        size="small"
+        variant="text"
+        color="primary"
+        :href="fila.file"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="t('support.lista.descargar')"
+        :aria-label="t('support.lista.descargar')"
+      />
+    </template>
+  </AsTablaDatos>
 </template>

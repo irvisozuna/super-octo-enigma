@@ -53,5 +53,8 @@ npm run lint && npm run lint:estilos                      # guardarraíles (hex,
 - Piloto aprobado por Irvis el 2026-10-07. Fase 2.1 (2026-10-08): el resto de Monitoreo (Re-lecturas, Ranking, Coordenadas,
   Destinatarios, Umbrales, Gerencias por usuario, Calendario; Pantalla grande solo tokens y formato) sobre `As*`. Métricas:
   `metricas-fase2-1-antes.json` → `metricas-fase2-1-despues.json`; comparación `tests/visual/capturas/comparacion-base-fase2-1.html`.
-- Siguen 2.2 Soporte (mapa a MapLibre), 2.3 Reportes, 2.4 CRUD, 2.5 defaults globales y 2.6 poda de demos.
+- Fase 2.2 (2026-10-08): Soporte completo (ficha, 7 pestañas, 9 diálogos) sobre `As*`; mapa a MapLibre con
+  `AsMapaUbicacion` y las fuentes de `components/as/mapa.ts`; listas paginadas con `support/composables/useListaContrato`.
+  Métricas: `metricas-fase2-2-antes.json` → `-despues.json`; comparación `tests/visual/capturas/comparacion-base-fase2-2.html`.
+- Siguen 2.3 Reportes, 2.4 CRUD, 2.5 defaults globales y 2.6 poda de demos.
 - Fase 3: modo oscuro para todos (hoy solo administradores), quiosco sobre tokens, logotipo para fondo oscuro.

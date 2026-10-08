@@ -1,188 +1,196 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useContractStore } from '@/modules/support/stores/contractStore'
+import { useContractStore } from '../../stores/contractStore'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
 
-interface ContractImage {
+/* Fotos de evidencia de una lectura (medidor, casa, recibo) por contrato y periodo, con ampliación. */
+interface ImagenLectura {
   tipo: string
   imagenUrl: string
   fecha: string
 }
 
 const props = defineProps<{
-  isDialogVisible: boolean
-  contractId: string
-  periodId: string
+  abierto: boolean
+  contrato: string
+  periodo: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:isDialogVisible', value: boolean): void
+  'update:abierto': [valor: boolean]
 }>()
 
 const { t } = useI18n()
-const contractStore = useContractStore()
-const images = ref<ContractImage[]>([])
-const loading = ref(false)
-const error = ref('')
-const currentSlide = ref(0)
-const zoomDialog = ref(false)
-const zoomedImageUrl = ref<string>('')
+const store = useContractStore()
+const imagenes = ref<ImagenLectura[]>([])
+const cargando = ref(false)
+const error = ref<ErrorReporte | null>(null)
+const actual = ref(0)
+const ampliada = ref<ImagenLectura | null>(null)
 
-const dialogVisible = computed({
-  get: () => props.isDialogVisible,
-  set: value => emit('update:isDialogVisible', value),
-})
-
-const fetchImages = async () => {
-  loading.value = true
-  error.value = ''
+async function cargar() {
+  if (!props.contrato || !props.periodo)
+    return
+  cargando.value = true
+  error.value = null
   try {
-    const response = await contractStore.getContractImages(props.contractId, props.periodId)
-    if (response.success) {
-      images.value = response.data
-      currentSlide.value = 0
-    }
-    else {
-      error.value = response.message
-    }
+    const r = await store.getContractImages(props.contrato, props.periodo)
+    if (r?.success === false)
+      throw new Error(r.message || t('support.evidencia.error'))
+    imagenes.value = r?.data ?? []
+    actual.value = 0
   }
-  catch (err) {
-    error.value = t('error_loading_images')
+  catch (e) {
+    error.value = normalizarError(e)
   }
   finally {
-    loading.value = false
+    cargando.value = false
   }
 }
 
-// Watch for dialog open and prop changes, and cleanup on close
-watch(
-  [dialogVisible, () => props.contractId, () => props.periodId],
-  ([visible, contractId, periodId]) => {
-    if (visible && contractId && periodId)
-      fetchImages()
-
-    if (!visible) {
-      images.value = []
-      error.value = ''
-      loading.value = false
-    }
-  },
-)
-
-// Force fetch on mount if dialog is already visible and props are ready
-onMounted(() => {
-  if (dialogVisible.value && props.contractId && props.periodId)
-    fetchImages()
-})
-
-function openZoom(imageUrl: string) {
-  zoomedImageUrl.value = imageUrl
-  zoomDialog.value = true
-}
-
-function closeZoom() {
-  zoomDialog.value = false
-  zoomedImageUrl.value = ''
-}
+watch([() => props.abierto, () => props.contrato, () => props.periodo], ([abierto]) => {
+  if (abierto) {
+    cargar()
+  }
+  else {
+    imagenes.value = []
+    error.value = null
+    ampliada.value = null
+  }
+}, { immediate: true })
 </script>
 
 <template>
-  <VDialog
-    v-model="dialogVisible"
-    max-width="800px"
+  <AsDialogo
+    :abierto="abierto"
+    :titulo="t('support.evidencia.titulo')"
+    :subtitulo="`${contrato} · ${periodo}`"
+    tamano="md"
+    variante="informativo"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >
-    <DialogCloseBtn @click="dialogVisible = false" />
-    <VCard>
-      <VCardTitle class="d-flex justify-space-between align-center">
-        {{ t('reading_evidence') }}
-        <VBtn
-          icon
-          variant="text"
-          @click="dialogVisible = false"
-        >
-          <VIcon>mdi-close</VIcon>
-        </VBtn>
-      </VCardTitle>
-
-      <VCardText>
-        <div
-          v-if="loading"
-          class="d-flex justify-center align-center py-4"
-        >
-          <VProgressCircular
-            indeterminate
-            color="primary"
-          />
-        </div>
-
-        <div
-          v-else-if="error"
-          class="text-center py-4 text-error"
-        >
-          {{ error }}
-        </div>
-
-        <div
-          v-else-if="images.length === 0"
-          class="text-center py-4"
-        >
-          {{ t('no_images_available') }}
-        </div>
-
-        <div
-          v-else
-          class="d-flex flex-column gap-4"
-        >
-          <VCarousel
-            v-model="currentSlide"
-            :show-arrows="images.length > 1"
-            hide-delimiter-background
-            delimiter-icon="mdi-circle"
-            height="400"
-            class="rounded"
-          >
-            <VCarouselItem
-              v-for="(image, index) in images"
-              :key="index"
-            >
-              <div class="d-flex flex-column gap-2">
-                <div class="text-subtitle-1 text-center">
-                  {{ image.tipo }} - {{ image.fecha }}
-                </div>
-                <VImg
-                  :src="image.imagenUrl"
-                  :alt="image.tipo"
-                  height="350"
-                  contain
-                  class="rounded"
-                  style="cursor: zoom-in;"
-                  @click="openZoom(image.imagenUrl)"
-                />
-              </div>
-            </VCarouselItem>
-          </VCarousel>
-        </div>
-      </VCardText>
-    </VCard>
-  </VDialog>
-
-  <!-- Zoom modal -->
-  <VDialog
-    v-model="zoomDialog"
-    max-width="90vw"
-  >
-    <VCard
-      class="pa-2"
-      style="background: transparent; box-shadow: none;"
+    <AsEstado
+      v-if="cargando"
+      tipo="cargando"
+      esqueleto="tarjeta"
+      :filas="1"
+    />
+    <AsEstado
+      v-else-if="error"
+      tipo="error"
+      :error="error"
+      :detalle="t('support.evidencia.error')"
+      @reintentar="cargar"
+    />
+    <AsEstado
+      v-else-if="!imagenes.length"
+      tipo="vacio"
+      :titulo="t('support.evidencia.sinImagenes')"
+      detalle=""
+      icono="tabler-photo-off"
+    />
+    <VCarousel
+      v-else
+      v-model="actual"
+      :show-arrows="imagenes.length > 1"
+      hide-delimiter-background
+      height="420"
+      class="evidencia__carrusel"
     >
-      <VImg
-        v-if="zoomedImageUrl"
-        :src="zoomedImageUrl"
-        max-width="90vw"
-        max-height="80vh"
-        style=" background: #222; cursor: zoom-out;object-fit: contain;"
-        @click="closeZoom"
+      <VCarouselItem
+        v-for="(imagen, i) in imagenes"
+        :key="i"
+      >
+        <figure class="evidencia__figura ma-0">
+          <figcaption class="as-secundario text-center mb-2">
+            {{ imagen.tipo }} · {{ imagen.fecha }}
+          </figcaption>
+          <button
+            type="button"
+            class="evidencia__ampliar"
+            :title="t('support.evidencia.ampliar')"
+            :aria-label="t('support.evidencia.ampliar')"
+            @click="ampliada = imagen"
+          >
+            <VImg
+              :src="imagen.imagenUrl"
+              :alt="`${imagen.tipo} · ${imagen.fecha}`"
+              height="360"
+              class="evidencia__imagen"
+            />
+          </button>
+        </figure>
+      </VCarouselItem>
+    </VCarousel>
+  </AsDialogo>
+
+  <!-- Imagen ampliada -->
+  <VDialog
+    :model-value="!!ampliada"
+    max-width="90vw"
+    @update:model-value="(v: boolean) => { if (!v) ampliada = null }"
+  >
+    <div
+      v-if="ampliada"
+      class="evidencia__zoom"
+    >
+      <VBtn
+        icon="tabler-x"
+        variant="elevated"
+        color="surface"
+        size="small"
+        class="evidencia__cerrar"
+        :title="t('support.evidencia.cerrarZoom')"
+        :aria-label="t('support.evidencia.cerrarZoom')"
+        @click="ampliada = null"
       />
-    </VCard>
+      <VImg
+        :src="ampliada.imagenUrl"
+        :alt="`${ampliada.tipo} · ${ampliada.fecha}`"
+        max-height="85vh"
+        class="evidencia__imagen-zoom"
+        @click="ampliada = null"
+      />
+    </div>
   </VDialog>
 </template>
+
+<style scoped>
+.evidencia__carrusel {
+  border-radius: var(--as-radio-md);
+}
+
+.evidencia__ampliar {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  inline-size: 100%;
+}
+
+.evidencia__imagen,
+.evidencia__imagen-zoom {
+  border-radius: var(--as-radio-md);
+}
+
+.evidencia__zoom {
+  position: relative;
+  padding: var(--as-sp-2);
+  border-radius: var(--as-radio-lg);
+  background: rgba(var(--v-theme-on-surface), 0.92);
+}
+
+.evidencia__imagen-zoom {
+  cursor: zoom-out;
+}
+
+.evidencia__cerrar {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: var(--as-sp-3);
+  inset-inline-end: var(--as-sp-3);
+}
+</style>

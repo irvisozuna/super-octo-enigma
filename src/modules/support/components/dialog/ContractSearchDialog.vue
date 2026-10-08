@@ -1,559 +1,360 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AddNoteDialog from './AddNoteDialog.vue'
-import BaseTable from '@/components/BaseTable.vue'
-import { useAppManager } from '@/composables/useAppManager'
-import { useContractStore } from '@/modules/support/stores/contractStore'
+import { useContractStore } from '../../stores/contractStore'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { useNotificacion } from '@/composables/useNotificacion'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
+
+/*
+ * Búsqueda avanzada de contratos: texto libre (cuenta, nombre, medidor, RFC, dirección) y filtros por columna con
+ * operador, paginada en el servidor. Elegir una fila carga el contrato en la ficha.
+ */
+type TipoColumna = 'text' | 'currency'
+type Operador = 'contains' | 'equals' | 'startsWith' | 'endsWith' | 'greater' | 'less' | 'range'
+
+interface Filtro {
+  column: string
+  operator: Operador
+  value: string
+  value2: string
+}
+
+const props = defineProps<{ abierto: boolean }>()
+
+const emit = defineEmits<{
+  'update:abierto': [valor: boolean]
+  'seleccionado': []
+}>()
 
 const { t } = useI18n()
-const { closeDialog, openDialog } = useAppManager()
-const contractStore = useContractStore()
+const notificar = useNotificacion()
+const store = useContractStore()
 
-const contracts = ref([])
-const loading = ref(true)
-const selectedContract = ref(null)
-const searchQuery = ref('')
-const showAdvancedSearch = ref(false)
-
-// Encabezados de la tabla
-const headers = [
-  { title: t('account'), value: 'account' },
-  { title: t('clave'), value: 'clave_loc', width: '120px' },
-  { title: t('measurer'), value: 'measurer' },
-  { title: t('name'), value: 'nameuser' },
-  { title: t('address'), value: 'address' },
-  { title: t('neighborhood'), value: 'neighborhood' },
-  { title: t('debt'), value: 'total_debt' },
-  { title: t('actionslabel'), value: 'actions', align: 'center' },
+const COLUMNAS: { clave: string; etiqueta: string; tipo: TipoColumna }[] = [
+  { clave: 'account', etiqueta: 'cuenta', tipo: 'text' },
+  { clave: 'clave_loc', etiqueta: 'clave', tipo: 'text' },
+  { clave: 'measurer', etiqueta: 'medidor', tipo: 'text' },
+  { clave: 'nameuser', etiqueta: 'nombre', tipo: 'text' },
+  { clave: 'address', etiqueta: 'direccion', tipo: 'text' },
+  { clave: 'neighborhood', etiqueta: 'colonia', tipo: 'text' },
+  { clave: 'total_debt', etiqueta: 'adeudo', tipo: 'currency' },
 ]
 
-const pagination = ref({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-  search: '',
-  filters: '[]',
-  page: 1,
-})
-
-const selectedColumn = ref('')
-const selectedOperator = ref('')
-const filterValue = ref('')
-const filterValue2 = ref('')
-const activeFilters = ref([])
-
-// Definir los operadores de búsqueda disponibles por tipo
-const operatorsByType = {
-  text: [
-    { value: 'contains', label: t('contains') },
-    { value: 'equals', label: t('equals') },
-    { value: 'startsWith', label: t('startsWith') },
-    { value: 'endsWith', label: t('endsWith') },
-  ],
-  number: [
-    { value: 'equals', label: t('equals') },
-    { value: 'greater', label: t('greaterThan') },
-    { value: 'less', label: t('lessThan') },
-    { value: 'range', label: t('range') },
-  ],
-  currency: [
-    { value: 'equals', label: t('equals') },
-    { value: 'greater', label: t('greaterThan') },
-    { value: 'less', label: t('lessThan') },
-    { value: 'range', label: t('range') },
-  ],
+const OPERADORES: Record<TipoColumna, Operador[]> = {
+  text: ['contains', 'equals', 'startsWith', 'endsWith'],
+  currency: ['equals', 'greater', 'less', 'range'],
 }
 
-// Definir los tipos de campo para cada columna
-const columnTypes = {
-  account: 'text',
-  clave_loc: 'text',
-  measurer: 'text',
-  nameuser: 'text',
-  address: 'text',
-  neighborhood: 'text',
-  total_debt: 'currency',
+const filas = ref<Record<string, unknown>[]>([])
+const cargando = ref(false)
+const error = ref<ErrorReporte | null>(null)
+const pagina = ref(1)
+const porPagina = 10
+const total = ref(0)
+const busqueda = ref('')
+const filtros = ref<Filtro[]>([])
+const mostrarFiltros = ref(false)
+const columna = ref('')
+const operador = ref<Operador | ''>('')
+const valor = ref('')
+const valor2 = ref('')
+const eligiendo = ref<string | null>(null)
+let peticion = 0
+let temporizador: ReturnType<typeof setTimeout> | null = null
+
+const etiquetaColumna = (clave: string) => t(`support.busqueda.columnas.${COLUMNAS.find(c => c.clave === clave)?.etiqueta ?? clave}`)
+const etiquetaOperador = (op: string) => t(`support.busqueda.operadores.${op}`)
+const tipoColumna = (clave: string): TipoColumna => COLUMNAS.find(c => c.clave === clave)?.tipo ?? 'text'
+
+const opcionesColumna = computed(() => COLUMNAS.map(c => ({ value: c.clave, title: etiquetaColumna(c.clave) })))
+const opcionesOperador = computed(() => (columna.value ? OPERADORES[tipoColumna(columna.value)].map(op => ({ value: op, title: etiquetaOperador(op) })) : []))
+const esNumerica = computed(() => tipoColumna(columna.value) === 'currency')
+const filtroValido = computed(() => !!columna.value && !!operador.value && !!valor.value.trim() && (operador.value !== 'range' || !!valor2.value.trim()))
+const paginacion = computed(() => ({ pagina: pagina.value, porPagina, total: total.value }))
+
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'account', titulo: etiquetaColumna('account'), formato: 'texto', ancho: 110 },
+  { clave: 'clave_loc', titulo: etiquetaColumna('clave_loc'), formato: 'texto', ancho: 120 },
+  { clave: 'measurer', titulo: etiquetaColumna('measurer'), formato: 'texto', ancho: 120 },
+  { clave: 'nameuser', titulo: etiquetaColumna('nameuser'), formato: 'texto', truncar: true, anchoMin: 200 },
+  { clave: 'address', titulo: etiquetaColumna('address'), formato: 'texto', truncar: true, anchoMin: 200 },
+  { clave: 'neighborhood', titulo: etiquetaColumna('neighborhood'), formato: 'texto', truncar: true, ancho: 160 },
+  { clave: 'total_debt', titulo: etiquetaColumna('total_debt'), formato: 'moneda', ancho: 130 },
+  { clave: 'acciones', titulo: t('support.busqueda.columnas.acciones'), formato: 'personalizado', alineacion: 'end', ancho: 130 },
+].map(c => ({ ...c, ordenable: false })))
+
+function descripcionFiltro(f: Filtro): string {
+  return `${etiquetaColumna(f.column)}: ${etiquetaOperador(f.operator).toLowerCase()} ${f.value}${f.operator === 'range' ? ` – ${f.value2}` : ''}`
 }
 
-// Función para obtener los operadores según el tipo de columna
-function getOperatorsForColumn(columnValue) {
-  const type = columnTypes[columnValue] || 'text'
+async function cargar() {
+  const n = ++peticion
 
-  return operatorsByType[type]
-}
-
-// Función para obtener el label de un operador
-function getOperatorLabel(operator, columnValue) {
-  const operators = getOperatorsForColumn(columnValue)
-
-  return operators.find(op => op.value === operator)?.label || operator
-}
-
-// Función para agregar un filtro
-function addFilter() {
-  if (!selectedColumn.value || !selectedOperator.value || !filterValue.value)
-    return
-
-  const header = headers.find(h => h.value === selectedColumn.value)
-  if (!header)
-    return
-
-  const newFilter = {
-    column: selectedColumn.value,
-    columnLabel: header.title,
-    operator: selectedOperator.value,
-    operatorLabel: getOperatorLabel(selectedOperator.value, selectedColumn.value),
-    value: filterValue.value,
-    value2: filterValue2.value,
-  }
-
-  activeFilters.value.push(newFilter)
-
-  // Limpiar los campos
-  selectedColumn.value = ''
-  selectedOperator.value = ''
-  filterValue.value = ''
-  filterValue2.value = ''
-
-  // Aplicar los filtros
-  applyFilters()
-}
-
-// Función para remover un filtro
-function removeFilter(index) {
-  activeFilters.value.splice(index, 1)
-  applyFilters()
-}
-
-// Función para aplicar los filtros
-function applyFilters() {
-  pagination.value.offset = 0
-  pagination.value.page = 1
-  pagination.value.search = '' // Limpiar búsqueda general cuando se aplican filtros
-
-  // Convertir los filtros a un formato más simple
-  const filters = activeFilters.value.map(filter => ({
-    field: filter.column,
-    operator: filter.operator,
-    value: filter.value,
-    value2: filter.operator === 'range' ? filter.value2 : undefined,
-  }))
-
-  // Convertir el array de filtros a string para enviar al backend
-  pagination.value.filters = JSON.stringify(filters)
-
-  fetchData()
-}
-
-// Función para limpiar todos los filtros
-function clearFilters() {
-  activeFilters.value = []
-  selectedColumn.value = ''
-  selectedOperator.value = ''
-  filterValue.value = ''
-  filterValue2.value = ''
-  pagination.value.filters = '[]'
-  pagination.value.page = 1
-  pagination.value.offset = 0
-  fetchData()
-}
-
-// Definir los filtros avanzados
-const advancedFilters = ref({
-  account: { operator: 'contains', value: '', value2: '' },
-  clave_loc: { operator: 'contains', value: '', value2: '' },
-  measurer: { operator: 'contains', value: '', value2: '' },
-  nameuser: { operator: 'contains', value: '', value2: '' },
-  address: { operator: 'contains', value: '', value2: '' },
-  neighborhood: { operator: 'contains', value: '', value2: '' },
-  total_debt: { operator: 'range', value: '', value2: '' },
-})
-
-// Función para seleccionar un contrato y cerrar el diálogo
-async function selectContract(contract) {
+  cargando.value = true
+  error.value = null
   try {
-    // Mostrar un loading mientras se selecciona el contrato
-    loading.value = true
-    await contractStore.getContract(contract.account) // Ejecutar la acción del store con el ID del contrato
+    const parametros = {
+      limit: porPagina,
+      page: pagina.value,
+      search: busqueda.value.trim(),
+      filters: JSON.stringify(filtros.value.map(f => ({ field: f.column, operator: f.operator, value: f.value, value2: f.operator === 'range' ? f.value2 : undefined }))),
+    }
 
-    closeDialog('submit')
+    const r = await store.getContracts(parametros)
+    if (n !== peticion)
+      return
+    const base = (pagina.value - 1) * porPagina
 
-    // Abrir el diálogo de notas obligatorio
-    // openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
-    //   if (result === 'submit') {
-    //     console.log('Nota creada, cerrando diálogo de búsqueda...')
-    //     closeDialog('submit') // Cerrar el diálogo después de crear la nota
-    //   }
-    // })
+    filas.value = ((r?.data ?? []) as Record<string, unknown>[]).map((f, i) => ({ ...f, _k: base + i }))
+    total.value = r?.pagination?.total ?? filas.value.length
   }
-  catch (error) {
-    console.error('Error al seleccionar el contrato:', error)
+  catch (e) {
+    if (n === peticion)
+      error.value = normalizarError(e)
   }
   finally {
-    loading.value = false
+    if (n === peticion)
+      cargando.value = false
   }
 }
 
-// Función para cerrar el diálogo
-function close(result: 'close' | 'submit' | 'cancel' = 'close') {
-  closeDialog(result)
+function desdeElInicio() {
+  pagina.value = 1
+  cargar()
 }
 
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value = {
-    ...pagination.value,
-    page: newPage,
-    offset: (newPage - 1) * pagination.value.limit,
-    search: searchQuery.value,
-    filters: typeof pagination.value.filters === 'object'
-      ? JSON.stringify(pagination.value.filters)
-      : pagination.value.filters,
-  }
-  fetchData()
+function agregarFiltro() {
+  if (!filtroValido.value || !operador.value)
+    return
+  filtros.value.push({ column: columna.value, operator: operador.value, value: valor.value.trim(), value2: valor2.value.trim() })
+  columna.value = ''
+  operador.value = ''
+  valor.value = ''
+  valor2.value = ''
+  desdeElInicio()
 }
 
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value = {
-    ...pagination.value,
-    limit: newItemsPerPage,
-    offset: 0,
-    page: 1,
-    search: searchQuery.value,
-    filters: typeof pagination.value.filters === 'object'
-      ? JSON.stringify(pagination.value.filters)
-      : pagination.value.filters,
-  }
-  fetchData()
+function quitarFiltro(i: number) {
+  filtros.value.splice(i, 1)
+  desdeElInicio()
 }
 
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
-  })
+function limpiar() {
+  filtros.value = []
+  busqueda.value = ''
+  desdeElInicio()
 }
 
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.page = 1
-  pagination.value.filters = '[]' // Limpiar filtros cuando se usa la búsqueda general
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
-// Función para aplicar los filtros avanzados
-function applyAdvancedFilters() {
-  pagination.value.offset = 0
-  pagination.value.filters = {}
-
-  // Convertir los filtros avanzados al formato esperado por el backend
-  Object.entries(advancedFilters.value).forEach(([key, filter]) => {
-    if (filter.value) {
-      pagination.value.filters[key] = {
-        operator: filter.operator,
-        value: filter.value,
-        value2: filter.value2,
-      }
-    }
-  })
-
-  fetchData()
-}
-
-// Función para limpiar los filtros avanzados
-function clearAdvancedFilters() {
-  Object.keys(advancedFilters.value).forEach(key => {
-    advancedFilters.value[key] = { operator: 'contains', value: '', value2: '' }
-  })
-  applyAdvancedFilters()
-}
-
-// Cargar los contratos al montar el componente
-onMounted(fetchData)
-
-async function fetchData() {
-  loading.value = true
+async function elegir(fila: Record<string, unknown>) {
+  const cuenta = String(fila.account ?? '')
+  if (!cuenta)
+    return
+  eligiendo.value = cuenta
   try {
-    const response = await contractStore.getContracts(pagination.value)
-
-    contracts.value = replaceNullWithEmptyString(response.data)
-
-    // Actualizar la paginación con los datos del servidor
-    pagination.value = {
-      ...pagination.value,
-      ...response.pagination,
-
-      // Mantener los filtros y búsqueda actuales
-      search: pagination.value.search,
-      filters: pagination.value.filters,
-    }
+    await store.getContract(cuenta)
+    emit('seleccionado')
+    emit('update:abierto', false)
   }
-  catch (error) {
-    console.error('Error al cargar los contratos:', error)
+  catch (e) {
+    notificar.error(e)
   }
   finally {
-    loading.value = false
+    eligiendo.value = null
   }
 }
+
+watch(busqueda, () => {
+  if (temporizador)
+    clearTimeout(temporizador)
+  temporizador = setTimeout(desdeElInicio, 350)
+})
+
+watch(columna, () => {
+  operador.value = ''
+  valor.value = ''
+  valor2.value = ''
+})
+
+watch(() => props.abierto, v => {
+  if (v) {
+    busqueda.value = ''
+    filtros.value = []
+    mostrarFiltros.value = false
+    desdeElInicio()
+  }
+})
 </script>
 
 <template>
-  <DialogCloseBtn @click="close" />
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <!-- Título y descripción -->
-      <div class="text-center mb-6">
-        <h4 class="text-h5 font-weight-medium mb-2">
-          {{ t('advanceSearch') }}
-        </h4>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ t('advanceSearchDescription') }}
-        </p>
-      </div>
-
-      <!-- Campo de búsqueda general con botón de búsqueda avanzada -->
-      <div class="d-flex align-center gap-2 mb-6">
+  <AsDialogo
+    :abierto="abierto"
+    :titulo="t('support.busqueda.titulo')"
+    :subtitulo="t('support.busqueda.descripcion')"
+    tamano="xl"
+    variante="informativo"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
+  >
+    <AsBarraFiltros
+      sin-tarjeta
+      class="mb-3"
+      :activos="filtros.length"
+      @limpiar="limpiar"
+    >
+      <template #inicio>
         <VTextField
-          v-model="searchQuery"
-          :placeholder="t('search.searchPlaceholder')"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          class="flex-grow-1"
-          @input="onSearchInput"
-        >
-          <template #append-inner>
-            <VIcon
-              color="primary"
-              icon="tabler-search"
-            />
-          </template>
-        </VTextField>
-
-        <VBtn
-          variant="text"
-          color="primary"
-          class="shrink-0"
-          @click="showAdvancedSearch = !showAdvancedSearch"
-        >
-          <VIcon
-            :icon="showAdvancedSearch ? 'tabler-chevron-up' : 'tabler-chevron-down'"
-            start
-          />
-          {{ showAdvancedSearch ? t('hideAdvancedSearch') : t('showAdvancedSearch') }}
-        </VBtn>
-      </div>
-
-      <!-- Filtros activos -->
-      <div
-        v-if="activeFilters.length > 0"
-        class="mb-4"
-      >
-        <div class="d-flex flex-wrap gap-2">
-          <VChip
-            v-for="(filter, index) in activeFilters"
-            :key="index"
-            variant="flat"
-            color="primary"
-            closable
-            size="small"
-            class="rounded"
-            @click:close="removeFilter(index)"
-          >
-            <template #prepend>
-              <VIcon
-                size="16"
-                :icon="columnTypes[filter.column] === 'number' || columnTypes[filter.column] === 'currency' ? 'tabler-calculator' : 'tabler-text-size'"
-              />
-            </template>
-            <span class="font-weight-medium">{{ filter.columnLabel }}:</span>
-            <span class="ms-1">{{ filter.operatorLabel.toLowerCase() }} {{ filter.value }}{{ filter.value2 ? ` - ${filter.value2}` : '' }}</span>
-          </VChip>
-          <VBtn
-            v-if="activeFilters.length > 0"
-            variant="text"
-            color="error"
-            density="comfortable"
-            size="small"
-            @click="clearFilters"
-          >
-            {{ t('clearAllFilters') }}
-          </VBtn>
-        </div>
-      </div>
-
-      <!-- Panel de búsqueda avanzada -->
-      <VExpandTransition>
-        <div v-if="showAdvancedSearch">
-          <VCard
-            variant="flat"
-            class="mb-6 pa-4 bg-surface rounded"
-            elevation="0"
-          >
-            <div class="d-flex gap-4">
-              <!-- Selector de columna -->
-              <VSelect
-                v-model="selectedColumn"
-                :items="headers.filter(h => h.value !== 'actions')"
-                item-title="title"
-                item-value="value"
-                :label="t('selectColumn')"
-                variant="outlined"
-                density="comfortable"
-                hide-details
-                class="flex-grow-1"
-              >
-                <template #prepend>
-                  <VIcon icon="tabler-table" />
-                </template>
-              </VSelect>
-
-              <!-- Selector de operador -->
-              <VSelect
-                v-if="selectedColumn"
-                v-model="selectedOperator"
-                :items="getOperatorsForColumn(selectedColumn)"
-                item-title="label"
-                item-value="value"
-                :label="t('selectOperator')"
-                variant="outlined"
-                density="comfortable"
-                hide-details
-                class="flex-grow-1"
-              >
-                <template #prepend>
-                  <VIcon icon="tabler-math-symbols" />
-                </template>
-              </VSelect>
-
-              <!-- Campo(s) de valor -->
-              <template v-if="selectedOperator === 'range'">
-                <div class="d-flex gap-2 flex-grow-1">
-                  <VTextField
-                    v-model="filterValue"
-                    :label="t('from')"
-                    :type="columnTypes[selectedColumn] === 'number' || columnTypes[selectedColumn] === 'currency' ? 'number' : 'text'"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    class="flex-grow-1"
-                  >
-                    <template #prepend>
-                      <VIcon icon="tabler-arrow-bar-right" />
-                    </template>
-                  </VTextField>
-                  <VTextField
-                    v-model="filterValue2"
-                    :label="t('to')"
-                    :type="columnTypes[selectedColumn] === 'number' || columnTypes[selectedColumn] === 'currency' ? 'number' : 'text'"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    class="flex-grow-1"
-                  >
-                    <template #prepend>
-                      <VIcon icon="tabler-arrow-bar-left" />
-                    </template>
-                  </VTextField>
-                </div>
-              </template>
-              <VTextField
-                v-else-if="selectedOperator"
-                v-model="filterValue"
-                :label="t('enterValue')"
-                :type="columnTypes[selectedColumn] === 'number' || columnTypes[selectedColumn] === 'currency' ? 'number' : 'text'"
-                variant="outlined"
-                density="comfortable"
-                hide-details
-                class="flex-grow-1"
-              >
-                <template #prepend>
-                  <VIcon :icon="columnTypes[selectedColumn] === 'number' || columnTypes[selectedColumn] === 'currency' ? 'tabler-calculator' : 'tabler-text-size'" />
-                </template>
-              </VTextField>
-
-              <!-- Botón de agregar filtro -->
-              <VBtn
-                color="primary"
-                :disabled="!selectedColumn || !selectedOperator || !filterValue"
-                class="align-self-center"
-                @click="addFilter"
-              >
-                <VIcon
-                  icon="tabler-plus"
-                  start
-                />
-                {{ t('addFilter') }}
-              </VBtn>
-            </div>
-          </VCard>
-        </div>
-      </VExpandTransition>
-
-      <!-- Tabla de contratos -->
-      <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
-        :items="contracts"
-        :total="pagination.total"
-        :page="pagination.page"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #total_debt="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.total_debt) || 'N/A' }}
-          </div>
-        </template>
-        <template #actions="{ item }">
-          <VBtn
-            color="primary"
-            variant="text"
-            @click="selectContract(item)"
-          >
-            {{ t('select') }}
-          </VBtn>
-        </template>
-      </BaseTable>
-
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="d-flex flex-column align-center justify-center py-8"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
-          size="32"
+          v-model="busqueda"
+          clearable
+          autofocus
+          prepend-inner-icon="tabler-search"
+          :placeholder="t('support.busqueda.general')"
+          :aria-label="t('support.busqueda.general')"
+          class="as-filtro--lg busqueda__texto"
         />
-        <span class="text-medium-emphasis mt-2">
-          {{ t('loading') }}...
-        </span>
-      </div>
-    </VCardText>
-  </VCard>
+      </template>
+      <VBtn
+        variant="text"
+        size="small"
+        :prepend-icon="mostrarFiltros ? 'tabler-chevron-up' : 'tabler-filter'"
+        @click="mostrarFiltros = !mostrarFiltros"
+      >
+        {{ mostrarFiltros ? t('support.busqueda.menosFiltros') : t('support.busqueda.masFiltros') }}
+      </VBtn>
+    </AsBarraFiltros>
+
+    <VExpandTransition>
+      <VForm
+        v-if="mostrarFiltros"
+        class="busqueda__constructor mb-3"
+        @submit.prevent="agregarFiltro"
+      >
+        <VSelect
+          v-model="columna"
+          :items="opcionesColumna"
+          :label="t('support.busqueda.columna')"
+          :aria-label="t('support.busqueda.columna')"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="busqueda__campo"
+        />
+        <VSelect
+          v-model="operador"
+          :items="opcionesOperador"
+          :label="t('support.busqueda.operador')"
+          :aria-label="t('support.busqueda.operador')"
+          density="compact"
+          variant="outlined"
+          hide-details
+          :disabled="!columna"
+          class="busqueda__campo"
+        />
+        <VTextField
+          v-model="valor"
+          :label="operador === 'range' ? t('support.busqueda.desde') : t('support.busqueda.valor')"
+          :aria-label="operador === 'range' ? t('support.busqueda.desde') : t('support.busqueda.valor')"
+          :type="esNumerica ? 'number' : 'text'"
+          density="compact"
+          variant="outlined"
+          hide-details
+          :disabled="!operador"
+          class="busqueda__campo"
+        />
+        <VTextField
+          v-if="operador === 'range'"
+          v-model="valor2"
+          :label="t('support.busqueda.hasta')"
+          :aria-label="t('support.busqueda.hasta')"
+          :type="esNumerica ? 'number' : 'text'"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="busqueda__campo"
+        />
+        <AsBtnSecundario
+          type="submit"
+          prepend-icon="tabler-plus"
+          :disabled="!filtroValido"
+        >
+          {{ t('support.busqueda.agregarFiltro') }}
+        </AsBtnSecundario>
+      </VForm>
+    </VExpandTransition>
+
+    <div
+      v-if="filtros.length"
+      class="d-flex flex-wrap gap-2 mb-3"
+    >
+      <VChip
+        v-for="(f, i) in filtros"
+        :key="`${f.column}-${i}`"
+        label
+        size="small"
+        variant="tonal"
+        color="primary"
+        closable
+        :close-label="t('support.busqueda.quitarFiltro', { filtro: etiquetaColumna(f.column) })"
+        @click:close="quitarFiltro(i)"
+      >
+        {{ descripcionFiltro(f) }}
+      </VChip>
+    </div>
+
+    <AsTablaDatos
+      :columnas="columnas"
+      :filas="filas"
+      clave-fila="_k"
+      densidad="media"
+      :cargando="cargando"
+      :error="error"
+      :paginacion="paginacion"
+      clic-fila
+      :vacio-titulo="t('support.busqueda.sinResultados')"
+      vacio-detalle=""
+      vacio-icono="tabler-user-search"
+      class="busqueda__tabla"
+      @update:pagina="(p: number) => { pagina = p; cargar() }"
+      @reintentar="cargar"
+      @fila="elegir"
+    >
+      <template #celda-acciones="{ fila }">
+        <VBtn
+          size="small"
+          variant="tonal"
+          color="primary"
+          :loading="eligiendo === String(fila.account)"
+          @click.stop="elegir(fila)"
+        >
+          {{ t('support.busqueda.seleccionar') }}
+        </VBtn>
+      </template>
+    </AsTablaDatos>
+  </AsDialogo>
 </template>
 
 <style scoped>
-.gap-2 {
-  gap: 8px;
+.busqueda__texto {
+  min-inline-size: var(--as-ancho-filtro-lg);
 }
 
-.gap-4 {
-  gap: 16px;
+.busqueda__constructor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--as-sp-3);
+  border: var(--as-borde);
+  border-radius: var(--as-radio-md);
+  background: rgb(var(--v-theme-surface-variant));
+  gap: var(--as-sp-2);
+}
+
+.busqueda__campo {
+  flex: 1 1 var(--as-ancho-filtro-sm);
+  max-inline-size: var(--as-ancho-filtro-md);
+}
+
+.busqueda__tabla :deep(.as-tabla__td--truncar) {
+  max-inline-size: var(--as-ancho-filtro-lg);
 }
 </style>

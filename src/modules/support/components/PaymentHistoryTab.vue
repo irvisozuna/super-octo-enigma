@@ -1,293 +1,124 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import BaseTable from '@/components/BaseTable.vue' // Asegúrate de importar correctamente tu componente BaseTable
-import { useAppManager } from '@/composables/useAppManager'
-import { useContractStore } from '@/modules/support/stores/contractStore'
+import { useListaContrato } from '../composables/useListaContrato'
+import { useContractStore } from '../stores/contractStore'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { moneda } from '@/utils/formato'
 
-// Props para personalizar el título y descripción
-const props = defineProps({
-  activeTab: { type: Number, required: true },
-})
+/* Historial de pagos del contrato: importes por concepto y detalle de cada pago agrupado por factura. */
+interface ConceptoPago {
+  ref: string
+  label: string
+  total_ttc: number
+}
+
+interface FacturaPago {
+  ref: string
+  items: (ConceptoPago & { _k: number })[]
+  total: number
+}
+
+const props = defineProps<{ activa: boolean }>()
 
 const { t } = useI18n()
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
+const store = useContractStore()
+const lista = useListaContrato((id, p) => store.getPaymentsByContract(id, p), () => props.activa)
 
-const contracts = ref([]) // Inicialmente sin datos
-const loading = ref(true) // Estado de carga activado al inicio
-const selectedContract = ref(null)
-const searchQuery = ref('')
+const detalleAbierto = ref(false)
+const facturas = ref<FacturaPago[]>([])
 
-const pagination = ref({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-})
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'paymentId', titulo: t('support.pagos.id'), formato: 'texto', ancho: 110 },
+  { clave: 'billingPeriod', titulo: t('support.pagos.periodo'), formato: 'texto', ancho: 150 },
+  { clave: 'DATE', titulo: t('support.pagos.fecha'), formato: 'fechaHora', ancho: 150 },
+  { clave: 'consumo', titulo: t('support.pagos.consumo'), formato: 'moneda', ancho: 120 },
+  { clave: 'drenaje', titulo: t('support.pagos.drenaje'), formato: 'moneda', ancho: 110 },
+  { clave: 'saneamiento', titulo: t('support.pagos.saneamiento'), formato: 'moneda', ancho: 120 },
+  { clave: 'recargos', titulo: t('support.pagos.recargos'), formato: 'moneda', ancho: 110 },
+  { clave: 'bomberos', titulo: t('support.pagos.bomberos'), formato: 'moneda', ancho: 110 },
+  { clave: 'otros', titulo: t('support.pagos.otros'), formato: 'moneda', ancho: 100 },
+  { clave: 'total_concept', titulo: t('support.pagos.totalConceptos'), formato: 'moneda', ancho: 130 },
+  { clave: 'totalPaid', titulo: t('support.pagos.totalPagado'), formato: 'moneda', ancho: 130 },
+  { clave: 'payment_method', titulo: t('support.pagos.metodo'), formato: 'texto', ancho: 140, truncar: true },
+  { clave: 'details', titulo: t('support.pagos.detalle'), formato: 'personalizado', alineacion: 'center', ancho: 90 },
+].map(c => ({ ...c, ordenable: false })))
 
-// Encabezados de la tabla
-const headers = [
-  { title: t('paymentId'), value: 'paymentId' },
-  { title: t('billingPeriod'), value: 'billingPeriod' },
-  { title: t('date'), value: 'DATE' },
-  { title: t('consumo'), value: 'consumo' },
-  { title: t('drenaje'), value: 'drenaje' },
-  { title: t('saneamiento'), value: 'saneamiento' },
-  { title: t('recargos'), value: 'recargos' },
-  { title: t('bomberos'), value: 'bomberos' },
-  { title: t('otros'), value: 'otros' },
-  { title: t('total_concept'), value: 'total_concept' },
-  { title: t('totalPaid'), value: 'totalPaid' },
-  { title: t('payment_method'), value: 'payment_method' },
-  { title: t('details'), value: 'details', sortable: false },
-]
+const columnasDetalle = computed<ColumnaTabla[]>(() => [
+  { clave: 'label', titulo: t('support.pagos.concepto'), formato: 'texto', ordenable: false },
+  { clave: 'total_ttc', titulo: t('support.pagos.importe'), formato: 'moneda', ordenable: false, ancho: 160 },
+])
 
-const showDetailsDialog = ref(false)
-const selectedDetails = ref([])
+/** Agrupa los conceptos del pago por referencia de factura, con el total de cada una. */
+function verDetalle(detalles: ConceptoPago[]) {
+  const grupos = new Map<string, FacturaPago>()
 
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.page = newPage
-  fetchData()
-}
+  detalles.forEach((d, i) => {
+    const g = grupos.get(d.ref) ?? { ref: d.ref, items: [], total: 0 }
 
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para manejar la entrada de búsqueda
-function onSearchInput() {
-  pagination.value.offset = 0
-  pagination.value.search = searchQuery.value
-  fetchData()
-}
-
-// Función para cargar los datos
-async function fetchData() {
-  loading.value = true
-  try {
-    const response = await contractStore.getPaymentsByContract(contractStore.item.id_account, pagination.value)
-
-    contracts.value = replaceNullWithEmptyString(response.data) // Reemplazar null por ''
-    pagination.value = response.pagination
-  }
-  catch (error) {
-    console.error('Error al cargar los Pagos:', error)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]) {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
+    g.items.push({ ...d, _k: i })
+    g.total += Number(d.total_ttc) || 0
+    grupos.set(d.ref, g)
   })
-}
-
-// Montar datos al iniciar el componente
-onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
-watch(() => props.activeTab, newTab => {
-  if (newTab === 2) { // Suponiendo que el tab de BillingHistory es el índice 1
-    fetchData()
-  }
-})
-
-function showPaymentDetails(details: any[]) {
-  if (details && details.length > 0) {
-    // Agrupar los detalles por referencia de factura
-    const groupedDetails = details.reduce((acc, detail) => {
-      if (!acc[detail.ref]) {
-        acc[detail.ref] = {
-          ref: detail.ref,
-          items: [],
-          total: 0,
-        }
-      }
-      acc[detail.ref].items.push(detail)
-      acc[detail.ref].total += detail.total_ttc
-
-      return acc
-    }, {})
-
-    selectedDetails.value = Object.values(groupedDetails)
-    showDetailsDialog.value = true
-  }
+  facturas.value = [...grupos.values()]
+  detalleAbierto.value = true
 }
 </script>
 
 <template>
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <!-- Tabla de contratos -->
-      <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
-        :items="contracts"
-        :total="pagination.total"
-        :page="pagination.offset / pagination.limit + 1"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #consumo="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.consumo) || 'N/A' }}
-          </div>
-        </template>
-        <template #DATE="{ item }">
-          <div class="text">
-            {{ $formatDate(item.DATE, {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false,
-            }) || 'N/A' }}
-          </div>
-        </template>
-        <template #drenaje="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.drenaje) || 'N/A' }}
-          </div>
-        </template>
-        <template #saneamiento="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.saneamiento) || 'N/A' }}
-          </div>
-        </template>
-        <template #recargos="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.recargos) || 'N/A' }}
-          </div>
-        </template>
-        <template #bomberos="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.bomberos) || 'N/A' }}
-          </div>
-        </template>
-        <template #totalPaid="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.totalPaid) || 'N/A' }}
-          </div>
-        </template>
-        <template #total_concept="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.total_concept) || 'N/A' }}
-          </div>
-        </template>
-        <template #otros="{ item }">
-          <div class="text-end">
-            {{ $formatCurrency(item.otros) || '0' }}
-          </div>
-        </template>
-        <template #payment_method="{ item }">
-          <div class="text">
-            {{ item.payment_method || '-' }}
-          </div>
-        </template>
-        <template #details="{ item }">
-          <VIcon
-            v-if="item.details && item.details.length > 0"
-            icon="tabler-eye"
-            size="small"
-            class="ms-2 cursor-pointer"
-            @click="showPaymentDetails(item.details)"
-          />
-        </template>
-      </BaseTable>
+  <AsTablaDatos
+    sin-tarjeta
+    :columnas="columnas"
+    :filas="lista.filas.value"
+    clave-fila="_k"
+    densidad="estandar"
+    :cargando="lista.cargando.value"
+    :error="lista.error.value"
+    :paginacion="lista.paginacion.value"
+    :vacio-titulo="t('support.lista.sinFilas')"
+    vacio-detalle=""
+    vacio-icono="tabler-cash-off"
+    @update:pagina="lista.cambiarPagina"
+    @reintentar="lista.cargar"
+  >
+    <template #celda-details="{ fila }">
+      <VBtn
+        v-if="fila.details && fila.details.length"
+        icon="tabler-list-details"
+        size="small"
+        variant="text"
+        :title="t('support.lista.verDetalle')"
+        :aria-label="t('support.lista.verDetalle')"
+        @click="verDetalle(fila.details)"
+      />
+    </template>
+  </AsTablaDatos>
 
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="text-center py-6"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
-        />
-        <p class="mt-2">
-          {{ t('loading') }}...
-        </p>
-      </div>
-    </VCardText>
-
-    <!-- Modal de detalles del pago -->
-    <VDialog
-      v-model="showDetailsDialog"
-      max-width="800"
+  <AsDialogo
+    :abierto="detalleAbierto"
+    :titulo="t('support.pagos.detalleTitulo')"
+    tamano="md"
+    variante="informativo"
+    @update:abierto="(v: boolean) => { detalleAbierto = v }"
+  >
+    <section
+      v-for="f in facturas"
+      :key="f.ref"
+      class="mb-4"
     >
-      <VCard>
-        <VCardTitle>{{ t('payment_details') }}</VCardTitle>
-        <VCardText>
-          <div
-            v-for="invoice in selectedDetails"
-            :key="invoice.ref"
-            class="mb-6"
-          >
-            <div class="d-flex justify-space-between align-center mb-2">
-              <h3 class="text-h6">
-                {{ invoice.ref }}
-              </h3>
-              <div class="text-h6">
-                {{ $formatCurrency(invoice.total) }}
-              </div>
-            </div>
-            <VTable>
-              <thead>
-                <tr>
-                  <th>{{ t('concepto') }}</th>
-                  <th class="text-end">
-                    {{ t('amount') }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="detail in invoice.items"
-                  :key="`${invoice.ref}-${detail.label}`"
-                >
-                  <td>{{ detail.label }}</td>
-                  <td class="text-end">
-                    {{ $formatCurrency(detail.total_ttc) }}
-                  </td>
-                </tr>
-              </tbody>
-            </VTable>
-          </div>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="primary"
-            @click="showDetailsDialog = false"
-          >
-            {{ t('close') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-  </VCard>
+      <h3 class="as-seccion">
+        <span>{{ f.ref }}</span>
+        <span class="as-num">{{ moneda(f.total) }}</span>
+      </h3>
+      <AsTablaDatos
+        sin-tarjeta
+        ocultar-pie
+        densidad="densa"
+        :columnas="columnasDetalle"
+        :filas="f.items"
+        clave-fila="_k"
+        :por-pagina="-1"
+      />
+    </section>
+  </AsDialogo>
 </template>
-
-<style scoped>
-.cursor-pointer {
-  cursor: pointer;
-}
-</style>

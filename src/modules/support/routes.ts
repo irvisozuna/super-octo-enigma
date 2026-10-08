@@ -1,17 +1,17 @@
-import { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
-const supportComponent = () => import('./views/index.vue');
+const supportComponent = () => import('./views/index.vue')
 
 const supportRoutes: RouteRecordRaw[] = [
   {
     path: '/supports',
     name: 'supportsList',
     component: supportComponent,
-    meta:{
+    meta: {
       action: 'read',
-      subject: 'supports'
-    }
-  }
-];
+      subject: 'supports',
+    },
+  },
+]
 
-export default supportRoutes;
+export default supportRoutes

@@ -1,0 +1,299 @@
+{
+  "generadoEl": "2026-10-08T17:42:33.197Z",
+  "alcance": [
+    "src/modules/support"
+  ],
+  "archivos": 49,
+  "totales": {
+    "hexEnEstilos": 0,
+    "hexEnScript": 0,
+    "rgbSinVarEnEstilos": 0,
+    "coloresEnLinea": 1,
+    "propsColorLiteral": 0,
+    "estilosEnLinea": 10,
+    "estilosEnLineaDinamicos": 1,
+    "importantEnScoped": 0,
+    "importantEnScss": 0,
+    "fontSizeManual": 0,
+    "fontSizeValores": [],
+    "textoMenor12px": 0,
+    "fontWeightManual": 0,
+    "anchosFijosPx": 1,
+    "anchosDrawer": [],
+    "anchosDialogo": [
+      "100%",
+      "600",
+      "800",
+      "800px",
+      "90vw"
+    ],
+    "props": {
+      "size=\"small\"": 12,
+      "size=\"x-small\"": 0,
+      "variant=\"tonal\"": 7,
+      "variant=\"outlined\"": 34,
+      "variant=\"text\"": 7,
+      "variant=\"flat\"": 8,
+      "density=\"compact\"": 2,
+      "density=\"comfortable\"": 7,
+      "text-none": 0
+    },
+    "vbtn": 50,
+    "formatoNumeros": {
+      "toLocaleString": 1,
+      "toFixed": 3,
+      "IntlNumberFormat": 0,
+      "n_i18n": 18,
+      "formatearPropias": 0,
+      "formatCurrency": 22,
+      "formatoCompartido": 0
+    },
+    "formatoFechas": {
+      "dayjs": 0,
+      "toLocaleDateString": 2,
+      "toLocaleTimeString": 0,
+      "IntlDateTimeFormat": 0,
+      "propias": 8,
+      "formatoCompartido": 0
+    },
+    "i18n": {
+      "t": 341,
+      "cabecerasLiterales": 16,
+      "propsLiterales": 23
+    },
+    "iconos": {
+      "tabler": 114,
+      "mdi": 2,
+      "fa": 0,
+      "distintos": 51,
+      "porAccion": {
+        "editar": {
+          "tabler-edit": 5
+        },
+        "exportar": {
+          "tabler-file-spreadsheet": 1
+        },
+        "filtrar": {},
+        "cerrar": {},
+        "actualizar": {},
+        "eliminar": {
+          "tabler-trash": 1
+        }
+      }
+    },
+    "tablas": {
+      "VDataTable": 1,
+      "VDataTableServer": 0,
+      "VDataTableVirtual": 0,
+      "VTable": 2,
+      "tableHtml": 0,
+      "AsTablaDatos": 0
+    },
+    "botonesIcono": 8,
+    "botonesIconoSinEtiqueta": 8,
+    "imagenes": 2,
+    "imagenesSinAlt": 2,
+    "responsive": {
+      "useDisplay": 0,
+      "mediaQueries": 0,
+      "rejilla": 99
+    },
+    "componentesAs": 0,
+    "fontSizeValoresDistintos": 0
+  },
+  "porModulo": {
+    "support": {
+      "archivos": 49,
+      "lineas": 6159,
+      "hexEnEstilos": 0,
+      "hexEnScript": 0,
+      "estilosEnLinea": 10,
+      "importantEnScoped": 0,
+      "fontSizeManual": 0,
+      "anchosFijosPx": 1,
+      "densityCompact": 2,
+      "textNone": 0,
+      "vbtn": 50,
+      "botonesIconoSinEtiqueta": 8,
+      "cabecerasLiterales": 16,
+      "t": 341
+    }
+  },
+  "archivosMasGrandes": [
+    {
+      "rel": "src/modules/support/components/ContractDetails.vue",
+      "lineas": 566,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractSearchDialog.vue",
+      "lineas": 560,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddWorkOrderDialog.vue",
+      "lineas": 352,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/dialog/AddChargeDialog.vue",
+      "lineas": 313,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/dialog/FiscalDataDialog.vue",
+      "lineas": 296,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/PaymentHistoryTab.vue",
+      "lineas": 294,
+      "lineasEstilo": 5
+    },
+    {
+      "rel": "src/modules/support/components/AgreementsTab.vue",
+      "lineas": 286,
+      "lineasEstilo": 17
+    },
+    {
+      "rel": "src/modules/support/components/ReadingsTab.vue",
+      "lineas": 233,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/AgreementDetails.vue",
+      "lineas": 219,
+      "lineasEstilo": 13
+    },
+    {
+      "rel": "src/modules/support/components/dialog/RebillingDetailDialog.vue",
+      "lineas": 217,
+      "lineasEstilo": 0
+    }
+  ],
+  "archivosConMasCss": [
+    {
+      "rel": "src/modules/support/components/AgreementsTab.vue",
+      "lineas": 286,
+      "lineasEstilo": 17
+    },
+    {
+      "rel": "src/modules/support/components/AgreementDetails.vue",
+      "lineas": 219,
+      "lineasEstilo": 13
+    },
+    {
+      "rel": "src/modules/support/views/SupportList.vue",
+      "lineas": 174,
+      "lineasEstilo": 13
+    },
+    {
+      "rel": "src/modules/support/components/dialog/ContractSearchDialog.vue",
+      "lineas": 560,
+      "lineasEstilo": 9
+    },
+    {
+      "rel": "src/modules/support/components/MapComponent.vue",
+      "lineas": 99,
+      "lineasEstilo": 7
+    },
+    {
+      "rel": "src/modules/support/components/NotesTab.vue",
+      "lineas": 198,
+      "lineasEstilo": 5
+    },
+    {
+      "rel": "src/modules/support/components/PaymentHistoryTab.vue",
+      "lineas": 294,
+      "lineasEstilo": 5
+    },
+    {
+      "rel": "src/modules/support/components/WorkOrdersTab.vue",
+      "lineas": 197,
+      "lineasEstilo": 5
+    },
+    {
+      "rel": "src/modules/support/components/AdjustmentsTab.vue",
+      "lineas": 171,
+      "lineasEstilo": 0
+    },
+    {
+      "rel": "src/modules/support/components/BillingHistoryTab.vue",
+      "lineas": 143,
+      "lineasEstilo": 0
+    }
+  ],
+  "detalles": {
+    "estilosEnLinea": [
+      "src/modules/support/components/ContractDetails.vue:170 style=\"aspect-ratio: 1; inline-size: 100%;\"\n                      @cl",
+      "src/modules/support/components/ContractDetails.vue:189 style=\"aspect-ratio: 1; inline-size: 100%;\"\n                      @cl",
+      "src/modules/support/components/ContractDetails.vue:208 style=\"aspect-ratio: 1; inline-size: 100%;\"\n                      @cl",
+      "src/modules/support/components/NotesTab.vue:35 style=\"max-inline-size: 200px;\"\n              v-html=\"item.content\"",
+      "src/modules/support/components/WorkOrdersTab.vue:21 style=\"max-inline-size: 200px;\"\n              v-html=\"item.message\"",
+      "src/modules/support/components/contract_detail/ContractStatistics.vue:17 style=\"aspect-ratio: 1; inline-size: 100%;\"\n                @click=\"t",
+      "src/modules/support/components/dialog/ContractImagesDialog.vue:70 style=\"cursor: zoom-in;\"\n                  @click=\"openZoom(image.ima",
+      "src/modules/support/components/dialog/ContractImagesDialog.vue:88 style=\"background: transparent; box-shadow: none;\"\n    >\n      <VImg",
+      "src/modules/support/components/dialog/ContractImagesDialog.vue:95 style=\" background: #222; cursor: zoom-out;object-fit: contain;\"",
+      "src/modules/support/views/index.vue:55 style=\"border: none;\"\n        no-actions\n        @refresh=\"searchCont"
+    ],
+    "cabecerasLiterales": [
+      "src/modules/support/components/ContractDetails.vue:21 title: 'Convenio Activo'",
+      "src/modules/support/components/ContractDetails.vue:27 title: 'Orden de trabajo'",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:51 title: 'Servicio'",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:53 title: 'Precio'",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:54 title: 'Cantidad'",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:55 title: 'Total'",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:56 title: 'Acción'",
+      "src/modules/support/menu.ts:5 title: 'Soporte'",
+      "src/modules/support/tests/support.test.ts:50 title: 'Name'",
+      "src/modules/support/views/SupportList.vue:33 title: 'Name'",
+      "src/modules/support/views/SupportList.vue:34 title: 'Email'",
+      "src/modules/support/views/SupportList.vue:35 title: 'Role'",
+      "src/modules/support/views/SupportList.vue:36 title: 'Actions'",
+      "src/modules/support/views/SupportList.vue:84 title: 'Add Support'",
+      "src/modules/support/views/SupportList.vue:92 title: 'Edit Support'",
+      "src/modules/support/views/SupportList.vue:104 title: 'Delete Support'"
+    ],
+    "botonesIconoSinEtiqueta": [
+      "src/modules/support/components/ContractDetails.vue:410 <VBtn icon variant=\"plain\" class=\"ms-2\" @click=\"openFiscalDataDialog\" >",
+      "src/modules/support/components/ReadingsTab.vue:24 <VBtn v-if=\"$can('read', 'Rebilling')\" v-bind=\"props\" size=\"small\" color=\"warning\" variant",
+      "src/modules/support/components/ReadingsTab.vue:50 <VBtn v-if=\"$can('read', 'Evidence')\" v-bind=\"props\" size=\"small\" color=\"primary\" variant=",
+      "src/modules/support/components/contract_detail/FiscalData.vue:17 <VBtn icon variant=\"plain\" class=\"ms-2\">",
+      "src/modules/support/components/contract_detail/FiscalData.vue:23 <VBtn icon variant=\"plain\" class=\"ms-2\">",
+      "src/modules/support/components/contract_detail/FiscalData.vue:29 <VBtn icon variant=\"plain\" class=\"ms-2\">",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:115 <VBtn icon variant=\"text\" color=\"error\" @click=\"removeCharge(item)\" >",
+      "src/modules/support/components/dialog/ContractImagesDialog.vue:10 <VBtn icon variant=\"text\" @click=\"dialogVisible = false\" >"
+    ],
+    "propsLiterales": [
+      "src/modules/support/components/dialog/AddChargeDialog.vue:28 label=\"Cargo\"",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:55 label=\"IVA\"",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:68 label=\"Precio\"",
+      "src/modules/support/components/dialog/AddChargeDialog.vue:80 label=\"Cantidad\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:28 label=\"Entidad\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:64 label=\"Tipo\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:95 label=\"Prioridad\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:115 placeholder=\"Seleccione un usuario\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:116 label=\"Asignado a\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:142 label=\"Área\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:143 placeholder=\"Capture el área\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:155 label=\"Departamento\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:156 placeholder=\"Departamento\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:168 label=\"Reportado por\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:169 placeholder=\"Reportado por\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:181 label=\"Teléfono\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:182 placeholder=\"Teléfono\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:191 label=\"Asunto\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:208 label=\"Mensaje\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:217 label=\"Observaciones\"",
+      "src/modules/support/components/dialog/AddWorkOrderDialog.vue:226 label=\"Adjuntar archivo\"",
+      "src/modules/support/views/SupportAdd.vue:42 label=\"Select Role\"",
+      "src/modules/support/views/SupportEdit.vue:39 label=\"Select Role\""
+    ],
+    "coloresEnLinea": [
+      "src/modules/support/components/dialog/ContractImagesDialog.vue:95 style=\" background: #222; cursor: zoom-out;object-fit: contain;\""
+    ],
+    "anchosFijosPx": [
+      "src/modules/support/views/SupportList.vue:11 max-inline-size: 300px"
+    ]
+  }
+}

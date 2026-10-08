@@ -12,6 +12,7 @@ declare global {
   const COLOR_CONVENIO: typeof import('./src/utils/estados')['COLOR_CONVENIO']
   const COLOR_ESTADO_ALERTA: typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']
   const COLOR_EXPORTACION: typeof import('./src/utils/estados')['COLOR_EXPORTACION']
+  const COLOR_PRIORIDAD_ORDEN: typeof import('./src/utils/estados')['COLOR_PRIORIDAD_ORDEN']
   const COLOR_PROPUESTA: typeof import('./src/utils/estados')['COLOR_PROPUESTA']
   const COLOR_RELECTURA: typeof import('./src/utils/estados')['COLOR_RELECTURA']
   const COLOR_TARIFA_FIJA: typeof import('./src/utils/estados')['COLOR_TARIFA_FIJA']
@@ -39,6 +40,8 @@ declare global {
   const buildSelectClause: typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']
   const buildWhereClause: typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']
   const colorDe: typeof import('./src/utils/estados')['colorDe']
+  const colorEstadoContrato: typeof import('./src/utils/estados')['colorEstadoContrato']
+  const colorPagoConvenio: typeof import('./src/utils/estados')['colorPagoConvenio']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -424,6 +427,7 @@ declare module 'vue' {
     readonly COLOR_CONVENIO: UnwrapRef<typeof import('./src/utils/estados')['COLOR_CONVENIO']>
     readonly COLOR_ESTADO_ALERTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']>
     readonly COLOR_EXPORTACION: UnwrapRef<typeof import('./src/utils/estados')['COLOR_EXPORTACION']>
+    readonly COLOR_PRIORIDAD_ORDEN: UnwrapRef<typeof import('./src/utils/estados')['COLOR_PRIORIDAD_ORDEN']>
     readonly COLOR_PROPUESTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_PROPUESTA']>
     readonly COLOR_RELECTURA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_RELECTURA']>
     readonly COLOR_TARIFA_FIJA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_TARIFA_FIJA']>
@@ -450,6 +454,8 @@ declare module 'vue' {
     readonly buildSelectClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildSelectClause']>
     readonly buildWhereClause: UnwrapRef<typeof import('./src/composables/useSqlExpressionPreview')['buildWhereClause']>
     readonly colorDe: UnwrapRef<typeof import('./src/utils/estados')['colorDe']>
+    readonly colorEstadoContrato: UnwrapRef<typeof import('./src/utils/estados')['colorEstadoContrato']>
+    readonly colorPagoConvenio: UnwrapRef<typeof import('./src/utils/estados')['colorPagoConvenio']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
     readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>

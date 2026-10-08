@@ -1,232 +1,108 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { useAbility } from '@casl/vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useListaContrato } from '../composables/useListaContrato'
+import { useContractStore } from '../stores/contractStore'
 import type { RebillingItem, TableItem } from '../types/RebillingItem'
-import RebillingDetailDialog from './dialog/RebillingDetailDialog.vue'
 import ContractImagesDialog from './dialog/ContractImagesDialog.vue'
-import BaseTable from '@/components/BaseTable.vue'
-import { useContractStore } from '@/modules/support/stores/contractStore'
+import RebillingDetailDialog from './dialog/RebillingDetailDialog.vue'
+import type { ColumnaTabla } from '@/components/as/tipos'
+import { entero } from '@/utils/formato'
 
-// Props para personalizar el título y descripción
-const props = defineProps({
-  activeTab: { type: Number, required: true },
-})
+/* Lecturas del contrato por periodo, con el acceso a la refacturación y a las fotos de evidencia (según permisos). */
+const props = defineProps<{ activa: boolean }>()
 
 const { t } = useI18n()
-const contractStore = useContractStore()
+const ability = useAbility()
+const store = useContractStore()
+const lista = useListaContrato<TableItem>((id, p) => store.getReadingsByContract(id, p), () => props.activa)
 
-interface PaginationState {
-  limit: number
-  offset: number
-  count: number
-  total: number
-  page?: number
-  search?: string
-}
+const refacturacionAbierta = ref(false)
+const refacturacion = ref<RebillingItem[]>([])
+const evidenciaAbierta = ref(false)
+const lecturaElegida = ref<TableItem | null>(null)
 
-const contracts = ref<TableItem[]>([])
-const loading = ref(true)
-const selectedContract = ref<TableItem[]>([])
-const searchQuery = ref('')
+const puedeVerEvidencia = computed(() => ability.can('read', 'Evidence'))
+const puedeVerRefacturacion = computed(() => ability.can('read', 'Rebilling'))
 
-const pagination = ref<PaginationState>({
-  limit: 10,
-  offset: 0,
-  count: 0,
-  total: 0,
-})
+const columnas = computed<ColumnaTabla[]>(() => [
+  { clave: 'Periodo', titulo: t('support.lecturas.periodo'), formato: 'texto', ancho: 160 },
+  { clave: 'Fecha', titulo: t('support.lecturas.fecha'), formato: 'fechaHora', ancho: 150 },
+  { clave: 'Lecturista', titulo: t('support.lecturas.lecturista'), formato: 'texto', truncar: true },
+  { clave: 'Anterior', titulo: t('support.lecturas.anterior'), formato: 'entero', ancho: 110 },
+  { clave: 'Actual', titulo: t('support.lecturas.actual'), formato: 'entero', ancho: 110 },
+  { clave: 'Real_Consumo', titulo: t('support.lecturas.consumoReal'), formato: 'entero', ancho: 130, descripcion: 'm³' },
+  { clave: 'Consumo', titulo: t('support.lecturas.consumo'), formato: 'personalizado', alineacion: 'end', ancho: 130, descripcion: 'm³' },
+  { clave: 'Anomalia', titulo: t('support.lecturas.anomalia'), formato: 'texto', truncar: true },
+  ...(puedeVerEvidencia.value ? [{ clave: 'view_evidence', titulo: t('support.lecturas.evidencia'), formato: 'personalizado' as const, alineacion: 'center' as const, ancho: 100 }] : []),
+].map(c => ({ ...c, ordenable: false })))
 
-const isRebillingDialogVisible = ref(false)
-const selectedRebillingData = ref<RebillingItem[]>([])
-const isImagesDialogVisible = ref(false)
-const selectedReading = ref<TableItem | null>(null)
-
-// Encabezados de la tabla
-const headers = [
-  { title: t('billingPeriod'), value: 'Periodo' },
-  { title: t('date'), value: 'Fecha' },
-  { title: t('Lecturista'), value: 'Lecturista' },
-  { title: t('Anterior'), value: 'Anterior' },
-  { title: t('Actual'), value: 'Actual' },
-  { title: t('real_consumo'), value: 'Real_Consumo' },
-  { title: t('Consumo'), value: 'Consumo' },
-  { title: t('Anomalia'), value: 'Anomalia' },
-  {
-    title: t('view_evidence'),
-    value: 'view_evidence',
-    permission: {
-      action: 'read',
-      subject: 'Evidence',
-    },
-  },
-]
-
-// Función para actualizar la página
-function updatePage(newPage: number) {
-  pagination.value.page = newPage
-  fetchData()
-}
-
-// Función para actualizar los elementos por página
-function updateItemsPerPage(newItemsPerPage: number) {
-  pagination.value.limit = newItemsPerPage
-  fetchData()
-}
-
-// Función para cargar los datos
-async function fetchData() {
-  loading.value = true
-  try {
-    if (!contractStore.item?.id_account)
-      throw new Error('No contract selected')
-
-    const response = await contractStore.getReadingsByContract(
-      String(contractStore.item.id_account),
-      pagination.value,
-    )
-
-    contracts.value = replaceNullWithEmptyString(response.data)
-    pagination.value = response.pagination
-  }
-  catch (error) {
-    console.error('Error al cargar los Pagos:', error)
-  }
-  finally {
-    loading.value = false
+function verRefacturacion(fila: TableItem) {
+  if (fila.rebilling?.length) {
+    refacturacion.value = fila.rebilling
+    refacturacionAbierta.value = true
   }
 }
 
-// Función para reemplazar valores null por una cadena vacía
-function replaceNullWithEmptyString(data: any[]): TableItem[] {
-  return data.map(item => {
-    const newItem = { ...item }
-    for (const key in newItem) {
-      if (newItem[key] === null)
-        newItem[key] = ''
-    }
-
-    return newItem
-  })
-}
-
-// Montar datos al iniciar el componente
-onMounted(fetchData)
-
-// Escuchar cambios en el tab activo y recargar datos
-watch(() => props.activeTab, newTab => {
-  if (newTab === 3)
-    fetchData()
-})
-
-const showRebillingDetails = (item: TableItem) => {
-  if (item.rebilling && item.rebilling.length > 0) {
-    selectedRebillingData.value = item.rebilling
-    isRebillingDialogVisible.value = true
-  }
-}
-
-const showImages = (item: TableItem) => {
-  selectedReading.value = item
-  isImagesDialogVisible.value = true
+function verEvidencia(fila: TableItem) {
+  lecturaElegida.value = fila
+  evidenciaAbierta.value = true
 }
 </script>
 
 <template>
-  <VCard class="pa-sm-10 pa-2">
-    <VCardText>
-      <!-- Tabla de contratos -->
-      <BaseTable
-        v-if="!loading"
-        v-model:selection="selectedContract"
-        :headers="headers"
-        :items="contracts"
-        :total="pagination.total"
-        :page="pagination.offset / pagination.limit + 1"
-        :items-per-page="pagination.limit"
-        :loading="loading"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      >
-        <template #Consumo="{ item }">
-          {{ (item as TableItem).Consumo || '0' }}
-          <VTooltip
-            v-if="(item as TableItem).rebilling && (item as TableItem).rebilling.length > 0"
-            location="top"
-          >
-            <template #activator="{ props }">
-              <VBtn
-                v-if="$can('read', 'Rebilling')"
-                v-bind="props"
-                size="small"
-                color="warning"
-                variant="tonal"
-                icon
-                @click="showRebillingDetails(item as TableItem)"
-              >
-                <VIcon
-                  icon="tabler-history"
-                  size="18"
-                />
-              </VBtn>
-            </template>
-            <span>{{ t('has_rebilling') }}</span>
-          </VTooltip>
-        </template>
-        <template #Fecha="{ item }">
-          <div class="">
-            {{ (item as TableItem).Fecha || 'N/A' }}
-          </div>
-        </template>
-        <template #view_evidence="{ item }">
-          <VTooltip location="top">
-            <template #activator="{ props }">
-              <VBtn
-                v-if="$can('read', 'Evidence')"
-                v-bind="props"
-                size="small"
-                color="primary"
-                variant="tonal"
-                icon
-                @click="showImages(item as TableItem)"
-              >
-                <VIcon
-                  icon="tabler-photo"
-                  size="18"
-                />
-              </VBtn>
-            </template>
-            <span>{{ t('view_evidence') }}</span>
-          </VTooltip>
-        </template>
-      </BaseTable>
-
-      <!-- Estado de carga -->
-      <div
-        v-if="loading"
-        class="text-center py-6"
-      >
-        <VProgressCircular
-          indeterminate
-          color="primary"
+  <AsTablaDatos
+    sin-tarjeta
+    :columnas="columnas"
+    :filas="lista.filas.value"
+    clave-fila="_k"
+    densidad="estandar"
+    :cargando="lista.cargando.value"
+    :error="lista.error.value"
+    :paginacion="lista.paginacion.value"
+    :vacio-titulo="t('support.lista.sinFilas')"
+    vacio-detalle=""
+    vacio-icono="tabler-gauge-off"
+    @update:pagina="lista.cambiarPagina"
+    @reintentar="lista.cargar"
+  >
+    <template #celda-Consumo="{ fila }">
+      <span class="d-inline-flex align-center justify-end gap-1">
+        <span class="as-num">{{ entero(fila.Consumo) }}</span>
+        <VBtn
+          v-if="puedeVerRefacturacion && fila.rebilling && fila.rebilling.length"
+          icon="tabler-history"
+          size="x-small"
+          variant="tonal"
+          color="warning"
+          :title="t('support.lecturas.refacturada')"
+          :aria-label="t('support.lecturas.verRefacturacion')"
+          @click="verRefacturacion(fila as TableItem)"
         />
-        <p class="mt-2">
-          {{ t('loading') }}...
-        </p>
-      </div>
-    </VCardText>
-  </VCard>
+      </span>
+    </template>
+    <template #celda-view_evidence="{ fila }">
+      <VBtn
+        icon="tabler-photo"
+        size="small"
+        variant="text"
+        color="primary"
+        :title="t('support.lecturas.verEvidencia')"
+        :aria-label="t('support.lecturas.verEvidencia')"
+        @click="verEvidencia(fila as TableItem)"
+      />
+    </template>
+  </AsTablaDatos>
 
-  <!-- Diálogo de detalle de refacturación -->
   <RebillingDetailDialog
-    v-model:is-dialog-visible="isRebillingDialogVisible"
-    :rebilling-data="selectedRebillingData"
+    v-model:abierto="refacturacionAbierta"
+    :datos="refacturacion"
   />
-
-  <!-- Diálogo de imágenes -->
   <ContractImagesDialog
-    v-if="selectedReading && contractStore.item?.id_account"
-    v-model:is-dialog-visible="isImagesDialogVisible"
-    :contract-id="String(contractStore.item!.account)"
-    :period-id="selectedReading.PeriodCode"
+    v-if="lecturaElegida && store.item"
+    v-model:abierto="evidenciaAbierta"
+    :contrato="String(store.item.account)"
+    :periodo="String(lecturaElegida.PeriodCode ?? '')"
   />
 </template>

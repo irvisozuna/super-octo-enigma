@@ -1,351 +1,313 @@
 <script setup lang="ts">
 import { useField, useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useContractStore } from '../../stores/contractStore'
 import { useWorkOrderValidation } from '../../validations/WorkOrderValidation'
-import { useNotification } from '@/helpers/notificationHelper'
+import { useNotificacion } from '@/composables/useNotificacion'
+import { COLOR_PRIORIDAD_ORDEN } from '@/utils/estados'
 
-const { closeDialog } = useAppManager()
-const contractStore = useContractStore()
-const { showSuccess, showError } = useNotification()
-const workOrderValidation = useWorkOrderValidation()
+/* Alta de una orden de trabajo (ticket) del contrato en Aquasoft Comercial, con adjuntos. Validación con vee-validate + yup. */
+interface Opcion {
+  rowid: number | string
+  name: string
+}
 
-// Modificar la configuración del formulario para asegurar la validación
-const { handleSubmit, errors, validate } = useForm({
-  validationSchema: workOrderValidation,
+const props = defineProps<{ abierto: boolean }>()
+
+const emit = defineEmits<{
+  'update:abierto': [valor: boolean]
+  'guardado': []
+}>()
+
+const { t } = useI18n()
+const notificar = useNotificacion()
+const store = useContractStore()
+const guardando = ref(false)
+
+const entidades = ref<Opcion[]>([])
+const tipos = ref<Opcion[]>([])
+const usuarios = ref<Opcion[]>([])
+const prioridades = computed(() => Object.keys(COLOR_PRIORIDAD_ORDEN).map(v => ({ value: v, title: t(`support.orden.prioridades.${v}`) })))
+
+const valoresIniciales = {
+  source_entity: null as number | string | null,
+  type_code: null as number | string | null,
+  severity_code: 'NORMAL',
+  fk_user_assign: null as number | string | null,
+  options_area: '',
+  options_department: '',
+  options_reported_by: '',
+  options_phone: '',
+  subject: '',
+  message: '',
+  options_observations: '',
+  files: [] as File[],
+}
+
+const { handleSubmit, errors, resetForm } = useForm({
+  validationSchema: useWorkOrderValidation(),
   validateOnMount: false,
-  validateOnBlur: true,
-  validateOnChange: true,
-  initialValues: {
-    source_entity: null,
-    type_code: null,
-    severity_code: 'NORMAL',
-    fk_user_assign: null,
-    options_area: '',
-    options_department: '',
-    options_reported_by: null,
-    options_phone: '',
-    subject: '',
-    message: '',
-    options_observations: '',
-    files: [] as File[],
-  },
+  initialValues: valoresIniciales,
 })
 
-const { value: source_entity } = useField('source_entity')
-const { value: type_code } = useField('type_code')
-const { value: severity_code } = useField('severity_code')
-const { value: fk_user_assign } = useField('fk_user_assign')
-const { value: options_area } = useField('options_area')
-const { value: options_department } = useField('options_department')
-const { value: options_reported_by } = useField('options_reported_by')
-const { value: options_phone } = useField('options_phone')
-const { value: subject } = useField('subject')
-const { value: message } = useField('message')
-const { value: files } = useField('files')
+const { value: entidad } = useField<number | string | null>('source_entity')
+const { value: tipo } = useField<number | string | null>('type_code')
+const { value: prioridad } = useField<string>('severity_code')
+const { value: asignado } = useField<number | string | null>('fk_user_assign')
+const { value: area } = useField<string>('options_area')
+const { value: departamento } = useField<string>('options_department')
+const { value: reportadoPor } = useField<string>('options_reported_by')
+const { value: telefono } = useField<string>('options_phone')
+const { value: asunto } = useField<string>('subject')
+const { value: mensaje } = useField<string>('message')
+const { value: observaciones } = useField<string>('options_observations')
+const { value: archivos } = useField<File[]>('files')
 
-// Opciones para los selects
-
-const priorities = ref([
-  { value: 'LOW', text: 'Bajo' },
-  { value: 'NORMAL', text: 'Normal' },
-  { value: 'HIGH', text: 'Alto' },
-  { value: 'BLOCKING', text: 'Crítico' },
-])
-
-// Función para enviar el formulario
-const onFormSubmit = handleSubmit(async values => {
+const enviar = handleSubmit(async valores => {
+  guardando.value = true
   try {
-    const token_dolibarr = useCookie('dolibarrToken').value
+    const datos = new FormData()
 
-    // 1. Crear un objeto FormData
-    const formData = new FormData()
-
-    // 2. Adjuntar los campos "simples" (string, number, etc.)
-    formData.append('source_entity', values.source_entity ?? '')
-    formData.append('type_code', values.type_code ?? '')
-    formData.append('severity_code', values.severity_code ?? '')
-    formData.append('fk_user_assign', values.fk_user_assign ?? '')
-    formData.append('options_area', values.options_area ?? '')
-    formData.append('options_department', values.options_department ?? '')
-    formData.append('options_reported_by', values.options_reported_by ?? '')
-    formData.append('options_phone', values.options_phone ?? '')
-    formData.append('subject', values.subject ?? '')
-    formData.append('message', values.message ?? '')
-    formData.append('options_observations', values.options_observations ?? '')
-    formData.append('token', token_dolibarr ?? '')
-    formData.append('account', contractStore.item?.account ?? '')
-
-    // 3. Adjuntar los archivos.
-    //    Ojo con el nombre del campo: en backend deben usar el mismo key (por ejemplo "files[]")
-    if (values.files && values.files.length > 0) {
-      values.files.forEach((file: File) => {
-        formData.append('files[]', file)
-      })
+    const campos: Record<string, unknown> = {
+      source_entity: valores.source_entity,
+      type_code: valores.type_code,
+      severity_code: valores.severity_code,
+      fk_user_assign: valores.fk_user_assign,
+      options_area: valores.options_area,
+      options_department: valores.options_department,
+      options_reported_by: valores.options_reported_by,
+      options_phone: valores.options_phone,
+      subject: valores.subject,
+      message: valores.message,
+      options_observations: valores.options_observations,
+      token: useCookie('dolibarrToken').value,
+      account: store.item?.account,
     }
 
-    // 4. Enviar el FormData a la store
-    const response = await contractStore.createItem(formData, '/workOrders')
+    for (const [k, v] of Object.entries(campos))
+      datos.append(k, v === null || v === undefined ? '' : String(v))
+    for (const archivo of valores.files ?? [])
+      datos.append('files[]', archivo)
 
-    showSuccess(response.message)
-    closeDialog()
+    const respuesta = await store.createItem(datos, '/workOrders')
+
+    notificar.exito((respuesta as { message?: string })?.message || t('support.orden.creada'))
+    emit('update:abierto', false)
+    emit('guardado')
   }
-  catch (error) {
-    showError('Error al crear la orden de trabajo')
-    console.error(error)
+  catch (e) {
+    notificar.error(e, t('support.orden.errorCrear'))
   }
+  finally {
+    guardando.value = false
+  }
+})
+
+watch(() => props.abierto, v => {
+  if (v)
+    resetForm({ values: valoresIniciales })
 })
 </script>
 
 <template>
-  <DialogCloseBtn @click="closeDialog" />
-  <VCard>
-    <VForm
-      class="mt-6"
-      @submit.prevent="onFormSubmit"
-    >
-      <VCardTitle class="headline">
-        {{ $t('support.work_order') }}
-      </VCardTitle>
-      <VCardText>
-        <VRow>
-          <!-- Select Entidad -->
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <ApiDataSource
-              api-path="supports/getSourceEntities?itemsPerPage=1000&page=1"
-              @loaded="(response) => entitiesOptions = response"
-            >
-              <template #default="{ loading }">
-                <VSelect
-                  v-model="source_entity"
-                  :items="entitiesOptions"
-                  item-title="name"
-                  item-value="rowid"
-                  label="Entidad"
-                  variant="outlined"
-                  dense
-                  clearable
-                  chips
-                  closable-chips
-                  :loading="loading"
-                  :error="!!errors.source_entity"
-                  :error-messages="errors.source_entity ? [errors.source_entity] : []"
-                  :disabled="loading"
-                >
-                  <template
-                    v-if="loading"
-                    #prepend-item
-                  >
-                    <span class="text-secondary text-caption">{{ $t('loading') }}...</span>
-                  </template>
-                </VSelect>
-              </template>
-            </ApiDataSource>
-          </VCol>
-          <!-- Select Tipo -->
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <ApiDataSource
-              api-path="supports/getTypeCodes?itemsPerPage=1000&page=1"
-              @loaded="(response) => TypeCodeOptions = response"
-            >
-              <template #default="{ loading }">
-                <VAutocomplete
-                  v-model="type_code"
-                  :items="TypeCodeOptions"
-                  item-title="name"
-                  item-value="rowid"
-                  label="Tipo"
-                  variant="outlined"
-                  dense
-                  clearable
-                  chips
-                  closable-chips
-                  :loading="loading"
-                  :error="!!errors.type_code"
-                  :error-messages="errors.type_code ? [errors.type_code] : []"
-                  :disabled="loading"
-                >
-                  <template
-                    v-if="loading"
-                    #prepend-item
-                  >
-                    <span class="text-secondary text-caption">{{ $t('loading') }}...</span>
-                  </template>
-                </VAutocomplete>
-              </template>
-            </ApiDataSource>
-          </VCol>
-          <!-- Select Prioridad -->
-          <VCol
-            cols="12"
-            md="2"
-          >
-            <VSelect
-              v-model="severity_code"
-              item-title="text"
-              item-value="value"
-              :items="priorities"
-              label="Prioridad"
-              :error="!!errors.severity_code"
-              :error-messages="errors.severity_code ? [errors.severity_code] : []"
-            />
-          </VCol>
-          <!-- Asignado a -->
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <ApiDataSource
-              api-path="supports/getUsers?itemsPerPage=100000&page=1"
-              @loaded="(response) => usersOptions = response"
-            >
-              <template #default="{ loading }">
-                <VAutocomplete
-                  v-model="fk_user_assign"
-                  :items="usersOptions"
-                  item-title="name"
-                  item-value="rowid"
-                  placeholder="Seleccione un usuario"
-                  label="Asignado a"
-                  variant="outlined"
-                  dense
-                  clearable
-                  :loading="loading"
-                  :error="!!errors.fk_user_assign"
-                  :error-messages="errors.fk_user_assign ? [errors.fk_user_assign] : []"
-                  :disabled="loading"
-                >
-                  <template
-                    v-if="loading"
-                    #prepend-item
-                  >
-                    <span class="text-secondary text-caption">{{ $t('loading') }}...</span>
-                  </template>
-                </VAutocomplete>
-              </template>
-            </ApiDataSource>
-          </VCol>
-          <!-- Área -->
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="options_area"
-              label="Área"
-              placeholder="Capture el área"
-              :error="!!errors.options_area"
-              :error-messages="errors.options_area ? [errors.options_area] : []"
-            />
-          </VCol>
-          <!-- Departamento -->
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VTextField
-              v-model="options_department"
-              label="Departamento"
-              placeholder="Departamento"
-              :error="!!errors.options_department"
-              :error-messages="errors.options_department ? [errors.options_department] : []"
-            />
-          </VCol>
-          <!-- Reportado por -->
-          <VCol
-            cols="12"
-            md="5"
-          >
-            <VTextField
-              v-model="options_reported_by"
-              label="Reportado por"
-              placeholder="Reportado por"
-              :error="!!errors.options_reported_by"
-              :error-messages="errors.options_reported_by ? [errors.options_reported_by] : []"
-            />
-          </VCol>
-          <!-- Teléfono -->
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VTextField
-              v-model="options_phone"
-              label="Teléfono"
-              placeholder="Teléfono"
-              :error="!!errors.options_phone"
-              :error-messages="errors.options_phone ? [errors.options_phone] : []"
-            />
-          </VCol>
-          <!-- Asunto -->
-          <VCol cols="12">
-            <VTextField
-              v-model="subject"
-              label="Asunto"
-              :error="!!errors.subject"
-              :error-messages="errors.subject ? [errors.subject] : []"
-            />
-          </VCol>
-          <!-- Mensaje -->
-          <VCol cols="12">
-            <VAlert
-              color="warning"
-              variant="outlined"
-            >
-              Por favor describa precisamente el problema. Provea la mayor cantidad de información posible para permitirnos identificar su solicitud.
-            </VAlert>
-          </VCol>
-          <VCol cols="12">
-            <VTextarea
-              v-model="message"
-              label="Mensaje"
-              :error="!!errors.message"
-              :error-messages="errors.message ? [errors.message] : []"
-            />
-          </VCol>
-          <!-- Observaciones -->
-          <VCol cols="12">
-            <VTextarea
-              v-model="options_observations"
-              label="Observaciones"
-              :error="!!errors.options_observations"
-              :error-messages="errors.options_observations ? [errors.options_observations] : []"
-            />
-          </VCol>
-          <!-- Archivos adjuntos -->
-          <VCol cols="12">
-            <VFileInput
-              v-model="files"
-              label="Adjuntar archivo"
-              multiple
-              :error="!!errors.files"
-              :error-messages="errors.files ? [errors.files] : []"
-            />
-          </VCol>
-        </VRow>
-      </VCardText>
-      <VCardActions class="justify-end">
-        <VBtn
-          variant="flat"
-          color="secondary"
-          @click="closeDialog"
+  <AsDialogo
+    :abierto="abierto"
+    :titulo="t('support.orden.titulo')"
+    :subtitulo="store.item ? `${store.item.account} · ${store.item.nameuser}` : undefined"
+    tamano="lg"
+    :cargando="guardando"
+    :texto-confirmar="t('save')"
+    @update:abierto="(v: boolean) => emit('update:abierto', v)"
+    @confirmar="enviar"
+  >
+    <VForm @submit.prevent="enviar">
+      <VRow dense>
+        <VCol
+          cols="12"
+          md="5"
         >
-          {{ $t('cancel') }}
-        </VBtn>
-        <VBtn
-          variant="flat"
-          color="primary"
-          type="submit"
+          <ApiDataSource
+            api-path="supports/getSourceEntities?itemsPerPage=1000&page=1"
+            @loaded="(r: Opcion[]) => { entidades = r }"
+          >
+            <template #default="{ loading }">
+              <VSelect
+                v-model="entidad"
+                :items="entidades"
+                item-title="name"
+                item-value="rowid"
+                :label="t('support.orden.entidad')"
+                :aria-label="t('support.orden.entidad')"
+                density="compact"
+                clearable
+                :loading="loading"
+                :disabled="loading"
+                :error-messages="errors.source_entity"
+              />
+            </template>
+          </ApiDataSource>
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
         >
-          {{ $t('save') }}
-        </VBtn>
-      </VCardActions>
+          <ApiDataSource
+            api-path="supports/getTypeCodes?itemsPerPage=1000&page=1"
+            @loaded="(r: Opcion[]) => { tipos = r }"
+          >
+            <template #default="{ loading }">
+              <VAutocomplete
+                v-model="tipo"
+                :items="tipos"
+                item-title="name"
+                item-value="rowid"
+                :label="t('support.orden.tipo')"
+                :aria-label="t('support.orden.tipo')"
+                density="compact"
+                clearable
+                :loading="loading"
+                :disabled="loading"
+                :error-messages="errors.type_code"
+              />
+            </template>
+          </ApiDataSource>
+        </VCol>
+        <VCol
+          cols="12"
+          md="3"
+        >
+          <VSelect
+            v-model="prioridad"
+            :items="prioridades"
+            :label="t('support.orden.prioridad')"
+            :aria-label="t('support.orden.prioridad')"
+            density="compact"
+            :error-messages="errors.severity_code"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="5"
+        >
+          <ApiDataSource
+            api-path="supports/getUsers?itemsPerPage=100000&page=1"
+            @loaded="(r: Opcion[]) => { usuarios = r }"
+          >
+            <template #default="{ loading }">
+              <VAutocomplete
+                v-model="asignado"
+                :items="usuarios"
+                item-title="name"
+                item-value="rowid"
+                :label="t('support.orden.asignado')"
+                :aria-label="t('support.orden.asignado')"
+                :placeholder="t('support.orden.asignadoAyuda')"
+                density="compact"
+                clearable
+                :loading="loading"
+                :disabled="loading"
+                :error-messages="errors.fk_user_assign"
+              />
+            </template>
+          </ApiDataSource>
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <VTextField
+            v-model="area"
+            :label="t('support.orden.area')"
+            :aria-label="t('support.orden.area')"
+            density="compact"
+            :error-messages="errors.options_area"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="3"
+        >
+          <VTextField
+            v-model="departamento"
+            :label="t('support.orden.departamento')"
+            :aria-label="t('support.orden.departamento')"
+            density="compact"
+            :error-messages="errors.options_department"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="8"
+        >
+          <VTextField
+            v-model="reportadoPor"
+            :label="t('support.orden.reportadoPor')"
+            :aria-label="t('support.orden.reportadoPor')"
+            density="compact"
+            :error-messages="errors.options_reported_by"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <VTextField
+            v-model="telefono"
+            :label="t('support.orden.telefono')"
+            :aria-label="t('support.orden.telefono')"
+            density="compact"
+            inputmode="tel"
+            :error-messages="errors.options_phone"
+          />
+        </VCol>
+        <VCol cols="12">
+          <VTextField
+            v-model="asunto"
+            :label="t('support.orden.asunto')"
+            :aria-label="t('support.orden.asunto')"
+            density="compact"
+            :error-messages="errors.subject"
+          />
+        </VCol>
+        <VCol cols="12">
+          <VTextarea
+            v-model="mensaje"
+            :label="t('support.orden.mensaje')"
+            :aria-label="t('support.orden.mensaje')"
+            :hint="t('support.orden.ayudaMensaje')"
+            persistent-hint
+            density="compact"
+            rows="3"
+            auto-grow
+            :error-messages="errors.message"
+          />
+        </VCol>
+        <VCol cols="12">
+          <VTextarea
+            v-model="observaciones"
+            :label="t('support.orden.observaciones')"
+            :aria-label="t('support.orden.observaciones')"
+            density="compact"
+            rows="2"
+            auto-grow
+            :error-messages="errors.options_observations"
+          />
+        </VCol>
+        <VCol cols="12">
+          <VFileInput
+            v-model="archivos"
+            :label="t('support.orden.archivos')"
+            :aria-label="t('support.orden.archivos')"
+            density="compact"
+            multiple
+            chips
+            prepend-icon=""
+            prepend-inner-icon="tabler-paperclip"
+            :error-messages="errors.files"
+          />
+        </VCol>
+      </VRow>
     </VForm>
-  </VCard>
+  </AsDialogo>
 </template>

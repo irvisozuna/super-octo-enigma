@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { markRaw, onMounted, ref } from 'vue'
+import type { Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AdjustmentsTab from '../components/AdjustmentsTab.vue'
@@ -11,205 +12,197 @@ import NotesTab from '../components/NotesTab.vue'
 import PaymentHistoryTab from '../components/PaymentHistoryTab.vue'
 import ReadingsTab from '../components/ReadingsTab.vue'
 import WorkOrdersTab from '../components/WorkOrdersTab.vue'
-import AddNoteDialog from '../components/dialog/AddNoteDialog.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
 
-// Interfaces
-interface Tab {
-  title: string
-  icon: string
-  component: any
+/*
+ * Atención a usuarios: búsqueda del contrato por cuenta (o avanzada) y su ficha en pestañas. Cada pestaña carga sus
+ * datos al activarse. Enlace profundo desde el monitoreo: /supports?cuenta=10702033.
+ */
+interface Pestana {
+  titulo: string
+  icono: string
+  componente: Component
 }
 
-// i18n y routing
 const { t } = useI18n()
-const route = useRoute() as { params: { id: string } }
+const route = useRoute()
+const store = useContractStore()
 
-// Store
-const contractStore = useContractStore()
+const activa = ref(0)
+const cuenta = ref('')
+const cargando = ref(false)
+const error = ref<ErrorReporte | null>(null)
+const busquedaAbierta = ref(false)
 
-// Composable para manejar diálogos
-const { openDialog, navigateTo } = useAppManager()
+const pestanas: Pestana[] = [
+  { icono: 'tabler-user', titulo: t('tabs.generalInfo'), componente: markRaw(ContractDetails) },
+  { icono: 'tabler-receipt', titulo: t('tabs.billingHistory'), componente: markRaw(BillingHistoryTab) },
+  { icono: 'tabler-cash', titulo: t('tabs.paymentHistory'), componente: markRaw(PaymentHistoryTab) },
+  { icono: 'tabler-gauge', titulo: t('tabs.readings'), componente: markRaw(ReadingsTab) },
+  { icono: 'tabler-clipboard', titulo: t('tabs.workOrders'), componente: markRaw(WorkOrdersTab) },
+  { icono: 'tabler-file-like', titulo: t('tabs.agreements'), componente: markRaw(AgreementsTab) },
+  { icono: 'tabler-adjustments', titulo: t('tabs.settings'), componente: markRaw(AdjustmentsTab) },
+  { icono: 'tabler-note', titulo: t('tabs.notes'), componente: markRaw(NotesTab) },
+]
 
-// Estado
-const activeTab = ref(0) // Índice del tab activo
-const searchQuery = ref('') // Entrada del buscador
-const isLoading = ref(false) // Estado de carga para controlar el spinner
-const itemData = ref(null) // Datos del contrato
-
-// Configuración de los tabs
-const tabs = ref<Tab[]>([
-  { icon: 'tabler-user', title: t('tabs.generalInfo'), component: markRaw(ContractDetails) }, // 0
-  { icon: 'tabler-receipt', title: t('tabs.billingHistory'), component: markRaw(BillingHistoryTab) }, // 1
-  { icon: 'tabler-cash', title: t('tabs.paymentHistory'), component: markRaw(PaymentHistoryTab) }, // 2
-  { icon: 'tabler-book', title: t('tabs.readings'), component: markRaw(ReadingsTab) }, // 3
-  { icon: 'tabler-clipboard', title: t('tabs.workOrders'), component: markRaw(WorkOrdersTab) }, // 4
-  { icon: 'tabler-file-like', title: t('tabs.agreements'), component: markRaw(AgreementsTab) }, // 5
-  { icon: 'tabler-settings', title: t('tabs.settings'), component: markRaw(AdjustmentsTab) }, // 6
-  { icon: 'tabler-note', title: t('tabs.notes'), component: markRaw(NotesTab) }, // 6
-])
-
-// Función para buscar un contrato
-async function searchContract() {
-  if (!searchQuery.value.trim())
+async function buscar() {
+  const q = cuenta.value.trim()
+  if (!q)
     return
-  isLoading.value = true
+  cargando.value = true
+  error.value = null
   try {
-    const result = await contractStore.getContract(searchQuery.value)
-
-    activeTab.value = 0
-    searchQuery.value = '' // Limpia el campo de búsqueda
-
-    // Abrir el diálogo de notas después de cargar el contrato
-    // openNoteDialog()
+    await store.getContract(q)
+    activa.value = 0
+    cuenta.value = ''
   }
-  catch (error) {
-    console.error('Error fetching contract data:', error)
-    itemData.value = null
+  catch (e) {
+    error.value = normalizarError(e)
   }
   finally {
-    isLoading.value = false
+    cargando.value = false
   }
 }
 
-// Obtener datos del elemento al montar
-async function fetchItemData() {
-  isLoading.value = true
-  try {
-    if (route.params.id) {
-      const result = await contractStore.getContracts(route.params.id)
-
-      itemData.value = result.data
-    }
-
-    // Enlace profundo (p. ej. desde el monitoreo de lecturas): /supports?cuenta=10702033 abre esa cuenta
-    if (typeof route.query.cuenta === 'string' && route.query.cuenta.trim()) {
-      searchQuery.value = route.query.cuenta.trim()
-      await searchContract()
-    }
+onMounted(() => {
+  const q = typeof route.query.cuenta === 'string' ? route.query.cuenta.trim() : ''
+  if (q) {
+    cuenta.value = q
+    buscar()
   }
-  catch (error) {
-    console.error('Error fetching support data:', error)
-    itemData.value = null
-  }
-  finally {
-    isLoading.value = false
-  }
-}
-
-// Función para abrir el diálogo de búsqueda avanzada
-function openAdvanceSearchDialog() {
-  openDialog(ContractSearchDialog, {}, { width: '100%', persistent: true }).then(result => {
-    if (result === 'submit') {
-      // irse al primer tab
-      activeTab.value = 0
-    }
-  })
-}
-
-// Función para abrir el diálogo de notas
-function openNoteDialog() {
-  openDialog(AddNoteDialog, { isMandatory: true }, { width: '50%', persistent: true }).then(result => {
-    if (result === 'submit')
-      console.log('Nota creada, refrescando datos...')
-  })
-}
-
-// Watch para detectar cambios de tab y recargar datos
-
-// Montar datos al iniciar el componente
-onMounted(fetchItemData)
+})
 </script>
 
 <template>
-  <VRow>
-    <VCol>
-      <!-- Card con el buscador -->
-      <AppCardActions
-        :loading="isLoading"
-        :title="$t('contract_search')"
-        no-actions
-        @refresh="searchContract"
-      >
-        <VCardText>
-          <div class="d-flex flex-column flex-md-row justify-center align-center">
-            <VTextField
-              v-model="searchQuery"
-              :label="t('search.contract')"
-              variant="outlined"
-              outlined
-              dense
-              class="mb-2 mb-md-0 me-md-4 w-100"
-              @keyup.enter="searchContract"
-            />
-            <VBtn
-              color="success"
-              class="mb-2 mb-md-0 me-md-2 w-100 w-md-auto"
-              @click="searchContract"
-            >
-              <VIcon
-                icon="tabler-search"
-                class="me-2"
-              />
-              {{ t('search.search') }}
-            </VBtn>
-            <VBtn
-              color="primary"
-              class="w-100 w-md-auto"
-              @click="openAdvanceSearchDialog"
-            >
-              <VIcon
-                icon="tabler-search"
-                class="me-2"
-              />
-              {{ t('search.advanced') }}
-            </VBtn>
-          </div>
-        </VCardText>
-      </AppCardActions>
-    </VCol>
-  </VRow>
+  <div class="soporte">
+    <AsEncabezadoPagina
+      :titulo="t('support.titulo')"
+      :descripcion="t('support.descripcion')"
+    />
 
-  <VRow v-if="contractStore.item">
-    <VCol cols="12">
-      <AppCardActions
-        :loading="isLoading"
-        variant="outlined"
-        style="border: none;"
-        no-actions
-        @refresh="searchContract"
+    <VCard
+      variant="flat"
+      class="as-tarjeta soporte__buscador mb-4"
+    >
+      <form
+        class="d-flex flex-wrap align-center gap-2"
+        role="search"
+        @submit.prevent="buscar"
       >
-        <VCard>
-          <VTabs v-model="activeTab">
-            <VTab
-              v-for="(tab, index) in tabs"
-              :key="index"
-            >
-              <VIcon
-                :size="18"
-                :icon="tab.icon"
-                class="me-1"
-              />
-              {{ tab.title }}
-            </VTab>
-          </VTabs>
-        </VCard>
-        <VWindow
-          v-model="activeTab"
-          class="mt-4 disable-tab-transition"
-          :touch="false"
+        <VTextField
+          v-model="cuenta"
+          :label="t('support.buscar.cuenta')"
+          :aria-label="t('support.buscar.cuenta')"
+          density="compact"
+          variant="outlined"
+          hide-details
+          clearable
+          autofocus
+          inputmode="numeric"
+          prepend-inner-icon="tabler-search"
+          class="soporte__cuenta"
+        />
+        <AsBtnPrimario
+          type="submit"
+          :loading="cargando"
+          :disabled="!cuenta.trim()"
         >
-          <VWindowItem
-            v-for="(tab, index) in tabs"
-            :key="index"
-          >
-            <component
-              :is="tab.component"
-              :active-tab="activeTab"
-            />
-          </VWindowItem>
-        </VWindow>
-      </AppCardActions>
-    </VCol>
-  </VRow>
+          {{ t('support.buscar.boton') }}
+        </AsBtnPrimario>
+        <AsBtnSecundario
+          prepend-icon="tabler-filter-search"
+          @click="busquedaAbierta = true"
+        >
+          {{ t('support.buscar.avanzada') }}
+        </AsBtnSecundario>
+      </form>
+    </VCard>
+
+    <AsEstado
+      v-if="error"
+      tipo="error"
+      class="mb-4"
+      :error="error"
+      :detalle="error.mensaje || t('support.buscar.noEncontrado', { cuenta })"
+      @reintentar="buscar"
+    />
+    <AsEstado
+      v-else-if="!store.item && !cargando"
+      tipo="vacio"
+      :titulo="t('support.buscar.vacioTitulo')"
+      :detalle="t('support.buscar.ayuda')"
+      icono="tabler-user-search"
+    />
+    <AsEstado
+      v-else-if="!store.item"
+      tipo="cargando"
+      esqueleto="tarjeta"
+      :filas="3"
+    />
+
+    <VCard
+      v-if="store.item"
+      variant="flat"
+      class="as-tarjeta soporte__ficha"
+      :loading="cargando"
+    >
+      <VTabs
+        v-model="activa"
+        class="soporte__pestanas"
+      >
+        <VTab
+          v-for="(p, i) in pestanas"
+          :key="i"
+          :value="i"
+          :prepend-icon="p.icono"
+        >
+          {{ p.titulo }}
+        </VTab>
+      </VTabs>
+      <VDivider />
+      <VWindow
+        v-model="activa"
+        :touch="false"
+        class="disable-tab-transition"
+      >
+        <VWindowItem
+          v-for="(p, i) in pestanas"
+          :key="i"
+          :value="i"
+        >
+          <component
+            :is="p.componente"
+            :activa="activa === i"
+          />
+        </VWindowItem>
+      </VWindow>
+    </VCard>
+
+    <ContractSearchDialog
+      v-model:abierto="busquedaAbierta"
+      @seleccionado="activa = 0"
+    />
+  </div>
 </template>
+
+<style scoped>
+.soporte__buscador {
+  padding-block: var(--as-sp-3);
+  padding-inline: var(--as-sp-4);
+}
+
+.soporte__cuenta {
+  flex: 1 1 var(--as-ancho-filtro-lg);
+  max-inline-size: calc(var(--as-ancho-filtro-lg) * 1.5);
+}
+
+.soporte__ficha {
+  overflow: hidden;
+}
+
+.soporte__pestanas :deep(.v-tab) {
+  text-transform: none;
+}
+</style>

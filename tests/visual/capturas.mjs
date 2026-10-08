@@ -17,6 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { chromium } from 'playwright'
+import { abrirDialogoSoporte, abrirJornada, abrirPestana, abrirSector, buscarContrato } from './acciones.mjs'
 
 const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
 const args = leerArgs(process.argv.slice(2))
@@ -39,34 +40,28 @@ const ANCHO_BASE = 1440
 const ANCHOS_PILOTO = [1440, 1280]
 
 /** Abre el panel de un lecturista en el Monitor del día. */
-async function abrirJornada(page) {
-  await page.locator('#monitoreo-lecturistas tbody tr').first().click()
-  await page.waitForTimeout(3500)
-}
 
 /** Abre el detalle del primer sector del Monitor del día. */
-async function abrirSector(page) {
-  await page.evaluate(() => {
-    const raiz = document.querySelector('.monitor-dia')
-    const estado = raiz?.__vueParentComponent?.setupState
-    const primero = estado?.sectores?.[0]
-    if (estado?.irASectorPorId && primero)
-      estado.irASectorPorId(Number(primero.id ?? primero.sector_id))
-  })
-  await page.waitForTimeout(3500)
-}
 
 /** Busca un contrato en la pantalla de Soporte. */
-async function buscarContrato(page) {
-  await page.locator('.v-field input').first().fill('10802150')
-  await page.getByRole('button', { name: 'Buscar', exact: true }).click()
-  await page.waitForSelector('.v-tab', { timeout: 20000 })
-  await page.waitForTimeout(2500)
-}
 
 const PANTALLAS = [
   { id: 'inicio-soporte', ruta: '/' },
   { id: 'soporte-contrato', ruta: '/', acciones: buscarContrato },
+  { id: 'soporte-facturacion', ruta: '/', acciones: abrirPestana(1) },
+  { id: 'soporte-pagos', ruta: '/', acciones: abrirPestana(2) },
+  { id: 'soporte-lecturas', ruta: '/', acciones: abrirPestana(3) },
+  { id: 'soporte-ordenes', ruta: '/', acciones: abrirPestana(4) },
+  { id: 'soporte-convenios', ruta: '/', acciones: abrirPestana(5) },
+  { id: 'soporte-ajustes', ruta: '/', acciones: abrirPestana(6) },
+  { id: 'soporte-notas', ruta: '/', acciones: abrirPestana(7) },
+  { id: 'soporte-busqueda', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /b[uú]squeda avanzada/i }, 4000) },
+  { id: 'soporte-nota', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /agregar nota/i }) },
+  { id: 'soporte-cargo', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /agregar cargo/i }, 3500) },
+  { id: 'soporte-orden', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /orden de trabajo/i }, 3500) },
+  { id: 'soporte-saldo', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /estado de cuenta/i }, 6000) },
+  { id: 'soporte-fiscales', ruta: '/', acciones: abrirDialogoSoporte({ selector: 'button:has(.tabler-edit)' }, 3500) },
+  { id: 'soporte-mapa', ruta: '/', acciones: abrirDialogoSoporte({ selector: 'button:has(.tabler-map-pin)' }, 4000) },
   { id: 'monitor-hoy', ruta: '/monitoreo?dia=2026-09-15&periodo=185', piloto: true, espera: 5000 },
   { id: 'monitor-periodo', ruta: '/monitoreo?vista=periodo&periodo=186', piloto: true, espera: 5000 },
   { id: 'monitor-detalle-lectura', ruta: '/monitoreo?vista=periodo&periodo=186&sector=330&contrato=40350', piloto: true, espera: 6000 },

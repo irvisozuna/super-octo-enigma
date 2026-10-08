@@ -10,6 +10,7 @@
 import fs from 'node:fs'
 import process from 'node:process'
 import { chromium } from 'playwright'
+import { abrirDialogoSoporte, abrirPestana, buscarContrato } from './acciones.mjs'
 
 const args = Object.fromEntries(process.argv.slice(2).join(' ').split('--').filter(Boolean).map(s => s.trim().split(/\s+/)))
 const baseUrl = process.env.DS_BASE_URL ?? 'http://localhost:5173'
@@ -36,6 +37,14 @@ const PANTALLAS = [
   { id: 'destinatarios', ruta: '/monitoreo/admin/destinatarios', espera: 3000 },
   { id: 'alcances', ruta: '/monitoreo/admin/alcances', espera: 3000 },
   { id: 'quiosco', ruta: '/monitoreo/quiosco', espera: 6000 },
+  { id: 'soporte-inicio', ruta: '/', espera: 2000 },
+  { id: 'soporte-contrato', ruta: '/', acciones: buscarContrato },
+  { id: 'soporte-pagos', ruta: '/', acciones: abrirPestana(2) },
+  { id: 'soporte-lecturas', ruta: '/', acciones: abrirPestana(3) },
+  { id: 'soporte-busqueda', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /b[uú]squeda avanzada/i }, 4000) },
+  { id: 'soporte-cargo', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /agregar cargo/i }, 3500) },
+  { id: 'soporte-orden', ruta: '/', acciones: abrirDialogoSoporte({ nombre: /orden de trabajo/i }, 3500) },
+  { id: 'soporte-fiscales', ruta: '/', acciones: abrirDialogoSoporte({ selector: 'button:has(.tabler-edit)' }, 3500) },
 ]
 
 async function iniciarSesion(page) {
@@ -62,7 +71,9 @@ async function main() {
   let graves = 0
   for (const pantalla of PANTALLAS.filter(p => !solo || solo.some(s => p.id.includes(s)))) {
     await page.goto(`${baseUrl}${pantalla.ruta}`, { waitUntil: 'networkidle' })
-    await page.waitForTimeout(pantalla.espera)
+    if (pantalla.acciones)
+      await pantalla.acciones(page)
+    await page.waitForTimeout(pantalla.espera ?? 1500)
     await page.addScriptTag({ url: AXE })
 
     // Se excluye el lienzo del mapa (WebGL de terceros) y se evalúa el resto con las reglas WCAG 2.1 A/AA

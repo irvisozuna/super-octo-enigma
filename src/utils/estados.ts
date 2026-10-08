@@ -137,3 +137,28 @@ export const COLOR_ACTIVO: Record<string, string> = { active: 'success', activo:
 export function colorDe<T extends string>(mapa: Record<T, string>, estado: T | string | null | undefined, respaldo = 'secondary'): string {
   return (estado && (mapa as Record<string, string>)[estado]) || respaldo
 }
+
+// ------------------------------------------------------------------------------------------------ contratos (Soporte)
+
+/** Estado del contrato en Aquasoft Comercial (texto del catálogo): activo en verde; cortado, suspendido o baja en rojo. */
+export function colorEstadoContrato(estado: string | null | undefined): string {
+  const s = (estado ?? '').toUpperCase()
+  if (!s)
+    return 'secondary'
+  if (/CORT|SUSP|BAJA|CANCEL/.test(s))
+    return 'error'
+  if (/ACTIV|VIGEN/.test(s))
+    return 'success'
+  if (/PROVIS|TRAM|PEND/.test(s))
+    return 'warning'
+
+  return 'secondary'
+}
+
+/** Prioridad de una orden de trabajo (códigos de Aquasoft Comercial). */
+export const COLOR_PRIORIDAD_ORDEN: Record<string, string> = { LOW: 'secondary', NORMAL: 'info', HIGH: 'warning', BLOCKING: 'error' }
+
+/** Pago de un convenio: pagado (status 4), vencido (fecha límite pasada) o pendiente. */
+export function colorPagoConvenio(status: number, vencido: boolean): string {
+  return status === 4 ? 'success' : vencido ? 'error' : 'warning'
+}
