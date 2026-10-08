@@ -1,25 +1,15 @@
 <script setup lang="ts">
-import { useAbility } from '@casl/vue'
-import { computed, reactive } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Account } from '../types/Contract'
-import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
-import AccountMapDialog from './dialog/AccountMapDialog.vue'
-import AddChargeDialog from './dialog/AddChargeDialog.vue'
-import AddNoteDialog from './dialog/AddNoteDialog.vue'
-import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
 import FiscalDataDialog from './dialog/FiscalDataDialog.vue'
-import { useAppManager } from '@/composables/useAppManager'
-import DocumentosDialogo from '@/modules/reportes/components/documentos/DocumentosDialogo.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
-import { colorEstadoContrato } from '@/utils/estados'
-import { aNumero, entero, fecha, moneda, texto } from '@/utils/formato'
+import { entero, fecha, texto } from '@/utils/formato'
 
 /*
- * Información general del contrato. Jerarquía: identidad (cuenta, estado, titular, ubicación con etiqueta en negrita e
- * icono) → acciones (una sola primaria) → cifras clave en una franja compacta → tres tarjetas de datos con una fila por
- * dato (icono, etiqueta en gris, valor en oscuro). Los diálogos propios van sobre AsDialogo; el de documentos es del
- * módulo de reportes y se abre con el gestor global hasta que ese módulo migre.
+ * Pestaña "Información general": tres tarjetas del mismo ancho (datos generales, servicio y consumo, fiscales) con una
+ * fila por dato: icono, etiqueta en gris y valor en oscuro. La identidad del contrato, las acciones y las cifras clave
+ * viven en ContractHeader, visible en todas las pestañas.
  */
 interface Dato {
   etiqueta: string
@@ -29,29 +19,10 @@ interface Dato {
 }
 
 const { t } = useI18n()
-const ability = useAbility()
 const store = useContractStore()
-const { openDialog } = useAppManager()
 
 const contrato = computed<Account | null>(() => store.item)
-const dialogos = reactive({ mapa: false, orden: false, saldo: false, cargo: false, nota: false, fiscales: false })
-const puedeDocumentos = computed(() => ability.can('generate', 'documentos'))
-
-/** Ubicación administrativa bajo la dirección: etiqueta en negrita y valor, con icono, como en la ficha anterior. */
-const ubicacion = computed<Dato[]>(() => {
-  const c = contrato.value
-
-  return [
-    { icono: 'tabler-map-pin', etiqueta: t('support.ficha.direccion'), valor: texto(c?.address) },
-    { icono: 'tabler-map-2', etiqueta: t('support.ficha.comunidad'), valor: texto(c?.community ?? c?.source_entity) },
-    { icono: 'tabler-topology-star', etiqueta: t('support.ficha.sistema'), valor: [texto(c?.c_system), c?.sector ? `${t('support.ficha.sector')}: ${c.sector}` : null].filter(Boolean).join(' · ') },
-    ...(c?.route ? [{ icono: 'tabler-route-2', etiqueta: t('support.ficha.ruta'), valor: c.route }] : []),
-    ...(c?.clave_loc ? [{ icono: 'tabler-brackets-contain', etiqueta: t('support.ficha.claveLoc'), valor: c.clave_loc, num: true }] : []),
-  ]
-})
-
-const mesesAdeudo = computed(() => Number(contrato.value?.months_debt) || 0)
-const adeuda = computed(() => (aNumero(contrato.value?.debt) ?? 0) > 0 || mesesAdeudo.value > 0)
+const fiscalesAbierto = ref(false)
 
 const datosGenerales = computed<Dato[]>(() => {
   const c = contrato.value
@@ -92,10 +63,6 @@ const fiscales = computed<Dato[]>(() => {
 
 const ultimasLecturas = computed(() => (contrato.value?.readings?.rows ?? []).slice(0, 3))
 
-function abrirDocumentos() {
-  openDialog(DocumentosDialogo, { contrato: String(contrato.value?.account ?? ''), nombre: contrato.value?.nameuser ?? undefined }, { width: '1100px' })
-}
-
 async function recargar() {
   if (store.item?.account)
     await store.getContract(store.item.account)
@@ -107,157 +74,7 @@ async function recargar() {
     v-if="contrato"
     class="ficha"
   >
-    <!-- Identidad, acciones y cifras clave -->
-    <VCard
-      variant="flat"
-      class="as-tarjeta ficha__tarjeta"
-    >
-      <div class="ficha__cabecera">
-        <div class="ficha__identidad">
-          <div class="as-sobrelinea">
-            {{ t('support.ficha.cuenta') }}
-          </div>
-          <div class="d-flex align-center flex-wrap gap-2">
-            <span class="ficha__cuenta as-num">{{ contrato.account }}</span>
-            <VChip
-              size="small"
-              label
-              variant="tonal"
-              :color="colorEstadoContrato(contrato.status)"
-            >
-              {{ contrato.status }}
-            </VChip>
-          </div>
-          <div class="ficha__titular">
-            {{ contrato.nameuser }}
-          </div>
-
-          <ul class="ficha__meta">
-            <li
-              v-for="d in ubicacion"
-              :key="d.etiqueta"
-              class="ficha__meta-fila"
-            >
-              <VIcon
-                :icon="d.icono"
-                size="16"
-                class="ficha__icono"
-              />
-              <span class="ficha__meta-etiqueta">{{ d.etiqueta }}:</span>
-              <span
-                class="ficha__meta-valor"
-                :class="{ 'as-num': d.num }"
-              >{{ d.valor }}</span>
-            </li>
-          </ul>
-        </div>
-
-        <div
-          class="ficha__acciones"
-          role="group"
-          :aria-label="t('actionslabel')"
-        >
-          <AsBtnPrimario
-            prepend-icon="tabler-plus"
-            @click="dialogos.cargo = true"
-          >
-            {{ t('support.ficha.agregarCargo') }}
-          </AsBtnPrimario>
-          <AsBtnSecundario
-            prepend-icon="tabler-note"
-            @click="dialogos.nota = true"
-          >
-            {{ t('support.ficha.agregarNota') }}
-          </AsBtnSecundario>
-          <AsBtnSecundario
-            prepend-icon="tabler-tool"
-            @click="dialogos.orden = true"
-          >
-            {{ t('support.ficha.ordenNueva') }}
-          </AsBtnSecundario>
-          <AsBtnSecundario
-            prepend-icon="tabler-file-invoice"
-            @click="dialogos.saldo = true"
-          >
-            {{ t('support.ficha.estadoCuenta') }}
-          </AsBtnSecundario>
-          <AsBtnSecundario
-            v-if="puedeDocumentos"
-            prepend-icon="tabler-file-text"
-            @click="abrirDocumentos"
-          >
-            {{ t('reportes.documentos.boton') }}
-          </AsBtnSecundario>
-          <AsBtnSecundario
-            prepend-icon="tabler-map-pin"
-            @click="dialogos.mapa = true"
-          >
-            {{ t('support.ficha.ubicacion') }}
-          </AsBtnSecundario>
-        </div>
-      </div>
-
-      <dl class="ficha__cifras">
-        <div
-          class="ficha__cifra"
-          :class="{ 'ficha__cifra--alerta': adeuda }"
-        >
-          <dt class="ficha__cifra-etiqueta">
-            {{ t('support.ficha.saldoVencido') }}
-          </dt>
-          <dd class="ficha__cifra-valor as-num">
-            {{ moneda(contrato.debt) }}
-          </dd>
-        </div>
-        <div class="ficha__cifra">
-          <dt class="ficha__cifra-etiqueta">
-            {{ t('support.ficha.saldoFavor') }}
-          </dt>
-          <dd class="ficha__cifra-valor as-num">
-            {{ moneda(contrato.positive_balance) }}
-          </dd>
-        </div>
-        <div
-          class="ficha__cifra"
-          :class="{ 'ficha__cifra--alerta': mesesAdeudo > 0 }"
-        >
-          <dt class="ficha__cifra-etiqueta">
-            {{ t('support.ficha.mesesAdeudo') }}
-          </dt>
-          <dd class="ficha__cifra-valor as-num">
-            {{ entero(mesesAdeudo) }}
-          </dd>
-        </div>
-        <div class="ficha__cifra">
-          <dt class="ficha__cifra-etiqueta">
-            {{ t('support.ficha.convenioActivo') }}
-          </dt>
-          <dd
-            class="ficha__cifra-valor as-num"
-            :class="{ 'ficha__cifra-valor--vacio': !contrato.ref_agreement }"
-          >
-            {{ contrato.ref_agreement || t('support.ficha.sinConvenio') }}
-          </dd>
-        </div>
-        <div class="ficha__cifra">
-          <dt class="ficha__cifra-etiqueta">
-            {{ t('support.ficha.ordenTrabajo') }}
-          </dt>
-          <dd
-            class="ficha__cifra-valor as-num"
-            :class="{ 'ficha__cifra-valor--vacio': !contrato.ref }"
-          >
-            {{ contrato.ref || t('support.ficha.sinOrden') }}
-          </dd>
-        </div>
-      </dl>
-    </VCard>
-
-    <!-- Datos generales, servicio y consumo, fiscales -->
-    <VRow
-      dense
-      class="mt-2"
-    >
+    <VRow dense>
       <VCol
         cols="12"
         lg="4"
@@ -378,7 +195,7 @@ async function recargar() {
             <AsBtnTerciario
               size="small"
               prepend-icon="tabler-edit"
-              @click="dialogos.fiscales = true"
+              @click="fiscalesAbierto = true"
             >
               {{ t('support.ficha.editarFiscales') }}
             </AsBtnTerciario>
@@ -409,16 +226,8 @@ async function recargar() {
       </VCol>
     </VRow>
 
-    <AccountMapDialog v-model:abierto="dialogos.mapa" />
-    <AddWorkOrderDialog v-model:abierto="dialogos.orden" />
-    <AccountBalanceDialog v-model:abierto="dialogos.saldo" />
-    <AddChargeDialog
-      v-model:abierto="dialogos.cargo"
-      @guardado="recargar"
-    />
-    <AddNoteDialog v-model:abierto="dialogos.nota" />
     <FiscalDataDialog
-      v-model:abierto="dialogos.fiscales"
+      v-model:abierto="fiscalesAbierto"
       @guardado="recargar"
     />
   </div>
@@ -430,115 +239,13 @@ async function recargar() {
 }
 
 .ficha__tarjeta {
-  padding-block: var(--as-sp-4);
+  padding-block: var(--as-sp-3) var(--as-sp-4);
   padding-inline: var(--as-sp-5);
-}
-
-.ficha__cabecera {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--as-sp-5);
-}
-
-.ficha__identidad {
-  flex: 1 1 var(--as-panel-md);
-  min-inline-size: 0;
-}
-
-.ficha__cuenta {
-  font-size: var(--as-fs-2xl);
-  font-weight: var(--as-peso-semi);
-  line-height: 1.2;
-}
-
-.ficha__titular {
-  font-size: var(--as-fs-md);
-  font-weight: var(--as-peso-medio);
-  line-height: 1.4;
 }
 
 .ficha__icono {
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   margin-block-start: 2px;
-}
-
-/* Ubicación: etiqueta en negrita, valor en gris, con icono (lo que ya se leía bien) */
-.ficha__meta {
-  display: flex;
-  flex-direction: column;
-  gap: var(--as-sp-1);
-  list-style: none;
-  margin-block: var(--as-sp-3) 0;
-  padding-inline-start: 0;
-}
-
-.ficha__meta-fila {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--as-sp-2);
-  line-height: 1.45;
-}
-
-.ficha__meta-etiqueta {
-  flex-shrink: 0;
-  font-weight: var(--as-peso-semi);
-}
-
-.ficha__meta-valor {
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-  overflow-wrap: break-word;
-}
-
-.ficha__acciones {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--as-sp-2);
-  max-inline-size: 600px;
-}
-
-/* Cifras clave: franja compacta bajo la identidad */
-.ficha__cifras {
-  display: flex;
-  flex-wrap: wrap;
-  border-block-start: var(--as-borde);
-  gap: var(--as-sp-3) var(--as-sp-8);
-  margin-block: var(--as-sp-4) 0;
-  padding-block-start: var(--as-sp-3);
-}
-
-.ficha__cifra {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-inline-size: 140px;
-}
-
-.ficha__cifra-etiqueta {
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-  font-size: var(--as-fs-sm);
-  line-height: 1.3;
-}
-
-.ficha__cifra-valor {
-  font-size: var(--as-fs-xl);
-  font-weight: var(--as-peso-semi);
-  line-height: 1.3;
-  margin-block-end: 0;
-}
-
-.ficha__cifra--alerta .ficha__cifra-valor {
-  color: rgb(var(--v-theme-error));
-}
-
-.ficha__cifra-valor--vacio {
-  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
-  font-size: var(--as-fs-base);
-  font-weight: var(--as-peso-normal);
-  line-height: 1.6;
 }
 
 /* Tarjetas de datos: título alineado y una fila por dato */
@@ -573,15 +280,15 @@ async function recargar() {
   border-block-end: 0;
 }
 
+.ficha__fila-etiqueta,
+.ficha__fila-valor {
+  min-inline-size: 0;
+}
+
 .ficha__fila-etiqueta {
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: var(--as-fs-sm);
   line-height: 1.5;
-}
-
-.ficha__fila-etiqueta,
-.ficha__fila-valor {
-  min-inline-size: 0;
 }
 
 .ficha__fila-valor {

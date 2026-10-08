@@ -7,6 +7,7 @@ import AdjustmentsTab from '../components/AdjustmentsTab.vue'
 import AgreementsTab from '../components/AgreementsTab.vue'
 import BillingHistoryTab from '../components/BillingHistoryTab.vue'
 import ContractDetails from '../components/ContractDetails.vue'
+import ContractHeader from '../components/ContractHeader.vue'
 import ContractSearchDialog from '../components/dialog/ContractSearchDialog.vue'
 import NotesTab from '../components/NotesTab.vue'
 import PaymentHistoryTab from '../components/PaymentHistoryTab.vue'
@@ -140,6 +141,11 @@ onMounted(() => {
       tipo="cargando"
       esqueleto="tarjeta"
       :filas="3"
+    />
+
+    <ContractHeader
+      v-if="store.item"
+      class="mb-4"
     />
 
     <VCard
