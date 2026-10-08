@@ -1,4 +1,39 @@
 export default {
+  /*
+   * Aquasoft Design System 1.0 · variantes con nombre (alias declarados en index.ts).
+   * Botones: una sola acción primaria por contexto (AsBtnPrimario); el resto, secundario (tonal) o terciario (texto).
+   * El formato oración de los botones viene de la tipografía del tema ($typography button → text-transform none).
+   */
+  AsBtnPrimario: {
+    variant: 'flat',
+    color: 'primary',
+  },
+  AsBtnSecundario: {
+    variant: 'tonal',
+    color: 'primary',
+  },
+  AsBtnTerciario: {
+    variant: 'text',
+    color: 'primary',
+  },
+  AsBtnIcono: {
+    icon: true,
+    variant: 'text',
+    color: 'default',
+    size: 'small',
+  },
+  AsChipEstado: {
+    label: true,
+    size: 'small',
+    variant: 'tonal',
+  },
+  AsCampoFiltro: {
+    variant: 'outlined',
+    density: 'compact',
+    color: 'primary',
+    hideDetails: true,
+    clearable: true,
+  },
   IconBtn: {
     icon: true,
     color: 'default',

@@ -42,7 +42,8 @@ const { isAdmin } = useCurrentUser()
         :languages="themeConfig.app.i18n.langConfig"
       />
 
-      <NavbarThemeSwitcher />
+      <!-- Modo oscuro: solo administradores hasta terminar la fase 3 del sistema de diseño -->
+      <NavbarThemeSwitcher v-if="isAdmin" />
       <NavbarShortcuts />
       <NavBarNotifications class="me-2" />
       <UserProfile />

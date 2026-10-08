@@ -3,9 +3,9 @@
 
 // 👉 Body
 
-// set body font size 15px
+// Aquasoft Design System 1.0: cuerpo a 14 px (var(--as-fs-base)); Vuetify fija 16 px en html
 body {
-  font-size: 15px !important;
+  font-size: var(--as-fs-base, 0.875rem) !important;
 
   // We reduced this margin to get 40px input height
   .v-input--density-compact {
@@ -13,6 +13,7 @@ body {
   }
 }
 
+// El texto secundario debe leerse (AA): énfasis medio, no opacidad de deshabilitado
 .text-caption {
-  color: rgba(var(--v-theme-on-background), var(--v-disabled-opacity));
+  color: rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity));
 }
