@@ -1,6 +1,7 @@
 import type { App } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { cookieRef } from '@layouts/stores/config'
+import { DATETIME_FORMATS, NUMBER_FORMATS } from '@/utils/formato'
 import { themeConfig } from '@themeConfig'
 
 const globalMessages = Object.fromEntries(
@@ -60,6 +61,10 @@ export const getI18n = () => {
       locale: cookieRef('language', themeConfig.app.i18n.defaultLocale).value,
       fallbackLocale: 'es',
       messages,
+
+      // Misma convención que src/utils/formato: n() y d() dan lo mismo que las funciones de formato
+      numberFormats: { es: NUMBER_FORMATS, en: NUMBER_FORMATS },
+      datetimeFormats: { es: DATETIME_FORMATS, en: DATETIME_FORMATS },
     })
   }
 

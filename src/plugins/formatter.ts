@@ -1,29 +1,24 @@
 import type { App } from 'vue'
+import { fecha, moneda } from '@/utils/formato'
 
+/*
+ * Propiedades globales históricas ($formatCurrency, $formatDate) usadas por Soporte y los CRUD.
+ * Desde el sistema de diseño 1.0 delegan en `src/utils/formato` (es-MX, zona de OOMSAPAS).
+ */
 function formatCurrency(value: number | string) {
-  const amount = Number(value) || 0
-
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  }).format(amount)
+  return moneda(Number(value) || 0)
 }
 
-function formatDate(dateString: string, format: Intl.DateTimeFormatOptions = {
-  day: '2-digit', month: '2-digit', year: 'numeric',
-}) {
-  // Reemplazar espacio por 'T' para hacerla compatible con `Date`
-  const normalizedDateString = dateString.replace(' ', 'T')
-  const date = new Date(normalizedDateString)
+function formatDate(dateString: string, format?: Intl.DateTimeFormatOptions) {
+  if (format)
+    return new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mazatlan', ...format }).format(new Date(dateString.replace(' ', 'T')))
 
-  if (isNaN(date.getTime()))
-    return 'Fecha inválida'
+  const texto = fecha(dateString, { vacio: 'Fecha inválida' })
 
-  return new Intl.DateTimeFormat('es-MX', format).format(date)
+  return texto === dateString ? 'Fecha inválida' : texto
 }
 
 export default function (app: App) {
-  // Asignamos la función a las propiedades globales:
   app.config.globalProperties.$formatCurrency = formatCurrency
   app.config.globalProperties.$formatDate = formatDate
 }
