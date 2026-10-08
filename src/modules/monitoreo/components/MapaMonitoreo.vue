@@ -49,7 +49,7 @@ const SATELITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Ima
 const CENTRO_LOS_CABOS: [number, number] = [-109.82, 23.0]
 const CAPAS_SECTORES = ['sectores-relleno', 'sectores-linea', 'sectores-etiqueta']
 const CAPAS_LECTURISTAS = ['lecturistas-halo', 'lecturistas-puntos', 'lecturistas-etiqueta']
-const CAPAS_RECORRIDO = ['recorrido-lecturas-linea', 'recorrido-linea', 'recorrido-flechas', 'recorrido-lecturas', 'recorrido-paradas', 'recorrido-paradas-texto', 'recorrido-extremos', 'recorrido-extremos-texto']
+const CAPAS_RECORRIDO = ['recorrido-lecturas-linea', 'recorrido-linea', 'recorrido-linea-aprox', 'recorrido-flechas', 'recorrido-lecturas', 'recorrido-paradas', 'recorrido-paradas-texto', 'recorrido-extremos', 'recorrido-extremos-texto']
 
 const { t } = useI18n()
 const datos = useMapaTomas()
@@ -89,6 +89,7 @@ function pinturasDelTema(): [string, string, unknown][] {
     ['tomas-circulos', 'circle-stroke-color', tk('toma-lejos')],
     ['recorrido-lecturas-linea', 'line-color', tk('toma-tarifa-fija')],
     ['recorrido-linea', 'line-color', tk('primary')],
+    ['recorrido-linea-aprox', 'line-color', tk('primary')],
     ['recorrido-flechas', 'text-color', tk('primary-darken-1')],
     ['recorrido-flechas', 'text-halo-color', tk('surface')],
     ['recorrido-lecturas', 'circle-color', ['case', ['get', 'a'], tk('toma-anomalia'), tk('toma-tarifa-fija')]],
@@ -215,15 +216,24 @@ function crearMapa() {
     // Recorrido del lecturista elegido (encima de las tomas, debajo de los lecturistas)
     mapa.addSource('recorrido', { type: 'geojson', data: recorridoGeoJson() })
     mapa.addLayer({ id: 'recorrido-lecturas-linea', type: 'line', source: 'recorrido', filter: ['==', ['get', 'tipo'], 'lecturas-linea'], paint: { 'line-color': tk('toma-tarifa-fija'), 'line-width': 2, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.9 } })
+
+    // Ajustado a calles: azul continuo; aproximado (punto a punto): azul punteado. Son dos capas porque MapLibre no admite
+    // expresiones por dato en `line-dasharray`: rechazaba la capa y el recorrido no se pintaba.
     mapa.addLayer({
       id: 'recorrido-linea',
       type: 'line',
       source: 'recorrido',
-      filter: ['==', ['get', 'tipo'], 'recorrido'],
+      filter: ['all', ['==', ['get', 'tipo'], 'recorrido'], ['==', ['coalesce', ['get', 'ajustado'], false], true]],
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-
-      // Ajustado a calles: azul continuo; aproximado (punto a punto): azul punteado
-      paint: { 'line-color': tk('primary'), 'line-width': ['case', ['coalesce', ['get', 'ajustado'], false], 4, 3], 'line-opacity': 0.9, 'line-dasharray': ['case', ['coalesce', ['get', 'ajustado'], false], ['literal', [1, 0]], ['literal', [2, 1.5]]] },
+      paint: { 'line-color': tk('primary'), 'line-width': 4, 'line-opacity': 0.9 },
+    })
+    mapa.addLayer({
+      id: 'recorrido-linea-aprox',
+      type: 'line',
+      source: 'recorrido',
+      filter: ['all', ['==', ['get', 'tipo'], 'recorrido'], ['!=', ['coalesce', ['get', 'ajustado'], false], true]],
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': tk('primary'), 'line-width': 3, 'line-opacity': 0.9, 'line-dasharray': [2, 1.5] },
     })
 
     // Flechas de dirección sobre la línea (visibles desde zoom de calle)
