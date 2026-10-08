@@ -1,0 +1,75 @@
+// Tokens primitivos del Aquasoft Design System 1.0 (Enterprise Clean UI).
+// Los colores viven en colores.json (tema de Vuetify → --v-theme-*). Aquí: tipografía, espaciado, radios, elevación,
+// medidas de contenedores y movimiento, como custom properties para usarlos en CSS propio sin valores sueltos.
+// Escala tipográfica: base 14 px, secundaria 13 px, mínimo legible 12 px; títulos 16–32 px. 1rem = 16 px.
+
+:root {
+  // Tipografía
+  --as-fuente: "Inter", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  --as-fs-xs: 0.75rem;     // 12 px · mínimo legible: leyendas, sellos, sobrelíneas
+  --as-fs-sm: 0.8125rem;   // 13 px · texto secundario, celdas densas
+  --as-fs-base: 0.875rem;  // 14 px · texto base, celdas, botones, campos
+  --as-fs-md: 1rem;        // 16 px · títulos de tarjeta y panel
+  --as-fs-lg: 1.125rem;    // 18 px · título de sección
+  --as-fs-xl: 1.25rem;     // 20 px · título de página
+  --as-fs-2xl: 1.5rem;     // 24 px · cifras de indicador
+  --as-fs-3xl: 1.75rem;    // 28 px · cifra destacada
+  --as-fs-4xl: 2rem;       // 32 px · pantalla grande
+  --as-lh-densa: 1.25;
+  --as-lh-normal: 1.45;
+  --as-peso-normal: 400;
+  --as-peso-medio: 500;
+  --as-peso-semi: 600;
+  --as-tracking-sobrelinea: 0.06em;
+
+  // Espaciado (múltiplos de 4 px)
+  --as-sp-1: 4px;
+  --as-sp-2: 8px;
+  --as-sp-3: 12px;
+  --as-sp-4: 16px;
+  --as-sp-5: 20px;
+  --as-sp-6: 24px;
+  --as-sp-8: 32px;
+  --as-sp-10: 40px;
+  --as-sp-12: 48px;
+
+  // Radios
+  --as-radio-sm: 4px;
+  --as-radio-md: 6px;
+  --as-radio-lg: 8px;
+  --as-radio-xl: 12px;
+
+  // Elevación discreta: en reposo solo borde; flotante para menús, paneles y diálogos
+  --as-borde: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  --as-sombra-reposo: 0 1px 2px rgba(var(--v-shadow-key-umbra-color), var(--v-shadow-xs-opacity));
+  --as-sombra-flotante: 0 8px 24px rgba(var(--v-shadow-key-umbra-color), var(--v-shadow-lg-opacity));
+
+  // Contenedores
+  --as-panel-sm: 360px;
+  --as-panel-md: 520px;   // referencia
+  --as-panel-lg: 640px;   // información compleja
+  --as-panel-xl: 720px;
+  --as-dialogo-sm: 480px;
+  --as-dialogo-md: 640px;
+  --as-dialogo-lg: 880px;
+  --as-fila: 44px;        // tabla estándar
+  --as-fila-media: 40px;  // densa justificada
+  --as-fila-densa: 36px;  // paneles laterales y listados largos
+  --as-control: 36px;     // alto de botones y campos compactos
+  --as-control-md: 40px;
+  --as-ancho-filtro-sm: 160px;
+  --as-ancho-filtro-md: 220px;
+  --as-ancho-filtro-lg: 280px;
+
+  // Movimiento
+  --as-dur-rapida: 120ms;
+  --as-dur-normal: 200ms;
+  --as-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --as-dur-rapida: 0ms;
+    --as-dur-normal: 0ms;
+  }
+}
