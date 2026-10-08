@@ -98,10 +98,10 @@ function moverDia(delta: number) {
         <VTextField
           v-model="dia"
           type="date"
+          :label="t('monitoreo.filtros.dia')"
           :max="hoy"
           :disabled="deshabilitado"
           class="filtros-monitor__dia"
-          :aria-label="t('monitoreo.filtros.dia')"
         />
         <VBtn
           icon="tabler-chevron-right"

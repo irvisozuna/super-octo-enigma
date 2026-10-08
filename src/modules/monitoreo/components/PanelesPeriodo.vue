@@ -161,6 +161,7 @@ onBeforeUnmount(() => p.detener())
                   height="4"
                   rounded
                   color="warning"
+                  :aria-label="q.usuario"
                 />
               </div>
               <div class="as-etiqueta mt-3 mb-1">

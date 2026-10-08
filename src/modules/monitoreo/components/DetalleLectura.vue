@@ -721,6 +721,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
             v-model="motivoElegido"
             :items="opcionesMotivo"
             :label="t('monitoreo.lectura.motivo')"
+            :aria-label="t('monitoreo.lectura.motivo')"
             density="compact"
             variant="outlined"
             hide-details
@@ -729,6 +730,7 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
           <VTextField
             v-model="notaRelectura"
             :label="t('monitoreo.lectura.notaOpcional')"
+            :aria-label="t('monitoreo.lectura.notaOpcional')"
             density="compact"
             variant="outlined"
             hide-details
@@ -794,33 +796,35 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
         >
           {{ t('monitoreo.lectura.sinAnotaciones') }}
         </div>
-        <VList
+        <ul
           v-else
-          density="compact"
-          class="py-0 detalle-lectura__lista"
+          class="detalle-lectura__notas"
         >
-          <VListItem
+          <li
             v-for="nota in notas"
             :key="nota.id"
-            :title="nota.texto"
-            :subtitle="`${nota.autor ?? '—'} · ${fechaCorta(nota.fecha)} ${horaCorta(nota.fecha)}`"
+            class="detalle-lectura__nota"
           >
-            <template
+            <div class="flex-grow-1">
+              <div class="text-body-2">
+                {{ nota.texto }}
+              </div>
+              <div class="as-secundario as-num">
+                {{ nota.autor ?? '—' }} · {{ fechaCorta(nota.fecha) }} {{ horaCorta(nota.fecha) }}
+              </div>
+            </div>
+            <VBtn
               v-if="puedeOperar"
-              #append
-            >
-              <VBtn
-                icon="tabler-trash"
-                size="small"
-                variant="text"
-                :title="t('monitoreo.lectura.borrarNota')"
-                :aria-label="t('monitoreo.lectura.borrarNota')"
-                :loading="acciones.ocupado.value === 'borrarNota'"
-                @click="borrarNota(nota.id)"
-              />
-            </template>
-          </VListItem>
-        </VList>
+              icon="tabler-trash"
+              size="small"
+              variant="text"
+              :title="t('monitoreo.lectura.borrarNota')"
+              :aria-label="t('monitoreo.lectura.borrarNota')"
+              :loading="acciones.ocupado.value === 'borrarNota'"
+              @click="borrarNota(nota.id)"
+            />
+          </li>
+        </ul>
         <div
           v-if="puedeOperar"
           class="d-flex align-center gap-2 mt-2"
@@ -945,6 +949,23 @@ watch(() => [props.abierto, props.contrato, props.periodo] as const, ([abierto, 
 .detalle-lectura__lista :deep(.v-list-item) {
   min-block-size: 32px;
   padding-inline: 0;
+}
+
+.detalle-lectura__notas {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.detalle-lectura__nota {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--as-sp-2);
+  padding-block: var(--as-sp-2);
+}
+
+.detalle-lectura__nota + .detalle-lectura__nota {
+  border-block-start: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.6));
 }
 
 .detalle-lectura__fotos {

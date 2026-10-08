@@ -251,6 +251,7 @@ watch(() => detalle.value, d => {
             height="6"
             rounded
             class="my-2"
+            :aria-label="t('monitoreo.indicadores.avance')"
           />
           <div class="as-secundario as-num mb-3">
             {{ t('monitoreo.sector.atendidas', { a: entero(avance.atendidas), e: entero(avance.esperadas) }) }}

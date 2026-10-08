@@ -36,10 +36,10 @@ const busqueda = ref('')
 const orden = ref<OrdenTabla>([{ key: 'lecturas', order: 'desc' }])
 
 const columnas = computed<ColumnaTabla<FilaLecturista>[]>(() => [
-  { clave: 'nombre', titulo: t('monitoreo.lecturistas.nombre'), formato: 'personalizado', anchoMin: 200 },
-  { clave: 'estado', titulo: t('monitoreo.lecturistas.estado'), formato: 'personalizado', ancho: 136 },
-  { clave: 'ultima_actividad', titulo: t('monitoreo.lecturistas.ultimaSenal'), formato: 'personalizado', ancho: 150 },
-  { clave: 'lecturas', titulo: t('monitoreo.lecturistas.lecturas'), formato: 'personalizado', ancho: 190 },
+  { clave: 'nombre', titulo: t('monitoreo.lecturistas.nombre'), formato: 'personalizado', anchoMin: 160 },
+  { clave: 'estado', titulo: t('monitoreo.lecturistas.estado'), formato: 'personalizado', ancho: 128 },
+  { clave: 'ultima_actividad', titulo: t('monitoreo.lecturistas.ultimaSenal'), formato: 'personalizado', ancho: 136 },
+  { clave: 'lecturas', titulo: t('monitoreo.lecturistas.lecturas'), formato: 'personalizado', ancho: 176 },
   { clave: 'sectores', titulo: t('monitoreo.lecturistas.sectores'), formato: 'personalizado', ordenable: false },
   { clave: 'anomalias', titulo: t('monitoreo.lecturistas.anomalias'), formato: 'entero', ancho: 80 },
   { clave: 'lejos', titulo: t('monitoreo.lecturistas.lejos'), formato: 'entero', ancho: 72, descripcion: t('monitoreo.lectura.lejos', { n: 50 }) },
@@ -172,6 +172,7 @@ function alternarEstado(e: EstadoLecturista) {
           height="6"
           rounded
           class="flex-grow-1"
+          :aria-label="`${t('monitoreo.lecturistas.lecturas')} ${fila.nombre}`"
         />
         <span class="text-body-2 as-num text-no-wrap tabla-lecturistas__meta">{{ entero(fila.lecturas) }} / {{ entero(fila.meta) }}</span>
       </div>

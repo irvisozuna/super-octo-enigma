@@ -161,6 +161,7 @@ function ultima(s: FilaSector): string {
           height="6"
           rounded
           class="flex-grow-1"
+          :aria-label="`${t('monitoreo.sectores.avance')} ${fila.sector}`"
         />
         <span class="text-body-2 as-num text-no-wrap tabla-sectores__pct">{{ fila.pct_campo === null ? '—' : porcentaje(fila.pct_campo) }}</span>
       </div>
