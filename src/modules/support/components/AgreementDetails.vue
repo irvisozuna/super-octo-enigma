@@ -65,7 +65,7 @@ const columnas = computed<ColumnaTabla<PagoConvenio>[]>(() => [
   <AsDialogo
     :abierto="abierto"
     :titulo="t('support.convenios.detalleTitulo')"
-    tamano="lg"
+    tamano="xl"
     variante="informativo"
     @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >

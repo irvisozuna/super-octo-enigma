@@ -49,7 +49,9 @@ export interface PaginacionTabla {
 }
 
 export type TamanoPanel = 'sm' | 'md' | 'lg' | 'xl'
-export type TamanoDialogo = 'sm' | 'md' | 'lg' | 'xl'
+export type TamanoDialogo = 'sm' | 'md' | 'lg' | 'xl' | 'completo'
 
 export const ANCHOS_PANEL: Record<TamanoPanel, number> = { sm: 360, md: 520, lg: 640, xl: 720 }
-export const ANCHOS_DIALOGO: Record<TamanoDialogo, number> = { sm: 480, md: 640, lg: 880, xl: 1100 }
+
+/** `completo` ocupa casi toda la ventana: para elegir una fila en tablas anchas sin desplazamiento lateral. */
+export const ANCHOS_DIALOGO: Record<TamanoDialogo, number | string> = { sm: 480, md: 640, lg: 880, xl: 1100, completo: 'calc(100vw - 48px)' }

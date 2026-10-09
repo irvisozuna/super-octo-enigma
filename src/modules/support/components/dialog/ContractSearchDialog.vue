@@ -76,11 +76,11 @@ const paginacion = computed(() => ({ pagina: pagina.value, porPagina, total: tot
 
 const columnas = computed<ColumnaTabla[]>(() => [
   { clave: 'account', titulo: etiquetaColumna('account'), formato: 'texto', ancho: 110 },
-  { clave: 'clave_loc', titulo: etiquetaColumna('clave_loc'), formato: 'texto', ancho: 120 },
+  { clave: 'clave_loc', titulo: etiquetaColumna('clave_loc'), formato: 'texto', ancho: 140 },
   { clave: 'measurer', titulo: etiquetaColumna('measurer'), formato: 'texto', ancho: 120 },
-  { clave: 'nameuser', titulo: etiquetaColumna('nameuser'), formato: 'texto', truncar: true, anchoMin: 200 },
-  { clave: 'address', titulo: etiquetaColumna('address'), formato: 'texto', truncar: true, anchoMin: 200 },
-  { clave: 'neighborhood', titulo: etiquetaColumna('neighborhood'), formato: 'texto', truncar: true, ancho: 160 },
+  { clave: 'nameuser', titulo: etiquetaColumna('nameuser'), formato: 'texto', anchoMin: 220 },
+  { clave: 'address', titulo: etiquetaColumna('address'), formato: 'texto', anchoMin: 320 },
+  { clave: 'neighborhood', titulo: etiquetaColumna('neighborhood'), formato: 'texto', ancho: 180 },
   { clave: 'total_debt', titulo: etiquetaColumna('total_debt'), formato: 'moneda', ancho: 130 },
   { clave: 'acciones', titulo: t('support.busqueda.columnas.acciones'), formato: 'personalizado', alineacion: 'end', ancho: 130 },
 ].map(c => ({ ...c, ordenable: false })))
@@ -192,7 +192,7 @@ watch(() => props.abierto, v => {
     :abierto="abierto"
     :titulo="t('support.busqueda.titulo')"
     :subtitulo="t('support.busqueda.descripcion')"
-    tamano="xl"
+    tamano="completo"
     variante="informativo"
     @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >
@@ -210,7 +210,7 @@ watch(() => props.abierto, v => {
           prepend-inner-icon="tabler-search"
           :placeholder="t('support.busqueda.general')"
           :aria-label="t('support.busqueda.general')"
-          class="as-filtro--lg busqueda__texto"
+          class="busqueda__texto"
         />
       </template>
       <VBtn
@@ -334,7 +334,9 @@ watch(() => props.abierto, v => {
 </template>
 
 <style scoped>
+/* El buscador ocupa el ancho libre: es la forma principal de encontrar el contrato */
 .busqueda__texto {
+  flex: 1 1 var(--as-panel-md);
   min-inline-size: var(--as-ancho-filtro-lg);
 }
 
@@ -354,7 +356,9 @@ watch(() => props.abierto, v => {
   max-inline-size: var(--as-ancho-filtro-md);
 }
 
-.busqueda__tabla :deep(.as-tabla__td--truncar) {
-  max-inline-size: var(--as-ancho-filtro-lg);
+/* Cuenta, clave y medidor en una sola línea; nombre y dirección pueden partirse */
+.busqueda__tabla :deep(td.as-num),
+.busqueda__tabla :deep(td:nth-child(-n+3)) {
+  white-space: nowrap;
 }
 </style>

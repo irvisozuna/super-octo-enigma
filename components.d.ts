@@ -7,7 +7,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    __pruebaRegla: typeof import('./src/components/__pruebaRegla.vue')['default']
     AddAuthenticatorAppDialog: typeof import('./src/components/dialogs/AddAuthenticatorAppDialog.vue')['default']
     AddEditAddressDialog: typeof import('./src/components/dialogs/AddEditAddressDialog.vue')['default']
     AddEditPermissionDialog: typeof import('./src/components/dialogs/AddEditPermissionDialog.vue')['default']
@@ -36,7 +35,6 @@ declare module 'vue' {
     AsMapaUbicacion: typeof import('./src/components/as/AsMapaUbicacion.vue')['default']
     AsPanelLateral: typeof import('./src/components/as/AsPanelLateral.vue')['default']
     AsTablaDatos: typeof import('./src/components/as/AsTablaDatos.vue')['default']
-    BaseTable: typeof import('./src/components/BaseTable.vue')['default']
     BuyNow: typeof import('./src/@core/components/BuyNow.vue')['default']
     CardAddEditDialog: typeof import('./src/components/dialogs/CardAddEditDialog.vue')['default']
     CardStatisticsHorizontal: typeof import('./src/@core/components/cards/CardStatisticsHorizontal.vue')['default']
