@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useListaContrato } from '../composables/useListaContrato'
+import { useTiposOrden } from '../composables/useTiposOrden'
 import { useContractStore } from '../stores/contractStore'
 import MensajeDialogo from './MensajeDialogo.vue'
 import type { ColumnaTabla } from '@/components/as/tipos'
@@ -18,14 +19,14 @@ const mensajeAbierto = ref(false)
 const mensaje = ref('')
 
 const prioridad = (v: unknown) => (te(`support.orden.prioridades.${String(v)}`) ? t(`support.orden.prioridades.${String(v)}`) : String(v ?? '—'))
-const tipo = (v: unknown) => (v && te(String(v)) ? t(String(v)) : String(v || '—'))
+const { nombreTipo } = useTiposOrden()
 
 const columnas = computed<ColumnaTabla[]>(() => [
   { clave: 'datec', titulo: t('support.ordenes.fecha'), formato: 'fecha', ancho: 120 },
   { clave: 'ref', titulo: t('support.ordenes.referencia'), formato: 'texto', ancho: 120 },
   { clave: 'subject', titulo: t('support.ordenes.asunto'), formato: 'texto', truncar: true, anchoMin: 200 },
   { clave: 'severity_code', titulo: t('support.ordenes.prioridad'), formato: 'estado', ancho: 120, colorEstado: v => colorDe(COLOR_PRIORIDAD_ORDEN, String(v)), textoEstado: prioridad },
-  { clave: 'type_code', titulo: t('support.ordenes.tipo'), formato: 'personalizado', ancho: 150 },
+  { clave: 'type_code', titulo: t('support.ordenes.tipo'), formato: 'personalizado', ancho: 200 },
   { clave: 'resolution', titulo: t('support.ordenes.resolucion'), formato: 'texto', truncar: true },
   { clave: 'reported_by', titulo: t('support.ordenes.autor'), formato: 'texto', truncar: true, ancho: 160 },
   { clave: 'message', titulo: t('support.ordenes.mensaje'), formato: 'personalizado', anchoMin: 220 },
@@ -57,7 +58,7 @@ function verMensaje(html: string) {
     @reintentar="lista.cargar"
   >
     <template #celda-type_code="{ fila }">
-      {{ tipo(fila.type_code) }}
+      {{ nombreTipo(fila.type_code) }}
     </template>
     <template #celda-message="{ fila }">
       <div class="d-flex align-center gap-1">

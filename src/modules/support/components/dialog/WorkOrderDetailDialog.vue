@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTiposOrden } from '../../composables/useTiposOrden'
 import { COLOR_ESTADO_ORDEN, COLOR_PRIORIDAD_ORDEN, colorDe } from '@/utils/estados'
 import { fechaHora, texto } from '@/utils/formato'
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const { t, te } = useI18n()
+const { nombreTipo } = useTiposOrden()
 
 const traducir = (prefijo: string, v: unknown) => (v !== null && v !== undefined && te(`${prefijo}${String(v)}`) ? t(`${prefijo}${String(v)}`) : texto(v))
 
@@ -27,7 +29,7 @@ const datos = computed(() => {
 
   return [
     { etiqueta: t('support.ordenes.fecha'), valor: fechaHora(o.datec), num: true },
-    { etiqueta: t('support.ordenes.tipo'), valor: traducir('', o.type_code) },
+    { etiqueta: t('support.ordenes.tipo'), valor: nombreTipo(o.type_code) },
     { etiqueta: t('support.ordenes.reportadoPor'), valor: texto(o.reported_by) },
     { etiqueta: t('support.orden.area'), valor: texto(o.area) },
     { etiqueta: t('support.orden.departamento'), valor: texto(o.department) },
