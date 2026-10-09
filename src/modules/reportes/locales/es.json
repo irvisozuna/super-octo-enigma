@@ -139,7 +139,8 @@
   "tablero": {
     "filasFuente": "{n} filas de la fuente",
     "widgetSinDatos": "Sin datos para este widget con los filtros actuales.",
-    "actualizar": "Actualizar tablero"
+    "actualizar": "Actualizar tablero",
+    "verReporte": "Ver reporte de detalle"
   },
   "admin": {
     "permisos": {

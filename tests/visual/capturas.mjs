@@ -82,6 +82,8 @@ const PANTALLAS = [
   { id: 'tablero-ingresos', ruta: '/reportes/tableros/ingresos', espera: 9000 },
   { id: 'tablero-convenios', ruta: '/reportes/tableros/convenios', espera: 7000 },
   { id: 'tablero-facturacion', ruta: '/reportes/tableros/facturacion', espera: 16000 },
+  { id: 'tablero-eficiencia', ruta: '/reportes/tableros/eficiencia_comercial', espera: 8000 },
+  { id: 'tablero-direccion', ruta: '/reportes/tableros/direccion', espera: 8000 },
   { id: 'exportaciones', ruta: '/reportes/exportaciones' },
   { id: 'mandatos', ruta: '/paymentmandates' },
   { id: 'plantillas', ruta: '/templates' },

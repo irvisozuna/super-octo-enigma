@@ -9,6 +9,10 @@ export interface MetricaWidget {
   agg: 'sum' | 'count' | 'avg' | 'min' | 'max'
   format: FormatoColumna
   label: string | null
+
+  /** Razón de dos sumas: [numerador, denominador] × `factor` (100 para porcentaje). */
+  ratio?: [string, string]
+  factor?: number
 }
 
 export interface WidgetDef {

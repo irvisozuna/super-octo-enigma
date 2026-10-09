@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import type { ErrorReporte } from '../../services/errores'
 import type { WidgetDef } from '../../types/tablero'
 import { claveMensaje } from '../../services/errores'
 
-defineProps<{
+const props = defineProps<{
   widget: WidgetDef
   cargando: boolean
   error: ErrorReporte | null
@@ -16,6 +18,14 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
+
+/** Reporte de detalle del widget (`config.report`): enlace «Ver reporte» en la esquina de la tarjeta. */
+const reporte = computed(() => {
+  const clave = props.widget.config.report
+
+  return typeof clave === 'string' && clave && router.hasRoute('reportesVisor') ? { name: 'reportesVisor', params: { clave } } : null
+})
 </script>
 
 <template>
@@ -27,6 +37,19 @@ const { t } = useI18n()
       <VCardTitle class="text-body-1 font-weight-medium">
         {{ widget.titulo }}
       </VCardTitle>
+      <template
+        v-if="reporte"
+        #append
+      >
+        <VBtn
+          :to="reporte"
+          icon="tabler-table-share"
+          size="small"
+          variant="text"
+          :title="t('reportes.tablero.verReporte')"
+          :aria-label="`${t('reportes.tablero.verReporte')}: ${widget.titulo}`"
+        />
+      </template>
     </VCardItem>
 
     <VCardText class="flex-grow-1 d-flex flex-column">

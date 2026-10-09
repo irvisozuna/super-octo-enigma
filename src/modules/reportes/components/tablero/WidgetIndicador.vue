@@ -20,9 +20,11 @@ const valor = computed(() => (columna.value && fila.value ? formatearValor(fila.
     <div class="text-h3 font-weight-bold indicador-valor">
       {{ valor }}
     </div>
-    <div class="text-body-2 text-medium-emphasis">
+    <div
+      class="text-body-2 text-medium-emphasis"
+      :title="datos.filas_fuente ? t('reportes.tablero.filasFuente', { n: formatearEntero(datos.filas_fuente) }) : undefined"
+    >
       {{ columna?.etiqueta }}
-      <span v-if="datos.filas_fuente"> · {{ t('reportes.tablero.filasFuente', { n: formatearEntero(datos.filas_fuente) }) }}</span>
     </div>
   </div>
 </template>
