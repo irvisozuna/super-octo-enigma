@@ -60,7 +60,11 @@
     "estadoCuenta": "Estado de cuenta",
     "agregarNota": "Agregar nota",
     "agregarCargo": "Agregar cargo",
-    "ordenNueva": "Orden de trabajo"
+    "ordenNueva": "Orden de trabajo",
+    "ultimaOrden": "Última orden de trabajo",
+    "ordenesTotal": "{fecha} · {n} en total",
+    "convenioAvance": "{p} de {n} pagos · resta {saldo}",
+    "verDetalle": "Ver detalle de {que}"
   },
   "lista": {
     "sinFilas": "Sin registros para este contrato.",
@@ -121,7 +125,24 @@
     "autor": "Autor",
     "mensaje": "Mensaje",
     "cierre": "Comentarios de cierre",
-    "estado": "Estado"
+    "estado": "Estado",
+    "estados": {
+      "0": "Sin leer",
+      "1": "Leída",
+      "2": "Asignada",
+      "3": "En progreso",
+      "5": "Falta información",
+      "7": "En espera",
+      "8": "Cerrada",
+      "9": "Cancelada"
+    },
+    "detalleTitulo": "Orden de trabajo {ref}",
+    "reportadoPor": "Reportado por",
+    "observaciones": "Observaciones",
+    "fechaCierre": "Fecha de cierre",
+    "verTodas": "Ver las {n} órdenes",
+    "sinMensaje": "Sin mensaje.",
+    "ultima": "Es la orden más reciente del contrato."
   },
   "convenios": {
     "folio": "Folio",
@@ -151,7 +172,13 @@
     "estado": "Estado",
     "estadoPagado": "Pagado",
     "estadoVencido": "Vencido",
-    "estadoPendiente": "Pendiente"
+    "estadoPendiente": "Pendiente",
+    "tipo": "Tipo de convenio",
+    "saldoConvenido": "Saldo convenido",
+    "inicio": "Primer pago",
+    "liquidacion": "Liquidación",
+    "verTodos": "Ver todos los convenios",
+    "noEncontrado": "No se encontró el detalle del convenio {ref}."
   },
   "ajustes": {
     "descripcion": "Descripción",

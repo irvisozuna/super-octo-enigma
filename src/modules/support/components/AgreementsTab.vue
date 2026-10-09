@@ -16,6 +16,7 @@ const lista = useListaContrato((id, p) => store.getAgreementsByContract(id, p), 
 
 const detalleAbierto = ref(false)
 const pagos = ref<PagoConvenio[]>([])
+const convenio = ref<Record<string, any> | null>(null)
 
 const columnas = computed<ColumnaTabla[]>(() => [
   { clave: 'ref', titulo: t('support.convenios.folio'), formato: 'texto', ancho: 120 },
@@ -31,8 +32,9 @@ const columnas = computed<ColumnaTabla[]>(() => [
   { clave: 'details', titulo: t('support.convenios.detalle'), formato: 'personalizado', alineacion: 'center', ancho: 100 },
 ].map(c => ({ ...c, ordenable: false })))
 
-function verDetalle(detalles: PagoConvenio[]) {
-  pagos.value = detalles
+function verDetalle(fila: Record<string, any>) {
+  convenio.value = fila
+  pagos.value = fila.details
   detalleAbierto.value = true
 }
 </script>
@@ -61,7 +63,7 @@ function verDetalle(detalles: PagoConvenio[]) {
         variant="text"
         :title="t('support.lista.verDetalle')"
         :aria-label="t('support.lista.verDetalle')"
-        @click="verDetalle(fila.details)"
+        @click="verDetalle(fila)"
       />
       <span
         v-else-if="fila.details"
@@ -73,5 +75,6 @@ function verDetalle(detalles: PagoConvenio[]) {
   <AgreementDetails
     v-model:abierto="detalleAbierto"
     :pagos="pagos"
+    :convenio="convenio"
   />
 </template>

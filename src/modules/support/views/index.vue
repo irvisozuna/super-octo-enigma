@@ -146,6 +146,7 @@ onMounted(() => {
     <ContractHeader
       v-if="store.item"
       class="mb-4"
+      @pestana="(i: number) => { activa = i }"
     />
 
     <VCard

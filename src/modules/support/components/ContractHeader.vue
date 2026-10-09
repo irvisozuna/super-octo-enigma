@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAbility } from '@casl/vue'
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Account } from '../types/Contract'
 import AccountBalanceDialog from './dialog/AccountBalanceDialog.vue'
@@ -8,11 +8,13 @@ import AccountMapDialog from './dialog/AccountMapDialog.vue'
 import AddChargeDialog from './dialog/AddChargeDialog.vue'
 import AddNoteDialog from './dialog/AddNoteDialog.vue'
 import AddWorkOrderDialog from './dialog/AddWorkOrderDialog.vue'
+import WorkOrderDetailDialog from './dialog/WorkOrderDetailDialog.vue'
+import AgreementDetails from './AgreementDetails.vue'
 import { useAppManager } from '@/composables/useAppManager'
 import DocumentosDialogo from '@/modules/reportes/components/documentos/DocumentosDialogo.vue'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 import { colorEstadoContrato } from '@/utils/estados'
-import { aNumero, entero, moneda, texto } from '@/utils/formato'
+import { aNumero, entero, fechaCorta, moneda, texto } from '@/utils/formato'
 
 /*
  * Cabecera fija de la ficha de contrato, visible en todas las pestañas: identidad (cuenta, estado, titular, ubicación
@@ -27,13 +29,19 @@ interface Dato {
   num?: boolean
 }
 
+const emit = defineEmits<{
+
+  /** Pide ir a una pestaña de la ficha (4 órdenes de trabajo, 5 convenios). */
+  pestana: [indice: number]
+}>()
+
 const { t } = useI18n()
 const ability = useAbility()
 const store = useContractStore()
 const { openDialog } = useAppManager()
 
 const contrato = computed<Account | null>(() => store.item)
-const dialogos = reactive({ mapa: false, orden: false, saldo: false, cargo: false, nota: false })
+const dialogos = reactive({ mapa: false, orden: false, saldo: false, cargo: false, nota: false, ultimaOrden: false, convenio: false })
 const puedeDocumentos = computed(() => ability.can('generate', 'documentos'))
 
 const ubicacion = computed<Dato[]>(() => {
@@ -50,6 +58,63 @@ const ubicacion = computed<Dato[]>(() => {
 
 const mesesAdeudo = computed(() => Number(contrato.value?.months_debt) || 0)
 const adeuda = computed(() => (aNumero(contrato.value?.debt) ?? 0) > 0 || mesesAdeudo.value > 0)
+
+/*
+ * Última orden de trabajo y convenio activo, con su detalle a un clic. La referencia de orden que trae el contrato no
+ * dice cuál es (la consulta toma una sin ordenar, en la práctica la más antigua), así que aquí se pide la lista, que
+ * viene de la más reciente a la más antigua, y se muestra la primera.
+ */
+const ultimaOrden = ref<Record<string, any> | null>(null)
+const totalOrdenes = ref(0)
+const convenioActivo = ref<Record<string, any> | null>(null)
+let consulta = 0
+
+async function cargarResumen() {
+  const id = contrato.value?.id_account
+  const n = ++consulta
+
+  ultimaOrden.value = null
+  totalOrdenes.value = 0
+  convenioActivo.value = null
+  if (!id)
+    return
+
+  const refConvenio = contrato.value?.ref_agreement
+
+  const [ordenes, convenios] = await Promise.all([
+    store.getWorkOrdersByContract(String(id), { limit: 1, page: 1 }).catch(() => null),
+    refConvenio ? store.getAgreementsByContract(String(id), { limit: 50, page: 1 }).catch(() => null) : Promise.resolve(null),
+  ])
+
+  if (n !== consulta)
+    return
+  ultimaOrden.value = ordenes?.data?.[0] ?? null
+  totalOrdenes.value = ordenes?.pagination?.total ?? 0
+  convenioActivo.value = (convenios?.data ?? []).find((c: Record<string, any>) => c.ref === refConvenio) ?? null
+}
+
+watch(() => [contrato.value?.id_account, contrato.value?.ref_agreement], cargarResumen, { immediate: true })
+
+const refOrden = computed(() => ultimaOrden.value?.ref ?? null)
+const apoyoOrden = computed(() => (ultimaOrden.value ? t('support.ficha.ordenesTotal', { fecha: fechaCorta(ultimaOrden.value.datec), n: entero(totalOrdenes.value) }) : ''))
+
+const apoyoConvenio = computed(() => {
+  const c = contrato.value
+  if (!c?.ref_agreement || !c.letters_agreement)
+    return ''
+
+  return t('support.ficha.convenioAvance', { p: entero(c.paid_letters_agreement), n: entero(c.letters_agreement), saldo: moneda(c.debt_agreement) })
+})
+
+function irAPestana(indice: number) {
+  dialogos.ultimaOrden = false
+  dialogos.convenio = false
+  emit('pestana', indice)
+}
+
+async function alCrearOrden() {
+  await cargarResumen()
+}
 
 function abrirDocumentos() {
   openDialog(DocumentosDialogo, { contrato: String(contrato.value?.account ?? ''), nombre: contrato.value?.nameuser ?? undefined }, { width: '1100px' })
@@ -187,28 +252,82 @@ async function recargar() {
         <dt class="cabecera__cifra-etiqueta">
           {{ t('support.ficha.convenioActivo') }}
         </dt>
+        <dd class="cabecera__cifra-valor as-num">
+          <button
+            v-if="contrato.ref_agreement"
+            type="button"
+            class="cabecera__enlace"
+            :title="t('support.ficha.verDetalle', { que: contrato.ref_agreement })"
+            @click="dialogos.convenio = true"
+          >
+            {{ contrato.ref_agreement }}
+            <VIcon
+              icon="tabler-chevron-right"
+              size="16"
+            />
+          </button>
+          <span
+            v-else
+            class="cabecera__cifra-valor--vacio"
+          >{{ t('support.ficha.sinConvenio') }}</span>
+        </dd>
         <dd
-          class="cabecera__cifra-valor as-num"
-          :class="{ 'cabecera__cifra-valor--vacio': !contrato.ref_agreement }"
+          v-if="apoyoConvenio"
+          class="cabecera__cifra-apoyo as-num"
         >
-          {{ contrato.ref_agreement || t('support.ficha.sinConvenio') }}
+          {{ apoyoConvenio }}
         </dd>
       </div>
       <div class="cabecera__cifra">
         <dt class="cabecera__cifra-etiqueta">
-          {{ t('support.ficha.ordenTrabajo') }}
+          {{ t('support.ficha.ultimaOrden') }}
         </dt>
+        <dd class="cabecera__cifra-valor as-num">
+          <button
+            v-if="refOrden"
+            type="button"
+            class="cabecera__enlace"
+            :title="t('support.ficha.verDetalle', { que: refOrden })"
+            @click="dialogos.ultimaOrden = true"
+          >
+            {{ refOrden }}
+            <VIcon
+              icon="tabler-chevron-right"
+              size="16"
+            />
+          </button>
+          <span
+            v-else
+            class="cabecera__cifra-valor--vacio"
+          >{{ t('support.ficha.sinOrden') }}</span>
+        </dd>
         <dd
-          class="cabecera__cifra-valor as-num"
-          :class="{ 'cabecera__cifra-valor--vacio': !contrato.ref }"
+          v-if="apoyoOrden"
+          class="cabecera__cifra-apoyo as-num"
         >
-          {{ contrato.ref || t('support.ficha.sinOrden') }}
+          {{ apoyoOrden }}
         </dd>
       </div>
     </dl>
 
     <AccountMapDialog v-model:abierto="dialogos.mapa" />
-    <AddWorkOrderDialog v-model:abierto="dialogos.orden" />
+    <AddWorkOrderDialog
+      v-model:abierto="dialogos.orden"
+      @guardado="alCrearOrden"
+    />
+    <WorkOrderDetailDialog
+      v-model:abierto="dialogos.ultimaOrden"
+      :orden="ultimaOrden"
+      :total="totalOrdenes"
+      @ver-todas="irAPestana(4)"
+    />
+    <AgreementDetails
+      v-model:abierto="dialogos.convenio"
+      :pagos="convenioActivo?.details ?? []"
+      :convenio="convenioActivo ?? { ref: contrato.ref_agreement }"
+      enlace-lista
+      @ver-todos="irAPestana(5)"
+    />
     <AccountBalanceDialog v-model:abierto="dialogos.saldo" />
     <AddChargeDialog
       v-model:abierto="dialogos.cargo"
@@ -318,6 +437,31 @@ async function recargar() {
   font-weight: var(--as-peso-semi);
   line-height: 1.3;
   margin-block-end: 0;
+}
+
+.cabecera__cifra-apoyo {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-xs);
+  line-height: 1.4;
+  margin-block-end: 0;
+}
+
+/* Cifra con detalle: se lee como dato y se comporta como enlace */
+.cabecera__enlace {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgb(var(--v-theme-primary));
+  cursor: pointer;
+  font: inherit;
+  gap: 2px;
+}
+
+.cabecera__enlace:hover,
+.cabecera__enlace:focus-visible {
+  text-decoration: underline;
 }
 
 .cabecera__cifra--alerta .cabecera__cifra-valor {

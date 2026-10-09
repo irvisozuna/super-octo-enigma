@@ -162,3 +162,6 @@ export const COLOR_PRIORIDAD_ORDEN: Record<string, string> = { LOW: 'secondary',
 export function colorPagoConvenio(status: number, vencido: boolean): string {
   return status === 4 ? 'success' : vencido ? 'error' : 'warning'
 }
+
+/** Estado de una orden de trabajo (ticket de Aquasoft Comercial, campo `fk_statut`). */
+export const COLOR_ESTADO_ORDEN: Record<string, string> = { 0: 'warning', 1: 'info', 2: 'info', 3: 'primary', 5: 'warning', 7: 'warning', 8: 'success', 9: 'secondary' }

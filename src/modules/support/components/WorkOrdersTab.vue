@@ -5,7 +5,7 @@ import { useListaContrato } from '../composables/useListaContrato'
 import { useContractStore } from '../stores/contractStore'
 import MensajeDialogo from './MensajeDialogo.vue'
 import type { ColumnaTabla } from '@/components/as/tipos'
-import { COLOR_PRIORIDAD_ORDEN, colorDe } from '@/utils/estados'
+import { COLOR_ESTADO_ORDEN, COLOR_PRIORIDAD_ORDEN, colorDe } from '@/utils/estados'
 
 /* Órdenes de trabajo del contrato (tickets de Aquasoft Comercial): prioridad, tipo, resolución y mensajes completos. */
 const props = defineProps<{ activa: boolean }>()
@@ -30,7 +30,7 @@ const columnas = computed<ColumnaTabla[]>(() => [
   { clave: 'reported_by', titulo: t('support.ordenes.autor'), formato: 'texto', truncar: true, ancho: 160 },
   { clave: 'message', titulo: t('support.ordenes.mensaje'), formato: 'personalizado', anchoMin: 220 },
   { clave: 'closed_comments', titulo: t('support.ordenes.cierre'), formato: 'texto', truncar: true },
-  { clave: 'status', titulo: t('support.ordenes.estado'), formato: 'texto', ancho: 120 },
+  { clave: 'fk_statut', titulo: t('support.ordenes.estado'), formato: 'estado', ancho: 140, colorEstado: v => colorDe(COLOR_ESTADO_ORDEN, String(v)), textoEstado: v => (te(`support.ordenes.estados.${String(v)}`) ? t(`support.ordenes.estados.${String(v)}`) : String(v ?? '—')) },
 ].map(c => ({ ...c, ordenable: false })))
 
 function verMensaje(html: string) {

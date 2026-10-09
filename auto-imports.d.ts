@@ -11,6 +11,7 @@ declare global {
   const COLOR_CONFIANZA: typeof import('./src/utils/estados')['COLOR_CONFIANZA']
   const COLOR_CONVENIO: typeof import('./src/utils/estados')['COLOR_CONVENIO']
   const COLOR_ESTADO_ALERTA: typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']
+  const COLOR_ESTADO_ORDEN: typeof import('./src/utils/estados')['COLOR_ESTADO_ORDEN']
   const COLOR_EXPORTACION: typeof import('./src/utils/estados')['COLOR_EXPORTACION']
   const COLOR_PRIORIDAD_ORDEN: typeof import('./src/utils/estados')['COLOR_PRIORIDAD_ORDEN']
   const COLOR_PROPUESTA: typeof import('./src/utils/estados')['COLOR_PROPUESTA']
@@ -19,6 +20,7 @@ declare global {
   const COOKIE_MAX_AGE_1_YEAR: typeof import('./src/utils/constants')['COOKIE_MAX_AGE_1_YEAR']
   const CreateUrl: typeof import('./src/@core/composable/CreateUrl')['CreateUrl']
   const EffectScope: typeof import('vue')['EffectScope']
+  const ORDEN_ABIERTA: typeof import('./src/utils/estados')['ORDEN_ABIERTA']
   const TOKEN_LECTURISTA: typeof import('./src/utils/estados')['TOKEN_LECTURISTA']
   const TOKEN_SECTOR: typeof import('./src/utils/estados')['TOKEN_SECTOR']
   const TOKEN_SEVERIDAD: typeof import('./src/utils/estados')['TOKEN_SEVERIDAD']
@@ -426,6 +428,7 @@ declare module 'vue' {
     readonly COLOR_CONFIANZA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_CONFIANZA']>
     readonly COLOR_CONVENIO: UnwrapRef<typeof import('./src/utils/estados')['COLOR_CONVENIO']>
     readonly COLOR_ESTADO_ALERTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_ESTADO_ALERTA']>
+    readonly COLOR_ESTADO_ORDEN: UnwrapRef<typeof import('./src/utils/estados')['COLOR_ESTADO_ORDEN']>
     readonly COLOR_EXPORTACION: UnwrapRef<typeof import('./src/utils/estados')['COLOR_EXPORTACION']>
     readonly COLOR_PRIORIDAD_ORDEN: UnwrapRef<typeof import('./src/utils/estados')['COLOR_PRIORIDAD_ORDEN']>
     readonly COLOR_PROPUESTA: UnwrapRef<typeof import('./src/utils/estados')['COLOR_PROPUESTA']>

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { colorPagoConvenio } from '@/utils/estados'
-import { aFecha, fecha, hoyLocal } from '@/utils/formato'
+import { aFecha, entero, fecha, hoyLocal, moneda, texto } from '@/utils/formato'
 
 /* Parcialidades de un convenio: resumen (pagadas, vencidas, pendientes) y la tabla de pagos. */
 export interface PagoConvenio {
@@ -25,10 +25,17 @@ export interface PagoConvenio {
 const props = defineProps<{
   abierto: boolean
   pagos: PagoConvenio[]
+
+  /** Datos del convenio (folio, importes, fechas); con ellos el diálogo muestra el resumen arriba. */
+  convenio?: Record<string, any> | null
+
+  /** Muestra el enlace a la pestaña de convenios (cuando se abre desde la cabecera). */
+  enlaceLista?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:abierto': [valor: boolean]
+  'verTodos': []
 }>()
 
 const { t } = useI18n()
@@ -39,6 +46,23 @@ function vencido(p: PagoConvenio): boolean {
 
   return p.status !== 4 && !!limite && limite.toISOString().slice(0, 10) < hoyLocal()
 }
+
+const datosConvenio = computed(() => {
+  const c = props.convenio
+  if (!c)
+    return []
+
+  return [
+    { etiqueta: t('support.convenios.tipo'), valor: texto(c.type) },
+    { etiqueta: t('support.convenios.saldoAnterior'), valor: moneda(c.previous_balance), num: true },
+    { etiqueta: t('support.convenios.montoAnticipo'), valor: moneda(c.advance_amount), num: true },
+    { etiqueta: t('support.convenios.saldoConvenido'), valor: moneda(c.agreed_balance), num: true },
+    { etiqueta: t('support.convenios.numeroPagos'), valor: `${entero(c.number_payments)} · ${texto(c.pay_frecuency)}`, num: true },
+    { etiqueta: t('support.convenios.montoPago'), valor: moneda(c.payment_amount), num: true },
+    { etiqueta: t('support.convenios.inicio'), valor: fecha(c.payment_start_date), num: true },
+    { etiqueta: t('support.convenios.liquidacion'), valor: fecha(c.settlement_date), num: true },
+  ]
+})
 
 const resumen = computed(() => ({
   total: props.pagos.length,
@@ -65,10 +89,32 @@ const columnas = computed<ColumnaTabla<PagoConvenio>[]>(() => [
   <AsDialogo
     :abierto="abierto"
     :titulo="t('support.convenios.detalleTitulo')"
+    :subtitulo="convenio?.ref ?? undefined"
     tamano="xl"
     variante="informativo"
     @update:abierto="(v: boolean) => emit('update:abierto', v)"
   >
+    <dl
+      v-if="datosConvenio.length"
+      class="as-datos mb-4"
+    >
+      <div
+        v-for="d in datosConvenio"
+        :key="d.etiqueta"
+        class="as-dato"
+      >
+        <dt class="as-etiqueta">
+          {{ d.etiqueta }}
+        </dt>
+        <dd
+          class="as-valor mb-0"
+          :class="{ 'as-num': d.num }"
+        >
+          {{ d.valor }}
+        </dd>
+      </div>
+    </dl>
+
     <VRow
       dense
       class="mb-4"
@@ -139,5 +185,17 @@ const columnas = computed<ColumnaTabla<PagoConvenio>[]>(() => [
         >{{ fecha(fila.due_date) }}</span>
       </template>
     </AsTablaDatos>
+
+    <template
+      v-if="enlaceLista"
+      #acciones-inicio
+    >
+      <AsBtnTerciario
+        prepend-icon="tabler-file-like"
+        @click="emit('verTodos')"
+      >
+        {{ t('support.convenios.verTodos') }}
+      </AsBtnTerciario>
+    </template>
   </AsDialogo>
 </template>
