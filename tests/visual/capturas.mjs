@@ -77,6 +77,7 @@ const PANTALLAS = [
   { id: 'alcances', ruta: '/monitoreo/admin/alcances' },
   { id: 'quiosco', ruta: '/monitoreo/quiosco', espera: 6000 },
   { id: 'reportes-indice', ruta: '/reportes' },
+  { id: 'reporte-ordenes', ruta: '/reportes/ordenes_trabajo', espera: 6000 },
   { id: 'reporte-visor', ruta: '/reportes/refacturacion_por_lectura', espera: 4000 },
   { id: 'tablero-lecturas', ruta: '/reportes/tableros/lecturas', espera: 4000 },
   { id: 'tablero-ingresos', ruta: '/reportes/tableros/ingresos', espera: 9000 },
