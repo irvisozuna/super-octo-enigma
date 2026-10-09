@@ -7,7 +7,7 @@ import EstadoVacio from '../components/comunes/EstadoVacio.vue'
 import TareasExportacion from '../components/exportar/TareasExportacion.vue'
 import { useExportacionesStore } from '../stores/exportacionesStore'
 import { useMenuReportesStore } from '../stores/menuReportesStore'
-import type { ElementoMenu } from '../types/api'
+import type { ElementoMenu, TipoElementoMenu } from '../types/api'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -16,6 +16,10 @@ const menu = useMenuReportesStore()
 const exportaciones = useExportacionesStore()
 
 const busqueda = ref('')
+
+/** Filtro por tipo (tabla, tablero o lote): el mismo que distingue el icono de cada tarjeta. */
+const tipo = ref<TipoElementoMenu | 'todos'>('todos')
+const TIPOS: TipoElementoMenu[] = ['reporte', 'tablero', 'lote']
 const sinAcceso = computed(() => (typeof route.query.sinAcceso === 'string' ? route.query.sinAcceso : ''))
 
 /** Orden de las categorías en el índice: las de uso diario primero; las demás, alfabéticas al final. */
@@ -28,18 +32,44 @@ const categoriasOrdenadas = computed(() => [...menu.categorias].sort((a, b) => {
   return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb) || a.nombre.localeCompare(b.nombre, 'es')
 }))
 
+const coincideBusqueda = (e: ElementoMenu, q: string) => !q || e.titulo.toLowerCase().includes(q) || (e.descripcion ?? '').toLowerCase().includes(q)
+
 const categoriasFiltradas = computed(() => {
   const q = busqueda.value.trim().toLowerCase()
-  if (!q)
+  if (!q && tipo.value === 'todos')
     return categoriasOrdenadas.value
 
   return categoriasOrdenadas.value
     .map(categoria => ({
       ...categoria,
-      elementos: categoria.elementos.filter(e => e.titulo.toLowerCase().includes(q) || (e.descripcion ?? '').toLowerCase().includes(q)),
+      elementos: categoria.elementos.filter(e => (tipo.value === 'todos' || e.tipo === tipo.value) && coincideBusqueda(e, q)),
     }))
     .filter(categoria => categoria.elementos.length > 0)
 })
+
+/** Cuántos hay de cada tipo con la búsqueda vigente; solo se ofrecen los tipos que el usuario tiene. */
+const conteos = computed(() => {
+  const q = busqueda.value.trim().toLowerCase()
+  const n: Record<string, number> = { todos: 0, reporte: 0, tablero: 0, lote: 0 }
+  for (const c of menu.categorias) {
+    for (const e of c.elementos) {
+      if (coincideBusqueda(e, q)) {
+        n.todos++
+        n[e.tipo]++
+      }
+    }
+  }
+
+  return n
+})
+
+const tiposDisponibles = computed(() => TIPOS.filter(x => menu.categorias.some(c => c.elementos.some(e => e.tipo === x))))
+const filtrosActivos = computed(() => (tipo.value !== 'todos' ? 1 : 0) + (busqueda.value.trim() ? 1 : 0))
+
+function limpiarFiltros() {
+  tipo.value = 'todos'
+  busqueda.value = ''
+}
 
 const hayElementos = computed(() => menu.categorias.some(c => c.elementos.length > 0) || menu.documentos.length > 0)
 
@@ -61,23 +91,52 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-6">
-      <div>
-        <h4 class="text-h4 mb-1">
-          {{ t('reportes.indice.titulo') }}
-        </h4>
-        <p class="text-body-1 text-medium-emphasis mb-0">
-          {{ t('reportes.indice.descripcion') }}
-        </p>
-      </div>
-      <AppTextField
-        v-model="busqueda"
-        :placeholder="t('reportes.indice.buscar')"
-        prepend-inner-icon="tabler-search"
-        clearable
-        class="indice-busqueda"
-      />
-    </div>
+    <AsEncabezadoPagina
+      :titulo="t('reportes.indice.titulo')"
+      :descripcion="t('reportes.indice.descripcion')"
+    />
+
+    <AsBarraFiltros
+      v-if="menu.cargado && hayElementos"
+      class="mb-4"
+      :activos="filtrosActivos"
+      @limpiar="limpiarFiltros"
+    >
+      <template #inicio>
+        <VChipGroup
+          v-if="tiposDisponibles.length > 1"
+          v-model="tipo"
+          mandatory
+          :aria-label="t('reportes.indice.filtroTipo')"
+        >
+          <VChip
+            value="todos"
+            filter
+          >
+            {{ t('reportes.indice.tipos.todos') }}&nbsp;·&nbsp;<span class="as-num">{{ conteos.todos }}</span>
+          </VChip>
+          <VChip
+            v-for="x in tiposDisponibles"
+            :key="x"
+            :value="x"
+            :prepend-icon="ICONOS[x]"
+            filter
+          >
+            {{ t(`reportes.indice.tipos.${x}`) }}&nbsp;·&nbsp;<span class="as-num">{{ conteos[x] }}</span>
+          </VChip>
+        </VChipGroup>
+      </template>
+      <template #fin>
+        <VTextField
+          v-model="busqueda"
+          :placeholder="t('reportes.indice.buscar')"
+          :aria-label="t('reportes.indice.buscar')"
+          prepend-inner-icon="tabler-search"
+          clearable
+          class="as-filtro--lg"
+        />
+      </template>
+    </AsBarraFiltros>
 
     <VAlert
       v-if="sinAcceso"
@@ -136,6 +195,7 @@ onMounted(() => {
               <VListItem
                 :to="destino(elemento)"
                 :prepend-icon="ICONOS[elemento.tipo]"
+                :aria-label="`${t(`reportes.indice.tipo.${elemento.tipo}`)}: ${elemento.titulo}`"
                 :title="elemento.titulo"
                 :subtitle="elemento.descripcion ?? undefined"
                 lines="two"
@@ -147,12 +207,13 @@ onMounted(() => {
         </VCardText>
       </VCard>
 
-      <p
-        v-if="busqueda && categoriasFiltradas.length === 0"
-        class="text-medium-emphasis mt-4"
-      >
-        {{ t('reportes.indice.sinResultados') }}
-      </p>
+      <AsEstado
+        v-if="filtrosActivos && categoriasFiltradas.length === 0"
+        tipo="vacio"
+        :titulo="t('reportes.indice.sinResultados')"
+        detalle=""
+        icono="tabler-report-search"
+      />
 
       <VCard
         v-if="menu.documentos.length"
@@ -180,11 +241,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.indice-busqueda {
-  inline-size: 100%;
-  max-inline-size: 320px;
-}
-
 .indice-elemento {
   block-size: 100%;
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));

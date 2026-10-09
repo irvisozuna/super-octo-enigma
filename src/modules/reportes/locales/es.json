@@ -9,7 +9,7 @@
     "titulo": "Reportes",
     "descripcion": "Consulta y exporta los reportes a los que tienes acceso.",
     "buscar": "Buscar reporte",
-    "sinResultados": "Ningún reporte coincide con la búsqueda.",
+    "sinResultados": "Ningún reporte coincide con el filtro.",
     "sinAcceso": "No tienes acceso al reporte \"{clave}\" o ya no existe.",
     "vacioTitulo": "Todavía no tienes reportes asignados",
     "vacioDetalle": "Pide al equipo de sistemas que asigne a tu rol los reportes de tu área.",
@@ -19,6 +19,13 @@
       "reporte": "Reporte",
       "tablero": "Tablero",
       "lote": "Lote"
+    },
+    "filtroTipo": "Tipo de reporte",
+    "tipos": {
+      "todos": "Todos",
+      "reporte": "Tablas",
+      "tablero": "Tableros y gráficas",
+      "lote": "Lotes de documentos"
     }
   },
   "visor": {
