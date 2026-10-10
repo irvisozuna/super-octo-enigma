@@ -1,0 +1,53 @@
+name: Comprobación (oomsapas)
+
+# Solo comprueba; no despliega. El despliegue lo hace el servidor (está tras VPN y GitHub no puede entrar):
+# ver ops/ en el repositorio del backend.
+on:
+  push:
+    branches: [oomsapas, design-system, oomsapas-monitoreo]
+  pull_request:
+    branches: [oomsapas]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # Node 22: con Node 24 falla la generación de iconos del postinstall
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Construcción de producción
+        env:
+          VITE_API_BASE_URL: https://api-aquasoft.oomsapaslc.gob.mx/api
+          VITE_API_ORGANIZATION: oomsapas
+          VITE_REPORTES_MOCK: 'false'
+        run: pnpm exec vite build
+
+      - name: El paquete no apunta a un entorno local
+        run: '! grep -rqE "localhost:8090|127\.0\.0\.1:8090" dist/assets'
+
+      # Sin bloquear todavía: hay fallos previos conocidos (TS2688 de vite/client, cinco archivos de la plantilla
+      # y una prueba de useAppManager). Cuando se limpien, quitar continue-on-error.
+      - name: Tipos
+        continue-on-error: true
+        run: pnpm exec vue-tsc --noEmit -p tsconfig.json
+
+      - name: Pruebas unitarias
+        continue-on-error: true
+        run: pnpm exec vitest run
