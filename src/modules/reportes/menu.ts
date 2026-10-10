@@ -28,6 +28,7 @@ const reportesMenu: VerticalNavItems = [
           { title: 'Reportes', to: 'reportesAdminReportes', action: 'manage', subject: 'reportes-admin' },
           { title: 'Tableros', to: 'reportesAdminTableros', action: 'manage', subject: 'reportes-admin' },
           { title: 'Permisos por rol', to: 'reportesAdminPermisos', action: 'manage', subject: 'reportes-admin' },
+          { title: 'Usuarios y roles', to: 'reportesAdminUsuarios', action: 'manage', subject: 'reportes-admin' },
         ],
       },
     ],

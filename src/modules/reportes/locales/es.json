@@ -282,6 +282,29 @@
       "limiteFilas": "Máximo de filas",
       "agruparPor": "Agrupar por",
       "tituloWidget": "Título"
+    },
+    "usuarios": {
+      "titulo": "Usuarios y roles",
+      "descripcion": "Asigna a cada persona el rol con el que trabaja. Los usuarios aparecen aquí después de iniciar sesión por primera vez con su cuenta de Aquasoft Comercial.",
+      "irPermisos": "Permisos por rol",
+      "usuario": "Usuario",
+      "roles": "Roles",
+      "ultimaActividad": "Última actividad",
+      "sinRol": "Sin rol asignado",
+      "sinActividad": "Sin actividad",
+      "tu": "Tú",
+      "cambiar": "Cambiar roles",
+      "todosRoles": "Todos los roles",
+      "filtroRol": "Filtrar por rol",
+      "buscar": "Buscar usuario",
+      "vacioTitulo": "No hay usuarios con esos filtros",
+      "vacioDetalle": "Quita los filtros o pide a la persona que inicie sesión una vez para que aparezca aquí.",
+      "dialogoTitulo": "Roles del usuario",
+      "guardar": "Guardar roles",
+      "guardado": "Roles de {usuario} guardados.",
+      "ayudaBase": "Acceso base: consulta de contratos en Soporte.",
+      "ayudaAdmin": "Acceso total al sistema. Solo otro administrador puede otorgarlo o quitarlo.",
+      "aplica": "El cambio aplica cuando la persona recarga la página o vuelve a iniciar sesión. Qué ve cada rol se define en Permisos por rol."
     }
   },
   "lote": {

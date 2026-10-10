@@ -82,6 +82,31 @@ export interface RespuestaPermisosRol {
   permisos: string[]
 }
 
+/** GET /reporting/admin/users */
+export interface RolUsuarios {
+  id: string
+  nombre: string
+  es_admin: boolean
+
+  /** El rol admin solo lo otorga o quita otro admin. */
+  asignable: boolean
+  usuarios: number
+}
+
+export interface UsuarioRoles {
+  id: string
+  usuario: string
+  nombre: string | null
+  roles: string[]
+  ultima_actividad: string | null
+  soy_yo: boolean
+}
+
+export interface ListaUsuariosRoles {
+  roles: RolUsuarios[]
+  usuarios: UsuarioRoles[]
+}
+
 /** Widget tal como se guarda (mismas llaves que el archivo JSON). */
 export interface DefinicionWidget {
   key: string

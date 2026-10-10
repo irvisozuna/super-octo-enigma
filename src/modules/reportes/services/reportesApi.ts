@@ -1,7 +1,7 @@
 import type { RespuestaAbilities, RespuestaMenu } from '../types/api'
 import type { DocumentoDef, DocumentoGenerado, LoteConfig, LoteConteo, LoteCreado, SolicitudDocumento } from '../types/documento'
 import type { Ejecucion, ExportacionCreada, SolicitudExportacion, UrlFirmada } from '../types/exportacion'
-import type { DefinicionReporte, DefinicionTablero, FuenteResumen, MatrizPermisos, ReporteAdmin, RespuestaPermisosRol, TableroAdmin } from '../types/admin'
+import type { DefinicionReporte, DefinicionTablero, FuenteResumen, ListaUsuariosRoles, MatrizPermisos, ReporteAdmin, RespuestaPermisosRol, TableroAdmin } from '../types/admin'
 import type { ConsultaEnCurso, Opcion, ParametrosConsulta, ReporteConfig, ResultadoConsulta, ValoresFiltros } from '../types/reporte'
 import type { DatosWidget, SolicitudDatosWidget, TableroConfig } from '../types/tablero'
 import { rawApi } from '@/services/api'
@@ -129,6 +129,14 @@ export function obtenerMatrizPermisos({ signal }: OpcionesPeticion = {}): Promis
 
 export function actualizarPermisosRol(rol: string, permisos: string[]): Promise<RespuestaPermisosRol> {
   return rawApi(`${BASE}/admin/roles/${encodeURIComponent(rol)}/grants`, { method: 'PUT', body: { permisos } })
+}
+
+export function obtenerUsuariosRoles({ signal }: OpcionesPeticion = {}): Promise<ListaUsuariosRoles> {
+  return rawApi(`${BASE}/admin/users`, { signal })
+}
+
+export function actualizarRolesUsuario(id: string, roles: string[]): Promise<{ id: string; roles: string[] }> {
+  return rawApi(`${BASE}/admin/users/${encodeURIComponent(id)}/roles`, { method: 'PUT', body: { roles } })
 }
 
 export function obtenerTablero(clave: string, { signal }: OpcionesPeticion = {}): Promise<TableroConfig> {

@@ -48,6 +48,12 @@ const reportesRoutes: RouteRecordRaw[] = [
     meta: { action: 'manage', subject: 'reportes-admin' },
   },
   {
+    path: '/reportes/admin/usuarios',
+    name: 'reportesAdminUsuarios',
+    component: () => import('./views/admin/UsuariosRoles.vue'),
+    meta: { action: 'manage', subject: 'reportes-admin' },
+  },
+  {
     path: '/reportes/admin/permisos',
     name: 'reportesAdminPermisos',
     component: () => import('./views/admin/PermisosRoles.vue'),
