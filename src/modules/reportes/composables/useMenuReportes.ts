@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import { useMenuReportesStore } from '../stores/menuReportesStore'
 import type { ElementoMenu } from '../types/api'
 import { useCookie } from '@core/composable/useCookie'
@@ -30,6 +31,7 @@ export function useMenuReportes() {
           { title: 'Reportes', to: 'reportesAdminReportes', action: 'manage', subject: 'reportes-admin' },
           { title: 'Tableros', to: 'reportesAdminTableros', action: 'manage', subject: 'reportes-admin' },
           { title: 'Permisos por rol', to: 'reportesAdminPermisos', action: 'manage', subject: 'reportes-admin' },
+          { title: 'Usuarios y roles', to: 'reportesAdminUsuarios', action: 'manage', subject: 'reportes-admin' },
         ],
       })
     }
@@ -56,6 +58,8 @@ export function useMenuReportes() {
   }
 
   async function recargar() {
+    // El login actualiza las habilidades antes de guardar el token: se espera a que termine ese mismo ciclo
+    await nextTick()
     if (!useCookie('accessToken').value || !ability.can('read', 'reportes')) {
       reportes.limpiar()
       aplicar()

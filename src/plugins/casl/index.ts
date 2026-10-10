@@ -1,24 +1,16 @@
-import { createMongoAbility } from '@casl/ability';
-import { abilitiesPlugin } from '@casl/vue';
-import type { App } from 'vue';
-import type { Rule } from './ability';
+import { abilitiesPlugin } from '@casl/vue'
+import type { App } from 'vue'
+import { ability } from './ability'
+import type { Rule } from './ability'
 
 export default function (app: App) {
-  const userAbilityRules = useCookie<Rule[]>('userAbilityRules');
+  const userAbilityRules = useCookie<Rule[]>('userAbilityRules')
 
-  // Define habilidades globales (por ejemplo, acceso a rutas públicas)
-  const globalRules: Rule[] = [
-    // { action: 'read', subject: 'Profile' }, // Todos pueden leer el perfil
-  ];
+  // Una sola instancia para toda la app: la misma que importan los módulos (menú de reportes, guardas) y la que
+  // devuelve useAbility(). Con dos instancias, el menú consultaba una vacía y no mostraba lo que el rol permite.
+  ability.update(userAbilityRules.value ?? [])
 
-  // Combina las habilidades globales con las habilidades específicas del usuario
-  const initialAbility = createMongoAbility([
-    ...globalRules,
-    ...(userAbilityRules.value ?? []), // Reglas cargadas dinámicamente
-  ]);
-
-  // Configura el plugin de CASL para Vue
-  app.use(abilitiesPlugin, initialAbility, {
+  app.use(abilitiesPlugin, ability, {
     useGlobalProperties: true, // Hacer `ability` accesible en todo el app
-  });
+  })
 }
