@@ -68,6 +68,7 @@ const reportesRoutes: RouteRecordRaw[] = [
     component: () => import('./views/TableroVista.vue'),
     props: true,
     meta: {
+      navActiveLink: 'reportesIndice',
       action: 'read',
       subject: 'tableros',
     },
@@ -87,6 +88,7 @@ const reportesRoutes: RouteRecordRaw[] = [
     component: () => import('./views/DocumentoLote.vue'),
     props: true,
     meta: {
+      navActiveLink: 'reportesIndice',
       action: 'generate',
       subject: 'documentos',
     },
@@ -105,6 +107,7 @@ const reportesRoutes: RouteRecordRaw[] = [
     component: () => import('./views/ReporteVisor.vue'),
     props: true,
     meta: {
+      navActiveLink: 'reportesIndice',
       action: 'read',
       subject: 'reportes',
     },
