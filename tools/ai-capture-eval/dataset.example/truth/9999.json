@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "source_image": "9999.jpg",
+    "reviewed_by_human": true,
+    "notes": ["Datos ficticios, solo para mostrar el formato."]
+  },
+  "folio": "9999",
+  "fecha": "2026-01-15",
+  "turno": "Noche",
+  "horas_trabajadas": 12,
+  "faena": {
+    "centro_costo": null,
+    "lugar": "Mina Ejemplo",
+    "equipo": "CDK-0000",
+    "operador": "Juan Pérez",
+    "ayudante_1": { "$any": ["Pedro López", "Pedro Lopes"] },
+    "ayudante_2": null,
+    "otro": null
+  },
+  "pozo": {
+    "numero": "VPO-00-01",
+    "sector": "Sector Ejemplo",
+    "diametro": "NQ",
+    "inclinacion": -60,
+    "prof_inicial": 100,
+    "prof_final": 106,
+    "mts_perforados": 6
+  },
+  "parametros": { "pull_down": 2000, "rpm": 2000 },
+  "horometro": { "inicial": 1000.5, "final": 1010.5, "total_horas": 10 },
+  "consumos": [{ "item": "petroleo", "unidad": "100", "envase": "litros" }],
+  "perforacion": [
+    { "desde": 100, "hasta": 103, "mts_perforados": 3, "recuperacion": 3, "tipo_roca": null, "dureza": null },
+    { "desde": 103, "hasta": 106, "mts_perforados": 3, "recuperacion": 2.9, "tipo_roca": null, "dureza": null }
+  ],
+  "perforacion_totales": { "mts_perforados": 6, "recuperacion": 5.9 },
+  "perforacion_notas": [],
+  "actividades": [
+    { "desde": "7:00", "hasta": "8:00", "descripcion": "Mantención", "horas_cdk": 1, "horas_cliente": null },
+    { "desde": "8:00", "hasta": "7:00", "descripcion": "Perforando", "horas_cdk": 11, "horas_cliente": null }
+  ],
+  "actividades_total_horas": 12,
+  "aceros": {
+    "broca": [{ "diametro": "NQ", "no_serie": "00000/00", "serie_color": null, "desde": 100, "hasta": 106, "nota": null }],
+    "tricono": [],
+    "escareador": []
+  },
+  "rebaje_herramientas": [],
+  "accesorios": [{ "accesorio": null, "cantidad": 1, "proveedor": null, "observaciones": "Zapata" }],
+  "casing": [],
+  "aditivos": [],
+  "firmas": { "operador": { "$skip": "firma ilegible" }, "supervision_firmado": false, "cliente_firmado": false },
+  "observaciones": "Se realiza mantención y se perfora dejando turno operativo.",
+  "campos_dudosos": []
+}

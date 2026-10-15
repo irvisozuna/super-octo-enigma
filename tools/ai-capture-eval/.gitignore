@@ -1,0 +1,6 @@
+# Datos reales: fotos y transcripciones contienen nombres de personal y datos del cliente.
+# El repo es PÚBLICO: nunca subir el dataset ni los resultados.
+dataset/
+results/
+.env
+node_modules/
