@@ -19,7 +19,7 @@ jobs:
           node-version: 20
 
       - name: Instalar pnpm globalmente
-        run: npm install -g pnpm
+        run: npm install -g pnpm@10  # pnpm 11+ falla por build scripts ignorados (ERR_PNPM_IGNORED_BUILDS)
 
       - name: 📥 Instalar dependencias con pnpm
         run: pnpm install --no-frozen-lockfile
