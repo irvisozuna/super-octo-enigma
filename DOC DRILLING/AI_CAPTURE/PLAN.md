@@ -2,7 +2,7 @@
 
 **Objetivo:** que el personal tome una foto del *Reporte de Perforación Diamantina* llenado a mano en campo y el sistema cree el reporte en **borrador** con los datos ya capturados. Una persona revisa, corrige lo marcado y completa.
 
-**Estado:** Fase 0: primera medición hecha (97.5% de campos correctos con Opus 5.5). Falta revisar la transcripción de referencia y comparar modelos. Última actualización: 2026-10-15.
+**Estado:** Fase 0: medición hecha con 3 modelos (Opus 5.5: 97.5% de campos correctos y 0 errores sin resaltar). Falta revisar la transcripción de referencia y crecer el dataset. Última actualización: 2026-10-15.
 
 ---
 
@@ -87,6 +87,23 @@ Criterio para pasar a fase 1 (propuesto): ≥ 90% de campos correctos, **0 inven
 | Fecha | Modelo | Effort | Hojas | Correctos | Inventados | Costo/hoja | Latencia | Notas |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-15 | `claude-opus-5-5` | medium | 6 | **97.5%** (469/481) | 6 (ver abajo) | $0.087 | 24 s | Transcripción de referencia aún sin revisar por una persona |
+| 2026-10-15 | `claude-sonnet-5-5` | medium | 6 | 95.4% (459/481) | 7 | $0.036 | 11 s | Mismo dataset |
+| 2026-10-15 | `claude-haiku-5-5` | medium | 6 | 94.8% (456/481) | 2 | $0.003 | 20 s | Mismo dataset |
+
+**Comparación de modelos.** Lo que importa no es solo el % sino cuántos errores quedan **sin resaltar**: los que no marcó la IA como dudosos ni detectó una validación, y que por eso un revisor dejaría pasar.
+
+| Modelo | Errores* | Sin resaltar | Errores en números | Costo por 1,000 hojas |
+|---|---|---|---|---|
+| Opus 5.5 | 10 | **0** | 1 (resaltado) | ~$87 |
+| Sonnet 5.5 | 21 | 2 (un nombre; una profundidad en aceros) | 6 | ~$36 |
+| Haiku 5.5 | 27 | 1 (un nombre) | 5 (todos resaltados) | ~$3 |
+
+\* Sin contar los accesorios puestos en otra columna, que fallaron igual en los tres modelos.
+
+- **Opus** es el único sin errores sin resaltar y con los números prácticamente perfectos.
+- **Sonnet** "corrigió" un error real del capturista: en el folio 1381 escribió 3 m perforados donde la hoja dice 3.60, lo que esconde el hallazgo de validación. También leyó mal la prof. inicial del 1382 (194 en vez de 197).
+- **Haiku** cuesta ~26 veces menos que Opus, pero falla más en letra cursiva y en horas: 4 horas mal leídas en el 1382, aunque las validaciones las detectaron todas. Además inventó palabras ("Traslado a dolomeras").
+- **Recomendación con lo medido hasta ahora:** usar Opus. A ~9 ¢ por hoja, el costo es menor que el tiempo de revisión que ahorra. Volver a comparar con 30–50 hojas antes de decidir, y probar la combinación "Haiku primero, Opus si las validaciones fallan".
 
 Lectura del primer resultado:
 
@@ -94,7 +111,7 @@ Lectura del primer resultado:
 - **Las validaciones encontraron lo mismo con lo que leyó la IA que con la transcripción verificada:** los 6 hallazgos de los folios 1350 y 1381.
 - **Errores reales de lectura (6):** nombres en letra cursiva (operador del 1358), `VPO` leído como `VPD` y `14A` como `14-D` (1358), equipo `H300` leído como `HD00` (1376), un dígito de un número de serie (1376) y la inclinación `34-98` dejada en blanco (1382). **La IA marcó todos como dudosos**, así que la pantalla de revisión los resaltaría. Además, la relación con catálogos (fase 2) corregiría pozo, equipo y número de serie.
 - **Los 6 "inventados" no son datos inventados:** son datos reales puestos en otra columna. En el 1376, los accesorios quedaron en la columna "Acces." en lugar de "Observaciones". En el número de serie `13445/12`, que cruza la línea entre columnas, la IA separó `13445` en "No. Serie" y `12` en "Serie/Color", y puede que tenga razón. Hay que decidir cuál lectura es la correcta al revisar la transcripción de referencia.
-- **Costo:** ~9 ¢ por hoja, arriba del estimado inicial de 5–8 ¢. Siguiente paso: correr Sonnet 5.5 y Haiku 5.5 con la misma herramienta.
+- **Costo:** ~9 ¢ por hoja, arriba del estimado inicial de 5–8 ¢.
 - **El hallazgo entre hojas no apareció con la lectura de la IA:** como leyó mal el número de pozo del 1358, no lo agrupó con el 1376. Es otra razón para relacionar con el catálogo de pozos antes de validar.
 
 **Limitación técnica encontrada:** la salida estructurada de la API (`output_config.format`) no acepta un esquema del tamaño de esta hoja. Primero rechaza más de 16 campos nullable y, ya sin nullables, responde "compiled grammar is too large". La solución que funcionó: el esquema va en el prompt, todo como texto (`""` = vacío), se valida la respuesta en código (`src/json-check.ts`) y se reintenta una vez si no cumple. El backend (fase 1) debe hacer lo mismo.
@@ -133,3 +150,4 @@ Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
 
 - **2026-10-15:** Análisis de 6 fotos reales y del módulo existente. Propuesta de arquitectura. Fase 0: herramienta de evaluación, esquema, validaciones y transcripciones de referencia. Revisión del servidor: despliegue documentado en la sección 7.
 - **2026-10-15:** Primera evaluación con Opus 5.5 (effort medium): 97.5% de campos correctos, $0.087 por hoja. La salida estructurada no admite el esquema; se cambió a esquema en el prompt + validación.
+- **2026-10-15:** Comparación con Sonnet 5.5 (95.4%, $0.036 por hoja) y Haiku 5.5 (94.8%, $0.003 por hoja). Opus es el único sin errores sin resaltar.
