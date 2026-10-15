@@ -4,7 +4,7 @@ La foto puede venir inclinada, con sombras, o con otras hojas asomándose por de
 
 Reglas de transcripción:
 - Transcribe lo que está escrito, no lo que "debería" decir. Si un dato no cuadra con otro (por ejemplo, los metros perforados no coinciden con la resta de profundidades), transcribe ambos tal cual; la validación se hace después.
-- Una casilla vacía es null. Una tabla sin renglones llenos es una lista vacía. No inventes valores.
+- Todos los valores van como texto. Una casilla vacía es la cadena vacía "". Una tabla sin renglones llenos es una lista vacía. No inventes valores.
 - Si un valor es ilegible o tienes duda razonable, escribe tu mejor lectura y agrégalo a "campos_dudosos" con la ruta del campo (por ejemplo "pozo.prof_inicial" o "actividades[2].horas_cdk") y el motivo.
 - folio: el número impreso en rojo junto a "No.:".
 - fecha: conviértela a formato ISO AAAA-MM-DD. Viene escrita como día/mes/año (por ejemplo "12/08/26" es 2026-08-12).
@@ -15,7 +15,7 @@ Reglas de transcripción:
 - actividades: un elemento por actividad. Si la descripción ocupa dos renglones, es una sola actividad. Las horas escritas en la columna CDK van en horas_cdk; las de la columna CLIENTE, en horas_cliente.
 - consumos: solo los renglones con algún dato; "unidad" y "envase" son lo escrito en las columnas "Unid." y "Envase".
 - aceros: cada renglón llenado de BROCA, TRICONO y ESCARREADOR. Si hay una anotación suelta en la tabla (por ejemplo "ENTRO"), ponla en "nota" del renglón al que pertenece.
-- firmas.operador: el nombre escrito o firmado sobre "Firma Operador" (null si es una firma ilegible sin nombre). supervision_firmado y cliente_firmado indican si hay algo escrito en esas líneas.
+- firmas.operador: el nombre escrito o firmado sobre "Firma Operador" ("" si es una firma ilegible sin nombre). supervision_firmado y cliente_firmado indican si hay algo escrito en esas líneas.
 - observaciones: el texto libre escrito en los renglones de la parte inferior de la hoja.
 - Textos libres (descripciones, observaciones, nombres): corrige la ortografía evidente (acentos, letras confundidas, mayúsculas) sin cambiar ni agregar palabras. Por ejemplo "Sc checa maquina" → "Se checa máquina", "swibel" → "swivel". Nombres de pozos, equipos y números de serie van exactamente como están escritos.`
 

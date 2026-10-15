@@ -8,7 +8,7 @@ Es una herramienta aparte: no forma parte del build de la app ni de sus dependen
 
 ## Qué hace
 
-1. Manda cada foto a Claude con salida estructurada (`output_config.format`): la respuesta siempre es JSON válido con la forma de [`src/schema.ts`](src/schema.ts).
+1. Manda cada foto a Claude con el esquema de [`src/schema.ts`](src/schema.ts) en el prompt. La respuesta se valida con [`src/json-check.ts`](src/json-check.ts) y, si no cumple, se reintenta una vez. La salida estructurada de la API (`output_config.format`) no sirve aquí: rechaza un esquema de este tamaño ("compiled grammar is too large").
 2. Compara campo por campo contra la transcripción verificada por una persona (`dataset/truth/`).
 3. Corre las reglas de negocio de [`src/validate.ts`](src/validate.ts) (profundidades, horas, continuidad entre hojas) sobre lo que leyó la IA.
 4. Escribe `results/<fecha>_<modelo>_<effort>/report.md` con el % de campos correctos, cuántos inventó, el costo por hoja y el detalle de cada error.

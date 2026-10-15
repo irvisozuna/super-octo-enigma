@@ -69,8 +69,12 @@ export interface Extraction {
   campos_dudosos: Array<{ campo: string; valor_leido: string | null; motivo: string }>
 }
 
-const str = { type: ['string', 'null'] } as const
-const num = { type: ['number', 'null'] } as const
+/*
+ * Formato "de cable": la salida estructurada admite máximo 16 campos con tipos unión (nullable),
+ * así que el modelo responde todo como texto, con "" para casilla vacía. `fromWire()` lo convierte a `Extraction`.
+ */
+const str = { type: 'string' } as const
+const num = { type: 'string', description: 'Número con punto decimal y sin unidades, o "" si la casilla está vacía' } as const
 
 function obj(properties: Record<string, unknown>) {
   return { type: 'object', properties, required: Object.keys(properties), additionalProperties: false }
@@ -81,6 +85,63 @@ function arr(items: unknown) {
 }
 
 const acero = obj({ diametro: str, no_serie: str, serie_color: str, desde: num, hasta: num, nota: str })
+
+type Wire = Record<string, any>
+
+const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null)
+
+function number(v: unknown): number | null {
+  const s = text(v)?.replace(',', '.')
+  if (!s)
+    return null
+  const n = Number(s.replace(/[^\d.-]/g, ''))
+
+  return Number.isFinite(n) ? n : null
+}
+
+const wireAcero = (a: Wire): Acero => ({
+  diametro: text(a.diametro), no_serie: text(a.no_serie), serie_color: text(a.serie_color), desde: number(a.desde), hasta: number(a.hasta), nota: text(a.nota),
+})
+
+/** Convierte la respuesta del modelo (todo texto) al tipo `Extraction` con números y nulls. */
+export function fromWire(w: Wire): Extraction {
+  return {
+    folio: text(w.folio),
+    fecha: text(w.fecha),
+    turno: text(w.turno),
+    horas_trabajadas: number(w.horas_trabajadas),
+    faena: Object.fromEntries(Object.entries(w.faena).map(([k, v]) => [k, text(v)])) as Extraction['faena'],
+    pozo: {
+      numero: text(w.pozo.numero),
+      sector: text(w.pozo.sector),
+      diametro: text(w.pozo.diametro),
+      inclinacion: number(w.pozo.inclinacion),
+      prof_inicial: number(w.pozo.prof_inicial),
+      prof_final: number(w.pozo.prof_final),
+      mts_perforados: number(w.pozo.mts_perforados),
+    },
+    parametros: { pull_down: number(w.parametros.pull_down), rpm: number(w.parametros.rpm) },
+    horometro: { inicial: number(w.horometro.inicial), final: number(w.horometro.final), total_horas: number(w.horometro.total_horas) },
+    consumos: w.consumos.map((c: Wire) => ({ item: c.item, unidad: text(c.unidad), envase: text(c.envase) })),
+    perforacion: w.perforacion.map((r: Wire) => ({
+      desde: number(r.desde), hasta: number(r.hasta), mts_perforados: number(r.mts_perforados), recuperacion: number(r.recuperacion), tipo_roca: text(r.tipo_roca), dureza: text(r.dureza),
+    })),
+    perforacion_totales: { mts_perforados: number(w.perforacion_totales.mts_perforados), recuperacion: number(w.perforacion_totales.recuperacion) },
+    perforacion_notas: w.perforacion_notas.filter((n: string) => text(n)),
+    actividades: w.actividades.map((a: Wire) => ({
+      desde: text(a.desde), hasta: text(a.hasta), descripcion: a.descripcion, horas_cdk: number(a.horas_cdk), horas_cliente: number(a.horas_cliente),
+    })),
+    actividades_total_horas: number(w.actividades_total_horas),
+    aceros: { broca: w.aceros.broca.map(wireAcero), tricono: w.aceros.tricono.map(wireAcero), escareador: w.aceros.escareador.map(wireAcero) },
+    rebaje_herramientas: w.rebaje_herramientas.map((r: Wire) => ({ acero: text(r.acero), no_serie: text(r.no_serie), patron_desgaste: text(r.patron_desgaste) })),
+    accesorios: w.accesorios.map((a: Wire) => ({ accesorio: text(a.accesorio), cantidad: number(a.cantidad), proveedor: text(a.proveedor), observaciones: text(a.observaciones) })),
+    casing: w.casing.map((c: Wire) => ({ diametro: text(c.diametro), desde: number(c.desde), hasta: number(c.hasta), observaciones: text(c.observaciones) })),
+    aditivos: w.aditivos.map((a: Wire) => ({ descripcion: text(a.descripcion), cantidad: text(a.cantidad) })),
+    firmas: { operador: text(w.firmas.operador), supervision_firmado: w.firmas.supervision_firmado, cliente_firmado: w.firmas.cliente_firmado },
+    observaciones: text(w.observaciones),
+    campos_dudosos: w.campos_dudosos.map((d: Wire) => ({ campo: d.campo, valor_leido: text(d.valor_leido), motivo: d.motivo })),
+  }
+}
 
 /** JSON Schema para `output_config.format` (salida estructurada). */
 export const extractionJsonSchema = obj({

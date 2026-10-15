@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
 import { SYSTEM_PROMPT, USER_PROMPT } from './prompt'
-import { type Extraction, extractionJsonSchema } from './schema'
+import { checkJson, parseJsonReply } from './json-check'
+import { type Extraction, extractionJsonSchema, fromWire } from './schema'
 
 export type Effort = 'low' | 'medium' | 'high' | 'max'
 
@@ -46,57 +47,70 @@ function loadImageAsJpeg(path: string): string {
   return readFileSync(tmp).toString('base64')
 }
 
+const MAX_ATTEMPTS = 2
+
 export async function extractSheet(client: Anthropic, imagePath: string, model: string, effort: Effort): Promise<ExtractionRun> {
   const started = Date.now()
-  const base: Omit<ExtractionRun, 'latencyMs'> = {
-    extraction: null, error: null, stopReason: null, inputTokens: 0, outputTokens: 0, costUsd: null,
+  const price = PRICES[model]
+  const run: ExtractionRun = {
+    extraction: null, error: null, stopReason: null, inputTokens: 0, outputTokens: 0, costUsd: null, latencyMs: 0,
   }
+  const messages: Anthropic.MessageParam[] = [{
+    role: 'user',
+    content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: loadImageAsJpeg(imagePath) } },
+      { type: 'text', text: USER_PROMPT },
+    ],
+  }]
 
   try {
-    const message = await client.messages.stream({
-      model,
-      max_tokens: 32000,
-      system: SYSTEM_PROMPT,
-      output_config: {
-        effort,
-        format: { type: 'json_schema', schema: extractionJsonSchema },
-      },
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: loadImageAsJpeg(imagePath) } },
-          { type: 'text', text: USER_PROMPT },
-        ],
-      }],
-    }).finalMessage()
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const message = await client.messages.stream({
+        model,
+        max_tokens: 32000,
+        system: `${SYSTEM_PROMPT}\n\nResponde SOLO con un objeto JSON que cumpla este JSON Schema, sin texto adicional:\n${JSON.stringify(extractionJsonSchema)}`,
+        output_config: { effort },
+        messages,
+      }).finalMessage()
 
-    const price = PRICES[model]
-    const run: ExtractionRun = {
-      ...base,
-      stopReason: message.stop_reason,
-      inputTokens: message.usage.input_tokens,
-      outputTokens: message.usage.output_tokens,
-      costUsd: price ? (message.usage.input_tokens * price.input + message.usage.output_tokens * price.output) / 1e6 : null,
-      latencyMs: Date.now() - started,
+      run.stopReason = message.stop_reason
+      run.inputTokens += message.usage.input_tokens
+      run.outputTokens += message.usage.output_tokens
+      run.costUsd = price ? (run.inputTokens * price.input + run.outputTokens * price.output) / 1e6 : null
+
+      if (message.stop_reason !== 'end_turn') {
+        run.error = `stop_reason=${message.stop_reason}${message.stop_details ? ` (${JSON.stringify(message.stop_details)})` : ''}`
+        break
+      }
+
+      const text = message.content.filter(b => b.type === 'text').map(b => (b.type === 'text' ? b.text : '')).join('')
+      let problems: string[]
+      let reply: unknown = null
+      try {
+        reply = parseJsonReply(text)
+        problems = checkJson(extractionJsonSchema, reply)
+      }
+      catch (err) {
+        problems = [err instanceof Error ? err.message : String(err)]
+      }
+
+      if (problems.length === 0) {
+        run.extraction = fromWire(reply as Record<string, unknown>)
+        run.error = null
+        break
+      }
+
+      run.error = `JSON inválido (intento ${attempt}): ${problems.slice(0, 5).join('; ')}`
+      messages.push(
+        { role: 'assistant', content: message.content },
+        { role: 'user', content: `El JSON no cumple el esquema: ${problems.slice(0, 20).join('; ')}. Corrígelo y responde solo con el JSON completo.` },
+      )
     }
-
-    if (message.stop_reason !== 'end_turn') {
-      run.error = `stop_reason=${message.stop_reason}${message.stop_details ? ` (${JSON.stringify(message.stop_details)})` : ''}`
-
-      return run
-    }
-
-    const text = message.content.find(b => b.type === 'text')
-    if (!text || text.type !== 'text') {
-      run.error = 'La respuesta no trae bloque de texto'
-
-      return run
-    }
-    run.extraction = JSON.parse(text.text) as Extraction
-
-    return run
   }
   catch (err) {
-    return { ...base, error: err instanceof Error ? err.message : String(err), latencyMs: Date.now() - started }
+    run.error = err instanceof Error ? err.message : String(err)
   }
+  run.latencyMs = Date.now() - started
+
+  return run
 }

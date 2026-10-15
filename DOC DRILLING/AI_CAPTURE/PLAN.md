@@ -2,7 +2,7 @@
 
 **Objetivo:** que el personal tome una foto del *Reporte de Perforación Diamantina* llenado a mano en campo y el sistema cree el reporte en **borrador** con los datos ya capturados. Una persona revisa, corrige lo marcado y completa.
 
-**Estado:** Fase 0 en curso (evaluación de precisión). Última actualización: 2026-10-15.
+**Estado:** Fase 0: primera medición hecha (97.5% de campos correctos con Opus 5.5). Falta revisar la transcripción de referencia y comparar modelos. Última actualización: 2026-10-15.
 
 ---
 
@@ -33,7 +33,7 @@
    → POST /drilling-reports/ai-imports    (guarda la imagen y encola)
 [Job Laravel]
    1. Preprocesar: HEIC→JPEG, lado mayor ~2000 px
-   2. IA con visión + salida estructurada (JSON schema espejo de la hoja)
+   2. IA con visión; esquema JSON espejo de la hoja en el prompt + validación y 1 reintento
    3. Normalizar en PHP: catálogos (pozo, equipo, personal), turno, am/pm, fracciones
    4. Validar reglas de negocio → advertencias por campo
    5. Crear DrillingReport en status=draft + sub-entidades
@@ -66,7 +66,8 @@ Herramienta en [`tools/ai-capture-eval/`](../../tools/ai-capture-eval/README.md)
 
 - `src/schema.ts`: esquema de extracción, espejo literal de la hoja.
 - `src/prompt.ts`: instrucciones de transcripción.
-- `src/extract.ts`: llamada a Claude (visión + salida estructurada) y costo por hoja.
+- `src/extract.ts`: llamada a Claude (visión, esquema en el prompt, validación y reintento) y costo por hoja.
+- `src/json-check.ts`: validador mínimo de JSON Schema para la respuesta.
 - `src/validate.ts`: reglas de negocio de una hoja y entre hojas del mismo pozo. Se reusarán en el backend.
 - `src/score.ts`: comparación campo por campo (correctos, mal leídos, omitidos, **inventados**).
 - `npm run check-truth`: revisa el dataset sin IA. `npm run eval`: corre la evaluación.
@@ -83,9 +84,20 @@ Criterio para pasar a fase 1 (propuesto): ≥ 90% de campos correctos, **0 inven
 
 #### Resultados
 
-| Fecha | Modelo | Effort | Hojas | Correctos | Inventados | Costo/hoja | Notas |
-|---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | Pendiente: falta la API key de Anthropic |
+| Fecha | Modelo | Effort | Hojas | Correctos | Inventados | Costo/hoja | Latencia | Notas |
+|---|---|---|---|---|---|---|---|---|
+| 2026-10-15 | `claude-opus-5-5` | medium | 6 | **97.5%** (469/481) | 6 (ver abajo) | $0.087 | 24 s | Transcripción de referencia aún sin revisar por una persona |
+
+Lectura del primer resultado:
+
+- **Lo numérico salió perfecto:** tablas de perforación (124/124), actividades con horas (152/152), profundidades, parámetros, consumos y totales al 100%.
+- **Las validaciones encontraron lo mismo con lo que leyó la IA que con la transcripción verificada:** los 6 hallazgos de los folios 1350 y 1381.
+- **Errores reales de lectura (6):** nombres en letra cursiva (operador del 1358), `VPO` leído como `VPD` y `14A` como `14-D` (1358), equipo `H300` leído como `HD00` (1376), un dígito de un número de serie (1376) y la inclinación `34-98` dejada en blanco (1382). **La IA marcó todos como dudosos**, así que la pantalla de revisión los resaltaría. Además, la relación con catálogos (fase 2) corregiría pozo, equipo y número de serie.
+- **Los 6 "inventados" no son datos inventados:** son datos reales puestos en otra columna. En el 1376, los accesorios quedaron en la columna "Acces." en lugar de "Observaciones". En el número de serie `13445/12`, que cruza la línea entre columnas, la IA separó `13445` en "No. Serie" y `12` en "Serie/Color", y puede que tenga razón. Hay que decidir cuál lectura es la correcta al revisar la transcripción de referencia.
+- **Costo:** ~9 ¢ por hoja, arriba del estimado inicial de 5–8 ¢. Siguiente paso: correr Sonnet 5.5 y Haiku 5.5 con la misma herramienta.
+- **El hallazgo entre hojas no apareció con la lectura de la IA:** como leyó mal el número de pozo del 1358, no lo agrupó con el 1376. Es otra razón para relacionar con el catálogo de pozos antes de validar.
+
+**Limitación técnica encontrada:** la salida estructurada de la API (`output_config.format`) no acepta un esquema del tamaño de esta hoja. Primero rechaza más de 16 campos nullable y, ya sin nullables, responde "compiled grammar is too large". La solución que funcionó: el esquema va en el prompt, todo como texto (`""` = vacío), se valida la respuesta en código (`src/json-check.ts`) y se reintenta una vez si no cumple. El backend (fase 1) debe hacer lo mismo.
 
 ## 5. Costos de referencia (2026-10)
 
@@ -120,3 +132,4 @@ Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
 ## 8. Bitácora
 
 - **2026-10-15:** Análisis de 6 fotos reales y del módulo existente. Propuesta de arquitectura. Fase 0: herramienta de evaluación, esquema, validaciones y transcripciones de referencia. Revisión del servidor: despliegue documentado en la sección 7.
+- **2026-10-15:** Primera evaluación con Opus 5.5 (effort medium): 97.5% de campos correctos, $0.087 por hoja. La salida estructurada no admite el esquema; se cambió a esquema en el prompt + validación.
