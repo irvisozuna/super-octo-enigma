@@ -5,12 +5,14 @@ import { formatDate } from '../../../shared/utils/dateUtils'
 export interface ProjectReportsTabProps {
   reports: any[]
   loading?: boolean
+  canCreate?: boolean
 }
 
 const props = defineProps<ProjectReportsTabProps>()
 
 defineEmits<{
   'create': []
+  'aiCapture': []
   'view': [report: any]
   'edit': [report: any]
   'delete': [report: any]
@@ -192,13 +194,24 @@ const getStatusLabel = (status: string) => {
           {{ totalReports }} {{ totalReports === 1 ? 'reporte' : 'reportes' }} registrados
         </p>
       </div>
-      <VBtn
-        color="primary"
-        prepend-icon="tabler-file-plus"
-        @click="$emit('create')"
-      >
-        Nuevo Reporte
-      </VBtn>
+      <div class="d-flex gap-2">
+        <VBtn
+          variant="tonal"
+          color="primary"
+          prepend-icon="tabler-camera"
+          :disabled="props.canCreate === false"
+          @click="$emit('aiCapture')"
+        >
+          Capturar desde foto
+        </VBtn>
+        <VBtn
+          color="primary"
+          prepend-icon="tabler-file-plus"
+          @click="$emit('create')"
+        >
+          Nuevo Reporte
+        </VBtn>
+      </div>
     </div>
 
     <!-- Filters -->

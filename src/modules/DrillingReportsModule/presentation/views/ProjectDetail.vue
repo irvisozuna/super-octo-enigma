@@ -59,6 +59,7 @@ import ProjectCostsTabOrganism from '../components/organisms/ProjectCostsTabOrga
 import ProjectStatisticsTabOrganism from '../components/organisms/ProjectStatisticsTabOrganism.vue'
 import ProjectHistoryTabOrganism from '../components/organisms/ProjectHistoryTabOrganism.vue'
 import CreateReportWizardOrganism from '../components/organisms/drillingReports/CreateReportWizardOrganism.vue'
+import AiCaptureDialogOrganism from '../components/organisms/drillingReports/AiCaptureDialogOrganism.vue'
 
 // Usar el store directamente para algunos datos específicos
 import { useProjectDetailStore } from '../stores/projectDetailStore'
@@ -739,6 +740,25 @@ function handleViewReport(report: any) {
 }
 
 /**
+ * Captura con IA: subir fotos de hojas y revisar los borradores que se crean
+ */
+const showAiCaptureDialog = ref(false)
+
+function handleAiCapture() {
+  if (!canCreateReports.value) {
+    showSnackbar({ message: `No se pueden crear reportes en un proyecto ${projectStatus.value}`, color: 'warning' })
+
+    return
+  }
+  showAiCaptureDialog.value = true
+}
+
+function handleAiCaptureReview(reportId: string) {
+  showAiCaptureDialog.value = false
+  handleEditReport(projectReports.value.find((report: any) => report.id === reportId) ?? { id: reportId })
+}
+
+/**
  * Manejar edición de reporte
  */
 function handleEditReport(report: any) {
@@ -1064,6 +1084,7 @@ onMounted(() => {
             :loading="tabLoadingStates.reports"
             :can-create="canCreateReports"
             @create="handleCreateReport"
+            @ai-capture="handleAiCapture"
             @view="handleViewReport"
             @edit="handleEditReport"
             @delete="handleDeleteReport"
@@ -1332,6 +1353,16 @@ onMounted(() => {
       :loading="editingReport"
       :error="editReportError"
       @update="handleUpdateReport"
+    />
+
+    <!-- Captura de reportes desde foto (IA) -->
+    <AiCaptureDialogOrganism
+      v-model="showAiCaptureDialog"
+      :project-id="projectId"
+      :well-id="currentWell?.id || ''"
+      :well-name="currentWell?.name || ''"
+      @review="handleAiCaptureReview"
+      @completed="refreshTab('reports')"
     />
 
     <!-- Diálogo de Vista Detallada del Reporte -->

@@ -2,7 +2,7 @@
 
 **Objetivo:** que el personal tome una foto del *Reporte de Perforación Diamantina* llenado a mano en campo y el sistema cree el reporte en **borrador** con los datos ya capturados. Una persona revisa, corrige lo marcado y completa.
 
-**Estado:** Fase 0: medición hecha con 3 modelos (Opus 5.5: 97.5% de campos correctos y 0 errores sin resaltar). Falta revisar la transcripción de referencia y crecer el dataset. Última actualización: 2026-10-15.
+**Estado:** Fase 1 lista para desplegar (backend + front, probada localmente). Fase 0 medida con 3 modelos (Opus 5.5: 97.5% de campos correctos y 0 errores sin resaltar); falta revisar la transcripción de referencia y crecer el dataset. Última actualización: 2026-10-15.
 
 ---
 
@@ -55,8 +55,8 @@ Cada fase es un commit a la rama `simo` (front) y, cuando aplique, a `DynamicRep
 
 | Fase | Qué | Estado |
 |---|---|---|
-| **0** | Herramienta de evaluación + transcripciones de referencia + validaciones. Medir precisión y costo por hoja con Claude | 🟡 En curso |
-| 1 | Endpoint + Job + extracción + borrador + pantalla de revisión con la foto al lado | ⚪ Pendiente |
+| **0** | Herramienta de evaluación + transcripciones de referencia + validaciones. Medir precisión y costo por hoja con Claude | ✅ Medido (falta revisión humana del dataset) |
+| **1** | Endpoint + Job + extracción + borrador + pantalla de revisión con la foto al lado | 🟡 Lista para desplegar |
 | 2 | Relación con catálogos + validaciones entre reportes en el backend | ⚪ Pendiente |
 | 3 | Varias hojas a la vez + captura desde el celular con escáner de documentos | ⚪ Pendiente |
 
@@ -128,9 +128,42 @@ Precio por millón de tokens (entrada/salida). Estimado con ~2–3k tokens de en
 
 La Batch API cuesta 50% menos si no se necesita el resultado al momento. El costo real por hoja sale en cada reporte de evaluación.
 
+### Fase 1: detalle
+
+**Flujo:** en el detalle del proyecto, pestaña Reportes → **Capturar desde foto** → se suben 1..10 fotos del pozo del proyecto → cada foto se procesa en la cola (~30 s) → se crea un reporte en **borrador** por foto → **Revisar** abre el asistente de edición con la foto al lado (zoom, giro, arrastre), las advertencias agrupadas por paso (con botón "Ir al paso") y lo que la hoja dice pero no se cargó solo.
+
+**Backend** (`main_skeleton`, módulo `Drilling`):
+
+| Pieza | Archivo |
+|---|---|
+| Endpoints `POST/GET /api/drilling/reports/ai-imports`, `GET …/{id}/image` | `Infrastructure/Controllers/DrillingAiImportController.php` |
+| Tabla `drilling_ai_imports` (foto, vista previa JPEG, transcripción, advertencias, mapeo, costo) | `Database/migrations/2026_10_15_000001_…` |
+| Job en cola (1 intento, 300 s) | `Application/Jobs/ProcessDrillingAiImportJob.php` |
+| Orquestación: HEIC→JPEG, IA, mapeo, borrador | `Application/UseCases/AiCapture/ProcessAiImportUseCase.php` |
+| Adaptador de Claude (esquema en el prompt + validación + reintento) | `Infrastructure/Services/AiCapture/ClaudeSheetExtractor.php` |
+| Esquema, prompt, validaciones, reloj de turno, tipos de actividad, mapeo | `Application/Services/AiCapture/*` |
+| Configuración (modelo, effort, mapa de turnos, precios) | `Config/module.php` → `ai_capture` |
+
+**Qué se carga solo al borrador:** fecha, turno, RPM/pull down, horómetro (si es válido), actividades (tipo, horas, hora 24 h, descripción), consumos de petróleo, observaciones y profundidades de perforación.
+
+**Qué NO se carga solo (queda para revisión):** operador, ayudantes y equipo (falta relacionar con catálogos, fase 2), aceros (crear el reporte con herramientas registra su desgaste de inmediato, aun en borrador), corridas de perforación (no hay entidad en el backend), accesorios, firmas y mediciones direccionales escritas como nota.
+
+**Seguridad:** consultas filtradas explícitamente por empresa; límite de 10 cargas por minuto por usuario; solo se decodifican JPEG/PNG/WebP/HEIC detectados por sus bytes iniciales, con límites de memoria y de píxeles; los errores internos no se muestran al usuario.
+
+**Permisos:** se declaró `import DrillingReport`, pero no se exige: en producción las asignaciones de rol guardan `model_type = "AppModelsUser"` (sin diagonales), así que ningún permiso de Spatie aplica a ningún usuario. Hay que corregir esos datos antes de poder exigir permisos en cualquier ruta del módulo.
+
+**Pruebas:** backend 43 pruebas unitarias (esquema, validaciones, reloj, clasificador, mapeo, detección de formato) + prueba real con una hoja (Opus 5.5 desde PHP: $0.07, 20 s). Front: 7 pruebas (store y panel). Build de producción OK. Sin MySQL local no se probó de punta a punta el job con base de datos.
+
+**Pasos de despliegue (en orden):**
+
+1. Push del backend a `DynamicReportModule` (la Action hace `git pull` + `composer install`).
+2. En el servidor: agregar `ANTHROPIC_API_KEY` al `.env`, `php artisan config:clear` y `php artisan migrate --force` (no hay otras migraciones pendientes).
+3. Reiniciar el worker de colas (`php artisan queue:restart`) para que cargue el job nuevo: el deploy no lo hace.
+4. Push del front a `simo` (sin `[skip ci]`: se publica en `cdkapp.xelesta.mx`).
+
 ## 6. Pendientes de decisión
 
-1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas?
+1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? **Mientras tanto** la fase 1 usa A/1/D = día y B/2/N/Noche = noche (configurable en `Config/module.php`), y siempre avisa en la revisión cómo interpretó el turno.
 2. **Tipo de actividad:** cómo se clasifican "voladura", "traslado", "midiendo barreno", "esperando empaques" en `drilling | maintenance | waiting | mobilization | …`.
 3. **Tabla PERFORACIÓN** (desde, hasta, m, recuperación, tipo de roca, dureza): confirmar si existe entidad en el backend o hay que crearla.
 ## 7. Despliegue (verificado en el servidor el 2026-10-15)
@@ -151,3 +184,4 @@ Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
 - **2026-10-15:** Análisis de 6 fotos reales y del módulo existente. Propuesta de arquitectura. Fase 0: herramienta de evaluación, esquema, validaciones y transcripciones de referencia. Revisión del servidor: despliegue documentado en la sección 7.
 - **2026-10-15:** Primera evaluación con Opus 5.5 (effort medium): 97.5% de campos correctos, $0.087 por hoja. La salida estructurada no admite el esquema; se cambió a esquema en el prompt + validación.
 - **2026-10-15:** Comparación con Sonnet 5.5 (95.4%, $0.036 por hoja) y Haiku 5.5 (94.8%, $0.003 por hoja). Opus es el único sin errores sin resaltar.
+- **2026-10-15:** Fase 1 implementada (backend + front) y probada localmente. Una revisión de seguridad automática encontró 4 puntos (autorización, imágenes gigantes, formatos de imagen inseguros, fuga de mensajes de error), todos corregidos antes del push.

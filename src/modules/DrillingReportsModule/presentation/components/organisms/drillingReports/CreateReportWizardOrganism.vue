@@ -14,6 +14,9 @@ import WizardDirectionalMeasurementsMolecule from '../../molecules/WizardDirecti
 import WizardConsumptionsMolecule from '../../molecules/WizardConsumptionsMolecule.vue'
 import WizardToolsMolecule from '../../molecules/WizardToolsMolecule.vue'
 import WizardReviewMolecule from '../../molecules/WizardReviewMolecule.vue'
+import AiCapturePhotoPanelMolecule from '../../molecules/AiCapturePhotoPanelMolecule.vue'
+import type { AiImport } from '../../../../infrastructure/api/services/AiCaptureApiService'
+import { useAiCaptureStore } from '../../../stores/aiCaptureStore'
 
 export interface CreateReportWizardProps {
   modelValue: boolean
@@ -257,6 +260,20 @@ defineExpose({
   onError,
 })
 
+// Captura con IA: si el reporte salió de una foto, se muestra la foto y sus advertencias junto al asistente
+const aiCaptureStore = useAiCaptureStore()
+const aiImport = ref<AiImport | null>(null)
+
+const loadAiImport = async (reportId: string) => {
+  try {
+    aiImport.value = await aiCaptureStore.findByReport(reportId)
+  }
+  catch (error) {
+    console.error('No se pudo consultar la captura con IA del reporte:', error)
+    aiImport.value = null
+  }
+}
+
 // Function to load report data when editing
 const loadReportForEditing = async () => {
   if (!props.reportId) {
@@ -314,6 +331,7 @@ const loadReportForEditing = async () => {
 
     wizardStore.loadReportData(report)
     console.log('✅ Report data loaded into wizard successfully')
+    await loadAiImport(props.reportId)
   }
   catch (error: any) {
     console.error('❌ Error loading report for editing:', error)
@@ -359,6 +377,7 @@ watch(() => props.modelValue, async newValue => {
   else {
     // When dialog closes, ensure everything is clean for next time
     wizardStore.clearError()
+    aiImport.value = null
 
     // Reset form when closing to avoid stale data
     if (!props.reportId)
@@ -442,7 +461,7 @@ onMounted(async () => {
 <template>
   <VDialog
     v-model="localDialog"
-    max-width="1000"
+    :max-width="aiImport ? 1600 : 1000"
     persistent
     scrollable
   >
@@ -527,71 +546,79 @@ onMounted(async () => {
         </p>
       </VAlert>
 
-      <VCardText
-        class="pa-0"
-        style="max-block-size: 70vh; overflow-y: auto;"
-      >
-        <VStepper
-          v-model="wizardStore.currentStep"
-          :items="steps"
-          hide-actions
-          flat
+      <div class="d-flex flex-column flex-md-row">
+        <AiCapturePhotoPanelMolecule
+          v-if="aiImport"
+          :ai-import="aiImport"
+          class="ai-capture-column"
+          @go-to-step="wizardStore.setStep"
+        />
+        <VCardText
+          class="pa-0 flex-grow-1"
+          style="max-block-size: 76vh; overflow-y: auto;"
         >
-          <VStepperWindow>
-            <!-- Step 1: Información Básica -->
-            <VStepperWindowItem value="1">
-              <VForm ref="step1Form">
-                <WizardBasicInfoMolecule
-                  :project-name="projectName"
-                  :well-name="wellName"
-                  :equipment-options="equipmentOptions"
-                  :loading-equipment="loadingEquipment"
+          <VStepper
+            v-model="wizardStore.currentStep"
+            :items="steps"
+            hide-actions
+            flat
+          >
+            <VStepperWindow>
+              <!-- Step 1: Información Básica -->
+              <VStepperWindowItem value="1">
+                <VForm ref="step1Form">
+                  <WizardBasicInfoMolecule
+                    :project-name="projectName"
+                    :well-name="wellName"
+                    :equipment-options="equipmentOptions"
+                    :loading-equipment="loadingEquipment"
+                  />
+                </VForm>
+              </VStepperWindowItem>
+
+              <!-- Step 2: Personal -->
+              <VStepperWindowItem value="2">
+                <VForm ref="step2Form">
+                  <WizardPersonnelMolecule
+                    ref="step2Personnel"
+                    :employee-options="employeeOptions"
+                    :loading-employees="loadingEmployees"
+                  />
+                </VForm>
+              </VStepperWindowItem>
+
+              <!-- Step 3: Actividades -->
+              <VStepperWindowItem value="3">
+                <WizardActivitiesMolecule />
+              </VStepperWindowItem>
+
+              <!-- Step 4: Mediciones Direccionales -->
+              <VStepperWindowItem value="4">
+                <WizardDirectionalMeasurementsMolecule />
+              </VStepperWindowItem>
+
+              <!-- Step 5: Consumos -->
+              <VStepperWindowItem value="5">
+                <WizardConsumptionsMolecule />
+              </VStepperWindowItem>
+
+              <!-- Step 6: Herramientas -->
+              <VStepperWindowItem value="6">
+                <WizardToolsMolecule
+                  :tool-options="toolOptions"
+                  :loading-tools="loadingTools"
+                  :current-well="detailStore.currentWell"
                 />
-              </VForm>
-            </VStepperWindowItem>
+              </VStepperWindowItem>
 
-            <!-- Step 2: Personal -->
-            <VStepperWindowItem value="2">
-              <VForm ref="step2Form">
-                <WizardPersonnelMolecule
-                  ref="step2Personnel"
-                  :employee-options="employeeOptions"
-                  :loading-employees="loadingEmployees"
-                />
-              </VForm>
-            </VStepperWindowItem>
-
-            <!-- Step 3: Actividades -->
-            <VStepperWindowItem value="3">
-              <WizardActivitiesMolecule />
-            </VStepperWindowItem>
-
-            <!-- Step 4: Mediciones Direccionales -->
-            <VStepperWindowItem value="4">
-              <WizardDirectionalMeasurementsMolecule />
-            </VStepperWindowItem>
-
-            <!-- Step 5: Consumos -->
-            <VStepperWindowItem value="5">
-              <WizardConsumptionsMolecule />
-            </VStepperWindowItem>
-
-            <!-- Step 6: Herramientas -->
-            <VStepperWindowItem value="6">
-              <WizardToolsMolecule
-                :tool-options="toolOptions"
-                :loading-tools="loadingTools"
-                :current-well="detailStore.currentWell"
-              />
-            </VStepperWindowItem>
-
-            <!-- Step 7: Revisión Final -->
-            <VStepperWindowItem value="7">
-              <WizardReviewMolecule />
-            </VStepperWindowItem>
-          </VStepperWindow>
-        </VStepper>
-      </VCardText>
+              <!-- Step 7: Revisión Final -->
+              <VStepperWindowItem value="7">
+                <WizardReviewMolecule />
+              </VStepperWindowItem>
+            </VStepperWindow>
+          </VStepper>
+        </VCardText>
+      </div>
 
       <VDivider />
 
@@ -651,5 +678,10 @@ onMounted(async () => {
 
 :deep(.v-stepper) {
   box-shadow: none !important;
+}
+
+.ai-capture-column {
+  flex: 0 0 42%;
+  min-inline-size: 0;
 }
 </style>

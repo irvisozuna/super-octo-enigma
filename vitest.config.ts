@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // Vuetify importa sus .css desde JS: hay que procesarlo con Vite para poder montar componentes en pruebas
+    server: { deps: { inline: ['vuetify'] } },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
