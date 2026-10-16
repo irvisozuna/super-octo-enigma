@@ -224,7 +224,8 @@ const getToolType = (toolId: string | null): 'diamond_bit' | 'tricone' => {
     return 'diamond_bit'
   const tool = props.toolOptions.find(t => t.value === toolId)
   const type = (tool?.type || '').toLowerCase()
-  if (type === 'tricone' || type.includes('tricono'))
+  // En el inventario el tipo es "drill_bit_tricone"
+  if (type.includes('tricone') || type.includes('tricono'))
     return 'tricone'
 
   return 'diamond_bit'
