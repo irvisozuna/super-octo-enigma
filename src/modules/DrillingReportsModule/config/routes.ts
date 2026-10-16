@@ -108,6 +108,16 @@ const drillingReportRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/drilling/catalog-import',
+    name: 'drilling-catalog-import',
+    component: () => import('../presentation/views/CatalogImport.vue'),
+    meta: {
+      title: 'Cargar catálogos',
+      requiresAuth: true,
+      permissions: ['drilling.projects.view'],
+    },
+  },
+  {
     path: '/drilling/wells',
     name: 'drilling-wells',
     component: () => import('../presentation/views/WellsList.vue'),

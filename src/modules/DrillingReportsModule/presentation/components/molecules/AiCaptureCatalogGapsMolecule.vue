@@ -140,6 +140,19 @@ async function onCreated(id: string) {
       </VBtn>
     </div>
 
+    <p
+      v-if="gaps.length >= 3"
+      class="text-caption text-medium-emphasis mb-0"
+    >
+      ¿Faltan muchos?
+      <RouterLink
+        :to="{ name: 'drilling-catalog-import' }"
+        target="_blank"
+      >
+        Cárgalos de una vez desde Excel
+      </RouterLink>
+    </p>
+
     <AiCaptureCatalogEntryDialogMolecule
       v-model="dialogOpen"
       :gap="dialogGap"

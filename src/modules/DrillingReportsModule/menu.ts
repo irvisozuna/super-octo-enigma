@@ -48,6 +48,13 @@ const drillingReportsMenu: VerticalNavItems = [
         action: 'read',
         subject: 'Project',
       },
+      {
+        title: 'Cargar catálogos',
+        icon: { icon: 'tabler-file-spreadsheet' },
+        to: 'drilling-catalog-import',
+        action: 'read',
+        subject: 'Project',
+      },
     ],
   },
 
