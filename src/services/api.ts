@@ -7,6 +7,7 @@
  *********************************************************/
 
 import type { ApiOptions } from '@/types/types'
+import { sesionVencida } from '@/utils/sesion'
 
 /**
  * Función principal para realizar peticiones HTTP.
@@ -92,6 +93,10 @@ export async function rawApi(
 
     // 8. Validamos si no fue exitoso => parseamos el mensaje de error si se puede
     if (!response.ok) {
+      // Token vencido o revocado: de regreso al login (XEL1-514)
+      if (response.status === 401 && accessToken)
+        void sesionVencida(url)
+
       let errorBody: any = null
 
       try {

@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/stores/auth.store'; // Ajusta la importación según tu estructura
+import { sesionVencida } from '@/utils/sesion'
 import { ofetch } from 'ofetch'
 
 const apiService = ofetch.create({
@@ -14,17 +14,10 @@ const apiService = ofetch.create({
       }
     }
   },
-  async onResponseError({ response }) {
-    if (response.status === 401) {
-      const authStore = useAuthStore()
-      const errorData = await response._data
-
-      console.error('Error: ', response)
-      if (errorData.error === 'TokenExpiredError') {
-        // Cierra la sesión del usuario
-        await authStore.logout()
-      }
-    }
+  async onResponseError({ request, response }) {
+    // Token vencido o revocado: de regreso al login (XEL1-514)
+    if (response.status === 401)
+      void sesionVencida(String(request))
 
     return Promise.reject(response)
   },

@@ -1,5 +1,6 @@
 import { createFetch } from '@vueuse/core'
 import { destr } from 'destr'
+import { sesionVencida } from '@/utils/sesion'
 
 export const useApi = createFetch({
   baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -38,6 +39,13 @@ export const useApi = createFetch({
       }
 
       return { data: parsedData, response }
+    },
+    onFetchError(ctx) {
+      // Token vencido o revocado: de regreso al login (XEL1-514)
+      if (ctx.response?.status === 401)
+        void sesionVencida(ctx.response.url)
+
+      return ctx
     },
   },
 })
