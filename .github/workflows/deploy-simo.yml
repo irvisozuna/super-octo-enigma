@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - simo  # Se ejecuta solo cuando hagas push a esta rama
+  workflow_dispatch:  # también a mano desde la pestaña Actions
 
 jobs:
   deploy:
