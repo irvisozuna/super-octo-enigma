@@ -7,6 +7,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { AiImport } from '../../infrastructure/api/services/AiCaptureApiService'
 import { AiCaptureApiService } from '../../infrastructure/api/services/AiCaptureApiService'
+import { prepareSheetPhotos } from '../../shared/utils/sheetPhotoUtils'
 
 const POLL_INTERVAL_MS = 3000
 const POLL_TIMEOUT_MS = 10 * 60 * 1000
@@ -26,7 +27,7 @@ export const useAiCaptureStore = defineStore('drillingAiCapture', () => {
     uploading.value = true
     error.value = null
     try {
-      const created = await AiCaptureApiService.upload(projectId, wellId, photos)
+      const created = await AiCaptureApiService.upload(projectId, wellId, await prepareSheetPhotos(photos))
 
       imports.value = [...created, ...imports.value]
       startPolling()

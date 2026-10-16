@@ -4,6 +4,9 @@ import type { AiImport } from '../../../infrastructure/api/services/AiCaptureApi
 import { AiCaptureApiService } from '../../../infrastructure/api/services/AiCaptureApiService'
 import { useAiCaptureStore } from '../aiCaptureStore'
 
+// La conversión HEIC → JPEG necesita un navegador real; aquí las fotos pasan tal cual
+vi.mock('../../../shared/utils/sheetPhotoUtils', () => ({ prepareSheetPhotos: vi.fn(async (photos: File[]) => photos) }))
+
 vi.mock('../../../infrastructure/api/services/AiCaptureApiService', () => ({
   AiCaptureApiService: { upload: vi.fn(), list: vi.fn(), image: vi.fn() },
 }))
