@@ -10,6 +10,7 @@ import { useLoadingState } from '@/composables/useLoadingState'
 export type ProjectTab =
   | 'overview'
   | 'reports'
+  | 'review'
   | 'budget'
   | 'equipment'
   | 'documents'
@@ -58,6 +59,13 @@ export function useTabManager(projectId?: string) {
       icon: 'tabler-file-text',
       requiresStatus: ['active', 'suspended', 'completed'],
       lazyLoad: true,
+    },
+    {
+      name: 'review',
+      label: 'Por revisar',
+      icon: 'tabler-checklist',
+      requiresStatus: ['active', 'suspended', 'completed'],
+      lazyLoad: false, // la pestaña carga su propia bandeja
     },
     {
       name: 'budget',
@@ -136,6 +144,8 @@ export function useTabManager(projectId?: string) {
 
       documents: store.projectDocuments.length
                  || project?.statistics?.documents_count || 0,
+
+      review: store.tabDataCache.reviewCount || 0,
 
       budget: store.tabDataCache.costs?.length || 0,
 

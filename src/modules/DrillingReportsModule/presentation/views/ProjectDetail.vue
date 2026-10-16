@@ -61,6 +61,8 @@ import ProjectHistoryTabOrganism from '../components/organisms/ProjectHistoryTab
 import CreateReportWizardOrganism from '../components/organisms/drillingReports/CreateReportWizardOrganism.vue'
 import AiCaptureDialogOrganism from '../components/organisms/drillingReports/AiCaptureDialogOrganism.vue'
 import AiCaptureSettingsOrganism from '../components/organisms/drillingReports/AiCaptureSettingsOrganism.vue'
+import ProjectReviewTabOrganism from '../components/organisms/ProjectReviewTabOrganism.vue'
+import { ReviewQueueApiService } from '../../infrastructure/api/services/ReviewQueueApiService'
 
 // Usar el store directamente para algunos datos específicos
 import { useProjectDetailStore } from '../stores/projectDetailStore'
@@ -188,6 +190,7 @@ const selectedReportForDetail = ref<any>(null)
 // Estado para el wizard de edición de reporte
 const showEditReportWizard = ref(false)
 const selectedReportForEdit = ref<any>(null)
+const reviewTabRef = ref<InstanceType<typeof ProjectReviewTabOrganism> | null>(null)
 const editingReport = ref(false)
 const editReportError = ref<string | null>(null)
 const editReportWizardRef = ref<any>(null)
@@ -763,6 +766,21 @@ function handleAiCaptureReview(reportId: string) {
 /**
  * Manejar edición de reporte
  */
+/** Desde la bandeja: abrir el asistente del reporte (con la foto al lado si vino de una captura). */
+function handleReviewFromQueue(report: { id: string; well_id: string }) {
+  handleEditReport({ id: report.id, well: { id: report.well_id } })
+}
+
+/** Contador de la pestaña "Por revisar" desde que se abre el proyecto; ?tab=review la abre (enlace del recordatorio). */
+async function loadReviewCount() {
+  try {
+    detailStore.tabDataCache.reviewCount = (await ReviewQueueApiService.get(projectId.value)).reports.length
+  }
+  catch {
+    // el contador es informativo
+  }
+}
+
 function handleEditReport(report: any) {
   console.log('Editar reporte:', report)
 
@@ -795,6 +813,8 @@ async function handleUpdateReport({ reportId, data }: { reportId: string; data: 
 
         // Cerrar wizard y refrescar tab
         showEditReportWizard.value = false
+        reviewTabRef.value?.load()
+        loadReviewCount()
         selectedReportForEdit.value = null
         await refreshTab('reports')
       },
@@ -971,6 +991,10 @@ function getActionMessage(action: string): string {
 // ========== LIFECYCLE ==========
 
 onMounted(() => {
+  loadReviewCount()
+  if (route.query.tab === 'review')
+    activeTab.value = 'review'
+
   // Mostrar recomendaciones de personal si las hay
   const recommendations = getStaffingRecommendations()
 
@@ -1095,6 +1119,18 @@ onMounted(() => {
             @approve="handleApproveReport(projectId, $event.id)"
             @reject="handleRejectReport"
             @refresh="() => refreshTab('reports')"
+          />
+        </template>
+
+        <!-- TAB: POR REVISAR (bandeja con semáforo) -->
+        <template #tab-review>
+          <ProjectReviewTabOrganism
+            v-if="activeTab === 'review'"
+            ref="reviewTabRef"
+            :project-id="projectId"
+            @review="handleReviewFromQueue"
+            @approved="refreshTab('reports')"
+            @count="detailStore.tabDataCache.reviewCount = $event"
           />
         </template>
 
