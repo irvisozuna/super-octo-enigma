@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
-import { SYSTEM_PROMPT, USER_PROMPT } from './prompt'
+import { ACTIVITY_TYPES, SYSTEM_PROMPT, USER_PROMPT } from './prompt'
 import { checkJson, parseJsonReply } from './json-check'
 import { type Extraction, extractionJsonSchema, fromWire } from './schema'
 
@@ -68,7 +68,7 @@ export async function extractSheet(client: Anthropic, imagePath: string, model: 
       const message = await client.messages.stream({
         model,
         max_tokens: 32000,
-        system: `${SYSTEM_PROMPT}\n\nResponde SOLO con un objeto JSON que cumpla este JSON Schema, sin texto adicional:\n${JSON.stringify(extractionJsonSchema)}`,
+        system: `${SYSTEM_PROMPT}\n\n${ACTIVITY_TYPES}\n\nResponde SOLO con un objeto JSON que cumpla este JSON Schema, sin texto adicional:\n${JSON.stringify(extractionJsonSchema)}`,
         output_config: { effort },
         messages,
       }).finalMessage()

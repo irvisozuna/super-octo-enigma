@@ -56,8 +56,9 @@ Cada fase es un commit a la rama `simo` (front) y, cuando aplique, a `DynamicRep
 | Fase | Qué | Estado |
 |---|---|---|
 | **0** | Herramienta de evaluación + transcripciones de referencia + validaciones. Medir precisión y costo por hoja con Claude | ✅ Medido (falta revisión humana del dataset) |
-| **1** | Endpoint + Job + extracción + borrador + pantalla de revisión con la foto al lado | 🟡 Lista para desplegar |
-| 2 | Relación con catálogos + validaciones entre reportes en el backend | ⚪ Pendiente |
+| **1** | Endpoint + Job + extracción + borrador + pantalla de revisión con la foto al lado | ✅ En producción (2026-10-16) |
+| **2a** | Turnos y reglas de actividades configurables (empresa / proyecto) + tipo sugerido por la IA + corridas del reporte | 🟡 Lista para desplegar |
+| 2b | Relación con catálogos (personal, equipo, aceros) + validaciones entre reportes en el backend | ⚪ Pendiente |
 | 3 | Varias hojas a la vez + captura desde el celular con escáner de documentos | ⚪ Pendiente |
 
 ### Fase 0: detalle
@@ -150,7 +151,7 @@ La Batch API cuesta 50% menos si no se necesita el resultado al momento. El cost
 
 **Seguridad:** consultas filtradas explícitamente por empresa; límite de 10 cargas por minuto por usuario; solo se decodifican JPEG/PNG/WebP/HEIC detectados por sus bytes iniciales, con límites de memoria y de píxeles; los errores internos no se muestran al usuario.
 
-**Permisos:** se declaró `import DrillingReport`, pero no se exige: en producción las asignaciones de rol guardan `model_type = "AppModelsUser"` (sin diagonales), así que ningún permiso de Spatie aplica a ningún usuario. Hay que corregir esos datos antes de poder exigir permisos en cualquier ruta del módulo.
+**Permisos:** se declaró `import DrillingReport`, pero no se exige. ~~En producción ningún permiso aplica~~ (corregido el 2026-10-16): aunque `model_has_roles.model_type` dice `"AppModelsUser"`, `User::roles()` está redefinido con `model_uuid` y no filtra por `model_type`, así que `hasRole()` y los permisos que vienen por rol **sí funcionan**. Los permisos nuevos de `Config/permissions.php` no existen en la BD hasta sembrarlos; por eso se usa `checkPermissionTo` (no lanza excepción).
 
 **Pruebas:** backend 43 pruebas unitarias (esquema, validaciones, reloj, clasificador, mapeo, detección de formato) + prueba real con una hoja (Opus 5.5 desde PHP: $0.07, 20 s). Front: 7 pruebas (store y panel). Build de producción OK. Sin MySQL local no se probó de punta a punta el job con base de datos.
 
@@ -161,11 +162,29 @@ La Batch API cuesta 50% menos si no se necesita el resultado al momento. El cost
 3. Reiniciar el worker de colas (`php artisan queue:restart`) para que cargue el job nuevo: el deploy no lo hace.
 4. Push del front a `simo` (sin `[skip ci]`: se publica en `cdkapp.xelesta.mx`).
 
+### Fase 2a: detalle
+
+**Configuración por empresa y por proyecto** (`drilling_capture_settings`). La fila sin proyecto es la de la empresa; la de un proyecto reemplaza **por sección completa** (`shifts`, `activity_rules`). Lo no guardado viene de `Config/module.php → ai_capture.defaults` (los valores de la fase 1), así que sin nada en BD todo funciona igual que antes. Cada importación guarda la configuración que usó en `mapping.settings`.
+
+- **Turno** (`ShiftResolver`): 1) horas en formato 24 h (13:00–23:59) en las actividades → se deduce por rango, porque un "7:00" a mano vale para día y para noche; si la etiqueta escrita dice otra cosa, aviso `warning`. 2) La etiqueta escrita según la tabla configurada (sin acentos ni mayúsculas). 3) Si no: Día con aviso que manda a la configuración. El turno de noche empieza 12 h después del de día (hora de inicio configurable; `ShiftClock` ya no tiene 07:00 fijo).
+- **Actividades** (`ActivityTypeClassifier`): reglas configuradas en orden de prioridad → si ninguna aplica, `actividades[].tipo_sugerido` que la IA llena al leer la hoja (lista fija de `ActivityType` en el prompt, así el prompt es igual para todas las empresas) → si no, "Otros". Cada caso deja un aviso distinto en la revisión.
+- **Aprender de la revisión:** `GET …/ai-capture/activity-suggestions` compara el tipo que puso la captura con el que quedó en el reporte revisado; la pantalla ofrece convertirlo en regla con un clic.
+- **Corridas** (`drilling_report_runs`, entidad `Run` del agregado `DrillingReport`): la tabla PERFORACIÓN se carga al borrador; el asistente las edita (paso Herramientas) y la vista del reporte las usa para su tabla PERFORACIÓN.
+- **Pantalla:** menú Proyectos → *Captura con IA* (empresa) y engrane junto a *Capturar desde foto* (proyecto). Pestañas Turnos / Actividades / Probar (prueba lo que está en pantalla sin guardar). Solo guardan administradores (`admin`, o quien tenga `configure DrillingAiCapture` o `update Project`).
+
+**API:** `GET|PUT|DELETE /api/drilling/reports/ai-capture/settings?project_id=`, `POST …/settings/preview`, `GET …/activity-suggestions`.
+
+**Evaluación con `tipo_sugerido` (Opus 5.5, 6 hojas, 2026-10-16):** 473/481 campos correctos (98.3 %, antes 97.5 %), 2 inventados (antes 6): agregar el campo no empeora la transcripción. De 38 actividades: 35 las resuelven las reglas de fábrica (la IA coincide en 32 de 34 que sugirió), 1 solo la IA ("Se lleva muestra de núcleo a geología" → Manejo de materiales) y 2 quedan en "Otros" ("Midiendo barreno", "Medición": no hay tipo de actividad para medición direccional).
+
+**Pruebas:** backend 73 unitarias (configuración, turnos con inicio 08:00, horas 24 h, reglas, tipo sugerido, corridas, entidad `Run`). Front: composable de configuración, organismo montado, corridas en el store (incluye borradores viejos sin corridas).
+
+**Despliegue (en orden, el back primero porque el reporte ahora carga las corridas en cada consulta):** push del back → en el servidor `git pull` + `composer install` + `php artisan migrate --force` (2 tablas) + `queue:restart` → push del front.
+
 ## 6. Pendientes de decisión
 
-1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? **Mientras tanto** la fase 1 usa A/1/D = día y B/2/N/Noche = noche (configurable en `Config/module.php`), y siempre avisa en la revisión cómo interpretó el turno.
-2. **Tipo de actividad:** cómo se clasifican "voladura", "traslado", "midiendo barreno", "esperando empaques" en `drilling | maintenance | waiting | mobilization | …`.
-3. **Tabla PERFORACIÓN** (desde, hasta, m, recuperación, tipo de roca, dureza): confirmar si existe entidad en el backend o hay que crearla.
+1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? Sigue pendiente con operación, pero ya **no bloquea**: desde la fase 2a se configura en pantalla por empresa o proyecto, y si las horas vienen en 24 h mandan las horas.
+2. **Tipo de actividad:** las reglas se editan en pantalla (fase 2a). Falta decidir si se crea un tipo para "medición / midiendo barreno" (hoy cae en "Otros").
+3. ~~**Tabla PERFORACIÓN**~~: resuelto en la fase 2a con `drilling_report_runs`.
 ## 7. Despliegue (verificado en el servidor el 2026-10-15)
 
 Servidor `server.nautiluz.mx` (148.135.39.191), SSH por el puerto 22. Es el mismo servidor del CRM de Galex.
@@ -173,9 +192,15 @@ Servidor `server.nautiluz.mx` (148.135.39.191), SSH por el puerto 22. Es el mism
 | Pieza | Repo / rama | Cómo se despliega | Dónde corre |
 |---|---|---|---|
 | Frontend | `super-octo-enigma` / **`simo`** | Push a `simo` → GitHub Action `deploy-simo.yml`: `pnpm install --no-frozen-lockfile`, build y `scp` de `dist/` | `/var/www/docker/simo/frontend/dist`, servido por el contenedor `simo_web` (Caddy) → `cdkapp.xelesta.mx` |
-| Backend | `main_skeleton` / **`DynamicReportModule`** | Push a `DynamicReportModule` → GitHub Action `deploy.yml` (SSH + `git pull`) | `/var/www/docker/simo`, contenedores `simo_app`, `simo_queue`, `simo_scheduler` → `cdkapi.xelesta.mx` |
+| Backend | `main_skeleton` / **`DynamicReportModule`** | Push a `DynamicReportModule` → GitHub Action `deploy.yml` (SSH + `git pull`). **No migra ni reinicia colas.** Hasta el 2026-10-16 la Action no llegaba al servidor y los despliegues fueron `git pull` manuales | `/var/www/docker/simo`, contenedores `simo_app`, `simo_queue`, `simo_scheduler` → `simocloudapi.nautiluz.mx` |
 
 Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
+
+**Lo que se aprendió al desplegar la fase 1 (2026-10-16):**
+
+- El servidor tiene dos IPs: `148.135.39.191` (responde) y `142.171.227.104` (sin respuesta desde ~2026-09-01). `simocloudapi.nautiluz.mx` y el secret `SSH_HOST_SIMO` apuntaban a la muerta: la app no tenía tráfico real desde septiembre y las Actions fallaban con `i/o timeout`. Se movieron a la `148.x`. Siguen en la `142.x`: `simocloudapp.nautiluz.mx` y un registro de `erp.galexgraduaciones.com` (sus certificados no se pueden renovar mientras tanto).
+- El workflow instalaba la última versión de pnpm (12), que falla con `ERR_PNPM_IGNORED_BUILDS`; quedó fijado en `pnpm@10`. Se agregó `workflow_dispatch`.
+- El ImageMagick del servidor *anuncia* HEIC pero no decodifica las fotos de iPhone actuales (IM 6.9.12 + libheif 1.17: "Metadata not correctly assigned to image"; ffmpeg 6.1 tampoco). El front convierte HEIC → JPEG en el navegador (`heic-to`, carga diferida) y reduce a 2400 px (~520 KB por hoja).
 
 ⚠️ **Todo push a `simo` reconstruye y publica el frontend en producción**, aunque el commit solo toque documentación. Como el install no usa el lockfile congelado, un rebuild puede traer versiones nuevas de dependencias. Los commits que no cambian la app (como la fase 0) llevan `[skip ci]` para no disparar el despliegue.
 
@@ -185,3 +210,5 @@ Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
 - **2026-10-15:** Primera evaluación con Opus 5.5 (effort medium): 97.5% de campos correctos, $0.087 por hoja. La salida estructurada no admite el esquema; se cambió a esquema en el prompt + validación.
 - **2026-10-15:** Comparación con Sonnet 5.5 (95.4%, $0.036 por hoja) y Haiku 5.5 (94.8%, $0.003 por hoja). Opus es el único sin errores sin resaltar.
 - **2026-10-15:** Fase 1 implementada (backend + front) y probada localmente. Una revisión de seguridad automática encontró 4 puntos (autorización, imágenes gigantes, formatos de imagen inseguros, fuga de mensajes de error), todos corregidos antes del push.
+- **2026-10-16:** Fase 1 en producción. Se corrigieron en el camino: DNS de la API apuntando a una IP muerta, pnpm sin versión fija y HEIC de iPhone que el servidor no decodifica (ahora se convierte en el navegador). Se verificó que los roles de Spatie sí funcionan.
+- **2026-10-16:** Fase 2a implementada: turnos y reglas de actividades configurables por empresa/proyecto, tipo de actividad sugerido por la IA como respaldo, sugerencias aprendidas de la revisión y corridas del reporte. Evaluación sin regresión (98.3 %).

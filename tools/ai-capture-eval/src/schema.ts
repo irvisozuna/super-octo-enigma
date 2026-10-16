@@ -57,6 +57,7 @@ export interface Extraction {
     descripcion: string
     horas_cdk: number | null
     horas_cliente: number | null
+    tipo_sugerido?: string | null
   }>
   actividades_total_horas: number | null
   aceros: { broca: Acero[]; tricono: Acero[]; escareador: Acero[] }
@@ -129,7 +130,7 @@ export function fromWire(w: Wire): Extraction {
     perforacion_totales: { mts_perforados: number(w.perforacion_totales.mts_perforados), recuperacion: number(w.perforacion_totales.recuperacion) },
     perforacion_notas: w.perforacion_notas.filter((n: string) => text(n)),
     actividades: w.actividades.map((a: Wire) => ({
-      desde: text(a.desde), hasta: text(a.hasta), descripcion: a.descripcion, horas_cdk: number(a.horas_cdk), horas_cliente: number(a.horas_cliente),
+      desde: text(a.desde), hasta: text(a.hasta), descripcion: a.descripcion, horas_cdk: number(a.horas_cdk), horas_cliente: number(a.horas_cliente), tipo_sugerido: text(a.tipo_sugerido),
     })),
     actividades_total_horas: number(w.actividades_total_horas),
     aceros: { broca: w.aceros.broca.map(wireAcero), tricono: w.aceros.tricono.map(wireAcero), escareador: w.aceros.escareador.map(wireAcero) },
@@ -157,7 +158,7 @@ export const extractionJsonSchema = obj({
   perforacion: arr(obj({ desde: num, hasta: num, mts_perforados: num, recuperacion: num, tipo_roca: str, dureza: str })),
   perforacion_totales: obj({ mts_perforados: num, recuperacion: num }),
   perforacion_notas: arr({ type: 'string' }),
-  actividades: arr(obj({ desde: str, hasta: str, descripcion: { type: 'string' }, horas_cdk: num, horas_cliente: num })),
+  actividades: arr(obj({ desde: str, hasta: str, descripcion: { type: 'string' }, horas_cdk: num, horas_cliente: num, tipo_sugerido: str })),
   actividades_total_horas: num,
   aceros: obj({ broca: arr(acero), tricono: arr(acero), escareador: arr(acero) }),
   rebaje_herramientas: arr(obj({ acero: str, no_serie: str, patron_desgaste: str })),

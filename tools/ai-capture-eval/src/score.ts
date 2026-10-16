@@ -17,6 +17,8 @@ export interface FieldResult {
 }
 
 const IGNORED_TOP = new Set(['campos_dudosos', '_meta'])
+/** Sugerencias de la IA, no transcripción: no se califican contra la verdad. */
+const IGNORED_ANY = new Set(['tipo_sugerido'])
 const FREE_TEXT = /(descripcion|observaciones|perforacion_notas\[\d+\]|nota|operador|ayudante_\d|otro|accesorio)$/
 const CLOCK = /^actividades\[\d+\]\.(desde|hasta)$/
 const SIMILARITY_OK = 0.8
@@ -106,7 +108,7 @@ function walk(path: string, expected: unknown, got: unknown, out: FieldResult[])
     const e = (isObj(expected) ? expected : {}) as Record<string, unknown>
     const g = (isObj(got) ? got : {}) as Record<string, unknown>
     for (const key of new Set([...Object.keys(e), ...Object.keys(g)])) {
-      if (!path && IGNORED_TOP.has(key))
+      if ((!path && IGNORED_TOP.has(key)) || IGNORED_ANY.has(key))
         continue
       walk(path ? `${path}.${key}` : key, e[key] ?? null, g[key] ?? null, out)
     }
