@@ -192,6 +192,8 @@ La Batch API cuesta 50% menos si no se necesita el resultado al momento. El cost
 
 **Resultado con las 6 hojas reales (2026-10-16):** ningún emparejamiento falso; 6 de 12 ayudantes y 1 de 6 equipos. Lo demás no está dado de alta: ningún número de serie de las hojas existe en el inventario, los operadores (Morales, Valenzuela, Ibarra…) no están en el personal y "CDK-1000" no es un equipo registrado. **El cuello de botella son los catálogos, no la lectura.**
 
+**Dar de alta desde la revisión (2026-10-16):** el panel de la foto muestra lo que la hoja menciona y no está en los catálogos, con "Usar \<parecido\>" o "Dar de alta" (diálogo precargado con lo leído). Al dar de alta se crea el registro, se agrega al proyecto (el asistente solo ofrece personal y equipos del proyecto), se recargan las listas y se pone en el reporte. También ofrece asignar lo encontrado que falte en el reporte o en el proyecto. `GET /reports/ai-imports/{id}/catalog-status` recalcula contra los catálogos sin llamar a la IA.
+
 ## 6. Pendientes de decisión
 
 1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? Sigue pendiente con operación, pero ya **no bloquea**: desde la fase 2a se configura en pantalla por empresa o proyecto, y si las horas vienen en 24 h mandan las horas.
