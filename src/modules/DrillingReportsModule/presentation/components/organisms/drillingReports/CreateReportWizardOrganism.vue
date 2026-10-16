@@ -203,6 +203,11 @@ const loadTools = async () => {
   }
 }
 
+/** Desde la revisión de la captura con IA se dio de alta o se agregó al proyecto: recargar las listas. */
+const reloadCatalogOptions = async () => {
+  await Promise.all([loadEmployees(), loadEquipment(), loadTools()])
+}
+
 // Actions
 const handleSubmit = async () => {
   const data = {
@@ -553,6 +558,7 @@ onMounted(async () => {
           :ai-import="aiImport"
           class="ai-capture-column"
           @go-to-step="wizardStore.setStep"
+                @catalog-changed="reloadCatalogOptions"
         />
         <VCardText
           class="pa-0 flex-grow-1"

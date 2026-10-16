@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { AiImport, AiImportSteel, AiImportStep } from '../../../infrastructure/api/services/AiCaptureApiService'
 import { AiCaptureApiService } from '../../../infrastructure/api/services/AiCaptureApiService'
+import AiCaptureCatalogGapsMolecule from './AiCaptureCatalogGapsMolecule.vue'
 
 export interface AiCapturePhotoPanelProps {
   aiImport: AiImport
@@ -11,6 +12,7 @@ const props = defineProps<AiCapturePhotoPanelProps>()
 
 const emit = defineEmits<{
   'goToStep': [step: string]
+  'catalogChanged': []
 }>()
 
 /** Paso del asistente (valor de REPORT_WIZARD_STEPS) para cada sección de advertencias. */
@@ -242,6 +244,18 @@ onBeforeUnmount(releaseImage)
           <span>{{ warning.message }}</span>
         </div>
       </div>
+
+      <template v-if="aiImport.status === 'completed'">
+        <VDivider class="my-3" />
+        <p class="text-subtitle-2 mb-1">
+          Personal, equipo y aceros de la hoja
+        </p>
+        <AiCaptureCatalogGapsMolecule
+          :import-id="aiImport.id"
+          :project-id="aiImport.project_id"
+          @catalog-changed="emit('catalogChanged')"
+        />
+      </template>
 
       <template v-if="unmapped">
         <VDivider class="my-3" />

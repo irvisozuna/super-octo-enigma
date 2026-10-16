@@ -1,10 +1,22 @@
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import type { AiImport } from '../../../../infrastructure/api/services/AiCaptureApiService'
 import AiCapturePhotoPanelMolecule from '../AiCapturePhotoPanelMolecule.vue'
+
+vi.mock('../../../../infrastructure/api/services/AiCaptureCatalogApiService', () => ({
+  AiCaptureCatalogApiService: {
+    status: vi.fn().mockResolvedValue({
+      gaps: [{ kind: 'employee', field: 'faena.operador', position: 'operator', written: 'Manuel Morales', candidates: [] }],
+      matches: [{ kind: 'equipment', field: 'faena.equipo', written: 'GD H300', id: 'eq-1', label: 'GDH300', in_project: false }],
+    }),
+    addEmployeeToProject: vi.fn(),
+    addEquipmentToProject: vi.fn(),
+  },
+}))
 
 vi.mock('../../../../infrastructure/api/services/AiCaptureApiService', () => ({
   AiCaptureApiService: { image: vi.fn().mockResolvedValue(new Blob(['jpeg'], { type: 'image/jpeg' })) },
@@ -51,7 +63,7 @@ describe('AiCapturePhotoPanelMolecule', () => {
   })
 
   const mountPanel = async () => {
-    const wrapper = mount(AiCapturePhotoPanelMolecule, { props: { aiImport }, global: { plugins: [vuetify] } })
+    const wrapper = mount(AiCapturePhotoPanelMolecule, { props: { aiImport }, global: { plugins: [vuetify, createPinia()] } })
 
     await flushPromises()
 
@@ -89,5 +101,21 @@ describe('AiCapturePhotoPanelMolecule', () => {
     expect(text).toContain('Operador: Juan Pérez')
     expect(text).toContain('Broca NQ · serie 13445 / 12')
     expect(text).toContain('Medición 90 MTS')
+  })
+
+  it('ofrece dar de alta lo que no está en el catálogo y agregar al proyecto lo encontrado', async () => {
+    const wrapper = await mountPanel()
+    const text = wrapper.text()
+
+    expect(text).toContain('Operador "Manuel Morales" no está en el catálogo')
+    expect(text).toContain('Dar de alta')
+    expect(text).toContain('Equipo "GD H300" → GDH300')
+
+    const addToProject = wrapper.findAll('button').find(button => button.text().includes('Agregar al proyecto y asignar'))!
+
+    await addToProject.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.emitted('catalogChanged')).toHaveLength(1)
   })
 })
