@@ -57,8 +57,8 @@ Cada fase es un commit a la rama `simo` (front) y, cuando aplique, a `DynamicRep
 |---|---|---|
 | **0** | Herramienta de evaluación + transcripciones de referencia + validaciones. Medir precisión y costo por hoja con Claude | ✅ Medido (falta revisión humana del dataset) |
 | **1** | Endpoint + Job + extracción + borrador + pantalla de revisión con la foto al lado | ✅ En producción (2026-10-16) |
-| **2a** | Turnos y reglas de actividades configurables (empresa / proyecto) + tipo sugerido por la IA + corridas del reporte | 🟡 Lista para desplegar |
-| 2b | Relación con catálogos (personal, equipo, aceros) + validaciones entre reportes en el backend | ⚪ Pendiente |
+| **2a** | Turnos y reglas de actividades configurables (empresa / proyecto) + tipo sugerido por la IA + corridas del reporte | ✅ En producción (2026-10-16) |
+| **2b** | Desgaste de herramientas al aprobar (arreglo + reparación de datos) + relación con catálogos (personal, equipo, aceros) | ✅ En producción (2026-10-16) |
 | 3 | Varias hojas a la vez + captura desde el celular con escáner de documentos | ⚪ Pendiente |
 
 ### Fase 0: detalle
@@ -180,6 +180,18 @@ La Batch API cuesta 50% menos si no se necesita el resultado al momento. El cost
 
 **Despliegue (en orden, el back primero porque el reporte ahora carga las corridas en cada consulta):** push del back → en el servidor `git pull` + `composer install` + `php artisan migrate --force` (2 tablas) + `queue:restart` → push del front.
 
+### Fase 2b: detalle
+
+**Desgaste de herramientas (arreglo previo, afectaba a todos los reportes):** el desgaste se registraba dos veces al crear el reporte (dos listeners), otra vez en cada edición y nunca se revertía al borrar. En producción las herramientas sumaban 2,607 m contra 858 m reales y las 8 retiradas automáticamente no llegaban al 90 % de su capacidad real.
+- Los aceros se guardan con el reporte (`drilling_report_tools`); editar reemplaza y borrar no deja rastro.
+- El desgaste se aplica **una sola vez, al aprobar** (`ApplyReportToolUsageService`, marca `applied_at`), dentro de la transacción de la aprobación. Si una herramienta no admite el uso (retirada, sin capacidad, de otra empresa), la aprobación se detiene con un mensaje claro.
+- Reparación con `php artisan drilling:repair-tool-usage [--apply]` (simula sin `--apply`; respalda las tablas antes). Aplicada el 2026-10-16: historial de 339 → 19 filas (solo reportes aprobados), 226 aceros guardados con su reporte (207 pendientes de aplicar al aprobar), 7 herramientas reactivadas. Respaldo: `tool_management_*_bak_20261016_193946`.
+- Prueba de humo en producción con transacción revertida: crear, editar, ver detalle, aprobar y aprobar de nuevo (sin duplicar).
+
+**Catálogos:** `CatalogMatcher` + `SheetCatalogMapper` llenan operador, ayudantes, equipo y un grupo de aceros (escareador + brocas/triconos con sus tramos). Nombres sin acentos, con errores de dedo e iniciales, desempatando a favor del roster del proyecto; equipo por código; aceros por número de serie combinando "No. serie" + "Serie/color" como en el inventario (`HA109728` + `14`). Solo se asigna lo claro; lo demás queda como aviso con hasta 3 parecidos.
+
+**Resultado con las 6 hojas reales (2026-10-16):** ningún emparejamiento falso; 6 de 12 ayudantes y 1 de 6 equipos. Lo demás no está dado de alta: ningún número de serie de las hojas existe en el inventario, los operadores (Morales, Valenzuela, Ibarra…) no están en el personal y "CDK-1000" no es un equipo registrado. **El cuello de botella son los catálogos, no la lectura.**
+
 ## 6. Pendientes de decisión
 
 1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? Sigue pendiente con operación, pero ya **no bloquea**: desde la fase 2a se configura en pantalla por empresa o proyecto, y si las horas vienen en 24 h mandan las horas.
@@ -212,3 +224,4 @@ Entrada: Apache (443) → Traefik (`:18080`) → contenedores.
 - **2026-10-15:** Fase 1 implementada (backend + front) y probada localmente. Una revisión de seguridad automática encontró 4 puntos (autorización, imágenes gigantes, formatos de imagen inseguros, fuga de mensajes de error), todos corregidos antes del push.
 - **2026-10-16:** Fase 1 en producción. Se corrigieron en el camino: DNS de la API apuntando a una IP muerta, pnpm sin versión fija y HEIC de iPhone que el servidor no decodifica (ahora se convierte en el navegador). Se verificó que los roles de Spatie sí funcionan.
 - **2026-10-16:** Fase 2a implementada: turnos y reglas de actividades configurables por empresa/proyecto, tipo de actividad sugerido por la IA como respaldo, sugerencias aprendidas de la revisión y corridas del reporte. Evaluación sin regresión (98.3 %).
+- **2026-10-16:** Fase 2b: arreglo del desgaste de herramientas (al aprobar), reparación de datos en producción y emparejamiento con catálogos.
