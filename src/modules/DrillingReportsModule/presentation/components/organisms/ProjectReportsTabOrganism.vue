@@ -13,6 +13,7 @@ const props = defineProps<ProjectReportsTabProps>()
 defineEmits<{
   'create': []
   'aiCapture': []
+  'aiCaptureSettings': []
   'view': [report: any]
   'edit': [report: any]
   'delete': [report: any]
@@ -195,6 +196,21 @@ const getStatusLabel = (status: string) => {
         </p>
       </div>
       <div class="d-flex gap-2">
+        <VBtn
+          icon
+          variant="text"
+          color="secondary"
+          aria-label="Configuración de la captura con IA"
+          @click="$emit('aiCaptureSettings')"
+        >
+          <VIcon icon="tabler-camera-cog" />
+          <VTooltip
+            activator="parent"
+            location="top"
+          >
+            Cómo se interpretan las hojas en este proyecto (turnos y actividades)
+          </VTooltip>
+        </VBtn>
         <VBtn
           variant="tonal"
           color="primary"

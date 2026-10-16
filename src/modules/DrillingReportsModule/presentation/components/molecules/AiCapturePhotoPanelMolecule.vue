@@ -269,7 +269,7 @@ onBeforeUnmount(releaseImage)
         </div>
 
         <div
-          v-if="unmapped.perforacion.length"
+          v-if="unmapped.perforacion?.length"
           class="mb-3"
         >
           <span class="text-caption font-weight-medium">Corridas de perforación</span>

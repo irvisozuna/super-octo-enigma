@@ -207,6 +207,18 @@ const drillingSummary = computed(() => {
 
 // Detalles de perforación filtrados y deduplicados
 const drillingDetailsForPrint = computed(() => {
+  // Si el reporte trae corridas (tabla PERFORACIÓN capturada tal cual de la hoja), esas mandan
+  const runs = report.value?.runs || []
+  if (runs.length) {
+    return runs.map((run: any) => ({
+      depth_from: run.depth_from,
+      depth_to: run.depth_to,
+      meters_drilled: run.meters_drilled,
+      recovery: run.meters_recovered,
+      hardness: run.hardness,
+    }))
+  }
+
   const details = report.value?.drilling_details || []
 
   // Filtrar: solo brocas (excluir escarreadores explícitamente)
@@ -412,6 +424,7 @@ watch(() => report.value, newReport => {
       parameters: newReport.parameters,
       horometer: newReport.horometer,
       drilling_details: newReport.drilling_details,
+      runs: newReport.runs,
       activities: newReport.activities,
       consumptions: newReport.consumptions,
       tool_assignments: newReport.tool_assignments,

@@ -98,6 +98,16 @@ const drillingReportRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/drilling/ai-capture/settings',
+    name: 'drilling-ai-capture-settings',
+    component: () => import('../presentation/views/AiCaptureSettings.vue'),
+    meta: {
+      title: 'Captura con IA',
+      requiresAuth: true,
+      permissions: ['drilling.projects.view'],
+    },
+  },
+  {
     path: '/drilling/wells',
     name: 'drilling-wells',
     component: () => import('../presentation/views/WellsList.vue'),

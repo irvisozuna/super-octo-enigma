@@ -34,7 +34,8 @@ export interface AiImportUnmapped {
   faena: Record<'centro_costo' | 'lugar' | 'equipo' | 'operador' | 'ayudante_1' | 'ayudante_2' | 'otro', string | null>
   pozo: { numero: string | null; prof_inicial: number | null; prof_final: number | null; mts_perforados: number | null }
   horometro: { inicial: number | null; final: number | null; total_horas: number | null }
-  perforacion: Array<{ desde: number | null; hasta: number | null; mts_perforados: number | null; recuperacion: number | null }>
+  /** Solo en importaciones anteriores a las corridas: ahora la tabla se carga al reporte. */
+  perforacion?: Array<{ desde: number | null; hasta: number | null; mts_perforados: number | null; recuperacion: number | null }>
   perforacion_notas: string[]
   aceros: { broca: AiImportSteel[]; tricono: AiImportSteel[]; escareador: AiImportSteel[] }
   accesorios: Array<{ accesorio: string | null; cantidad: number | null; observaciones: string | null }>

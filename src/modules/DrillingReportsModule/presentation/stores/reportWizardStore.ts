@@ -30,6 +30,16 @@ interface Consumption {
   unit: string
 }
 
+/** Corrida: un renglón de la tabla PERFORACIÓN de la hoja. */
+export interface ReportRun {
+  depth_from: number | null
+  depth_to: number | null
+  meters_drilled: number | null
+  meters_recovered: number | null
+  rock_type: string | null
+  hardness: string | null
+}
+
 interface DirectionalMeasurement {
   id?: string
   depth: number
@@ -86,6 +96,7 @@ export interface ReportWizardData extends PersonnelData {
   activities: Activity[]
   directional_measurements: DirectionalMeasurement[]
   consumptions: Consumption[]
+  runs: ReportRun[]
   tool_assignments: ToolAssignment[]
   tool_groups: ToolGroup[]
   drilling_depth_start: number | null
@@ -120,6 +131,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     activities: [],
     directional_measurements: [],
     consumptions: [],
+    runs: [],
     tool_assignments: [],
     tool_groups: [],
     drilling_depth_start: null,
@@ -424,6 +436,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       activities: [],
       directional_measurements: [],
       consumptions: [],
+      runs: [],
       tool_assignments: [],
       tool_groups: [],
       drilling_depth_start: null,
@@ -633,6 +646,15 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       shift: cons.shift || formData.value.shift,
       quantity: cons.quantity || cons.amount || 0,
       unit: cons.unit || 'kg',
+    }))
+
+    formData.value.runs = (report.runs || []).map((run: any) => ({
+      depth_from: run.depth_from ?? null,
+      depth_to: run.depth_to ?? null,
+      meters_drilled: run.meters_drilled ?? null,
+      meters_recovered: run.meters_recovered ?? null,
+      rock_type: run.rock_type ?? null,
+      hardness: run.hardness ?? null,
     }))
 
     // Directional measurements
@@ -1105,6 +1127,25 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     isDirty.value = true
   }
 
+  // Runs (corridas) Management
+  const addRun = () => {
+    const last = formData.value.runs[formData.value.runs.length - 1]
+    const from = last?.depth_to ?? formData.value.drilling_depth_start
+
+    formData.value.runs.push({ depth_from: from, depth_to: null, meters_drilled: null, meters_recovered: null, rock_type: null, hardness: null })
+    isDirty.value = true
+  }
+
+  const removeRun = (index: number) => {
+    formData.value.runs.splice(index, 1)
+    isDirty.value = true
+  }
+
+  const updateRun = (index: number, run: Partial<ReportRun>) => {
+    formData.value.runs[index] = { ...formData.value.runs[index], ...run }
+    isDirty.value = true
+  }
+
   // Helper functions para tool management
   const getLastDepth = () => {
     if (formData.value.tool_assignments.length === 0)
@@ -1343,7 +1384,8 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
       if (saved) {
         const draft = JSON.parse(saved)
 
-        formData.value = draft.formData
+        // Borradores guardados antes de agregar campos nuevos (p. ej. runs) no los traen
+        formData.value = { ...formData.value, runs: [], ...draft.formData }
         currentStep.value = draft.currentStep || '1'
 
         // Show notification
@@ -1451,6 +1493,9 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
     addConsumption,
     removeConsumption,
     updateConsumption,
+    addRun,
+    removeRun,
+    updateRun,
 
     // Tool Management (legacy)
     addToolAssignment,

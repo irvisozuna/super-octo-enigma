@@ -13,6 +13,7 @@ import WizardActivitiesMolecule from '../../molecules/WizardActivitiesMolecule.v
 import WizardDirectionalMeasurementsMolecule from '../../molecules/WizardDirectionalMeasurementsMolecule.vue'
 import WizardConsumptionsMolecule from '../../molecules/WizardConsumptionsMolecule.vue'
 import WizardToolsMolecule from '../../molecules/WizardToolsMolecule.vue'
+import WizardRunsMolecule from '../../molecules/WizardRunsMolecule.vue'
 import WizardReviewMolecule from '../../molecules/WizardReviewMolecule.vue'
 import AiCapturePhotoPanelMolecule from '../../molecules/AiCapturePhotoPanelMolecule.vue'
 import type { AiImport } from '../../../../infrastructure/api/services/AiCaptureApiService'
@@ -609,6 +610,7 @@ onMounted(async () => {
                   :loading-tools="loadingTools"
                   :current-well="detailStore.currentWell"
                 />
+                <WizardRunsMolecule />
               </VStepperWindowItem>
 
               <!-- Step 7: Revisión Final -->

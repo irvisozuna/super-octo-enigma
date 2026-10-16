@@ -60,6 +60,7 @@ import ProjectStatisticsTabOrganism from '../components/organisms/ProjectStatist
 import ProjectHistoryTabOrganism from '../components/organisms/ProjectHistoryTabOrganism.vue'
 import CreateReportWizardOrganism from '../components/organisms/drillingReports/CreateReportWizardOrganism.vue'
 import AiCaptureDialogOrganism from '../components/organisms/drillingReports/AiCaptureDialogOrganism.vue'
+import AiCaptureSettingsOrganism from '../components/organisms/drillingReports/AiCaptureSettingsOrganism.vue'
 
 // Usar el store directamente para algunos datos específicos
 import { useProjectDetailStore } from '../stores/projectDetailStore'
@@ -743,6 +744,7 @@ function handleViewReport(report: any) {
  * Captura con IA: subir fotos de hojas y revisar los borradores que se crean
  */
 const showAiCaptureDialog = ref(false)
+const showAiCaptureSettingsDialog = ref(false)
 
 function handleAiCapture() {
   if (!canCreateReports.value) {
@@ -1085,6 +1087,7 @@ onMounted(() => {
             :can-create="canCreateReports"
             @create="handleCreateReport"
             @ai-capture="handleAiCapture"
+            @ai-capture-settings="showAiCaptureSettingsDialog = true"
             @view="handleViewReport"
             @edit="handleEditReport"
             @delete="handleDeleteReport"
@@ -1364,6 +1367,33 @@ onMounted(() => {
       @review="handleAiCaptureReview"
       @completed="refreshTab('reports')"
     />
+
+    <!-- Configuración de la captura con IA de este proyecto -->
+    <VDialog
+      v-model="showAiCaptureSettingsDialog"
+      max-width="960"
+      scrollable
+    >
+      <VCard>
+        <VCardTitle class="d-flex align-center pa-6 pb-2">
+          <span class="text-h5">Captura con IA en este proyecto</span>
+          <VSpacer />
+          <VBtn
+            icon="tabler-x"
+            variant="text"
+            aria-label="Cerrar"
+            @click="showAiCaptureSettingsDialog = false"
+          />
+        </VCardTitle>
+        <VCardText class="pa-6 pt-2">
+          <AiCaptureSettingsOrganism
+            v-if="showAiCaptureSettingsDialog"
+            :project-id="projectId"
+            @saved="showSnackbar({ message: 'Configuración de captura guardada', color: 'success' })"
+          />
+        </VCardText>
+      </VCard>
+    </VDialog>
 
     <!-- Diálogo de Vista Detallada del Reporte -->
     <VDialog

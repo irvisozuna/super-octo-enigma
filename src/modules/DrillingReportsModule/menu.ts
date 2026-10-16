@@ -41,6 +41,13 @@ const drillingReportsMenu: VerticalNavItems = [
         action: 'read',
         subject: 'Project',
       },
+      {
+        title: 'Captura con IA',
+        icon: { icon: 'tabler-camera-cog' },
+        to: 'drilling-ai-capture-settings',
+        action: 'read',
+        subject: 'Project',
+      },
     ],
   },
 
