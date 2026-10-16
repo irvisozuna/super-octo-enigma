@@ -194,6 +194,19 @@ La Batch API cuesta 50% menos si no se necesita el resultado al momento. El cost
 
 **Dar de alta desde la revisión (2026-10-16):** el panel de la foto muestra lo que la hoja menciona y no está en los catálogos, con "Usar \<parecido\>" o "Dar de alta" (diálogo precargado con lo leído). Al dar de alta se crea el registro, se agrega al proyecto (el asistente solo ofrece personal y equipos del proyecto), se recargan las listas y se pone en el reporte. También ofrece asignar lo encontrado que falte en el reporte o en el proyecto. `GET /reports/ai-imports/{id}/catalog-status` recalcula contra los catálogos sin llamar a la IA.
 
+### Hoja de ruta de experiencia (2026-10-16)
+
+Diagnóstico con datos de producción: 62 reportes, 51 en borrador. El cuello de botella dejó de ser capturar: es revisar y aprobar (y el desgaste y el avance del pozo cuentan al aprobar). Orden acordado: A → D1 → C1 → B.
+
+- **A, bandeja de revisión** (en producción):
+  - pestaña "Por revisar" con semáforo (rojo: sin actividades o sin operador, la profundidad no sigue al turno anterior, folio repetido; amarillo: avisos de la IA sin revisar u horómetro; verde: listo);
+  - "Aprobar los verdes";
+  - recordatorio diario a las 07:00 (`drilling:review-reminders`, solo proyectos vigentes).
+  
+  Al desplegar, EL CUBO tenía 41 pendientes: 16 verdes, 11 amarillos, 14 rojos.
+- **D1, catálogos desde Excel** (en producción): Proyectos → Cargar catálogos (plantilla, vista previa por renglón, asignación al proyecto).
+- **Siguen:** C1 (horas CDK contra horas del cliente y prefactura de standby) y B (cámara guiada y hoja impresa con QR y casillas D/N).
+
 ## 6. Pendientes de decisión
 
 1. **Turno:** ¿"A" y "1" = día, "B" y "Noche" = noche? ¿O "1/2" y "A/B" son cuadrillas distintas? Sigue pendiente con operación, pero ya **no bloquea**: desde la fase 2a se configura en pantalla por empresa o proyecto, y si las horas vienen en 24 h mandan las horas.
