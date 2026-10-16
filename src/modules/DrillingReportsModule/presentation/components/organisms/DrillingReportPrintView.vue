@@ -117,6 +117,8 @@ const shiftLabel = computed(() => {
   return report.value.shift === 'day' ? 'Día' : 'Noche'
 })
 
+const clientHours = computed(() => +((report.value?.activities || []).reduce((sum: number, a: any) => sum + (Number(a.hours_client) || 0), 0)).toFixed(2))
+
 const totalHours = computed(() => {
   return report.value?.totals?.hours_worked || 0
 })
@@ -782,15 +784,15 @@ watch(() => report.value, newReport => {
                     <td class="text-left">
                       {{ getActivityTypeLabel(a.type) }} {{ a.description ? `- ${a.description}` : '' }}
                     </td>
-                    <td>{{ a.hours }}</td>
-                    <td />
+                    <td>{{ a.hours_client ? +(a.hours - a.hours_client).toFixed(2) || '' : a.hours }}</td>
+                    <td>{{ a.hours_client || '' }}</td>
                   </tr>
                   <tr class="total-row">
                     <td colspan="3">
                       <strong>TOTAL:</strong>
                     </td>
-                    <td><strong>{{ totalHours }}</strong></td>
-                    <td />
+                    <td><strong>{{ +(Number(totalHours) - clientHours).toFixed(2) }}</strong></td>
+                    <td><strong>{{ clientHours || '' }}</strong></td>
                   </tr>
                 </tbody>
               </table>

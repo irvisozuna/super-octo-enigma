@@ -472,6 +472,26 @@ const calculateHorometer = () => {
                     class="readonly-field"
                   />
                 </VCol>
+                <VCol
+                  cols="12"
+                  md="3"
+                >
+                  <VTextField
+                    :model-value="activity.hours_client"
+                    label="De ellas, a cargo del cliente"
+                    type="number"
+                    step="0.25"
+                    min="0"
+                    :max="activity.hours"
+                    prepend-inner-icon="tabler-receipt"
+                    suffix="hrs"
+                    hint="Columna CLIENTE de la hoja: se cobra al cliente (stand-by, esperas…)"
+                    persistent-hint
+                    clearable
+                    :error-messages="activity.hours_client != null && Number(activity.hours_client) > Number(activity.hours) ? 'No puede ser mayor que las horas de la actividad' : []"
+                    @update:model-value="(v) => updateActivity(index, 'hours_client', v === '' || v === null ? null : Number(v))"
+                  />
+                </VCol>
                 <VCol cols="12">
                   <VTextarea
                     :model-value="activity.description"

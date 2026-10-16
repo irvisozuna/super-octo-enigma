@@ -18,6 +18,9 @@ interface Activity {
   activity_type: string
   shift: string
   hours: number
+
+  /** Parte de las horas a cargo del cliente (columna CLIENTE de la hoja). */
+  hours_client?: number | null
   start_time: string
   end_time: string
   description: string
@@ -630,6 +633,7 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         activity_type: act.activity_type || 'drilling',
         shift: act.shift || formData.value.shift,
         hours,
+        hours_client: act.hours_client ?? null,
         start_time: startTime,
         end_time: endTime,
         description: act.description || '',

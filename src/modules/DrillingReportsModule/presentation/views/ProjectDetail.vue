@@ -62,6 +62,7 @@ import CreateReportWizardOrganism from '../components/organisms/drillingReports/
 import AiCaptureDialogOrganism from '../components/organisms/drillingReports/AiCaptureDialogOrganism.vue'
 import AiCaptureSettingsOrganism from '../components/organisms/drillingReports/AiCaptureSettingsOrganism.vue'
 import ProjectReviewTabOrganism from '../components/organisms/ProjectReviewTabOrganism.vue'
+import ProjectClientHoursTabOrganism from '../components/organisms/ProjectClientHoursTabOrganism.vue'
 import { ReviewQueueApiService } from '../../infrastructure/api/services/ReviewQueueApiService'
 
 // Usar el store directamente para algunos datos específicos
@@ -1131,6 +1132,16 @@ onMounted(() => {
             @review="handleReviewFromQueue"
             @approved="refreshTab('reports')"
             @count="detailStore.tabDataCache.reviewCount = $event"
+          />
+        </template>
+
+        <!-- TAB: HORAS A CARGO DEL CLIENTE (prefactura de stand-by) -->
+        <template #tab-client_hours>
+          <ProjectClientHoursTabOrganism
+            v-if="activeTab === 'client_hours'"
+            :project-id="projectId"
+            :project-name="project?.project_name"
+            @review="handleReviewFromQueue"
           />
         </template>
 

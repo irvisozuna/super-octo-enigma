@@ -11,6 +11,7 @@ export type ProjectTab =
   | 'overview'
   | 'reports'
   | 'review'
+  | 'client_hours'
   | 'budget'
   | 'equipment'
   | 'documents'
@@ -66,6 +67,13 @@ export function useTabManager(projectId?: string) {
       icon: 'tabler-checklist',
       requiresStatus: ['active', 'suspended', 'completed'],
       lazyLoad: false, // la pestaña carga su propia bandeja
+    },
+    {
+      name: 'client_hours',
+      label: 'Horas cliente',
+      icon: 'tabler-receipt',
+      requiresStatus: ['active', 'suspended', 'completed'],
+      lazyLoad: false, // la pestaña carga su propio periodo
     },
     {
       name: 'budget',
