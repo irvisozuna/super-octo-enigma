@@ -205,7 +205,27 @@ Diagnóstico con datos de producción: 62 reportes, 51 en borrador. El cuello de
   
   Al desplegar, EL CUBO tenía 41 pendientes: 16 verdes, 11 amarillos, 14 rojos.
 - **D1, catálogos desde Excel** (en producción): Proyectos → Cargar catálogos (plantilla, vista previa por renglón, asignación al proyecto).
-- **Siguen:** C1 (horas CDK contra horas del cliente y prefactura de standby) y B (cámara guiada y hoja impresa con QR y casillas D/N).
+- **C1, horas a cargo del cliente** (en producción):
+  - `drilling_activities.hours_client` (la columna CLIENTE de la hoja, que antes se sumaba);
+  - pestaña "Horas cliente" con totales, evidencia (reporte, folio y foto) y Excel para la prefactura.
+- **B, captura en la mina** (en producción):
+  - Proyectos → Capturar hojas, en el celular.
+  - **Revisión de la foto en el teléfono:** borrosa, oscura o quemada, o con poca resolución. Los umbrales se calibraron con las hojas reales: nitidez de 3,100 a 4,300 en las nítidas contra 20–27 con 1.5 px de desenfoque, y brillo de 133 a 144 contra unos 55 oscurecidas.
+  - **Etiquetas QR por pozo** (Reportes → icono QR): el pozo se elige solo.
+  - **Cola sin conexión** (Dexie): las fotos se guardan en el teléfono y se suben solas.
+  - No se endereza la foto en el teléfono (OpenCV pesa unos 8 MB): la IA lee bien las hojas inclinadas.
+
+#### Propuesta de rediseño de la hoja impresa (para aprobar con operación)
+Los errores de lectura que quedan vienen de la hoja, no de la IA: turnos ambiguos (A/B/1/2), números pegados ("14700" por 147.00), horas sin a.m. ni p.m. y el pozo escrito a mano. Cambios baratos al formato, en orden de impacto:
+1. **Turno con casillas** ☐ DÍA ☐ NOCHE en lugar de un renglón libre. Elimina la ambigüedad de A/B/1/2.
+2. **Espacio para la etiqueta QR del pozo** (recuadro de 3 × 3 cm junto a "Pozo"), o el QR impreso si se imprimen hojas por pozo. El pozo y el proyecto quedan identificados sin leer.
+3. **Cuadros por dígito con el punto decimal impreso** en profundidades, metros y horómetro (`[ ][ ][ ].[ ][ ]`). Se acaban los números pegados.
+4. **Horas en formato de 24 h** (`[ ][ ]:[ ][ ]`). El turno se deduce solo y desaparece la ambigüedad de las 7:00.
+5. **Folio como código QR o de barras** además del número rojo. Detecta duplicados con certeza.
+6. **Lista impresa de tipos de actividad** al pie, con un número por tipo (1 Perforación, 2 Cambio de broca, …), y una columna "Tipo" para anotar el número. La clasificación deja de depender de la redacción.
+7. **Horas cliente:** mantener la columna CLIENTE y agregar un renglón de "Total cliente". Alimenta directo la prefactura.
+
+Ninguno obliga a cambiar el flujo en campo: es la misma hoja, más fácil de llenar sin ambigüedad. Todo lo actual sigue funcionando con las hojas viejas.
 
 ## 6. Pendientes de decisión
 
