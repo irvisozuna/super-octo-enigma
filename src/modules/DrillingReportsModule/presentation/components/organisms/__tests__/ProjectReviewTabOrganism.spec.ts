@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import type { ReviewIssue, ReviewQueueEntry } from '../../../../infrastructure/api/services/ReviewQueueApiService'
 import { ReviewQueueApiService } from '../../../../infrastructure/api/services/ReviewQueueApiService'
 import ProjectReviewTabOrganism from '../ProjectReviewTabOrganism.vue'
 
@@ -12,7 +13,7 @@ vi.mock('../../../../infrastructure/api/services/ReviewQueueApiService', () => (
 
 const vuetify = createVuetify({ components, directives })
 
-const entry = (id: string, light: 'red' | 'yellow' | 'green', issues: any[] = []) => ({
+const entry = (id: string, light: ReviewQueueEntry['light'], issues: ReviewIssue[] = []): ReviewQueueEntry => ({
   id, report_number: `RPT-${id}`, report_date: '2026-08-11', shift: 'day', status: 'draft', well_id: 'w-1',
   well_number: 'VPO-00-01', meters: 3, hours: 12, ai_import_id: 'imp', light, issues,
 })

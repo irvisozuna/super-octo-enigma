@@ -146,7 +146,7 @@ async function onCreated(id: string) {
     >
       ¿Faltan muchos?
       <RouterLink
-        :to="{ name: 'drilling-catalog-import' }"
+        to="/drilling/catalog-import"
         target="_blank"
       >
         Cárgalos de una vez desde Excel

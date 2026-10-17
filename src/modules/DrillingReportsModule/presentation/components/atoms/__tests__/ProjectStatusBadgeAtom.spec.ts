@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount as baseMount } from '@vue/test-utils'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import ProjectStatusBadgeAtom from '../ProjectStatusBadgeAtom.vue'
+
+// Sin Vuetify, VChip/VIcon no se resuelven y no se pueden revisar sus props
+const vuetify = createVuetify({ components, directives })
+const mount: typeof baseMount = (component: any, options: any = {}) =>
+  baseMount(component, { ...options, global: { ...options.global, plugins: [vuetify] } })
 
 describe('ProjectStatusBadgeAtom', () => {
   it('renders badge with correct status label', () => {
