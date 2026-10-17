@@ -108,6 +108,26 @@ const drillingReportRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/drilling/capture',
+    name: 'drilling-capture',
+    component: () => import('../presentation/views/MobileCapture.vue'),
+    meta: {
+      title: 'Capturar hojas',
+      requiresAuth: true,
+      permissions: ['drilling.projects.view'],
+    },
+  },
+  {
+    path: '/drilling/projects/:id/qr-labels',
+    name: 'drilling-well-qr-labels',
+    component: () => import('../presentation/views/WellQrLabels.vue'),
+    meta: {
+      title: 'Etiquetas QR de los pozos',
+      requiresAuth: true,
+      permissions: ['drilling.projects.view'],
+    },
+  },
+  {
     path: '/drilling/catalog-import',
     name: 'drilling-catalog-import',
     component: () => import('../presentation/views/CatalogImport.vue'),

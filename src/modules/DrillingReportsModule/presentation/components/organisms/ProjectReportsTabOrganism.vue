@@ -6,6 +6,7 @@ export interface ProjectReportsTabProps {
   reports: any[]
   loading?: boolean
   canCreate?: boolean
+  projectId?: string
 }
 
 const props = defineProps<ProjectReportsTabProps>()
@@ -196,6 +197,22 @@ const getStatusLabel = (status: string) => {
         </p>
       </div>
       <div class="d-flex gap-2">
+        <VBtn
+          v-if="props.projectId"
+          icon
+          variant="text"
+          color="secondary"
+          aria-label="Etiquetas QR de los pozos"
+          :to="{ name: 'drilling-well-qr-labels', params: { id: props.projectId } }"
+        >
+          <VIcon icon="tabler-qrcode" />
+          <VTooltip
+            activator="parent"
+            location="top"
+          >
+            Etiquetas QR de los pozos (el pozo se elige solo al capturar)
+          </VTooltip>
+        </VBtn>
         <VBtn
           icon
           variant="text"
