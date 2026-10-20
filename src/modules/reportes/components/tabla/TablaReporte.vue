@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ColumnaDef, Fila, OrdenDef } from '../../types/reporte'
 import { formatearEntero, formatearValor } from '../../utils/formato'
+import AyudaColumna from './AyudaColumna.vue'
+import ExplicacionColumnaDialogo from './ExplicacionColumnaDialogo.vue'
 
 const props = withDefaults(defineProps<{
   columnas: ColumnaDef[]
@@ -40,6 +42,11 @@ const headers = computed(() => visibles.value.map(c => ({
   nowrap: true,
 })))
 
+const conAyuda = computed(() => visibles.value.filter(c => c.ayuda))
+
+// Explicación de la columna cuyo ícono ⓘ se tocó
+const explicada = ref<ColumnaDef | null>(null)
+
 const sortBy = computed(() => props.orden.map(o => ({ key: o.columna, order: o.dir })))
 
 const opcionesPorPagina = computed(() => [25, 50, 100, 200, 500]
@@ -76,6 +83,25 @@ function actualizarOrden(nuevo: { key: string; order?: boolean | 'asc' | 'desc' 
     @update:items-per-page="(n: number) => emit('update:porPagina', n)"
     @update:sort-by="actualizarOrden"
   >
+    <template
+      v-for="columna in conAyuda"
+      :key="columna.columna"
+      #[`header.${columna.columna}`]="{ column, getSortIcon }"
+    >
+      <div class="v-data-table-header__content">
+        <span>{{ column.title }}</span>
+        <AyudaColumna
+          :etiqueta="columna.etiqueta"
+          :ayuda="columna.ayuda!"
+          @abrir="explicada = columna"
+        />
+        <VIcon
+          class="v-data-table-header__sort-icon"
+          :icon="getSortIcon(column)"
+        />
+      </div>
+    </template>
+
     <template #item="{ item }">
       <tr>
         <td
@@ -108,6 +134,14 @@ function actualizarOrden(nuevo: { key: string; order?: boolean | 'asc' | 'desc' 
       </tr>
     </template>
   </VDataTableServer>
+
+  <ExplicacionColumnaDialogo
+    :abierto="explicada !== null"
+    :columnas="explicada ? [explicada] : []"
+    :todas="columnas"
+    :totales="totales"
+    @update:abierto="(v: boolean) => { if (!v) explicada = null }"
+  />
 </template>
 
 <style scoped>

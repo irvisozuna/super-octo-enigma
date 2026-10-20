@@ -16,6 +16,18 @@ export interface ColumnaDef {
   total: boolean
   ancho?: number
   fija?: boolean
+
+  /** Total como razón de dos columnas: [numerador, denominador, factor] (porcentajes) */
+  razon?: [string, string, number] | null
+
+  /** Explicación para quien lee el reporte: resumen (tooltip), de dónde sale y cómo se calcula */
+  ayuda?: AyudaColumna | null
+}
+
+export interface AyudaColumna {
+  resumen: string
+  origen?: string | null
+  calculo?: string | null
 }
 
 export type TipoFiltro = 'select' | 'multiselect' | 'period' | 'period_range' | 'date_range' | 'boolean' | 'text' | 'search' | 'number'

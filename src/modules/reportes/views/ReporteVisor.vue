@@ -9,6 +9,7 @@ import TareasExportacion from '../components/exportar/TareasExportacion.vue'
 import FiltroChips from '../components/filtros/FiltroChips.vue'
 import FiltroPanel from '../components/filtros/FiltroPanel.vue'
 import TablaReporte from '../components/tabla/TablaReporte.vue'
+import ExplicacionColumnaDialogo from '../components/tabla/ExplicacionColumnaDialogo.vue'
 import { useFiltros } from '../composables/useFiltros'
 import { useReporte } from '../composables/useReporte'
 import { normalizarError } from '../services/errores'
@@ -27,10 +28,12 @@ const filtros = useFiltros(computed(() => reporte.config.value?.filtros ?? []))
 const exportaciones = useExportacionesStore()
 const drawer = ref(false)
 const dialogoExportar = ref(false)
+const dialogoAyuda = ref(false)
 const enviandoExportacion = ref(false)
 const aviso = ref<string | null>(null)
 
 const columnasVisibles = computed(() => reporte.config.value?.columnas.filter(c => c.visible) ?? [])
+const hayAyuda = computed(() => columnasVisibles.value.some(c => c.ayuda))
 const tieneFiltros = computed(() => filtros.defs.value.some(d => !d.oculto))
 const primerFaltante = computed(() => filtros.faltantes.value[0]?.etiqueta ?? '')
 
@@ -132,7 +135,7 @@ watch(() => props.clave, iniciar)
         </p>
       </div>
 
-      <div class="d-flex align-center gap-2">
+      <div class="d-flex flex-wrap align-center gap-2">
         <IndicadorActualizado
           :fecha="reporte.actualizadoEn.value"
           :desde-cache="reporte.desdeCache.value"
@@ -140,6 +143,14 @@ watch(() => props.clave, iniciar)
           :cargando="reporte.cargando.value"
           @actualizar="reporte.actualizar"
         />
+        <VBtn
+          v-if="hayAyuda"
+          variant="text"
+          prepend-icon="tabler-help-circle"
+          @click="dialogoAyuda = true"
+        >
+          {{ t('reportes.ayuda.boton') }}
+        </VBtn>
         <VBtn
           v-if="tieneFiltros && reporte.config.value"
           variant="tonal"
@@ -241,6 +252,13 @@ watch(() => props.clave, iniciar)
         </VCard>
       </VCol>
     </VRow>
+
+    <ExplicacionColumnaDialogo
+      v-model:abierto="dialogoAyuda"
+      :columnas="columnasVisibles"
+      :todas="columnasVisibles"
+      :totales="reporte.totales.value"
+    />
 
     <ExportarDialogo
       v-if="reporte.config.value"

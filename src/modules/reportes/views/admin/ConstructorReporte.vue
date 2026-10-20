@@ -9,7 +9,7 @@ import { useMenuReportes } from '../../composables/useMenuReportes'
 import { normalizarError } from '../../services/errores'
 import type { ErrorReporte } from '../../services/errores'
 import { actualizarReporte, crearReporte, listarCategorias, listarFuentes, listarReportesAdmin, previsualizarReporte } from '../../services/reportesApi'
-import type { DefinicionReporte, FuenteResumen } from '../../types/admin'
+import type { AyudaDefinicion, DefinicionReporte, FuenteResumen } from '../../types/admin'
 import type { FormatoExportacion } from '../../types/exportacion'
 import type { ColumnaDef, FormatoColumna, ResultadoConsulta } from '../../types/reporte'
 import { clavear } from '../../utils/texto'
@@ -33,6 +33,7 @@ interface ColumnaEditable {
   label: string
   format: FormatoColumna
   total: boolean
+  ayuda: { summary: string; origin: string; calculation: string }
 }
 
 interface FiltroEditable {
@@ -109,6 +110,7 @@ function prepararFuente(def: FuenteResumen, existente?: DefinicionReporte) {
       label: String(anterior?.label ?? c.label ?? c.name),
       format: anterior?.format ?? (tipo === 'decimal' ? 'decimal' : tipo === 'integer' ? 'entero' : tipo === 'date' ? 'fecha' : tipo === 'datetime' ? 'fechaHora' : 'texto'),
       total: !!anterior?.total,
+      ayuda: { summary: anterior?.help?.summary ?? '', origin: anterior?.help?.origin ?? '', calculation: anterior?.help?.calculation ?? '' },
     }
   })
 
@@ -172,6 +174,18 @@ watch(fuente, (nuevo, anterior) => {
     prepararFuente(def)
 })
 
+// Sin resumen no hay explicación: se manda null para que el servidor la quite
+function ayudaDefinicion(c: ColumnaEditable): AyudaDefinicion | null {
+  const summary = c.ayuda.summary.trim()
+  if (!summary)
+    return null
+
+  return { summary, origin: c.ayuda.origin.trim() || undefined, calculation: c.ayuda.calculation.trim() || undefined }
+}
+
+// Columna cuya explicación se está editando
+const editandoAyuda = ref<ColumnaEditable | null>(null)
+
 function construir(): DefinicionReporte {
   return {
     key: claveReporte.value,
@@ -179,7 +193,7 @@ function construir(): DefinicionReporte {
     description: descripcion.value.trim() || null,
     source: fuente.value ?? '',
     category: categoria.value?.trim() || null,
-    columns: columnasIncluidas.value.map(c => ({ column: c.column, label: c.label.trim() || c.column, format: c.format, total: c.total && NUMERICOS.has(c.tipo) })),
+    columns: columnasIncluidas.value.map(c => ({ column: c.column, label: c.label.trim() || c.column, format: c.format, total: c.total && NUMERICOS.has(c.tipo), help: ayudaDefinicion(c) })),
     filters: filtros.value.filter(f => f.incluir).map(f => ({ filter: f.filter, required: f.required || undefined, hidden: f.hidden || undefined })),
     default_order: ordenColumna.value ? [{ column: ordenColumna.value, dir: ordenDir.value }] : [],
     export_formats: formatosExport.value,
@@ -454,6 +468,7 @@ onMounted(cargar)
                   <th>{{ t('reportes.admin.comunes.etiqueta') }}</th>
                   <th>{{ t('reportes.admin.comunes.formato') }}</th>
                   <th>{{ t('reportes.admin.reportes.total') }}</th>
+                  <th>{{ t('reportes.admin.reportes.explicacion') }}</th>
                 </tr>
               </thead>
               <Draggable
@@ -507,6 +522,19 @@ onMounted(cargar)
                         :disabled="!element.incluir || !NUMERICOS.has(element.tipo)"
                       />
                     </td>
+                    <td>
+                      <VBtn
+                        icon
+                        variant="text"
+                        size="small"
+                        :color="element.ayuda.summary.trim() ? 'primary' : undefined"
+                        :disabled="!element.incluir"
+                        :aria-label="t('reportes.admin.reportes.editarExplicacion', { columna: element.label || element.column })"
+                        @click="editandoAyuda = element"
+                      >
+                        <VIcon :icon="element.ayuda.summary.trim() ? 'tabler-info-circle-filled' : 'tabler-info-circle'" />
+                      </VBtn>
+                    </td>
                   </tr>
                 </template>
               </Draggable>
@@ -547,5 +575,41 @@ onMounted(cargar)
         </VCard>
       </VCol>
     </VRow>
+    <AsDialogo
+      :abierto="editandoAyuda !== null"
+      :titulo="t('reportes.admin.reportes.explicacionDe', { columna: editandoAyuda?.label || editandoAyuda?.column || '' })"
+      :subtitulo="t('reportes.admin.reportes.explicacionAyuda')"
+      tamano="md"
+      variante="informativo"
+      @update:abierto="(v: boolean) => { if (!v) editandoAyuda = null }"
+    >
+      <div
+        v-if="editandoAyuda"
+        class="d-flex flex-column gap-4"
+      >
+        <AppTextarea
+          v-model="editandoAyuda.ayuda.summary"
+          :label="t('reportes.ayuda.queEs')"
+          :hint="t('reportes.admin.reportes.explicacionResumen')"
+          persistent-hint
+          counter="240"
+          :rules="[(v: string) => v.length <= 240 || t('reportes.admin.reportes.explicacionLarga')]"
+          rows="2"
+          auto-grow
+        />
+        <AppTextarea
+          v-model="editandoAyuda.ayuda.origin"
+          :label="t('reportes.ayuda.deDondeSale')"
+          rows="2"
+          auto-grow
+        />
+        <AppTextarea
+          v-model="editandoAyuda.ayuda.calculation"
+          :label="t('reportes.ayuda.comoSeCalcula')"
+          rows="2"
+          auto-grow
+        />
+      </div>
+    </AsDialogo>
   </div>
 </template>

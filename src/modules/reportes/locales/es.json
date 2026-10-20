@@ -58,6 +58,17 @@
     "filasPorPagina": "Filas por página",
     "sinResultados": "Sin resultados"
   },
+  "ayuda": {
+    "boton": "Cómo se calcula",
+    "verExplicacion": "Cómo se calcula {columna}",
+    "clicDetalle": "Clic para ver de dónde sale y cómo se calcula",
+    "tituloTodas": "Cómo se calcula cada columna",
+    "subtituloTodas": "Qué es, de dónde sale y cómo se calcula cada cifra del reporte",
+    "queEs": "Qué es",
+    "deDondeSale": "De dónde sale",
+    "comoSeCalcula": "Cómo se calcula",
+    "conFiltros": "Con los filtros actuales"
+  },
   "exportar": {
     "titulo": "Exportar reporte",
     "filas": "{n} filas con los filtros actuales",
@@ -218,6 +229,12 @@
       "columnasAyuda": "Marca las columnas visibles, cambia su etiqueta y formato, y arrástralas para ordenarlas.",
       "eligeFuente": "Elige una fuente de datos para ver sus columnas.",
       "total": "Total",
+      "explicacion": "Explicación",
+      "editarExplicacion": "Editar la explicación de {columna}",
+      "explicacionDe": "Explicación de {columna}",
+      "explicacionAyuda": "Se ve en el ícono ⓘ del encabezado y en la hoja Definiciones del Excel. Sin resumen, la columna no lleva explicación.",
+      "explicacionResumen": "Una o dos frases; es lo que sale al pasar el mouse.",
+      "explicacionLarga": "Máximo 240 caracteres",
       "previsualizar": "Vista previa",
       "vistaPrevia": "Vista previa",
       "vistaPreviaDetalle": "{n} filas con los filtros por defecto"

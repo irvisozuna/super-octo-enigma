@@ -39,7 +39,7 @@ export const reporteEjemplo: ReporteConfig = {
     { columna: 'PERIODO', etiqueta: 'Periodo', tipo: 'string', formato: 'periodo', alineacion: 'start', visible: true, total: false },
     { columna: 'ENTIDAD', etiqueta: 'Gerencia', tipo: 'string', formato: 'texto', alineacion: 'start', visible: true, total: false },
     { columna: 'CONCEPTO', etiqueta: 'Concepto', tipo: 'string', formato: 'texto', alineacion: 'start', visible: true, total: false },
-    { columna: 'TOTAL', etiqueta: 'Total', tipo: 'decimal', formato: 'moneda', alineacion: 'end', visible: true, total: true },
+    { columna: 'TOTAL', etiqueta: 'Total', tipo: 'decimal', formato: 'moneda', alineacion: 'end', visible: true, total: true, ayuda: { resumen: 'Importe facturado del concepto en el periodo.', origen: 'Recibos del periodo en Aquasoft Comercial, sin borradores ni cancelados.', calculo: 'Suma del importe de cada concepto en los recibos.' } },
   ],
   filtros: [
     { key: 'periodo', etiqueta: 'Periodo', tipo: 'period', requerido: true, fijo: false, oculto: false, depende_de: [], opciones: null, opciones_remotas: true, valor_default: 185, config: {} },

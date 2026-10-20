@@ -16,6 +16,13 @@ export interface FuenteResumen {
   version: number
 }
 
+/** Explicación de una columna (llaves del archivo JSON): resumen para el tooltip, de dónde sale y cómo se calcula. */
+export interface AyudaDefinicion {
+  summary: string
+  origin?: string
+  calculation?: string
+}
+
 /** Definición de reporte que se guarda desde la pantalla (mismas llaves que el archivo JSON). */
 export interface DefinicionReporte {
   key?: string | null
@@ -23,7 +30,7 @@ export interface DefinicionReporte {
   description?: string | null
   source: string
   category?: string | null
-  columns: { column: string; label?: string; format?: FormatoColumna; align?: 'start' | 'center' | 'end'; visible?: boolean; total?: boolean }[]
+  columns: { column: string; label?: string; format?: FormatoColumna; align?: 'start' | 'center' | 'end'; visible?: boolean; total?: boolean; help?: AyudaDefinicion | null }[]
   filters?: { filter: string; required?: boolean; fixed?: boolean; hidden?: boolean; default?: unknown }[]
   default_order?: { column: string; dir?: 'asc' | 'desc' }[]
   export_formats?: FormatoExportacion[]
