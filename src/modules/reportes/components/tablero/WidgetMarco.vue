@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { ErrorReporte } from '../../services/errores'
+import type { ColumnaDef } from '../../types/reporte'
 import type { WidgetDef } from '../../types/tablero'
 import { claveMensaje } from '../../services/errores'
+import AyudaColumna from '../tabla/AyudaColumna.vue'
+import ExplicacionColumnaDialogo from '../tabla/ExplicacionColumnaDialogo.vue'
 
 const props = defineProps<{
   widget: WidgetDef
@@ -26,6 +29,29 @@ const reporte = computed(() => {
 
   return typeof clave === 'string' && clave && router.hasRoute('reportesVisor') ? { name: 'reportesVisor', params: { clave } } : null
 })
+
+/*
+ * Explicación del widget (`config.help`, mismas llaves que en las columnas de reporte): ícono ⓘ junto al título y el
+ * mismo modal de los reportes, con el widget como si fuera una columna.
+ */
+const explicacion = computed<ColumnaDef | null>(() => {
+  const help = props.widget.config.help as { summary?: string; origin?: string; calculation?: string } | undefined
+  if (!help?.summary)
+    return null
+
+  return {
+    columna: props.widget.key,
+    etiqueta: props.widget.titulo,
+    tipo: 'string',
+    formato: 'texto',
+    alineacion: 'start',
+    visible: true,
+    total: false,
+    ayuda: { resumen: help.summary, origen: help.origin ?? null, calculo: help.calculation ?? null },
+  }
+})
+
+const explicando = ref(false)
 </script>
 
 <template>
@@ -34,8 +60,14 @@ const reporte = computed(() => {
     :loading="cargando"
   >
     <VCardItem class="pb-2">
-      <VCardTitle class="text-body-1 font-weight-medium">
-        {{ widget.titulo }}
+      <VCardTitle class="text-body-1 font-weight-medium d-flex align-center">
+        <span class="text-truncate">{{ widget.titulo }}</span>
+        <AyudaColumna
+          v-if="explicacion?.ayuda"
+          :etiqueta="widget.titulo"
+          :ayuda="explicacion.ayuda"
+          @abrir="explicando = true"
+        />
       </VCardTitle>
       <template
         v-if="reporte"
@@ -99,6 +131,13 @@ const reporte = computed(() => {
 
       <slot v-else />
     </VCardText>
+
+    <ExplicacionColumnaDialogo
+      v-if="explicacion"
+      v-model:abierto="explicando"
+      :columnas="[explicacion]"
+      :todas="[]"
+    />
   </VCard>
 </template>
 
