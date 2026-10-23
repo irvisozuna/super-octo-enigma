@@ -1,3 +1,4 @@
+import { createMongoAbility } from '@casl/ability'
 import { describe, expect, it } from 'vitest'
 import { fuentesConsultadas } from '../utils/herramientas'
 import { esRutaInterna, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
@@ -88,5 +89,16 @@ describe('markdown seguro', () => {
 describe('avance de consultas', () => {
   it('resume las fuentes sin repetir ni pasos internos', () => {
     expect(fuentesConsultadas(['catalogo', 'consultar_reporte', 'consultar_reporte', 'explicar_regla'])).toEqual(['reportes', 'definiciones'])
+  })
+})
+
+describe('interruptor del asistente', () => {
+  it('admin no lo ve cuando el servidor manda la regla invertida', () => {
+    expect(createMongoAbility([{ action: 'manage', subject: 'all' }]).can('use', 'asistente')).toBe(true)
+    expect(createMongoAbility([
+      { action: 'manage', subject: 'all' },
+      { action: 'use', subject: 'asistente', inverted: true },
+    ]).can('use', 'asistente')).toBe(false)
+    expect(createMongoAbility([{ action: 'read', subject: 'Profile' }]).can('use', 'asistente')).toBe(false)
   })
 })
