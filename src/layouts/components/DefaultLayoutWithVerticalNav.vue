@@ -10,6 +10,8 @@ import NavSearchBar from '@/layouts/components/NavSearchBar.vue'
 import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
+import BotonAsistente from '@/modules/asistente/components/BotonAsistente.vue'
+import PanelAsistente from '@/modules/asistente/components/PanelAsistente.vue'
 import NavBarI18n from '@core/components/I18n.vue'
 
 // @layouts plugin
@@ -47,6 +49,7 @@ const { isAdmin } = useCurrentUser()
         <!-- Modo oscuro: solo administradores hasta terminar la fase 3 del sistema de diseño -->
         <NavbarThemeSwitcher v-if="isAdmin" />
         <NavbarShortcuts />
+        <BotonAsistente />
         <NavBarNotifications class="me-1" />
         <UserProfile />
       </div>
@@ -54,6 +57,8 @@ const { isAdmin } = useCurrentUser()
 
     <!-- 👉 Pages -->
     <slot />
+    <!-- Asistente de IA: panel lateral que abre el botón del navbar (XEL1-539) -->
+    <PanelAsistente v-if="$can('use', 'asistente')" />
 
     <!-- 👉 Footer -->
     <template #footer>

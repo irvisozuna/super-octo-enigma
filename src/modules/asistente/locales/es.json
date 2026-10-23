@@ -1,0 +1,39 @@
+{
+  "menu": {
+    "asistente": "Asistente"
+  },
+  "titulo": "Asistente",
+  "sobrelinea": "Inteligencia artificial",
+  "abrirPanel": "Preguntar al asistente",
+  "pantallaCompleta": "Abrir en pantalla completa",
+  "nueva": "Nueva conversación",
+  "nuevaCorta": "Nueva",
+  "historial": "Conversaciones",
+  "sinHistorial": "Todavía no hay conversaciones.",
+  "renombrar": "Renombrar",
+  "borrar": "Borrar",
+  "borrarTitulo": "¿Borrar la conversación?",
+  "borrarDetalle": "Se quita de su historial.",
+  "renombrarTitulo": "Nombre de la conversación",
+  "guardar": "Guardar",
+  "cancelar": "Cancelar",
+  "bienvenida": "Pregunte por cifras de reportes y tableros, el avance de lecturas o cómo se calcula un indicador.",
+  "placeholder": "Escriba su pregunta",
+  "enviar": "Enviar",
+  "detener": "Detener",
+  "nivel": {
+    "etiqueta": "Respuesta",
+    "auto": "Automática",
+    "rapido": "Rápida",
+    "analisis": "Análisis",
+    "ayuda": "Automática elige según la pregunta. Análisis tarda más y sirve para comparar o explicar variaciones."
+  },
+  "consulto": "Consultó: {fuentes}",
+  "detenido": "Respuesta detenida.",
+  "aviso": "Las cifras salen de los reportes de Atención con sus permisos. Revise la fuente antes de usarlas en un documento oficial.",
+  "restantes": "Le quedan {n} preguntas en esta hora.",
+  "sinCupo": "Llegó al límite de preguntas de esta hora.",
+  "consumoAlto": "Se ha usado el {pct} % del consumo mensual del asistente.",
+  "tu": "Usted",
+  "error": "No se pudo completar la respuesta."
+}

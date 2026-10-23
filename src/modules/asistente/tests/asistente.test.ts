@@ -1,0 +1,92 @@
+import { describe, expect, it } from 'vitest'
+import { fuentesConsultadas } from '../utils/herramientas'
+import { esRutaInterna, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
+import { crearLectorSse, interpretarBloque } from '../utils/sse'
+
+describe('lector SSE del asistente', () => {
+  it('arma los eventos aunque lleguen partidos entre trozos', () => {
+    const lector = crearLectorSse()
+
+    expect(lector.leer('data: {"type":"conversation","payload":{"id":"c1"}}\n\ndata: {"type":"text-de')).toEqual([
+      { type: 'conversation', payload: { id: 'c1' } },
+    ])
+    expect(lector.leer('lta","payload":{"text":"Hola"}}\n\ndata: {"type":"tool-call","payload":{"toolName":"consultar_reporte"}}\n\n')).toEqual([
+      { type: 'text-delta', payload: { text: 'Hola' } },
+      { type: 'tool-call', payload: { toolName: 'consultar_reporte' } },
+    ])
+    expect(lector.leer('data: [DONE]')).toEqual([])
+    expect(lector.cerrar()).toEqual([{ type: 'done' }])
+  })
+
+  it('descarta lo que no tiene la forma esperada', () => {
+    expect(interpretarBloque('data: no es json')).toBeNull()
+    expect(interpretarBloque('data: {"type":"tool-result","payload":{"result":1}}')).toBeNull()
+    expect(interpretarBloque('data: {"type":"text-delta","payload":{"text":5}}')).toBeNull()
+    expect(interpretarBloque(': comentario')).toBeNull()
+    expect(interpretarBloque('data: {"type":"error","payload":{}}')).toEqual({ type: 'error', payload: { error: { message: '' } } })
+  })
+})
+
+describe('markdown seguro', () => {
+  it('interpreta negritas, cursivas, código y enlaces internos', () => {
+    expect(interpretarLinea('Fue **$75,861,808.73** con *IVA* en `ingresos`.')).toEqual([
+      { tipo: 'texto', texto: 'Fue ' },
+      { tipo: 'negrita', hijos: [{ tipo: 'texto', texto: '$75,861,808.73' }] },
+      { tipo: 'texto', texto: ' con ' },
+      { tipo: 'cursiva', hijos: [{ tipo: 'texto', texto: 'IVA' }] },
+      { tipo: 'texto', texto: ' en ' },
+      { tipo: 'codigo', texto: 'ingresos' },
+      { tipo: 'texto', texto: '.' },
+    ])
+    expect(interpretarLinea('[Abrir Ingresos](/reportes/tableros/ingresos)')).toEqual([
+      { tipo: 'enlace', destino: '/reportes/tableros/ingresos', hijos: [{ tipo: 'texto', texto: 'Abrir Ingresos' }] },
+    ])
+  })
+
+  it('no enlaza destinos externos ni esquemas peligrosos', () => {
+    for (const destino of ['https://otro.com', '//otro.com/x', 'javascript:alert(1)', '/ruta"onclick'])
+      expect(esRutaInterna(destino)).toBe(false)
+    expect(interpretarLinea('[clic](javascript:alert(1))').some(l => l.tipo === 'enlace')).toBe(false)
+    expect(interpretarLinea('<img src=x onerror=alert(1)>')).toEqual([{ tipo: 'texto', texto: '<img src=x onerror=alert(1)>' }])
+  })
+
+  it('arma títulos, listas, tablas y párrafos', () => {
+    const bloques = interpretarMarkdown([
+      '### Ingreso por gerencia',
+      '',
+      '| Gerencia | Sep |',
+      '|---|---:|',
+      '| San José del Cabo | $47,813,437.18 |',
+      '| Cabo San Lucas | $25,871,834.76 |',
+      '',
+      '- Base sin IVA: $68,455,142.71',
+      '- IVA: $7,406,674.79',
+      '',
+      '1. Primero',
+      '2. Segundo',
+      '',
+      'Fuente: tablero Ingresos.',
+      'Datos al 22/10/2026.',
+    ].join('\n'))
+
+    expect(bloques.map(b => b.tipo)).toEqual(['titulo', 'tabla', 'lista', 'lista', 'parrafo'])
+
+    const tabla = bloques[1] as Extract<typeof bloques[number], { tipo: 'tabla' }>
+
+    expect(tabla.alineaciones).toEqual(['start', 'end'])
+    expect(tabla.filas).toHaveLength(2)
+    expect(bloques[3]).toMatchObject({ ordenada: true, inicio: 1 })
+    expect(bloques[4]).toEqual({ tipo: 'parrafo', contenido: [{ tipo: 'texto', texto: 'Fuente: tablero Ingresos. Datos al 22/10/2026.' }] })
+  })
+
+  it('tolera texto a medio llegar', () => {
+    expect(interpretarMarkdown('El ingreso fue **$75,86').at(0)).toEqual({ tipo: 'parrafo', contenido: [{ tipo: 'texto', texto: 'El ingreso fue **$75,86' }] })
+    expect(interpretarMarkdown('| Gerencia | Sep |').at(0)?.tipo).toBe('parrafo')
+  })
+})
+
+describe('avance de consultas', () => {
+  it('resume las fuentes sin repetir ni pasos internos', () => {
+    expect(fuentesConsultadas(['catalogo', 'consultar_reporte', 'consultar_reporte', 'explicar_regla'])).toEqual(['reportes', 'definiciones'])
+  })
+})
