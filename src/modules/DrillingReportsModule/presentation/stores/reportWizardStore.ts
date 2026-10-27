@@ -630,7 +630,8 @@ export const useReportWizardStore = defineStore('reportWizard', () => {
         hours = calculateHoursFromTimesForLoad(startTime, endTime)
 
       return {
-        activity_type: act.activity_type || 'drilling',
+        // El detalle del reporte manda el tipo como `type`; sin esto toda actividad se cargaba como perforación
+        activity_type: act.activity_type || act.type || 'drilling',
         shift: act.shift || formData.value.shift,
         hours,
         hours_client: act.hours_client ?? null,
