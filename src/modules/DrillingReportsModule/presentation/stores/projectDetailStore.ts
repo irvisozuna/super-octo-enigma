@@ -15,7 +15,19 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
 
   // Datos principales
   const currentProject = ref<Project | null>(null)
-  const currentWell = ref<Well | null>(null)
+  // Un proyecto tiene varios pozos; el "pozo actual" es el elegido o, si no, el primero que recibe reportes
+  const wells = ref<Well[]>([])
+  const selectedWellId = ref<string | null>(null)
+  const reportableWells = computed(() => wells.value.filter((well: any) => well.accepts_reports !== false))
+  const currentWell = computed<Well | null>(() =>
+    wells.value.find((well: any) => well.id === selectedWellId.value)
+    ?? reportableWells.value[0]
+    ?? wells.value[0]
+    ?? null)
+
+  const selectWell = (wellId: string | null) => {
+    selectedWellId.value = wellId
+  }
   const projectPersonnel = ref<Personnel[]>([])
   const projectDocuments = ref<Document[]>([])
   const statusHistory = ref<StatusHistory[]>([])
@@ -166,12 +178,11 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
 
     try {
       const response = await wellsStore.fetchWellsByProject(projectId)
-      const wells = response?.data || response || []
+      const backendWells = response?.data || response || []
 
-      if (wells.length > 0)
-        currentWell.value = mapWellData(wells[0])
-      else
-        currentWell.value = null
+      wells.value = backendWells.map(mapWellData)
+      if (selectedWellId.value && !wells.value.some((well: any) => well.id === selectedWellId.value))
+        selectedWellId.value = null
 
       lastLoadTimestamps.well = Date.now()
 
@@ -179,7 +190,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
     }
     catch (error) {
       errors.well = error as Error
-      currentWell.value = null
+      wells.value = []
     }
     finally {
       loadingStates.well = false
@@ -393,7 +404,8 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
    */
   function $reset() {
     currentProject.value = null
-    currentWell.value = null
+    wells.value = []
+    selectedWellId.value = null
     projectPersonnel.value = []
     projectDocuments.value = []
     statusHistory.value = []
@@ -550,6 +562,10 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
       project_id: backendWell.project_id,
       project_name: currentProject.value?.project_name || '',
       status: backendWell.status,
+      status_reason: backendWell.status_reason ?? null,
+      accepts_reports: backendWell.accepts_reports ?? !['suspended', 'completed', 'abandoned'].includes(backendWell.status),
+      raw_well_type: backendWell.well_type || 'vertical',
+      orientation: backendWell.orientation || null,
       well_type: mappedWellType,
       depth_planned: backendWell.depth?.planned_meters || 0,
       depth_actual: backendWell.depth?.current_meters || 0,
@@ -795,6 +811,10 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
     // State
     currentProject,
     currentWell,
+    wells,
+    reportableWells,
+    selectedWellId,
+    selectWell,
     projectPersonnel,
     projectDocuments,
     statusHistory,

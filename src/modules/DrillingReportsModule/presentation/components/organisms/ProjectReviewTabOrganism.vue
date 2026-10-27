@@ -3,13 +3,20 @@
  * Pestaña "Por revisar": borradores y pendientes del proyecto con semáforo.
  * Verde = listo para aprobar; amarillo = hay que mirarlo; rojo = no se puede aprobar todavía.
  * "Aprobar los verdes" termina y aprueba de una vez los que están listos (el desgaste de sus aceros se aplica ahí).
+ * Arriba van las hojas que la IA ya leyó pero cuyo pozo no se reconoció: al elegirlo se crea su borrador.
  */
 import { computed, onMounted, ref } from 'vue'
 import type { BulkApproveResult, ReviewLight, ReviewQueue, ReviewQueueEntry } from '../../../infrastructure/api/services/ReviewQueueApiService'
 import { ReviewQueueApiService } from '../../../infrastructure/api/services/ReviewQueueApiService'
+import type { AiImport } from '../../../infrastructure/api/services/AiCaptureApiService'
+import { AiCaptureApiService } from '../../../infrastructure/api/services/AiCaptureApiService'
 import { formatDate } from '../../../shared/utils/dateUtils'
 
-const props = defineProps<{ projectId: string }>()
+const props = withDefaults(defineProps<{
+  projectId: string
+  /** Pozos que reciben reportes: para elegir el de una hoja sin pozo */
+  wells?: Array<{ id: string; label: string }>
+}>(), { wells: () => [] })
 
 const emit = defineEmits<{
   review: [report: { id: string; well_id: string }]
@@ -25,6 +32,39 @@ const filter = ref<ReviewLight | 'all'>('all')
 const confirmOpen = ref(false)
 const approving = ref(false)
 const results = ref<BulkApproveResult[] | null>(null)
+const wellFilter = ref<string | null>(null)
+
+const withoutWell = ref<AiImport[]>([])
+const chosenWell = ref<Record<string, string>>({})
+const assigning = ref<string | null>(null)
+const wellItems = computed(() => props.wells.map(well => ({ title: well.label, value: well.id })))
+
+async function loadWithoutWell() {
+  try {
+    withoutWell.value = await AiCaptureApiService.list({ projectId: props.projectId, status: 'needs_well' })
+  }
+  catch {
+    withoutWell.value = []
+  }
+}
+
+async function assignWell(item: AiImport) {
+  const wellId = chosenWell.value[item.id]
+  if (!wellId)
+    return
+  assigning.value = item.id
+  error.value = null
+  try {
+    await AiCaptureApiService.assignWell(item.id, wellId)
+    await Promise.all([load(), loadWithoutWell()])
+  }
+  catch (err: any) {
+    error.value = err?.data?.message || err?.message || 'No se pudo asignar el pozo'
+  }
+  finally {
+    assigning.value = null
+  }
+}
 
 const LIGHTS: Record<ReviewLight, { color: string; label: string; icon: string }> = {
   green: { color: 'success', label: 'Listos para aprobar', icon: 'tabler-circle-check' },
@@ -33,7 +73,16 @@ const LIGHTS: Record<ReviewLight, { color: string; label: string; icon: string }
 }
 const SHIFTS = { day: 'Día', night: 'Noche', mixed: 'Mixto' }
 
-const reports = computed(() => (queue.value?.reports ?? []).filter(r => filter.value === 'all' || r.light === filter.value))
+const wellsInQueue = computed(() => {
+  const seen = new Map<string, string>()
+
+  ;(queue.value?.reports ?? []).forEach(r => seen.set(r.well_id, r.well_number ?? 'Pozo'))
+
+  return [...seen].map(([value, title]) => ({ value, title }))
+})
+const reports = computed(() => (queue.value?.reports ?? [])
+  .filter(r => filter.value === 'all' || r.light === filter.value)
+  .filter(r => !wellFilter.value || r.well_id === wellFilter.value))
 const greens = computed(() => (queue.value?.reports ?? []).filter(r => r.light === 'green'))
 const toApprove = computed(() => (selected.value.length ? selected.value : greens.value.map(r => r.id)))
 
@@ -78,7 +127,7 @@ function reviewPrevious(issue: { previous_report_id?: string | null }, entry: Re
     emit('review', { id: issue.previous_report_id, well_id: entry.well_id })
 }
 
-onMounted(load)
+onMounted(() => Promise.all([load(), loadWithoutWell()]))
 defineExpose({ load })
 </script>
 
@@ -141,6 +190,54 @@ defineExpose({ load })
       </div>
     </VAlert>
 
+    <VCard
+      v-if="withoutWell.length"
+      variant="outlined"
+      color="warning"
+      class="mb-4"
+    >
+      <VCardTitle class="d-flex align-center gap-2 text-body-1 font-weight-medium">
+        <VIcon icon="tabler-map-pin-question" />
+        Hojas sin pozo ({{ withoutWell.length }})
+      </VCardTitle>
+      <VCardText>
+        <p class="text-body-2 mb-3">
+          La IA ya leyó estas hojas, pero el número de pozo no coincide con ningún pozo del proyecto. Elige el pozo y se crea el borrador.
+        </p>
+        <div
+          v-for="item in withoutWell"
+          :key="item.id"
+          class="d-flex flex-wrap align-center gap-3 mb-2"
+        >
+          <div class="flex-grow-1">
+            <div class="text-body-2 font-weight-medium">
+              {{ item.original_name }}
+            </div>
+            <div class="text-caption text-medium-emphasis">
+              La hoja dice pozo «{{ item.well_number_read || 'sin número' }}»
+            </div>
+          </div>
+          <VSelect
+            v-model="chosenWell[item.id]"
+            :items="wellItems"
+            label="Pozo"
+            density="compact"
+            hide-details
+            style="max-inline-size: 260px; min-inline-size: 200px;"
+          />
+          <VBtn
+            color="primary"
+            size="small"
+            :disabled="!chosenWell[item.id]"
+            :loading="assigning === item.id"
+            @click="assignWell(item)"
+          >
+            Crear borrador
+          </VBtn>
+        </div>
+      </VCardText>
+    </VCard>
+
     <div
       v-if="queue"
       class="d-flex flex-wrap gap-2 mb-4"
@@ -161,6 +258,16 @@ defineExpose({ load })
       >
         {{ light.label }} ({{ queue.summary[key] }})
       </VChip>
+      <VSelect
+        v-if="wellsInQueue.length > 1"
+        v-model="wellFilter"
+        :items="wellsInQueue"
+        label="Pozo"
+        density="compact"
+        hide-details
+        clearable
+        style="max-inline-size: 220px;"
+      />
     </div>
 
     <VCard

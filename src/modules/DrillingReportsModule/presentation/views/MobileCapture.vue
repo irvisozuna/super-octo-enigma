@@ -37,8 +37,10 @@ const galleryInput = ref<HTMLInputElement | null>(null)
 const previews = new Map<string, string>()
 let timer: ReturnType<typeof setInterval> | null = null
 
-const canCapture = computed(() => !!projectId.value && !!wellId.value)
-const wellName = (id: string) => wells.value.find(w => w.value === id)?.title ?? 'Pozo'
+/** Pozo '' = automático: cada hoja se ubica por el número de pozo escrito (o por su etiqueta QR). */
+const AUTO_WELL = ''
+const canCapture = computed(() => !!projectId.value && wellId.value !== null)
+const wellName = (id: string) => id === AUTO_WELL ? 'Pozo según la hoja' : wells.value.find(w => w.value === id)?.title ?? 'Pozo'
 
 async function loadProjects() {
   const response = await DrillingReportApiService.getProjects({ per_page: 100 })
@@ -57,9 +59,14 @@ async function loadWells() {
     return
   const response = await DrillingReportApiService.getWellsByProject(projectId.value)
 
-  wells.value = (response?.data ?? response ?? []).map((w: any) => ({ title: w.well_number ?? w.name ?? w.well_name, value: w.id }))
+  // Los pozos en stand-by, terminados o abandonados no reciben reportes
+  const receiving = (response?.data ?? response ?? [])
+    .filter((w: any) => w.accepts_reports !== false)
+    .map((w: any) => ({ title: w.well_number ?? w.name ?? w.well_name, value: w.id }))
+
+  wells.value = receiving.length > 1 ? [{ title: 'Automático (según la hoja)', value: AUTO_WELL }, ...receiving] : receiving
   if (!wells.value.some(w => w.value === wellId.value))
-    wellId.value = wells.value.length === 1 ? wells.value[0].value : null
+    wellId.value = wells.value[0]?.value ?? null
 }
 
 watch(projectId, async value => {
@@ -220,7 +227,7 @@ onBeforeUnmount(() => {
         :items="wells"
         label="Pozo"
         :disabled="!projectId"
-        hint="Si la hoja trae la etiqueta QR del pozo, se elige sola"
+        hint="En automático, cada hoja va al pozo que trae escrito (o al de su etiqueta QR)"
         persistent-hint
       />
     </VCard>

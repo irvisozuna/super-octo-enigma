@@ -8,9 +8,22 @@ interface Props {
   wellName: string
   equipmentOptions: any[]
   loadingEquipment: boolean
+  /** Pozos a los que puede ir el reporte; sin lista, el pozo solo se muestra */
+  wellOptions?: Array<{ title: string; value: string }>
+  wellId?: string
+  /** Un reporte ya enviado o aprobado no cambia de pozo */
+  wellLocked?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  wellOptions: () => [],
+  wellId: '',
+  wellLocked: false,
+})
+
+const emit = defineEmits<{
+  'update:wellId': [value: string]
+}>()
 
 const wizardStore = useReportWizardStore()
 const rules = REPORT_VALIDATION_RULES
@@ -64,7 +77,20 @@ const handleEquipmentChange = (value: string | null) => {
           cols="12"
           md="6"
         >
+          <VSelect
+            v-if="wellOptions.length"
+            :model-value="wellId"
+            :items="wellOptions"
+            label="Pozo *"
+            prepend-inner-icon="tabler-droplet"
+            :rules="[(v: string) => !!v || 'Elige el pozo del reporte']"
+            :disabled="wellLocked"
+            :hint="wellLocked ? 'Solo un borrador puede cambiar de pozo' : 'El pozo que dice la hoja'"
+            persistent-hint
+            @update:model-value="(v: string) => emit('update:wellId', v)"
+          />
           <VTextField
+            v-else
             :model-value="wellName"
             label="Pozo"
             prepend-inner-icon="tabler-droplet"

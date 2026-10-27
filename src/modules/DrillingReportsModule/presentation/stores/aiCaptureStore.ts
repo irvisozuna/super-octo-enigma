@@ -23,7 +23,7 @@ export const useAiCaptureStore = defineStore('drillingAiCapture', () => {
 
   const running = computed(() => imports.value.some(isAiImportRunning))
 
-  async function upload(projectId: string, wellId: string, photos: File[]) {
+  async function upload(projectId: string, wellId: string | null, photos: File[]) {
     uploading.value = true
     error.value = null
     try {

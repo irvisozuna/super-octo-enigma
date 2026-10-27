@@ -36,11 +36,12 @@ const isDeletable = computed(() => {
   return props.projectStatus === 'planned' && props.well.status === 'planned'
 })
 
+// Un pozo se corrige mientras siga abierto (planeado, perforando o en stand-by): número, nombre, profundidad planeada…
 const isEditable = computed(() => {
   if (!props.well)
     return true
 
-  return props.well.status === 'planned'
+  return !['completed', 'abandoned'].includes(props.well.status)
 })
 
 // Composables
@@ -188,7 +189,8 @@ const handleSubmit = async () => {
       return
     }
 
-    const validatedData = validationResult.data
+    // El número de pozo es el que va escrito en la hoja: con él la captura con IA ubica cada reporte en su pozo
+    const validatedData = { ...validationResult.data, well_number: validationResult.data?.well_code?.trim() || null }
 
     if (isEditing.value) {
       // Update existing well
@@ -341,7 +343,8 @@ watch(() => props.well, () => {
             >
               <VTextField
                 v-model="formData.well_code"
-                label="Código del Pozo"
+                label="Número de pozo (como va en la hoja)"
+                placeholder="LR-01"
                 prepend-inner-icon="tabler-hash"
                 :rules="[rules.wellCode]"
                 :disabled="isEditing && !isEditable"

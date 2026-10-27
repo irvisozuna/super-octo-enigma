@@ -25,12 +25,29 @@ export interface CreateReportWizardProps {
   projectName: string
   wellId: string
   wellName: string
+  /** Pozos del proyecto que reciben reportes: se elige a cuál va el reporte */
+  wells?: Array<{ id: string; label: string }>
   reportId?: string
   loading?: boolean
   error?: string | null
 }
 
-const props = defineProps<CreateReportWizardProps>()
+const props = withDefaults(defineProps<CreateReportWizardProps>(), {
+  wells: () => [],
+})
+
+// Pozo del reporte: por defecto el del proyecto; al editar, el del reporte (un borrador puede cambiarlo)
+const selectedWellId = ref(props.wellId)
+const reportStatus = ref<string | null>(null)
+const reportWell = ref<{ id: string; label: string } | null>(null)
+const wellOptions = computed(() => {
+  const options = props.wells.map(well => ({ title: well.label, value: well.id }))
+  if (reportWell.value && !options.some(option => option.value === reportWell.value!.id))
+    options.unshift({ title: reportWell.value.label, value: reportWell.value.id })
+
+  return options
+})
+const wellLocked = computed(() => !!props.reportId && !!reportStatus.value && reportStatus.value !== 'draft')
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -212,8 +229,8 @@ const reloadCatalogOptions = async () => {
 const handleSubmit = async () => {
   const data = {
     project_id: props.projectId,
-    well_id: props.wellId,
     ...wizardStore.formData,
+    well_id: selectedWellId.value || props.wellId,
   }
 
   // Important: We don't clear here because we need to wait for the parent's response
@@ -317,6 +334,12 @@ const loadReportForEditing = async () => {
 
     console.log('✅ Valid report received, loading into wizard...')
 
+    reportStatus.value = report.status ?? null
+    if (report.well?.id) {
+      reportWell.value = { id: report.well.id, label: [report.well.code, report.well.name].filter(Boolean).join(' · ') || 'Pozo del reporte' }
+      selectedWellId.value = report.well.id
+    }
+
     // Add tools from the report to toolOptions if they don't exist
     // This ensures reamers and bits from the report are selectable in dropdowns
     const reportTools = [
@@ -363,6 +386,10 @@ watch(() => props.modelValue, async newValue => {
       loadEmployees(),
       loadTools(),
     ])
+
+    selectedWellId.value = props.wellId
+    reportStatus.value = null
+    reportWell.value = null
 
     // If editing (reportId exists), load report data
     if (props.reportId) {
@@ -576,7 +603,10 @@ onMounted(async () => {
                 <VForm ref="step1Form">
                   <WizardBasicInfoMolecule
                     :project-name="projectName"
+                    v-model:well-id="selectedWellId"
                     :well-name="wellName"
+                    :well-options="wellOptions"
+                    :well-locked="wellLocked"
                     :equipment-options="equipmentOptions"
                     :loading-equipment="loadingEquipment"
                   />

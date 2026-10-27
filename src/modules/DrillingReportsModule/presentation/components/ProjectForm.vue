@@ -48,6 +48,8 @@ const formData = reactive({
   general_location: '',
   total_budget: '',
   budget_currency: 'MXN',
+  /** Metros contratados: el proyecto se reparte en varios pozos y su avance es la suma de ellos */
+  target_meters: '' as string | number,
   start_date: '',
   estimated_end_date: '',
   general_coordinates: {
@@ -101,6 +103,7 @@ watch(() => props.project, newProject => {
     formData.client_id = newProject.client_id || ''
     formData.general_location = newProject.general_location || ''
     formData.description = newProject.description || ''
+    formData.target_meters = newProject.target_meters ?? ''
 
     // Map budget from nested structure
     if (newProject.budget) {
@@ -234,6 +237,7 @@ const handleSubmit = async () => {
           }
         : null,
       description: formData.description || null,
+      target_meters: formData.target_meters === '' || formData.target_meters === null ? null : Number(formData.target_meters),
     }
 
     console.log('💾 Guardando proyecto:', projectData)
@@ -460,6 +464,24 @@ onMounted(() => {
               :label="$t('DrillingReportsModule.projects.budgetCurrency')"
               :rules="[rules.required]"
               required
+            />
+          </VCol>
+
+          <!-- Metros contratados -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <VTextField
+              v-model="formData.target_meters"
+              label="Metros contratados"
+              type="number"
+              step="0.01"
+              min="0"
+              suffix="m"
+              hint="Total de metros del contrato, sumando todos los pozos (ej. 1500). El avance del proyecto se mide contra esta meta."
+              persistent-hint
+              :rules="[(v: any) => v === '' || v === null || Number(v) > 0 || 'Debe ser mayor a 0']"
             />
           </VCol>
 

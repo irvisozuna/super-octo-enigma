@@ -10,6 +10,9 @@ import ProjectReviewTabOrganism from '../ProjectReviewTabOrganism.vue'
 vi.mock('../../../../infrastructure/api/services/ReviewQueueApiService', () => ({
   ReviewQueueApiService: { get: vi.fn(), bulkApprove: vi.fn() },
 }))
+vi.mock('../../../../infrastructure/api/services/AiCaptureApiService', () => ({
+  AiCaptureApiService: { list: vi.fn().mockResolvedValue([]), assignWell: vi.fn() },
+}))
 
 const vuetify = createVuetify({ components, directives })
 

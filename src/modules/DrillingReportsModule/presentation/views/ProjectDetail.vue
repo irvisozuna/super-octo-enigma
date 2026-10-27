@@ -16,7 +16,7 @@
  * El componente original está respaldado en ProjectDetail.original.vue
  */
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -48,7 +48,8 @@ import WellDetailsDialogOrganism from '../components/organisms/WellDetailsDialog
 import DrillingReportPrintView from '../components/organisms/DrillingReportPrintView.vue'
 
 // Componentes adicionales existentes
-import WellInfoCardMolecule from '../components/molecules/WellInfoCardMolecule.vue'
+import MetersProgressCardMolecule from '../components/molecules/MetersProgressCardMolecule.vue'
+import ProjectWellsCardOrganism from '../components/organisms/wells/ProjectWellsCardOrganism.vue'
 import PersonnelCardMolecule from '../components/molecules/PersonnelCardMolecule.vue'
 import BudgetCardMolecule from '../components/molecules/BudgetCardMolecule.vue'
 
@@ -68,6 +69,8 @@ import { ReviewQueueApiService } from '../../infrastructure/api/services/ReviewQ
 // Usar el store directamente para algunos datos específicos
 import { useProjectDetailStore } from '../stores/projectDetailStore'
 import { useDrillingReportStore } from '../stores/drillingReportStore'
+import { useWellsStore } from '../stores/wellsStore'
+import { DrillingReportApiService } from '../../infrastructure/api/services/DrillingReportApiService'
 import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog.vue'
 import ActionConfirmationDialog from '@/components/shared/ActionConfirmationDialog.vue'
 import { useGlobalSnackbar } from '@/composables/useGlobalSnackbar'
@@ -149,6 +152,37 @@ const reportStore = useDrillingReportStore()
 
 // Computeds locales para datos específicos de tabs
 const currentWell = computed(() => detailStore.currentWell)
+const projectWells = computed(() => detailStore.wells as any[])
+
+/** "LR-01 · Barreno 1": como se reconoce el pozo en la hoja */
+const wellLabel = (well: any) => [well.well_number, well.name].filter(Boolean).join(' · ') || 'Pozo'
+const reportableWellOptions = computed(() => (detailStore.reportableWells as any[]).map(well => ({ id: well.id, label: wellLabel(well) })))
+
+/** Avance en metros: lo perforado en todos los pozos contra los metros contratados del proyecto */
+const metersProgress = computed(() => {
+  const progress = (project.value as any)?.drilling_progress
+  const meters = progress?.meters
+
+  return {
+    target: Number(meters?.target ?? progress?.total_planned_depth ?? 0),
+    drilled: Number(meters?.drilled ?? progress?.total_current_depth ?? 0),
+    source: (meters?.source ?? 'wells') as 'target' | 'wells',
+    suspended: Number(progress?.wells_suspended ?? 0),
+  }
+})
+
+/** % del plazo del proyecto transcurrido, para comparar con el avance en metros */
+const timePercentage = computed<number | null>(() => {
+  const start = (project.value as any)?.dates?.start_date
+  const end = (project.value as any)?.dates?.estimated_end_date
+  if (!start || !end)
+    return null
+  const total = new Date(end).getTime() - new Date(start).getTime()
+  if (total <= 0)
+    return null
+
+  return Math.min(100, Math.max(0, ((Date.now() - new Date(start).getTime()) / total) * 100))
+})
 const projectDocuments = computed(() => detailStore.projectDocuments)
 const statusHistory = computed(() => detailStore.statusHistory)
 const historySummary = computed(() => detailStore.historySummary)
@@ -641,7 +675,7 @@ async function handleWellCreated(wellData: any) {
     await createWell(wellData)
 
     dialogs.assignWell = false
-    await detailStore.loadProject(projectId.value)
+    await reloadWells()
 
     showSnackbar({
       title: 'Éxito',
@@ -691,45 +725,80 @@ function handleViewBudgetDetails() {
   activeTab.value = 'budget'
 }
 
-/**
- * Manejar "Ver Detalles" del pozo
- */
-function handleViewWellDetails() {
-  dialogs.wellDetails = true
+function scrollToWells() {
+  document.getElementById('project-wells')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-/**
- * Manejar "Crear Pozo"
- */
+/** Recarga los pozos y el avance del proyecto (sin el aviso de "proyecto actualizado") */
+async function reloadWells() {
+  await Promise.all([detailStore.loadProject(projectId.value), detailStore.loadProjectWell(projectId.value)])
+}
+
+/** Pozo que se edita en el diálogo de pozo (null = alta de pozo) */
+const editingWell = ref<any | null>(null)
+
+watch(() => dialogs.assignWell, open => {
+  if (!open)
+    editingWell.value = null
+})
+
+/** El diálogo de pozo espera los datos con estos nombres */
+const toWellDialogData = (well: any) => ({
+  id: well.id,
+  wellName: well.name,
+  wellCode: well.well_number,
+  surfaceCoordinates: well.coordinates,
+  plannedDepthMeters: well.depth_planned,
+  holeDiameterInches: well.diameter,
+  currentDepthMeters: well.depth_actual,
+  status: well.status,
+  spudDate: well.start_date,
+  orientation: well.orientation,
+})
+
 function handleCreateWell() {
+  editingWell.value = null
   dialogs.assignWell = true
 }
 
-/**
- * Manejar "Eliminar Pozo"
- */
-async function handleDeleteWell() {
-  if (!currentWell.value)
-    return
+function handleEditWell(well: any) {
+  editingWell.value = toWellDialogData(well)
+  dialogs.assignWell = true
+}
 
+async function handleWellUpdated(wellId: string, wellData: any) {
+  const well = projectWells.value.find(item => item.id === wellId)
+
+  await runWellAction(
+    () => useWellsStore().updateWell(wellId, { ...wellData, well_type: well?.raw_well_type || 'vertical' }),
+    'Pozo actualizado',
+  )
+  dialogs.assignWell = false
+}
+
+async function runWellAction(action: () => Promise<unknown>, success: string) {
   try {
-    await deleteWell(currentWell.value.id)
-    await refreshProject()
-
-    showSnackbar({
-      title: 'Éxito',
-      message: 'Pozo eliminado correctamente',
-      color: 'success',
-    })
+    await action()
+    await reloadWells()
+    showSnackbar({ title: 'Éxito', message: success, color: 'success' })
   }
   catch (error: any) {
-    showSnackbar({
-      title: 'Error',
-      message: error.message || 'Error al eliminar el pozo',
-      color: 'error',
-    })
+    showSnackbar({ title: 'Error', message: error?.data?.message || error?.message || 'No se pudo completar la acción', color: 'error' })
   }
 }
+
+const handleStandbyWell = (well: any, reason: string) =>
+  runWellAction(() => DrillingReportApiService.suspendWell(well.id, reason), `Pozo ${well.well_number || well.name} en stand-by`)
+
+const handleResumeWell = (well: any) =>
+  runWellAction(() => DrillingReportApiService.resumeWell(well.id), `Pozo ${well.well_number || well.name} reactivado`)
+
+const handleCompleteWell = (well: any) =>
+  runWellAction(() => DrillingReportApiService.completeWell(well.id), `Pozo ${well.well_number || well.name} terminado`)
+
+/** Un pozo con reportes no se elimina (el backend lo rechaza y sugiere stand-by) */
+const handleDeleteWell = (well: any) =>
+  runWellAction(() => DrillingReportApiService.deleteWell(well.id), 'Pozo eliminado')
 
 // ========== REPORT ACTIONS ==========
 
@@ -769,7 +838,9 @@ function handleAiCaptureReview(reportId: string) {
  */
 /** Desde la bandeja: abrir el asistente del reporte (con la foto al lado si vino de una captura). */
 function handleReviewFromQueue(report: { id: string; well_id: string }) {
-  handleEditReport({ id: report.id, well: { id: report.well_id } })
+  const well = projectWells.value.find(item => item.id === report.well_id)
+
+  handleEditReport({ id: report.id, well: { id: report.well_id, name: well ? wellLabel(well) : '' } })
 }
 
 /** Contador de la pestaña "Por revisar" desde que se abre el proyecto; ?tab=review la abre (enlace del recordatorio). */
@@ -1038,18 +1109,21 @@ onMounted(() => {
             fluid
           >
             <VRow>
-              <!-- Información del Pozo -->
+              <!-- Avance en metros: suma de los pozos contra los metros contratados -->
               <VCol
                 cols="12"
                 md="4"
               >
-                <WellInfoCardMolecule
-                  :well="currentWell"
+                <MetersProgressCardMolecule
+                  :target="metersProgress.target"
+                  :drilled="metersProgress.drilled"
+                  :source="metersProgress.source"
+                  :time-percentage="timePercentage"
+                  :well-count="projectWells.length"
+                  :suspended-count="metersProgress.suspended"
                   :loading="loading"
-                  :show-actions="canEditProject"
-                  @view-details="handleViewWellDetails"
-                  @create-well="handleCreateWell"
-                  @delete-well="handleDeleteWell"
+                  @view-wells="scrollToWells"
+                  @set-target="openEditDialog(project)"
                 />
               </VCol>
 
@@ -1080,6 +1154,25 @@ onMounted(() => {
                   :loading="loading"
                   @view-details="handleViewBudgetDetails"
                   @add-expense="handleAddCost"
+                />
+              </VCol>
+
+              <!-- Pozos (barrenos) del proyecto -->
+              <VCol
+                id="project-wells"
+                cols="12"
+              >
+                <ProjectWellsCardOrganism
+                  :wells="projectWells"
+                  :loading="detailStore.loadingStates.well"
+                  :can-edit="canEditProject"
+                  @add="handleCreateWell"
+                  @edit="handleEditWell"
+                  @standby="handleStandbyWell"
+                  @resume="handleResumeWell"
+                  @complete="handleCompleteWell"
+                  @delete="handleDeleteWell"
+                  @qr-labels="router.push({ name: 'drilling-well-qr-labels', params: { id: projectId } })"
                 />
               </VCol>
 
@@ -1129,6 +1222,7 @@ onMounted(() => {
             v-if="activeTab === 'review'"
             ref="reviewTabRef"
             :project-id="projectId"
+            :wells="reportableWellOptions"
             @review="handleReviewFromQueue"
             @approved="refreshTab('reports')"
             @count="detailStore.tabDataCache.reviewCount = $event"
@@ -1302,8 +1396,10 @@ onMounted(() => {
     <AssignWellDialogOrganism
       v-model="dialogs.assignWell"
       :project-id="projectId"
+      :well="editingWell"
       @assign="handleWellAssigned"
       @create="handleWellCreated"
+      @update="handleWellUpdated"
     />
 
     <!-- Diálogo de Detalles del Pozo -->
@@ -1384,7 +1480,8 @@ onMounted(() => {
       :project-id="projectId"
       :project-name="project?.project_name || ''"
       :well-id="currentWell?.id || ''"
-      :well-name="currentWell?.name || ''"
+      :well-name="currentWell ? wellLabel(currentWell) : ''"
+      :wells="reportableWellOptions"
       :loading="creatingReport"
       :error="reportError"
       @submit="handleCreateReportSubmit"
@@ -1399,6 +1496,7 @@ onMounted(() => {
       :project-name="selectedReportForEdit.project?.name || project?.project_name || ''"
       :well-id="selectedReportForEdit.well?.id || currentWell?.id || ''"
       :well-name="selectedReportForEdit.well?.name || currentWell?.name || ''"
+      :wells="reportableWellOptions"
       :report-id="selectedReportForEdit.id"
       :loading="editingReport"
       :error="editReportError"
@@ -1409,8 +1507,7 @@ onMounted(() => {
     <AiCaptureDialogOrganism
       v-model="showAiCaptureDialog"
       :project-id="projectId"
-      :well-id="currentWell?.id || ''"
-      :well-name="currentWell?.name || ''"
+      :wells="reportableWellOptions"
       @review="handleAiCaptureReview"
       @completed="refreshTab('reports')"
     />

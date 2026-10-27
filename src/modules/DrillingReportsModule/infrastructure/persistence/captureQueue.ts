@@ -14,6 +14,7 @@ export interface QueuedPhoto {
   id: string
   ownerId: string
   projectId: string
+  /** '' = automático: el pozo se ubica por el número escrito en la hoja */
   wellId: string
   name: string
   blob: Blob

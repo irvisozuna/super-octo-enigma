@@ -5,7 +5,8 @@
 
 import { rawApi } from '@/services/api'
 
-export type AiImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
+/** `needs_well`: la IA ya leyó la hoja pero no se pudo ubicar su pozo; falta elegirlo. */
+export type AiImportStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'needs_well'
 
 /** Paso del asistente de reporte al que pertenece la advertencia. */
 export type AiImportStep = 'basic' | 'personnel' | 'activities' | 'directional' | 'consumptions' | 'tools' | 'review'
@@ -45,7 +46,9 @@ export interface AiImportUnmapped {
 export interface AiImport {
   id: string
   project_id: string
-  well_id: string
+  well_id: string | null
+  /** Lo que dice la hoja en "pozo" */
+  well_number_read?: string | null
   report_id: string | null
   status: AiImportStatus
   original_name: string
@@ -61,11 +64,13 @@ export interface AiImport {
 export class AiCaptureApiService {
   private static readonly baseUrl = '/drilling/reports/ai-imports'
 
-  static async upload(projectId: string, wellId: string, photos: File[]): Promise<AiImport[]> {
+  /** Sin pozo, cada hoja se ubica por el número de pozo que trae escrito. */
+  static async upload(projectId: string, wellId: string | null, photos: File[]): Promise<AiImport[]> {
     const formData = new FormData()
 
     formData.append('project_id', projectId)
-    formData.append('well_id', wellId)
+    if (wellId)
+      formData.append('well_id', wellId)
     photos.forEach(photo => formData.append('photos[]', photo))
 
     const response = await rawApi(this.baseUrl, { method: 'POST', body: formData })
@@ -73,17 +78,25 @@ export class AiCaptureApiService {
     return response?.data ?? []
   }
 
-  static async list(filters: { ids?: string[]; reportId?: string; projectId?: string }): Promise<AiImport[]> {
+  static async list(filters: { ids?: string[]; reportId?: string; projectId?: string; status?: AiImportStatus }): Promise<AiImport[]> {
     const response = await rawApi(this.baseUrl, {
       method: 'GET',
       params: {
         ids: filters.ids?.join(','),
         report_id: filters.reportId,
         project_id: filters.projectId,
+        status: filters.status,
       },
     })
 
     return response?.data ?? []
+  }
+
+  /** Elegir el pozo de una hoja que no se pudo ubicar: crea el borrador con lo que la IA ya leyó. */
+  static async assignWell(importId: string, wellId: string): Promise<AiImport> {
+    const response = await rawApi(`${this.baseUrl}/${importId}/well`, { method: 'POST', body: { well_id: wellId } })
+
+    return response?.data
   }
 
   static async image(importId: string): Promise<Blob> {

@@ -780,6 +780,23 @@ export class DrillingReportApiService {
     })
   }
 
+  /** Stand-by: el pozo deja de recibir reportes hasta reactivarlo (se guarda el motivo). */
+  static async suspendWell(id: string, reason: string) {
+    return await rawApi(`/drilling/wells/${id}/suspend`, { method: 'POST', body: { reason } })
+  }
+
+  static async resumeWell(id: string) {
+    return await rawApi(`/drilling/wells/${id}/resume`, { method: 'POST', body: {} })
+  }
+
+  static async completeWell(id: string) {
+    return await rawApi(`/drilling/wells/${id}/complete`, { method: 'POST', body: {} })
+  }
+
+  static async abandonWell(id: string, reason: string) {
+    return await rawApi(`/drilling/wells/${id}/abandon`, { method: 'POST', body: { reason } })
+  }
+
   /**
    * Delete a well
    */
