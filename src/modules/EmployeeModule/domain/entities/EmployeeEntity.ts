@@ -311,6 +311,7 @@ export class EmployeeDomain {
       helper: 'Ayudante',
       manager: 'Gerente',
       supervisor: 'Supervisor',
+      mechanic: 'Mecánico',
       admin: 'Administrador',
     }
 

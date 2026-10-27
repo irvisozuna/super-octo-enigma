@@ -53,6 +53,7 @@ export enum EmployeePosition {
   HELPER = 'helper',
   MANAGER = 'manager',
   SUPERVISOR = 'supervisor',
+  MECHANIC = 'mechanic',
   ADMIN = 'admin',
 }
 

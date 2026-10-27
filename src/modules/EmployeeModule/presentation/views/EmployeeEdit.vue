@@ -343,6 +343,7 @@ onMounted(() => {
                 { value: 'helper', title: t('EmployeeModule.positions.helper') },
                 { value: 'manager', title: t('EmployeeModule.positions.manager') },
                 { value: 'supervisor', title: t('EmployeeModule.positions.supervisor') },
+                { value: 'mechanic', title: t('EmployeeModule.positions.mechanic') },
                 { value: 'admin', title: t('EmployeeModule.positions.admin') },
               ]"
               variant="outlined"

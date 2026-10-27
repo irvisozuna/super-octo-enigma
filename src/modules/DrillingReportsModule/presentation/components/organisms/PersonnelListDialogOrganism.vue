@@ -45,6 +45,7 @@ const getRoleLabel = (role: string): string => {
     operator: 'Operador',
     supervisor: 'Supervisor',
     helper: 'Ayudante',
+    mechanic: 'Mecánico',
   }
 
   return roleMap[role] || role || 'Sin rol'

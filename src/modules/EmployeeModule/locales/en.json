@@ -46,6 +46,7 @@
       "helper": "Helper",
       "manager": "Manager",
       "supervisor": "Supervisor",
+      "mechanic": "Mechanic",
       "admin": "Administrator"
     },
 

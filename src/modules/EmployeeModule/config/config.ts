@@ -65,6 +65,7 @@ export const EmployeeModuleConfig = {
     helper: 'Ayudante',
     manager: 'Gerente',
     supervisor: 'Supervisor',
+    mechanic: 'Mecánico',
     admin: 'Administrador',
   },
 
