@@ -1,11 +1,12 @@
 import { User } from '@/types/types'
 import { canNavigate } from '@layouts/plugins/casl'
+import { puedeNavegar, refrescarPermisos } from '@/utils/permisos'
 import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
-  router.beforeEach(to => {
+  router.beforeEach(async to => {
     /*
      * If it's a public route, continue navigation. This kind of pages are allowed to visited by login & non-login users. Basically, without any restrictions.
      * Examples of public routes are, 404, under maintenance, etc.
@@ -32,7 +33,8 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
         return undefined
     }
 
-    if (!canNavigate(to) && to.matched.length) {
+    // Los roles pudieron cambiar con la sesión abierta: antes de negar se confirma con el servidor (XEL1-624)
+    if (!canNavigate(to) && to.matched.length && !(isLoggedIn && await refrescarPermisos({ forzar: true }) && puedeNavegar(to))) {
       /* eslint-disable indent */
       return isLoggedIn
         ? { name: 'not-authorized' }

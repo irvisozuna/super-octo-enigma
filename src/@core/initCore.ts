@@ -2,6 +2,7 @@ import { useStorage } from '@vueuse/core'
 import { useTheme } from 'vuetify'
 import { initializeMenus } from '@/navigation'
 import { useMenuReportes } from '@/modules/reportes/composables/useMenuReportes'
+import { vigilarPermisos } from '@/utils/permisos'
 import { useConfigStore } from '@core/stores/config'
 import { cookieRef, namespaceConfig } from '@layouts/stores/config'
 import { themeConfig } from '@themeConfig'
@@ -94,6 +95,9 @@ const initCore = async () => {
 
   // Reportes permitidos por rol: se agregan al grupo "Reportes" desde el servidor
   useMenuReportes().iniciar()
+
+  // Roles cambiados con la sesión abierta: se toman sin volver a iniciar sesión (XEL1-624)
+  vigilarPermisos()
 }
 
 export default initCore
