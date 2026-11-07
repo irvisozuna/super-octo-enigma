@@ -16,6 +16,7 @@ import Lote from '../views/Lote.vue'
 import Lotes from '../views/Lotes.vue'
 import Notificaciones from '../views/Notificaciones.vue'
 import Notificar from '../views/Notificar.vue'
+import Seguimiento from '../views/Seguimiento.vue'
 import PestanaCobranzaContrato from '../components/PestanaCobranzaContrato.vue'
 import ordenesEs from '@/modules/ordenes/locales/es.json'
 import Agentes from '@/modules/ordenes/views/Agentes.vue'
@@ -53,6 +54,9 @@ const cartera = vi.hoisted(() => ({
   capturarEnBloque: vi.fn(),
   cancelarNotificacion: vi.fn(),
   obtenerConfiguracion: vi.fn(),
+  obtenerSeguimiento: vi.fn(),
+  accionSeguimiento: vi.fn(),
+  cerrarOrdenSeguimiento: vi.fn(),
   guardarConfiguracion: vi.fn(),
 }))
 
@@ -92,7 +96,7 @@ const catalogos = {
   estatus: [item(5, 'ACTIVO')],
   notificadores: [{ id: 'a1', nombre: 'José Enrique Cota' }],
   resultados: [{ codigo: 'recibida', nombre: 'Recibida' }, { codigo: 'firmada', nombre: 'Firmada' }],
-  configuracion: { vigencia_dias: 90, capacidad_lote: 45 },
+  configuracion: { vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15 },
   corte: '2026-11-06',
   puede_operar: true,
 }
@@ -151,7 +155,8 @@ beforeEach(() => {
   cartera.obtenerLote.mockResolvedValue({ ...lote, notificaciones: [notificacion] })
   cartera.obtenerNotificaciones.mockResolvedValue({ notificaciones: [notificacion], paginacion: { pagina: 1, por_pagina: 50, total: 1 }, puede_operar: true })
   cartera.obtenerNotificacionesContrato.mockResolvedValue({ notificaciones: [{ ...notificacion, estado: 'Recibida', estado_codigo: 'recibida', entregada: '2026-11-07T18:00:00+00:00', recuperado: 726.49, pagado_total: 900 }], vigente: true })
-  cartera.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 } }, puede_editar: true })
+  cartera.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 }, seguimiento_dias: { min: 1, max: 180 } }, puede_editar: true })
+  cartera.obtenerSeguimiento.mockResolvedValue({ dias: 15, candidatas: [{ id: 'n1', ref: 'NC2610-00012', contrato: 7285, cuenta: '40901818', notificador: 'José Enrique Cota', estado: 'Recibida', estado_codigo: 'recibida', origen: 'legado', emitida: '2026-10-01T18:00:00+00:00', entregada: '2026-10-03T18:00:00+00:00', dias: 35, adeudo_notificado: 1226.49, adeudo_actual: 1480.1 }], ordenes: [], puede_operar: true })
   ordenes.obtenerCatalogo.mockResolvedValue({ tipos: [{ codigo: 'cobranza', nombre: 'Notificación de cobranza', refleja_ticket: true, estados: [{ codigo: 'en_proceso', nombre: 'En proceso', inicial: true, cierra: false, cancela: false }] }] })
   ordenes.obtenerOrdenes.mockResolvedValue({ ordenes: [{ id: 'o1', tipo: { codigo: 'cobranza', nombre: 'Notificación de cobranza' }, estado: { codigo: 'en_proceso', nombre: 'En proceso' }, contrato: 7285, cuenta: '40901818', agente: { id: 'a1', nombre: 'José Enrique Cota' }, observacion: null, entregada_en: null, vence: null, origen: 'collections', abierta_en: '2026-11-06T18:00:00+00:00', cerrada_en: null }], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
   ordenes.obtenerAgentes.mockResolvedValue({ agentes: [{ id: 'a1', nombre: 'José Enrique Cota', usuario_id: null, usuario_comercial: 692, tipos: ['cobranza'], gerencias: [], sectores: [], activo: true }], puede_administrar: true })
@@ -169,7 +174,8 @@ describe('pantallas de cartera y del núcleo', () => {
     ['Lotes', Lotes, ['LT2611-001', 'José Enrique Cota', 'Listo']],
     ['Lote', Lote, ['LT2611-001', 'NC2611-00038', '40901818', 'En fila', 'Descargar PDF']],
     ['Notificaciones', Notificaciones, ['NC2611-00038', 'LT2611-001', 'En proceso']],
-    ['Configuracion', Configuracion, ['Configuración de cartera', 'Vigencia de la notificación']],
+    ['Configuracion', Configuracion, ['Configuración de cartera', 'Vigencia de la notificación', 'Días sin pago para pasar a seguimiento']],
+    ['Seguimiento', Seguimiento, ['Seguimiento', 'Entregadas hace 15 días', 'NC2610-00012', '$1,480.10', 'Notificado $1,226.49', 'Sin pago']],
     ['Ordenes', Ordenes, ['Órdenes de trabajo', 'Notificación de cobranza', '40901818']],
     ['Agentes', Agentes, ['Agentes de campo', 'José Enrique Cota', 'Notificación de cobranza', 'Activo']],
     ['Pestaña de cobranza en Soporte', { render: () => h(PestanaCobranzaContrato, { activa: true }) }, ['NC2611-00038', 'Recibida', 'Entregada', '$726.49', 'vigente', 'Notificación y acta']],

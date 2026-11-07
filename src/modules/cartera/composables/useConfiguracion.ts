@@ -7,7 +7,7 @@ import type { ErrorReporte } from '@/services/errores'
 /** Configuración de cartera: vigencia de la notificación y capacidad sugerida del lote. */
 export function useConfiguracion() {
   const datos = ref<RespuestaConfiguracion | null>(null)
-  const edicion = reactive<Configuracion>({ vigencia_dias: 90, capacidad_lote: 45 })
+  const edicion = reactive<Configuracion>({ vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15 })
   const cargando = ref(false)
   const guardando = ref(false)
   const error = ref<ErrorReporte | null>(null)
@@ -16,7 +16,7 @@ export function useConfiguracion() {
     const out: Partial<Configuracion> = {}
     if (!datos.value)
       return out
-    for (const clave of ['vigencia_dias', 'capacidad_lote'] as const) {
+    for (const clave of ['vigencia_dias', 'capacidad_lote', 'seguimiento_dias'] as const) {
       if (Number(edicion[clave]) !== datos.value.valores[clave])
         out[clave] = Number(edicion[clave])
     }
@@ -28,7 +28,7 @@ export function useConfiguracion() {
   const invalido = computed<keyof Configuracion | null>(() => {
     if (!datos.value)
       return null
-    for (const clave of ['vigencia_dias', 'capacidad_lote'] as const) {
+    for (const clave of ['vigencia_dias', 'capacidad_lote', 'seguimiento_dias'] as const) {
       const v = Number(edicion[clave])
       const { min, max } = datos.value.limites[clave]
       if (!Number.isInteger(v) || v < min || v > max)

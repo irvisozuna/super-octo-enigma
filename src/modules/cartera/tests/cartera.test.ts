@@ -4,6 +4,7 @@ import { useConfiguracion } from '../composables/useConfiguracion'
 import { documentoEnCurso, useLote } from '../composables/useLotes'
 import { useNotificaciones } from '../composables/useNotificaciones'
 import { useNotificar } from '../composables/useNotificar'
+import { useSeguimiento } from '../composables/useSeguimiento'
 import type { CuentaCandidata, ItemCatalogo, Notificacion, RespuestaCatalogos } from '../types/cartera'
 import { cuerpoBusqueda, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
 
@@ -23,6 +24,9 @@ const api = vi.hoisted(() => ({
   capturarEnBloque: vi.fn(),
   cancelarNotificacion: vi.fn(),
   obtenerConfiguracion: vi.fn(),
+  obtenerSeguimiento: vi.fn(),
+  accionSeguimiento: vi.fn(),
+  cerrarOrdenSeguimiento: vi.fn(),
   guardarConfiguracion: vi.fn(),
 }))
 
@@ -40,7 +44,7 @@ const catalogos: RespuestaCatalogos = {
   estatus: [],
   notificadores: [{ id: 'a1', nombre: 'Notificador' }],
   resultados: [{ codigo: 'recibida', nombre: 'Recibida' }],
-  configuracion: { vigencia_dias: 90, capacidad_lote: 2 },
+  configuracion: { vigencia_dias: 90, capacidad_lote: 2, seguimiento_dias: 15 },
   corte: '2026-11-06',
   puede_operar: true,
 }
@@ -233,8 +237,8 @@ describe('useNotificaciones', () => {
 
 describe('useConfiguracion', () => {
   it('manda solo lo que cambió y no guarda fuera de límites', async () => {
-    api.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 } }, puede_editar: true })
-    api.guardarConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 60, capacidad_lote: 45 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 } }, puede_editar: true })
+    api.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 }, seguimiento_dias: { min: 1, max: 180 } }, puede_editar: true })
+    api.guardarConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 60, capacidad_lote: 45, seguimiento_dias: 15 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 }, seguimiento_dias: { min: 1, max: 180 } }, puede_editar: true })
 
     const c = useConfiguracion()
 
@@ -248,5 +252,41 @@ describe('useConfiguracion', () => {
     expect(await c.guardar()).toBe(true)
     expect(api.guardarConfiguracion).toHaveBeenCalledWith({ vigencia_dias: 60 })
     expect(c.cambios.value).toEqual({})
+  })
+})
+
+describe('useSeguimiento', () => {
+  const candidata = (id: string, adeudo: number) => ({ id, ref: id, contrato: 1, cuenta: '1', notificador: null, estado: 'Recibida', estado_codigo: 'recibida', origen: 'atencion', emitida: '', entregada: '', dias: 20, adeudo_notificado: adeudo, adeudo_actual: adeudo })
+
+  it('aplica la acción solo con motivo, manda las marcadas y recarga la bandeja', async () => {
+    api.obtenerSeguimiento
+      .mockResolvedValueOnce({ dias: 15, candidatas: [candidata('a', 100), candidata('b', 50)], ordenes: [], puede_operar: true })
+      .mockResolvedValueOnce({ dias: 15, candidatas: [candidata('b', 50)], ordenes: [], puede_operar: true })
+    api.accionSeguimiento.mockResolvedValue({ aplicadas: 1, errores: [] })
+
+    const s = useSeguimiento()
+
+    await s.cargar()
+    s.marcarTodas(true)
+    expect(s.totalMarcado.value).toBe(150)
+    s.alternar('b')
+
+    expect(await s.aplicar('orden', '   ')).toBeNull()
+    expect(api.accionSeguimiento).not.toHaveBeenCalled()
+    await s.aplicar('orden', ' Llamar ')
+    expect(api.accionSeguimiento).toHaveBeenCalledWith(['a'], 'orden', 'Llamar', undefined)
+    expect(s.candidatas.value.map(c => c.id)).toEqual(['b'])
+    expect(s.seleccion.value.size).toBe(0)
+  })
+
+  it('cerrar una orden pide nota', async () => {
+    api.obtenerSeguimiento.mockResolvedValue({ dias: 15, candidatas: [], ordenes: [], puede_operar: true })
+    api.cerrarOrdenSeguimiento.mockResolvedValue({ id: 'o1', estado: 'atendida', cerrada_en: '' })
+
+    const s = useSeguimiento()
+
+    expect(await s.cerrar('o1', 'atendida', ' ')).toBe(false)
+    expect(await s.cerrar('o1', 'atendida', 'Pagará')).toBe(true)
+    expect(api.cerrarOrdenSeguimiento).toHaveBeenCalledWith('o1', 'atendida', 'Pagará')
   })
 })

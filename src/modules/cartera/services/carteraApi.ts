@@ -1,5 +1,7 @@
 import type {
+  AccionSeguimiento,
   FichaNotificacion,
+  RespuestaAccionSeguimiento,
   RespuestaCapturaBloque,
   RespuestaCatalogos,
   RespuestaConfiguracion,
@@ -8,6 +10,7 @@ import type {
   RespuestaLotes,
   RespuestaNotificaciones,
   RespuestaNotificacionesContrato,
+  RespuestaSeguimiento,
   RespuestaVistaPrevia,
   ResultadoNotificacion,
   ResumenBusqueda,
@@ -86,10 +89,22 @@ export function cancelarNotificacion(id: string, motivo: string): Promise<FichaN
   return rawApi(`${BASE}/notificaciones/${encodeURIComponent(id)}/cancelar`, { method: 'POST', body: { motivo } })
 }
 
+export function obtenerSeguimiento({ signal }: OpcionesPeticion = {}): Promise<RespuestaSeguimiento> {
+  return rawApi(`${BASE}/seguimiento`, { signal })
+}
+
+export function accionSeguimiento(notificaciones: string[], accion: AccionSeguimiento, motivo: string, notificador?: string | null): Promise<RespuestaAccionSeguimiento> {
+  return rawApi(`${BASE}/seguimiento`, { method: 'POST', body: { notificaciones, accion, motivo, notificador: notificador || undefined } })
+}
+
+export function cerrarOrdenSeguimiento(id: string, estado: 'atendida' | 'cancelada', nota: string): Promise<{ id: string; estado: string; cerrada_en: string }> {
+  return rawApi(`${BASE}/seguimiento/ordenes/${encodeURIComponent(id)}`, { method: 'POST', body: { estado, nota } })
+}
+
 export function obtenerConfiguracion({ signal }: OpcionesPeticion = {}): Promise<RespuestaConfiguracion> {
   return rawApi(`${BASE}/configuracion`, { signal })
 }
 
-export function guardarConfiguracion(valores: Partial<Record<'vigencia_dias' | 'capacidad_lote', number>>): Promise<RespuestaConfiguracion> {
+export function guardarConfiguracion(valores: Partial<Record<'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias', number>>): Promise<RespuestaConfiguracion> {
   return rawApi(`${BASE}/configuracion`, { method: 'PUT', body: valores })
 }

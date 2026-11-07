@@ -10,8 +10,8 @@ const notificar = useNotificacion()
 const c = useConfiguracion()
 
 const editable = computed(() => c.datos.value?.puede_editar ?? false)
-const limite = (clave: 'vigencia_dias' | 'capacidad_lote') => c.datos.value?.limites[clave] ?? { min: 1, max: 1 }
-const regla = (clave: 'vigencia_dias' | 'capacidad_lote') => () => c.invalido.value === clave ? t('cartera.configuracion.fueraLimites', limite(clave)) : true
+const limite = (clave: 'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias') => c.datos.value?.limites[clave] ?? { min: 1, max: 1 }
+const regla = (clave: 'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias') => () => c.invalido.value === clave ? t('cartera.configuracion.fueraLimites', limite(clave)) : true
 
 async function guardar() {
   if (await c.guardar())
@@ -85,6 +85,18 @@ onMounted(() => c.cargar())
         persistent-hint
         :readonly="!editable"
         :rules="[regla('capacidad_lote')]"
+        class="mb-5"
+      />
+      <VTextField
+        v-model.number="c.edicion.seguimiento_dias"
+        type="number"
+        :min="limite('seguimiento_dias').min"
+        :max="limite('seguimiento_dias').max"
+        :label="t('cartera.configuracion.seguimiento')"
+        :hint="t('cartera.configuracion.seguimientoAyuda')"
+        persistent-hint
+        :readonly="!editable"
+        :rules="[regla('seguimiento_dias')]"
         class="mb-5"
       />
       <div

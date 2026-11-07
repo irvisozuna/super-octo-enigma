@@ -161,7 +161,9 @@
     "fueraLimites": "Debe ser un número entero entre {min} y {max}.",
     "guardar": "Guardar",
     "guardado": "Configuración guardada",
-    "soloLectura": "Solo quien administra cartera vencida puede cambiar la configuración."
+    "soloLectura": "Solo quien administra cartera vencida puede cambiar la configuración.",
+    "seguimiento": "Días sin pago para pasar a seguimiento",
+    "seguimientoAyuda": "Desde la fecha de entrega. Al cumplirlos, la notificación aparece en Seguimiento si no se ha recuperado nada."
   },
   "contrato": {
     "pestana": "Cobranza",
@@ -170,5 +172,36 @@
     "recuperado": "Recuperado",
     "verPdf": "Notificación y acta",
     "entregada": "Entregada {fecha}"
+  },
+  "seguimiento": {
+    "titulo": "Seguimiento",
+    "descripcion": "Notificaciones entregadas que no se han pagado. Decide el siguiente paso: una orden de seguimiento, una segunda notificación o descartarla.",
+    "sinPago": "Sin pago",
+    "enSeguimiento": "En seguimiento",
+    "regla": "Entregadas hace {dias} días o más, sin nada recuperado y que siguen debiendo hoy.",
+    "dias": "Días",
+    "entregada": "Entregada",
+    "adeudoActual": "Adeudo hoy",
+    "adeudoNotificado": "Notificado {importe}",
+    "sinCandidatas": "No hay notificaciones entregadas sin pago",
+    "sinOrdenes": "No hay órdenes de seguimiento abiertas",
+    "marcadas": "{n} marcadas · {importe}",
+    "orden": "Orden de seguimiento",
+    "segunda": "Segunda notificación",
+    "descartar": "Descartar",
+    "motivo": "Motivo",
+    "motivoAyuda": "Queda en la bitácora de cada notificación.",
+    "notificador": "Notificador",
+    "tituloAccion": "{accion} · {n} notificaciones",
+    "aplicadas": "Se aplicó a {n} notificaciones",
+    "loteGenerado": "Se generó el lote {ref}",
+    "noAplicadas": "{n} ya no estaban en seguimiento.",
+    "abierta": "Abierta",
+    "atender": "Atendida",
+    "cancelar": "Cancelar",
+    "cerrarTitulo": "{accion} · cuenta {cuenta}",
+    "nota": "Qué se hizo",
+    "cerrada": "Orden cerrada",
+    "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida decide el seguimiento."
   }
 }

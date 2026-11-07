@@ -18,6 +18,7 @@ export interface Opcion<T = string> {
 export interface Configuracion {
   vigencia_dias: number
   capacidad_lote: number
+  seguimiento_dias: number
 }
 
 export interface RespuestaCatalogos {
@@ -230,4 +231,46 @@ export interface FiltrosNotificaciones {
   origen: 'atencion' | 'legado' | null
   desde: string | null
   hasta: string | null
+}
+
+/* Seguimiento (XEL1-659) */
+
+export type AccionSeguimiento = 'orden' | 'segunda' | 'descartada'
+
+export interface CandidataSeguimiento {
+  id: string
+  ref: string
+  contrato: number
+  cuenta: string | null
+  notificador: string | null
+  estado: string
+  estado_codigo: EstadoNotificacion
+  origen: 'atencion' | 'legado'
+  emitida: string
+  entregada: string
+  dias: number
+  adeudo_notificado: number
+  adeudo_actual: number
+}
+
+export interface OrdenSeguimiento {
+  id: string
+  cuenta: string | null
+  contrato: number
+  motivo: string | null
+  abierta_en: string
+  notificacion: { id: string; ref: string }
+}
+
+export interface RespuestaSeguimiento {
+  dias: number
+  candidatas: CandidataSeguimiento[]
+  ordenes: OrdenSeguimiento[]
+  puede_operar: boolean
+}
+
+export interface RespuestaAccionSeguimiento {
+  aplicadas: number
+  errores: { id: string; motivo: string }[]
+  lote?: { id: string; ref: string | null }
 }

@@ -27,6 +27,12 @@ const carteraMenu: VerticalNavItems = [
         subject: 'cartera',
       },
       {
+        title: 'Seguimiento',
+        to: 'carteraSeguimiento',
+        action: 'read',
+        subject: 'cartera',
+      },
+      {
         title: 'Recuperación',
         to: { name: 'reportesVisor', params: { clave: 'recuperacion_notificaciones' } },
         action: 'read',
