@@ -162,5 +162,13 @@
     "guardar": "Guardar",
     "guardado": "Configuración guardada",
     "soloLectura": "Solo quien administra cartera vencida puede cambiar la configuración."
+  },
+  "contrato": {
+    "pestana": "Cobranza",
+    "vigente": "Tiene una notificación de cobranza vigente: no entra en otro lote hasta que venza.",
+    "sinFilas": "La cuenta no tiene notificaciones de cobranza",
+    "recuperado": "Recuperado",
+    "verPdf": "Notificación y acta",
+    "entregada": "Entregada {fecha}"
   }
 }

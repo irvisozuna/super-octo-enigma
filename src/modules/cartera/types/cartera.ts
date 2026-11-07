@@ -181,6 +181,16 @@ export interface RespuestaNotificaciones {
   puede_operar: boolean
 }
 
+export interface NotificacionContrato extends Notificacion {
+  recuperado: number | null
+  pagado_total: number | null
+}
+
+export interface RespuestaNotificacionesContrato {
+  notificaciones: NotificacionContrato[]
+  vigente: boolean
+}
+
 export interface EventoHistorial {
   accion: string
   usuario: string | null

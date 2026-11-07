@@ -7,6 +7,7 @@ import type {
   RespuestaLote,
   RespuestaLotes,
   RespuestaNotificaciones,
+  RespuestaNotificacionesContrato,
   RespuestaVistaPrevia,
   ResultadoNotificacion,
   ResumenBusqueda,
@@ -58,6 +59,11 @@ export function rearmarDocumentoLote(id: string): Promise<RespuestaLote> {
 
 export function obtenerNotificaciones(params: Record<string, string | number>, { signal }: OpcionesPeticion = {}): Promise<RespuestaNotificaciones> {
   return rawApi(`${BASE}/notificaciones`, { params, signal })
+}
+
+/** Notificaciones de una cuenta, para la ficha del contrato en Soporte (XEL1-658). */
+export function obtenerNotificacionesContrato(contrato: number | string, { signal }: OpcionesPeticion = {}): Promise<RespuestaNotificacionesContrato> {
+  return rawApi(`${BASE}/contratos/${encodeURIComponent(String(contrato))}/notificaciones`, { signal })
 }
 
 export function obtenerNotificacion(id: string, { signal }: OpcionesPeticion = {}): Promise<FichaNotificacion> {

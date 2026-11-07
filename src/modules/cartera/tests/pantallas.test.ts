@@ -16,6 +16,7 @@ import Lote from '../views/Lote.vue'
 import Lotes from '../views/Lotes.vue'
 import Notificaciones from '../views/Notificaciones.vue'
 import Notificar from '../views/Notificar.vue'
+import PestanaCobranzaContrato from '../components/PestanaCobranzaContrato.vue'
 import ordenesEs from '@/modules/ordenes/locales/es.json'
 import Agentes from '@/modules/ordenes/views/Agentes.vue'
 import Ordenes from '@/modules/ordenes/views/Ordenes.vue'
@@ -46,6 +47,7 @@ const cartera = vi.hoisted(() => ({
   rearmarDocumentoLote: vi.fn(),
   obtenerNotificaciones: vi.fn(),
   obtenerNotificacion: vi.fn(),
+  obtenerNotificacionesContrato: vi.fn(),
   descargarDocumentoNotificacion: vi.fn(),
   capturarResultado: vi.fn(),
   capturarEnBloque: vi.fn(),
@@ -59,6 +61,7 @@ const ordenes = vi.hoisted(() => ({ obtenerCatalogo: vi.fn(), obtenerOrdenes: vi
 vi.mock('../services/carteraApi', () => cartera)
 vi.mock('@/modules/ordenes/services/ordenesApi', () => ordenes)
 vi.mock('@layouts/plugins/casl', () => ({ can: () => true }))
+vi.mock('@/modules/support/stores/contractStore', () => ({ useContractStore: () => ({ item: { id_account: 7285 } }) }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }), useRoute: () => ({ params: { id: 'a3000000-0000-4000-8000-000000000001' }, query: {} }) }))
 
 class ResizeObserverSimulado {
@@ -147,6 +150,7 @@ beforeEach(() => {
   cartera.obtenerLotes.mockResolvedValue({ lotes: [lote], paginacion: { pagina: 1, por_pagina: 25, total: 1 } })
   cartera.obtenerLote.mockResolvedValue({ ...lote, notificaciones: [notificacion] })
   cartera.obtenerNotificaciones.mockResolvedValue({ notificaciones: [notificacion], paginacion: { pagina: 1, por_pagina: 50, total: 1 }, puede_operar: true })
+  cartera.obtenerNotificacionesContrato.mockResolvedValue({ notificaciones: [{ ...notificacion, estado: 'Recibida', estado_codigo: 'recibida', entregada: '2026-11-07T18:00:00+00:00', recuperado: 726.49, pagado_total: 900 }], vigente: true })
   cartera.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 } }, puede_editar: true })
   ordenes.obtenerCatalogo.mockResolvedValue({ tipos: [{ codigo: 'cobranza', nombre: 'Notificación de cobranza', refleja_ticket: true, estados: [{ codigo: 'en_proceso', nombre: 'En proceso', inicial: true, cierra: false, cancela: false }] }] })
   ordenes.obtenerOrdenes.mockResolvedValue({ ordenes: [{ id: 'o1', tipo: { codigo: 'cobranza', nombre: 'Notificación de cobranza' }, estado: { codigo: 'en_proceso', nombre: 'En proceso' }, contrato: 7285, cuenta: '40901818', agente: { id: 'a1', nombre: 'José Enrique Cota' }, observacion: null, entregada_en: null, vence: null, origen: 'collections', abierta_en: '2026-11-06T18:00:00+00:00', cerrada_en: null }], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
@@ -168,6 +172,7 @@ describe('pantallas de cartera y del núcleo', () => {
     ['Configuracion', Configuracion, ['Configuración de cartera', 'Vigencia de la notificación']],
     ['Ordenes', Ordenes, ['Órdenes de trabajo', 'Notificación de cobranza', '40901818']],
     ['Agentes', Agentes, ['Agentes de campo', 'José Enrique Cota', 'Notificación de cobranza', 'Activo']],
+    ['Pestaña de cobranza en Soporte', { render: () => h(PestanaCobranzaContrato, { activa: true }) }, ['NC2611-00038', 'Recibida', 'Entregada', '$726.49', 'vigente', 'Notificación y acta']],
     ['Puente', Puente, ['Puente con Aquasoft Comercial', 'Crear ticket', 'Pendiente', 'Tickets apagados', '6 nov 11:00']],
   ] as const)('%s se monta con datos reales, sin avisos ni claves sin traducir', async (_nombre, vista, textos) => {
     const w = montar(vista as Component)
