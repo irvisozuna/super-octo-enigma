@@ -33,6 +33,12 @@ const carteraMenu: VerticalNavItems = [
         subject: 'cartera',
       },
       {
+        title: 'Indicadores',
+        to: { name: 'reportesTablero', params: { clave: 'cobranza_notificaciones' } },
+        action: 'read',
+        subject: 'cartera',
+      },
+      {
         title: 'Recuperación',
         to: { name: 'reportesVisor', params: { clave: 'recuperacion_notificaciones' } },
         action: 'read',
