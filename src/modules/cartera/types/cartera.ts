@@ -90,6 +90,7 @@ export interface CuentaCandidata {
   convenio: string | null
   convenio_estado: 'al_corriente' | 'atrasado' | null
   pagado_despues: number | null
+  revision_padron: boolean
 }
 
 export interface RespuestaVistaPrevia {

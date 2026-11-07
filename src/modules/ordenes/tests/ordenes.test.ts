@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   obtenerAgentes: vi.fn(),
   guardarAgente: vi.fn(),
   obtenerPuente: vi.fn(),
+  cambiarEstadoOrden: vi.fn(),
 }))
 
 vi.mock('../services/ordenesApi', () => api)
@@ -51,5 +52,40 @@ describe('agentes de campo', () => {
 
     expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false })).toBeNull()
     expect(a.errorGuardar.value).not.toBeNull()
+  })
+})
+
+describe('cerrar órdenes desde la pantalla de órdenes (XEL1-660)', () => {
+  it('solo los tipos sin módulo dueño ofrecen estados de cierre, y cerrar pide nota', async () => {
+    api.obtenerCatalogo.mockResolvedValue({
+      tipos: [
+        { codigo: 'cobranza', nombre: 'Cobranza', refleja_ticket: true, captura_aqui: false, estados: [{ codigo: 'recibida', nombre: 'Recibida', inicial: false, cierra: true, cancela: false }] },
+        {
+          codigo: 'revision_padron',
+          nombre: 'Revisión',
+          refleja_ticket: false,
+          captura_aqui: true,
+          estados: [
+            { codigo: 'pendiente', nombre: 'Pendiente', inicial: true, cierra: false, cancela: false },
+            { codigo: 'corregida', nombre: 'Corregida', inicial: false, cierra: true, cancela: false },
+          ],
+        },
+      ],
+    })
+
+    const fila = { id: 'o1', tipo: { codigo: 'revision_padron', nombre: 'Revisión' }, estado: { codigo: 'pendiente', nombre: 'Pendiente' }, contrato: 1, cuenta: '1', agente: null, observacion: null, entregada_en: null, vence: null, origen: null, abierta_en: null, cerrada_en: null, datos: null }
+
+    api.obtenerOrdenes.mockResolvedValue({ ordenes: [fila], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
+    api.cambiarEstadoOrden.mockResolvedValue({ ...fila, estado: { codigo: 'corregida', nombre: 'Corregida' }, cerrada_en: '2026-11-07T10:00:00+00:00' })
+
+    const o = useOrdenes()
+
+    await o.iniciar()
+    expect(o.estadosDeCierre('cobranza')).toEqual([])
+    expect(o.estadosDeCierre('revision_padron').map(e => e.codigo)).toEqual(['corregida'])
+    expect(await o.cerrar(fila, 'corregida', ' ')).toBe(false)
+    expect(await o.cerrar(fila, 'corregida', 'Se corrigió el número')).toBe(true)
+    expect(api.cambiarEstadoOrden).toHaveBeenCalledWith('o1', 'corregida', 'Se corrigió el número')
+    expect(o.filas.value[0].cerrada_en).not.toBeNull()
   })
 })

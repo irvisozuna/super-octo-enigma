@@ -303,6 +303,17 @@ onBeforeUnmount(() => n.detener())
       </template>
       <template #celda-sector="{ fila }">
         {{ fila.sector ?? '—' }}
+        <VChip
+          v-if="fila.revision_padron"
+          size="x-small"
+          label
+          variant="tonal"
+          color="warning"
+          class="ms-1"
+          :title="t('cartera.notificar.revisionPadronDetalle')"
+        >
+          {{ t('cartera.notificar.revisionPadron') }}
+        </VChip>
         <div class="as-secundario">
           {{ t('cartera.notificar.manzanaLote', { mza: fila.manzana ?? '—', lote: fila.lote ?? '—' }) }}
         </div>

@@ -4,12 +4,37 @@ import { useI18n } from 'vue-i18n'
 import { useOrdenes } from '../composables/useOrdenes'
 import type { Orden } from '../types/ordenes'
 import type { ColumnaTabla } from '@/components/as/tipos'
+import { useNotificacion } from '@/composables/useNotificacion'
+import { can } from '@layouts/plugins/casl'
 import { fechaHoraCorta } from '@/utils/formato'
 
-/* Órdenes de trabajo del núcleo, de todos los tipos y en solo lectura: cada tipo se captura desde su módulo. */
+/*
+ * Órdenes de trabajo del núcleo, de todos los tipos. Las de tipos con módulo dueño (cobranza) se capturan allá; las demás,
+ * como la revisión de padrón (XEL1-660), se cierran aquí con nota.
+ */
 const { t } = useI18n()
+const notificar = useNotificacion()
 const o = useOrdenes()
 const cuenta = ref('')
+const cierre = ref<Orden | null>(null)
+const estadoCierre = ref<string | null>(null)
+const observacion = ref('')
+const puedeOperar = computed(() => can('operate', 'ordenes-operar'))
+const opcionesCierre = computed(() => o.estadosDeCierre(cierre.value?.tipo.codigo ?? null).map(s => ({ value: s.codigo, title: s.nombre })))
+
+function abrirCierre(f: Orden) {
+  cierre.value = f
+  estadoCierre.value = null
+  observacion.value = ''
+  o.errorCierre.value = null
+}
+
+async function confirmarCierre() {
+  if (cierre.value && estadoCierre.value && await o.cerrar(cierre.value, estadoCierre.value, observacion.value)) {
+    cierre.value = null
+    notificar.exito(t('ordenes.ordenes.cerrada_ok'))
+  }
+}
 
 const tipos = computed(() => o.tipos.value.map(x => ({ value: x.codigo, title: x.nombre })))
 const estados = computed(() => (o.tipos.value.find(x => x.codigo === o.filtros.tipo)?.estados ?? []).map(s => ({ value: s.codigo, title: s.nombre })))
@@ -22,6 +47,7 @@ const columnas: ColumnaTabla<Orden>[] = [
   { clave: 'agente.nombre', titulo: t('ordenes.ordenes.agente'), formato: 'texto', anchoMin: 200 },
   { clave: 'abierta_en', titulo: t('ordenes.ordenes.abierta'), formato: 'personalizado', ancho: 160 },
   { clave: 'cerrada_en', titulo: t('ordenes.ordenes.cerrada'), formato: 'personalizado', ancho: 160 },
+  { clave: 'acciones', titulo: '', formato: 'personalizado', ordenable: false, alineacion: 'end', ancho: 110 },
 ]
 
 function limpiar() {
@@ -104,12 +130,35 @@ onMounted(() => o.iniciar())
           {{ fila.estado.nombre ?? '—' }}
         </VChip>
         <div
+          v-if="fila.datos?.motivo_nombre"
+          class="as-secundario mt-1"
+        >
+          {{ fila.datos.motivo_nombre }}<span v-if="fila.datos.notificacion"> · {{ t('ordenes.ordenes.notificacion', { ref: fila.datos.notificacion }) }}</span>
+        </div>
+        <div
+          v-if="fila.datos?.domicilio?.length"
+          class="as-secundario text-truncate"
+          :title="fila.datos.domicilio.join('; ')"
+        >
+          {{ fila.datos.domicilio.join('; ') }}
+        </div>
+        <div
           v-if="fila.observacion"
           class="as-secundario mt-1 text-truncate"
           :title="fila.observacion"
         >
           {{ fila.observacion }}
         </div>
+      </template>
+      <template #celda-acciones="{ fila }">
+        <VBtn
+          v-if="puedeOperar && !fila.cerrada_en && o.estadosDeCierre(fila.tipo.codigo).length"
+          size="small"
+          variant="text"
+          @click="abrirCierre(fila)"
+        >
+          {{ t('ordenes.ordenes.cerrar') }}
+        </VBtn>
       </template>
       <template #celda-abierta_en="{ fila }">
         <span class="as-num">{{ fechaHoraCorta(fila.abierta_en) }}</span>
@@ -118,5 +167,39 @@ onMounted(() => o.iniciar())
         <span class="as-num">{{ fechaHoraCorta(fila.cerrada_en) }}</span>
       </template>
     </AsTablaDatos>
+
+    <AsDialogo
+      :abierto="cierre !== null"
+      :titulo="cierre ? t('ordenes.ordenes.cerrarTitulo', { cuenta: cierre.cuenta ?? cierre.contrato ?? '—' }) : ''"
+      tamano="sm"
+      :cargando="o.cerrando.value"
+      :texto-confirmar="t('ordenes.ordenes.cerrar')"
+      :desactivar-confirmar="!estadoCierre || !observacion.trim()"
+      @update:abierto="(v: boolean) => { if (!v) cierre = null }"
+      @confirmar="confirmarCierre"
+    >
+      <VAlert
+        v-if="o.errorCierre.value"
+        type="error"
+        variant="tonal"
+        density="compact"
+        class="mb-3"
+      >
+        {{ o.errorCierre.value.mensaje }}
+      </VAlert>
+      <VSelect
+        v-model="estadoCierre"
+        :items="opcionesCierre"
+        :label="t('ordenes.ordenes.estadoCierre')"
+        class="mb-3"
+      />
+      <VTextarea
+        v-model="observacion"
+        :label="t('ordenes.ordenes.observacion')"
+        rows="2"
+        auto-grow
+        maxlength="1000"
+      />
+    </AsDialogo>
   </div>
 </template>

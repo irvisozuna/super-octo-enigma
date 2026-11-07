@@ -10,7 +10,13 @@
     "abierta": "Abierta",
     "cerrada": "Cerrada",
     "vence": "Vence",
-    "sinFilas": "No hay órdenes con estos filtros"
+    "sinFilas": "No hay órdenes con estos filtros",
+    "cerrar": "Cerrar",
+    "cerrarTitulo": "Cerrar orden · cuenta {cuenta}",
+    "estadoCierre": "Cómo se cierra",
+    "observacion": "Qué se hizo",
+    "cerrada_ok": "Orden cerrada",
+    "notificacion": "Notificación {ref}"
   },
   "agentes": {
     "titulo": "Agentes de campo",

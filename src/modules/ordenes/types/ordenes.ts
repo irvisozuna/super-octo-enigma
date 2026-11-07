@@ -14,6 +14,7 @@ export interface TipoOrden {
   codigo: string
   nombre: string
   refleja_ticket: boolean
+  captura_aqui: boolean
   estados: EstadoTipo[]
 }
 
@@ -30,6 +31,7 @@ export interface Orden {
   origen: string | null
   abierta_en: string | null
   cerrada_en: string | null
+  datos: { motivo_nombre?: string; notificacion?: string; domicilio?: string[] } | null
 }
 
 export interface Paginacion {

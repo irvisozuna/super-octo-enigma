@@ -68,6 +68,7 @@ const cuenta = (contrato: number, adeudo = 100): CuentaCandidata => ({
   convenio: null,
   convenio_estado: null,
   pagado_despues: null,
+  revision_padron: false,
 })
 
 const notificacion = (x: Partial<Notificacion>): Notificacion => ({

@@ -1,5 +1,5 @@
 import { reactive, ref } from 'vue'
-import { guardarAgente, obtenerAgentes, obtenerCatalogo, obtenerOrdenes, obtenerPuente } from '../services/ordenesApi'
+import { cambiarEstadoOrden, guardarAgente, obtenerAgentes, obtenerCatalogo, obtenerOrdenes, obtenerPuente } from '../services/ordenesApi'
 import type { Agente, EdicionAgente, FiltrosOrdenes, Orden, Paginacion, RespuestaPuente, TipoOrden } from '../types/ordenes'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
@@ -64,7 +64,41 @@ export function useOrdenes(porPagina = 50) {
     return cargar(1)
   }
 
-  return { filtros, tipos, filas, paginacion, cargando, error, cargar, iniciar, aplicar }
+  const cerrando = ref(false)
+  const errorCierre = ref<ErrorReporte | null>(null)
+
+  /** Estados que cierran, para los tipos que se capturan aquí (sin módulo dueño). */
+  function estadosDeCierre(tipo: string | null) {
+    const t = tipos.value.find(x => x.codigo === tipo)
+
+    return t?.captura_aqui ? t.estados.filter(s => s.cierra) : []
+  }
+
+  async function cerrar(orden: Orden, estado: string, observacion: string): Promise<boolean> {
+    if (!observacion.trim())
+      return false
+    cerrando.value = true
+    errorCierre.value = null
+    try {
+      const r = await cambiarEstadoOrden(orden.id, estado, observacion.trim())
+      const i = filas.value.findIndex(f => f.id === orden.id)
+
+      if (i >= 0)
+        filas.value.splice(i, 1, r)
+
+      return true
+    }
+    catch (e) {
+      errorCierre.value = normalizarError(e)
+
+      return false
+    }
+    finally {
+      cerrando.value = false
+    }
+  }
+
+  return { filtros, tipos, filas, paginacion, cargando, error, cerrando, errorCierre, cargar, iniciar, aplicar, estadosDeCierre, cerrar }
 }
 
 /** Agentes de campo: lista y alta o edición (solo quien administra órdenes). */
