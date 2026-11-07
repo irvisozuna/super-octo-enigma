@@ -1,0 +1,179 @@
+import { computed, reactive, ref } from 'vue'
+import { contarCuentas, generarLote, obtenerCatalogos, vistaPrevia } from '../services/carteraApi'
+import type { CuentaCandidata, FiltrosBusqueda, RespuestaCatalogos, RespuestaGenerar, ResumenBusqueda } from '../types/cartera'
+import { cuerpoBusqueda, filtrosBusquedaIniciales, hijosDe, recortar } from '../utils/cartera'
+import { normalizarError } from '@/services/errores'
+import type { ErrorReporte } from '@/services/errores'
+
+/*
+ * Notificar (F3 en pantalla): filtros, conteo, vista previa, selección de cuentas y generación del lote.
+ * El conteo se pide solo al cambiar filtros (con espera); la lista se pide a mano porque puede ser larga.
+ * Al generar, el servidor vuelve a buscar y descarta las marcadas que ya no cumplen.
+ */
+export function useNotificar(espera = 400) {
+  const catalogos = ref<RespuestaCatalogos | null>(null)
+  const filtros = reactive<FiltrosBusqueda>(filtrosBusquedaIniciales())
+  const resumen = ref<ResumenBusqueda | null>(null)
+  const cuentas = ref<CuentaCandidata[]>([])
+  const capacidad = ref(45)
+  const seleccion = ref<Set<number>>(new Set())
+  const notificador = ref<string | null>(null)
+  const contando = ref(false)
+  const cargandoLista = ref(false)
+  const generando = ref(false)
+  const error = ref<ErrorReporte | null>(null)
+  const resultado = ref<RespuestaGenerar | null>(null)
+  const listaVigente = ref(false)
+
+  let temporizador: ReturnType<typeof setTimeout> | null = null
+  let controladorConteo: AbortController | null = null
+
+  const sistemas = computed(() => hijosDe(catalogos.value?.sistemas ?? [], filtros.gerencias))
+  const sectores = computed(() => hijosDe(catalogos.value?.sectores ?? [], filtros.sistemas))
+  const seleccionadas = computed(() => cuentas.value.filter(c => seleccion.value.has(c.contrato)))
+  const totalSeleccionado = computed(() => seleccionadas.value.reduce((s, c) => s + c.adeudo, 0))
+  const excedeCapacidad = computed(() => seleccion.value.size > capacidad.value)
+  const puedeGenerar = computed(() => listaVigente.value && seleccion.value.size > 0 && !!notificador.value && !generando.value)
+
+  async function iniciar() {
+    try {
+      catalogos.value = await obtenerCatalogos()
+      capacidad.value = catalogos.value.configuracion.capacidad_lote
+      await contar()
+    }
+    catch (e) {
+      error.value = normalizarError(e)
+    }
+  }
+
+  async function contar() {
+    controladorConteo?.abort()
+    controladorConteo = new AbortController()
+    contando.value = true
+    try {
+      resumen.value = await contarCuentas(cuerpoBusqueda(filtros), { signal: controladorConteo.signal })
+      error.value = null
+    }
+    catch (e) {
+      if ((e as { name?: string }).name === 'AbortError')
+        return
+      error.value = normalizarError(e)
+    }
+    finally {
+      contando.value = false
+    }
+  }
+
+  /** Cambia filtros: la lista que se veía deja de valer y el conteo se repite tras una pausa. */
+  function aplicar(parcial: Partial<FiltrosBusqueda>) {
+    Object.assign(filtros, parcial)
+    filtros.sistemas = recortar(filtros.sistemas, sistemas.value)
+    filtros.sectores = recortar(filtros.sectores, sectores.value)
+    listaVigente.value = false
+    if (temporizador)
+      clearTimeout(temporizador)
+    temporizador = setTimeout(() => {
+      contar()
+    }, espera)
+  }
+
+  function limpiar() {
+    aplicar(filtrosBusquedaIniciales())
+  }
+
+  /** Trae la lista y deja marcadas las primeras según la capacidad sugerida (en orden de recorrido). */
+  async function verCuentas() {
+    cargandoLista.value = true
+    try {
+      const r = await vistaPrevia(cuerpoBusqueda(filtros))
+
+      cuentas.value = r.cuentas
+      resumen.value = r.resumen
+      capacidad.value = r.capacidad_sugerida
+      seleccion.value = new Set(r.cuentas.slice(0, r.capacidad_sugerida).map(c => c.contrato))
+      listaVigente.value = true
+      error.value = null
+    }
+    catch (e) {
+      error.value = normalizarError(e)
+    }
+    finally {
+      cargandoLista.value = false
+    }
+  }
+
+  function alternar(contrato: number) {
+    const s = new Set(seleccion.value)
+
+    s.has(contrato) ? s.delete(contrato) : s.add(contrato)
+    seleccion.value = s
+  }
+
+  function marcar(contratos: number[], marcadas: boolean) {
+    const s = new Set(seleccion.value)
+    for (const c of contratos)
+      marcadas ? s.add(c) : s.delete(c)
+    seleccion.value = s
+  }
+
+  async function generar(): Promise<RespuestaGenerar | null> {
+    if (!puedeGenerar.value || !notificador.value)
+      return null
+    generando.value = true
+    try {
+      // En el orden de recorrido de la lista
+      const contratos = seleccionadas.value.map(c => c.contrato)
+
+      resultado.value = await generarLote(cuerpoBusqueda(filtros), contratos, notificador.value)
+      error.value = null
+      listaVigente.value = false
+
+      return resultado.value
+    }
+    catch (e) {
+      error.value = normalizarError(e)
+
+      return null
+    }
+    finally {
+      generando.value = false
+    }
+  }
+
+  function detener() {
+    if (temporizador)
+      clearTimeout(temporizador)
+    controladorConteo?.abort()
+  }
+
+  return {
+    catalogos,
+    filtros,
+    resumen,
+    cuentas,
+    capacidad,
+    seleccion,
+    notificador,
+    contando,
+    cargandoLista,
+    generando,
+    error,
+    resultado,
+    listaVigente,
+    sistemas,
+    sectores,
+    seleccionadas,
+    totalSeleccionado,
+    excedeCapacidad,
+    puedeGenerar,
+    iniciar,
+    contar,
+    aplicar,
+    limpiar,
+    verCuentas,
+    alternar,
+    marcar,
+    generar,
+    detener,
+  }
+}

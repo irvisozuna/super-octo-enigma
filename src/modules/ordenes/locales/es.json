@@ -1,0 +1,55 @@
+{
+  "ordenes": {
+    "titulo": "Órdenes de trabajo",
+    "descripcion": "Órdenes de campo de todos los tipos. Cada una se captura desde su módulo (por ejemplo, las notificaciones de cobranza en Cartera vencida).",
+    "tipo": "Tipo",
+    "estado": "Estado",
+    "agente": "Agente",
+    "cuenta": "Cuenta",
+    "abiertas": "Solo abiertas",
+    "abierta": "Abierta",
+    "cerrada": "Cerrada",
+    "vence": "Vence",
+    "sinFilas": "No hay órdenes con estos filtros"
+  },
+  "agentes": {
+    "titulo": "Agentes de campo",
+    "descripcion": "Quienes llevan órdenes al campo: notificadores y, más adelante, cuadrillas.",
+    "nombre": "Nombre",
+    "tipos": "Atiende",
+    "activo": "Activo",
+    "inactivo": "Inactivo",
+    "comercial": "Usuario en Aquasoft Comercial",
+    "nuevo": "Nuevo agente",
+    "editar": "Editar agente",
+    "guardar": "Guardar",
+    "guardado": "Agente guardado",
+    "sinFilas": "Todavía no hay agentes",
+    "soloLectura": "Solo quien administra órdenes de trabajo da de alta o edita agentes."
+  },
+  "puente": {
+    "titulo": "Puente con Aquasoft Comercial",
+    "actualizar": "Actualizar",
+    "descripcion": "Operaciones que Atención manda a Aquasoft Comercial (tickets de cobranza). Reintentar y aplicar se hace con legacy:outbox.",
+    "activo": "Tickets activos",
+    "apagado": "Tickets apagados: las operaciones esperan sin gastar intentos.",
+    "operacion": "Operación",
+    "estado": "Estado",
+    "cuantas": "Cuántas",
+    "ultima": "Última",
+    "pendientes": "Sin terminar",
+    "intentos": "Intentos",
+    "error": "Último error",
+    "sinPendientes": "No hay operaciones pendientes",
+    "estados": {
+      "pending": "Pendiente",
+      "processing": "En proceso",
+      "done": "Hecha",
+      "failed": "Fallida"
+    },
+    "operaciones": {
+      "ticket_create": "Crear ticket",
+      "ticket_close": "Cerrar ticket"
+    }
+  }
+}
