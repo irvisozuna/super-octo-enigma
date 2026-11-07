@@ -65,7 +65,7 @@ const cartera = vi.hoisted(() => ({
   guardarConfiguracion: vi.fn(),
 }))
 
-const ordenes = vi.hoisted(() => ({ obtenerCatalogo: vi.fn(), obtenerOrdenes: vi.fn(), obtenerAgentes: vi.fn(), guardarAgente: vi.fn(), obtenerPuente: vi.fn() }))
+const ordenes = vi.hoisted(() => ({ obtenerUsuariosAgente: vi.fn(), cambiarEstadoOrden: vi.fn(), obtenerCatalogo: vi.fn(), obtenerOrdenes: vi.fn(), obtenerAgentes: vi.fn(), guardarAgente: vi.fn(), obtenerPuente: vi.fn() }))
 
 vi.mock('../services/carteraApi', () => cartera)
 vi.mock('@/modules/ordenes/services/ordenesApi', () => ordenes)
@@ -169,6 +169,7 @@ beforeEach(() => {
   ordenes.obtenerCatalogo.mockResolvedValue({ tipos: [{ codigo: 'cobranza', nombre: 'Notificación de cobranza', refleja_ticket: true, captura_aqui: false, estados: [{ codigo: 'en_proceso', nombre: 'En proceso', inicial: true, cierra: false, cancela: false }] }] })
   ordenes.obtenerOrdenes.mockResolvedValue({ ordenes: [{ id: 'o1', tipo: { codigo: 'cobranza', nombre: 'Notificación de cobranza' }, estado: { codigo: 'en_proceso', nombre: 'En proceso' }, contrato: 7285, cuenta: '40901818', agente: { id: 'a1', nombre: 'José Enrique Cota' }, observacion: null, entregada_en: null, vence: null, origen: 'collections', abierta_en: '2026-11-06T18:00:00+00:00', cerrada_en: null, datos: null }], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
   ordenes.obtenerAgentes.mockResolvedValue({ agentes: [{ id: 'a1', nombre: 'José Enrique Cota', usuario_id: null, usuario_comercial: 692, tipos: ['cobranza'], gerencias: [], sectores: [], activo: true }], puede_administrar: true })
+  ordenes.obtenerUsuariosAgente.mockResolvedValue({ usuarios: [{ id: 'u1', nombre: 'campo', correo: 'campo@local.test' }] })
   ordenes.obtenerPuente.mockResolvedValue({ tickets_activos: false, conteos: [{ operacion: 'ticket.create', estado: 'pending', n: 2, ultima: '2026-11-06T18:00:00+00:00' }], pendientes: [{ id: 'e1', operacion: 'ticket.create', entidad: 'work_order', entidad_id: 'o1', estado: 'pending', intentos: 0, error: null, disponible_en: null, actualizada: '2026-11-06T18:00:00+00:00' }] })
 })
 

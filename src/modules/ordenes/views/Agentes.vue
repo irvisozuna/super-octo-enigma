@@ -2,8 +2,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAgentes } from '../composables/useOrdenes'
-import { obtenerCatalogo } from '../services/ordenesApi'
-import type { Agente, EdicionAgente, TipoOrden } from '../types/ordenes'
+import { obtenerCatalogo, obtenerUsuariosAgente } from '../services/ordenesApi'
+import type { Agente, EdicionAgente, TipoOrden, UsuarioAgente } from '../types/ordenes'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useNotificacion } from '@/composables/useNotificacion'
 
@@ -14,7 +14,9 @@ const a = useAgentes()
 const tipos = ref<TipoOrden[]>([])
 const editando = ref<Agente | null>(null)
 const abierto = ref(false)
-const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true })
+const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true, usuario_id: null })
+const usuarios = ref<UsuarioAgente[]>([])
+const opcionesUsuario = computed(() => usuarios.value.map(u => ({ value: u.id, title: u.correo ? `${u.nombre} · ${u.correo}` : u.nombre })))
 
 const opcionesTipo = computed(() => tipos.value.map(x => ({ value: x.codigo, title: x.nombre })))
 const nombreTipo = (codigo: string) => tipos.value.find(x => x.codigo === codigo)?.nombre ?? codigo
@@ -23,12 +25,13 @@ const columnas: ColumnaTabla<Agente>[] = [
   { clave: 'nombre', titulo: t('ordenes.agentes.nombre'), formato: 'texto', anchoMin: 240 },
   { clave: 'tipos', titulo: t('ordenes.agentes.tipos'), formato: 'personalizado', ordenable: false, anchoMin: 200 },
   { clave: 'usuario_comercial', titulo: t('ordenes.agentes.comercial'), formato: 'entero', ancho: 200 },
+  { clave: 'usuario_id', titulo: t('ordenes.agentes.app'), formato: 'personalizado', ancho: 220 },
   { clave: 'activo', titulo: t('ordenes.agentes.activo'), formato: 'personalizado', ancho: 120 },
 ]
 
 function abrir(agente: Agente | null) {
   editando.value = agente
-  Object.assign(edicion, agente ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo } : { nombre: '', tipos: [], activo: true })
+  Object.assign(edicion, agente ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo, usuario_id: agente.usuario_id } : { nombre: '', tipos: [], activo: true, usuario_id: null })
   a.errorGuardar.value = null
   abierto.value = true
 }
@@ -43,6 +46,8 @@ async function guardar() {
 onMounted(async () => {
   tipos.value = (await obtenerCatalogo().catch(() => null))?.tipos ?? []
   await a.cargar()
+  if (a.puedeAdministrar.value)
+    usuarios.value = (await obtenerUsuariosAgente().catch(() => null))?.usuarios ?? []
 })
 </script>
 
@@ -87,6 +92,9 @@ onMounted(async () => {
       <template #celda-tipos="{ fila }">
         {{ fila.tipos.map(nombreTipo).join(', ') || '—' }}
       </template>
+      <template #celda-usuario_id="{ fila }">
+        {{ usuarios.find(u => u.id === fila.usuario_id)?.nombre ?? (fila.usuario_id ? '✓' : '—') }}
+      </template>
       <template #celda-activo="{ fila }">
         <VChip
           size="small"
@@ -129,6 +137,15 @@ onMounted(async () => {
         :label="t('ordenes.agentes.tipos')"
         multiple
         chips
+        class="mb-3"
+      />
+      <VAutocomplete
+        v-model="edicion.usuario_id"
+        :items="opcionesUsuario"
+        :label="t('ordenes.agentes.usuario')"
+        :hint="t('ordenes.agentes.usuarioAyuda')"
+        persistent-hint
+        clearable
         class="mb-3"
       />
       <VSwitch

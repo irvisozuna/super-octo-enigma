@@ -68,6 +68,13 @@ export interface EdicionAgente {
   nombre: string
   tipos: string[]
   activo: boolean
+  usuario_id: string | null
+}
+
+export interface UsuarioAgente {
+  id: string
+  nombre: string
+  correo: string | null
 }
 
 export interface RespuestaAgentes {

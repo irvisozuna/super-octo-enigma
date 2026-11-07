@@ -9,6 +9,7 @@ const api = vi.hoisted(() => ({
   guardarAgente: vi.fn(),
   obtenerPuente: vi.fn(),
   cambiarEstadoOrden: vi.fn(),
+  obtenerUsuariosAgente: vi.fn(),
 }))
 
 vi.mock('../services/ordenesApi', () => api)
@@ -46,11 +47,11 @@ describe('agentes de campo', () => {
 
     await a.cargar()
 
-    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true })
-    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true })
+    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true, usuario_id: null })
+    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true, usuario_id: null })
     expect(a.agentes.value.map(x => x.id)).toEqual(['a', 'b'])
 
-    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false })).toBeNull()
+    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false, usuario_id: 'u1' })).toBeNull()
     expect(a.errorGuardar.value).not.toBeNull()
   })
 })

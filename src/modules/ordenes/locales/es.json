@@ -31,7 +31,10 @@
     "guardar": "Guardar",
     "guardado": "Agente guardado",
     "sinFilas": "Todavía no hay agentes",
-    "soloLectura": "Solo quien administra órdenes de trabajo da de alta o edita agentes."
+    "soloLectura": "Solo quien administra órdenes de trabajo da de alta o edita agentes.",
+    "usuario": "Usuario para la app",
+    "usuarioAyuda": "La app de campo entra con este usuario y solo ve las notificaciones de este agente. Necesita el permiso «field collections».",
+    "app": "App de campo"
   },
   "puente": {
     "titulo": "Puente con Aquasoft Comercial",

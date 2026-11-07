@@ -1,4 +1,4 @@
-import type { Agente, EdicionAgente, Orden, RespuestaAgentes, RespuestaOrdenes, RespuestaPuente, TipoOrden } from '../types/ordenes'
+import type { Agente, EdicionAgente, Orden, RespuestaAgentes, RespuestaOrdenes, RespuestaPuente, TipoOrden, UsuarioAgente } from '../types/ordenes'
 import { rawApi } from '@/services/api'
 
 /* Una función por endpoint del núcleo: órdenes de trabajo, agentes de campo y estado del puente. */
@@ -21,6 +21,11 @@ export function cambiarEstadoOrden(id: string, estado: string, observacion: stri
 
 export function obtenerAgentes({ signal }: OpcionesPeticion = {}): Promise<RespuestaAgentes> {
   return rawApi('/work-orders/agentes', { signal })
+}
+
+/** Usuarios de la empresa para ligar a un agente (la app de campo entra con ese usuario). */
+export function obtenerUsuariosAgente({ signal }: OpcionesPeticion = {}): Promise<{ usuarios: UsuarioAgente[] }> {
+  return rawApi('/work-orders/agentes/usuarios', { signal })
 }
 
 export function guardarAgente(id: string | null, datos: EdicionAgente): Promise<Agente> {
