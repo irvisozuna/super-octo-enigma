@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from 'vue'
 import { contarCuentas, generarLote, obtenerCatalogos, vistaPrevia } from '../services/carteraApi'
-import type { CuentaCandidata, FiltrosBusqueda, RespuestaCatalogos, RespuestaGenerar, ResumenBusqueda } from '../types/cartera'
+import type { CuentaCandidata, FiltrosBusqueda, OrdenVistaPrevia, RespuestaCatalogos, RespuestaGenerar, ResumenBusqueda } from '../types/cartera'
 import { cuerpoBusqueda, filtrosBusquedaIniciales, hijosDe, recortar } from '../utils/cartera'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
@@ -24,6 +24,7 @@ export function useNotificar(espera = 400) {
   const error = ref<ErrorReporte | null>(null)
   const resultado = ref<RespuestaGenerar | null>(null)
   const listaVigente = ref(false)
+  const orden = ref<OrdenVistaPrevia>('recorrido')
 
   let temporizador: ReturnType<typeof setTimeout> | null = null
   let controladorConteo: AbortController | null = null
@@ -81,11 +82,14 @@ export function useNotificar(espera = 400) {
     aplicar(filtrosBusquedaIniciales())
   }
 
-  /** Trae la lista y deja marcadas las primeras según la capacidad sugerida (en orden de recorrido). */
+  /**
+   * Trae la lista y deja marcadas las primeras según la capacidad sugerida, en el orden elegido: recorrido o prioridad
+   * (XEL1-663). El lote siempre se genera en orden de recorrido.
+   */
   async function verCuentas() {
     cargandoLista.value = true
     try {
-      const r = await vistaPrevia(cuerpoBusqueda(filtros))
+      const r = await vistaPrevia(cuerpoBusqueda(filtros), orden.value)
 
       cuentas.value = r.cuentas
       resumen.value = r.resumen
@@ -121,7 +125,7 @@ export function useNotificar(espera = 400) {
       return null
     generando.value = true
     try {
-      // En el orden de recorrido de la lista
+      // El servidor las acomoda en orden de recorrido
       const contratos = seleccionadas.value.map(c => c.contrato)
 
       resultado.value = await generarLote(cuerpoBusqueda(filtros), contratos, notificador.value)
@@ -160,6 +164,7 @@ export function useNotificar(espera = 400) {
     error,
     resultado,
     listaVigente,
+    orden,
     sistemas,
     sectores,
     seleccionadas,

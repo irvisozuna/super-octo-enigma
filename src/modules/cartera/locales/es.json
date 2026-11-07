@@ -81,7 +81,18 @@
     "pagadoDespues": "Pagó {importe} después de la foto",
     "excluidasDetalle": "No se notifican: {convenio} con convenio al corriente y {pagaron} que ya pagaron después de la foto de la madrugada.",
     "revisionPadron": "Domicilio o toma por revisar",
-    "revisionPadronDetalle": "La última notificación regresó como no localizada o duplicada; hay una revisión de padrón abierta."
+    "revisionPadronDetalle": "La última notificación regresó como no localizada o duplicada; hay una revisión de padrón abierta.",
+    "orden": "Orden",
+    "ordenRecorrido": "Recorrido",
+    "ordenPrioridad": "Prioridad",
+    "ordenAyuda": "Con prioridad se marcan primero las de mayor recuperación esperada; el lote se imprime igual en orden de recorrido.",
+    "prioridad": "Prioridad",
+    "nivel": {
+      "alta": "Alta",
+      "media": "Media",
+      "baja": "Baja"
+    },
+    "esperado": "Esperado {importe}"
   },
   "lotes": {
     "titulo": "Lotes",

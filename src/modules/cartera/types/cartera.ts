@@ -91,7 +91,19 @@ export interface CuentaCandidata {
   convenio_estado: 'al_corriente' | 'atrasado' | null
   pagado_despues: number | null
   revision_padron: boolean
+  prioridad: PrioridadCuenta | null
 }
+
+/** Prioridad explicable (XEL1-663). */
+export interface PrioridadCuenta {
+  nivel: 'alta' | 'media' | 'baja'
+  probabilidad: number
+  fraccion: number
+  esperado: number
+  razon: string
+}
+
+export type OrdenVistaPrevia = 'recorrido' | 'prioridad'
 
 export interface RespuestaVistaPrevia {
   resumen: ResumenBusqueda

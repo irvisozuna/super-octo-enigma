@@ -74,6 +74,7 @@ const cuenta = (contrato: number, adeudo = 100): CuentaCandidata => ({
   convenio_estado: null,
   pagado_despues: null,
   revision_padron: false,
+  prioridad: null,
 })
 
 const notificacion = (x: Partial<Notificacion>): Notificacion => ({
@@ -172,9 +173,20 @@ describe('useNotificar', () => {
     n.alternar(3)
     await n.generar()
 
+    expect(api.vistaPrevia).toHaveBeenCalledWith({ meses_desde: 3 }, 'recorrido')
     expect(api.generarLote).toHaveBeenCalledWith({ meses_desde: 3 }, [1, 2], 'a1')
     expect(n.listaVigente.value).toBe(false)
     expect(n.puedeGenerar.value).toBe(false)
+  })
+
+  it('pide la lista en el orden elegido (prioridad, XEL1-663)', async () => {
+    api.vistaPrevia.mockResolvedValue({ resumen: {}, cuentas: [cuenta(9)], capacidad_sugerida: 45 })
+
+    const n = useNotificar()
+
+    n.orden.value = 'prioridad'
+    await n.verCuentas()
+    expect(api.vistaPrevia).toHaveBeenCalledWith({ meses_desde: 3 }, 'prioridad')
   })
 
   it('cambiar un filtro invalida la lista: no se genera con cuentas de otra búsqueda', async () => {

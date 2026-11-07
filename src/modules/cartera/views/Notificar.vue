@@ -69,7 +69,11 @@ const columnas: ColumnaTabla<CuentaCandidata>[] = [
   { clave: 'adeudo', titulo: t('cartera.comun.adeudo'), formato: 'moneda', ancho: 120 },
   { clave: 'meses', titulo: t('cartera.comun.meses'), formato: 'entero', ancho: 80 },
   { clave: 'ultimo_pago', titulo: t('cartera.notificar.pago'), formato: 'personalizado', ancho: 170 },
+  { clave: 'prioridad', titulo: t('cartera.notificar.prioridad'), formato: 'personalizado', ancho: 150, ordenable: false },
 ]
+
+const COLOR_PRIORIDAD = { alta: 'success', media: 'warning', baja: 'secondary' } as const
+const ordenes = computed(() => [{ value: 'recorrido', title: t('cartera.notificar.ordenRecorrido') }, { value: 'prioridad', title: t('cartera.notificar.ordenPrioridad') }])
 
 async function generar() {
   const quien = notificadores.value.find(o => o.value === n.notificador.value)?.title ?? ''
@@ -201,6 +205,15 @@ onBeforeUnmount(() => n.detener())
         :cargando="n.contando.value && !n.resumen.value"
       >
         <template #acciones>
+          <VSelect
+            v-model="n.orden.value"
+            :items="ordenes"
+            :label="t('cartera.notificar.orden')"
+            :title="t('cartera.notificar.ordenAyuda')"
+            density="compact"
+            hide-details
+            class="notificar__orden"
+          />
           <VBtn
             size="small"
             color="primary"
@@ -352,6 +365,22 @@ onBeforeUnmount(() => n.detener())
           {{ t('cartera.notificar.pagadoDespues', { importe: moneda(fila.pagado_despues) }) }}
         </div>
       </template>
+      <template #celda-prioridad="{ fila }">
+        <template v-if="fila.prioridad">
+          <VChip
+            size="small"
+            label
+            variant="tonal"
+            :color="COLOR_PRIORIDAD[fila.prioridad.nivel as keyof typeof COLOR_PRIORIDAD]"
+            :title="fila.prioridad.razon"
+          >
+            {{ t(`cartera.notificar.nivel.${fila.prioridad.nivel}`) }} · <span class="as-num">{{ Math.round(fila.prioridad.probabilidad * 100) }} %</span>
+          </VChip>
+          <div class="as-secundario as-num mt-1">
+            {{ t('cartera.notificar.esperado', { importe: moneda(fila.prioridad.esperado) }) }}
+          </div>
+        </template>
+      </template>
     </AsTablaDatos>
   </div>
 </template>
@@ -361,6 +390,10 @@ onBeforeUnmount(() => n.detener())
   display: grid;
   gap: var(--as-sp-3);
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.notificar__orden {
+  max-inline-size: 160px;
 }
 
 .notificar__notificador {

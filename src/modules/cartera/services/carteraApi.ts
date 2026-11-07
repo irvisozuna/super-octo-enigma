@@ -2,6 +2,7 @@ import type {
   AccionSeguimiento,
   Evidencia,
   FichaNotificacion,
+  OrdenVistaPrevia,
   RespuestaAccionSeguimiento,
   RespuestaCapturaBloque,
   RespuestaCatalogos,
@@ -39,8 +40,8 @@ export function contarCuentas(filtros: Record<string, unknown>, { signal }: Opci
   return rawApi(`${BASE}/busqueda/conteo`, { method: 'POST', body: { filtros }, signal })
 }
 
-export function vistaPrevia(filtros: Record<string, unknown>, { signal }: OpcionesPeticion = {}): Promise<RespuestaVistaPrevia> {
-  return rawApi(`${BASE}/busqueda`, { method: 'POST', body: { filtros }, signal })
+export function vistaPrevia(filtros: Record<string, unknown>, orden: OrdenVistaPrevia = 'recorrido', { signal }: OpcionesPeticion = {}): Promise<RespuestaVistaPrevia> {
+  return rawApi(`${BASE}/busqueda`, { method: 'POST', body: { filtros, orden }, signal })
 }
 
 export function generarLote(filtros: Record<string, unknown>, contratos: number[], notificador: string): Promise<RespuestaGenerar> {
