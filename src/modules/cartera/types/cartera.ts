@@ -37,6 +37,9 @@ export interface RespuestaCatalogos {
 
 export type NuncaHaPagado = 'incluir' | 'excluir' | 'solo'
 
+/** Cuentas con convenio vigente (XEL1-656): por omisión se excluyen las que van al corriente. */
+export type FiltroConvenio = 'excluir_al_corriente' | 'incluir' | 'solo_atrasados'
+
 /** Filtros de la búsqueda; los mismos nombres que espera el servidor en `filtros`. */
 export interface FiltrosBusqueda {
   gerencias: number[]
@@ -53,6 +56,7 @@ export interface FiltrosBusqueda {
   ultimo_pago_dias: number | null
   ultimo_pago_importe_max: number | null
   nunca_ha_pagado: NuncaHaPagado
+  convenio: FiltroConvenio
 }
 
 export interface ResumenBusqueda {
@@ -60,6 +64,8 @@ export interface ResumenBusqueda {
   en_padron: number
   con_adeudo: number
   con_vigente: number
+  con_convenio?: number
+  pagaron_despues?: number
   a_notificar: number
   mostradas?: number
 }
@@ -81,6 +87,8 @@ export interface CuentaCandidata {
   ultimo_pago: string | null
   ultimo_pago_importe: number | null
   convenio: string | null
+  convenio_estado: 'al_corriente' | 'atrasado' | null
+  pagado_despues: number | null
 }
 
 export interface RespuestaVistaPrevia {

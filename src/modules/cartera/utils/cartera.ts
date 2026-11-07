@@ -20,10 +20,11 @@ export function filtrosBusquedaIniciales(): FiltrosBusqueda {
     ultimo_pago_dias: null,
     ultimo_pago_importe_max: null,
     nunca_ha_pagado: 'incluir',
+    convenio: 'excluir_al_corriente',
   }
 }
 
-/** Solo lo que tiene valor; «incluir a quien nunca ha pagado» es lo normal y no se manda. */
+/** Solo lo que tiene valor; «incluir a quien nunca ha pagado» y «excluir convenios al corriente» son lo normal y no se mandan. */
 export function cuerpoBusqueda(f: FiltrosBusqueda): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [clave, valor] of Object.entries(f)) {
@@ -32,6 +33,8 @@ export function cuerpoBusqueda(f: FiltrosBusqueda): Record<string, unknown> {
   }
   if (out.nunca_ha_pagado === 'incluir')
     delete out.nunca_ha_pagado
+  if (out.convenio === 'excluir_al_corriente')
+    delete out.convenio
 
   return out
 }

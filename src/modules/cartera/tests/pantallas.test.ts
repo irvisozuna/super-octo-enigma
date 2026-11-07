@@ -143,7 +143,7 @@ beforeEach(() => {
     avisos.push(a.map(String).join(' '))
   })
   cartera.obtenerCatalogos.mockResolvedValue(catalogos)
-  cartera.contarCuentas.mockResolvedValue({ corte: '2026-11-06', en_padron: 1200, con_adeudo: 400, con_vigente: 12, a_notificar: 388 })
+  cartera.contarCuentas.mockResolvedValue({ corte: '2026-11-06', en_padron: 1200, con_adeudo: 400, con_vigente: 12, con_convenio: 7, pagaron_despues: 3, a_notificar: 378 })
   cartera.obtenerLotes.mockResolvedValue({ lotes: [lote], paginacion: { pagina: 1, por_pagina: 25, total: 1 } })
   cartera.obtenerLote.mockResolvedValue({ ...lote, notificaciones: [notificacion] })
   cartera.obtenerNotificaciones.mockResolvedValue({ notificaciones: [notificacion], paginacion: { pagina: 1, por_pagina: 50, total: 1 }, puede_operar: true })
@@ -161,7 +161,7 @@ afterEach(() => {
 
 describe('pantallas de cartera y del núcleo', () => {
   it.each([
-    ['Notificar', Notificar, ['Notificar', 'Se pueden notificar', '388', 'Adeudo al']],
+    ['Notificar', Notificar, ['Notificar', 'Se pueden notificar', '378', 'Adeudo al', '7 con convenio al corriente y 3 que ya pagaron']],
     ['Lotes', Lotes, ['LT2611-001', 'José Enrique Cota', 'Listo']],
     ['Lote', Lote, ['LT2611-001', 'NC2611-00038', '40901818', 'En fila', 'Descargar PDF']],
     ['Notificaciones', Notificaciones, ['NC2611-00038', 'LT2611-001', 'En proceso']],

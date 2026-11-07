@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useNotificar } from '../composables/useNotificar'
-import type { CuentaCandidata, FiltrosBusqueda, ItemCatalogo, NuncaHaPagado } from '../types/cartera'
+import type { CuentaCandidata, FiltroConvenio, FiltrosBusqueda, ItemCatalogo, NuncaHaPagado } from '../types/cartera'
 import { filtrosActivos } from '../utils/cartera'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useDialogo } from '@/composables/useDialogo'
@@ -22,6 +22,14 @@ const n = useNotificar()
 
 const opciones = (items: ItemCatalogo[]) => items.map(i => ({ value: i.id, title: i.nombre }))
 const catalogo = computed(() => n.catalogos.value)
+
+const convenios = computed(() => [
+  { value: 'excluir_al_corriente', title: t('cartera.notificar.convenioExcluir') },
+  { value: 'incluir', title: t('cartera.notificar.convenioIncluir') },
+  { value: 'solo_atrasados', title: t('cartera.notificar.convenioAtrasados') },
+])
+
+const excluidas = computed(() => (n.resumen.value?.con_convenio ?? 0) + (n.resumen.value?.pagaron_despues ?? 0))
 const nunca = computed(() => (['incluir', 'excluir', 'solo'] as NuncaHaPagado[]).map(v => ({ value: v, title: t(`cartera.notificar.nunca${v.charAt(0).toUpperCase()}${v.slice(1)}`) })))
 const notificadores = computed(() => (catalogo.value?.notificadores ?? []).map(a => ({ value: a.id, title: a.nombre })))
 const activos = computed(() => filtrosActivos(n.filtros))
@@ -159,6 +167,13 @@ onBeforeUnmount(() => n.detener())
           class="as-filtro--sm"
           @update:model-value="(v: NuncaHaPagado) => n.aplicar({ nunca_ha_pagado: v })"
         />
+        <VSelect
+          :model-value="n.filtros.convenio"
+          :items="convenios"
+          :label="t('cartera.notificar.convenioFiltro')"
+          class="as-filtro--md"
+          @update:model-value="(v: FiltroConvenio) => n.aplicar({ convenio: v })"
+        />
       </template>
     </AsBarraFiltros>
 
@@ -201,6 +216,15 @@ onBeforeUnmount(() => n.detener())
       </AsIndicador>
     </div>
 
+    <VAlert
+      v-if="excluidas"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-3"
+    >
+      {{ t('cartera.notificar.excluidasDetalle', { convenio: n.resumen.value?.con_convenio ?? 0, pagaron: n.resumen.value?.pagaron_despues ?? 0 }) }}
+    </VAlert>
     <VAlert
       v-if="n.cuentas.value.length && !n.listaVigente.value"
       type="warning"
@@ -299,6 +323,22 @@ onBeforeUnmount(() => n.detener())
           class="as-secundario"
         >
           {{ t('cartera.notificar.convenio', { ref: fila.convenio }) }}
+        </div>
+        <VChip
+          v-if="fila.convenio_estado"
+          size="x-small"
+          label
+          variant="tonal"
+          :color="fila.convenio_estado === 'atrasado' ? 'warning' : 'info'"
+          class="mt-1"
+        >
+          {{ fila.convenio_estado === 'atrasado' ? t('cartera.notificar.convenioAtrasado') : t('cartera.notificar.convenioAlCorriente') }}
+        </VChip>
+        <div
+          v-if="fila.pagado_despues"
+          class="as-secundario text-success"
+        >
+          {{ t('cartera.notificar.pagadoDespues', { importe: moneda(fila.pagado_despues) }) }}
         </div>
       </template>
     </AsTablaDatos>

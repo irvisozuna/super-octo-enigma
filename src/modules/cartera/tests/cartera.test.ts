@@ -93,8 +93,8 @@ beforeEach(() => {
 describe('reglas puras', () => {
   it('el cuerpo de la búsqueda solo lleva lo que tiene valor y omite «incluir a quien nunca pagó»', () => {
     expect(cuerpoBusqueda(filtrosBusquedaIniciales())).toEqual({ meses_desde: 3 })
-    expect(cuerpoBusqueda({ ...filtrosBusquedaIniciales(), gerencias: [1], importe_desde: 0, nunca_ha_pagado: 'solo' }))
-      .toEqual({ gerencias: [1], meses_desde: 3, importe_desde: 0, nunca_ha_pagado: 'solo' })
+    expect(cuerpoBusqueda({ ...filtrosBusquedaIniciales(), gerencias: [1], importe_desde: 0, nunca_ha_pagado: 'solo', convenio: 'incluir' }))
+      .toEqual({ gerencias: [1], meses_desde: 3, importe_desde: 0, nunca_ha_pagado: 'solo', convenio: 'incluir' })
   })
 
   it('cuenta como activos solo los filtros distintos de los iniciales', () => {

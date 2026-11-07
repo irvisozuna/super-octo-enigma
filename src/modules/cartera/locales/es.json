@@ -69,7 +69,17 @@
     "manzanaLote": "Mza. {mza} · Lote {lote}",
     "ultimoPagoCelda": "Último pago {fecha}",
     "nunca": "Nunca ha pagado",
-    "convenio": "Convenio {ref}"
+    "convenio": "Convenio {ref}",
+    "convenioFiltro": "Convenios",
+    "convenioExcluir": "Sin los que van al corriente",
+    "convenioIncluir": "Incluir todos",
+    "convenioAtrasados": "Solo convenios atrasados",
+    "conConvenio": "Con convenio al corriente",
+    "pagaronDespues": "Pagaron después de la foto",
+    "convenioAlCorriente": "Convenio al corriente",
+    "convenioAtrasado": "Convenio atrasado",
+    "pagadoDespues": "Pagó {importe} después de la foto",
+    "excluidasDetalle": "No se notifican: {convenio} con convenio al corriente y {pagaron} que ya pagaron después de la foto de la madrugada."
   },
   "lotes": {
     "titulo": "Lotes",
