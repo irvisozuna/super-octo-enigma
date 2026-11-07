@@ -5,6 +5,7 @@ import { documentoEnCurso, useLote } from '../composables/useLotes'
 import { useNotificaciones } from '../composables/useNotificaciones'
 import { useNotificar } from '../composables/useNotificar'
 import { useSeguimiento } from '../composables/useSeguimiento'
+import { useEvidencia } from '../composables/useEvidencia'
 import type { CuentaCandidata, ItemCatalogo, Notificacion, RespuestaCatalogos } from '../types/cartera'
 import { cuerpoBusqueda, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
 
@@ -25,6 +26,10 @@ const api = vi.hoisted(() => ({
   cancelarNotificacion: vi.fn(),
   obtenerConfiguracion: vi.fn(),
   obtenerSeguimiento: vi.fn(),
+  obtenerEvidencias: vi.fn(),
+  subirEvidencias: vi.fn(),
+  descargarEvidencia: vi.fn(),
+  borrarEvidencia: vi.fn(),
   accionSeguimiento: vi.fn(),
   cerrarOrdenSeguimiento: vi.fn(),
   guardarConfiguracion: vi.fn(),
@@ -289,5 +294,30 @@ describe('useSeguimiento', () => {
     expect(await s.cerrar('o1', 'atendida', ' ')).toBe(false)
     expect(await s.cerrar('o1', 'atendida', 'Pagará')).toBe(true)
     expect(api.cerrarOrdenSeguimiento).toHaveBeenCalledWith('o1', 'atendida', 'Pagará')
+  })
+})
+
+describe('useEvidencia', () => {
+  it('sube los archivos de la notificación cargada, recarga y borrar la quita de la lista', async () => {
+    if (!URL.createObjectURL)
+      Object.assign(URL, { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} })
+    const lista = { evidencias: [{ id: 'e1', tipo: 'acta', mime: 'application/pdf', tamano: 1, nombre: null, lat: null, lng: null, tomada_en: null, subida_en: null }], puede_subir: true, puede_borrar: true }
+
+    api.obtenerEvidencias.mockResolvedValue(lista)
+    api.subirEvidencias.mockResolvedValue({ guardadas: [lista.evidencias[0]] })
+    api.borrarEvidencia.mockResolvedValue({ ok: true })
+
+    const ev = useEvidencia()
+
+    expect(await ev.subir('acta', [new File(['x'], 'a.pdf')])).toBe(0) // sin notificación cargada no sube
+    await ev.cargar('n1')
+
+    const archivo = new File(['x'], 'acta.pdf', { type: 'application/pdf' })
+
+    expect(await ev.subir('acta', [archivo])).toBe(1)
+    expect(api.subirEvidencias).toHaveBeenCalledWith('n1', 'acta', [archivo])
+    expect(api.obtenerEvidencias).toHaveBeenCalledTimes(2)
+    expect(await ev.borrar('e1')).toBe(true)
+    expect(ev.datos.value?.evidencias).toEqual([])
   })
 })

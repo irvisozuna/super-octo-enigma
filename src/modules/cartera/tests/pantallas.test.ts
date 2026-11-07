@@ -17,6 +17,7 @@ import Lotes from '../views/Lotes.vue'
 import Notificaciones from '../views/Notificaciones.vue'
 import Notificar from '../views/Notificar.vue'
 import Seguimiento from '../views/Seguimiento.vue'
+import EvidenciaNotificacion from '../components/EvidenciaNotificacion.vue'
 import PestanaCobranzaContrato from '../components/PestanaCobranzaContrato.vue'
 import ordenesEs from '@/modules/ordenes/locales/es.json'
 import Agentes from '@/modules/ordenes/views/Agentes.vue'
@@ -55,6 +56,10 @@ const cartera = vi.hoisted(() => ({
   cancelarNotificacion: vi.fn(),
   obtenerConfiguracion: vi.fn(),
   obtenerSeguimiento: vi.fn(),
+  obtenerEvidencias: vi.fn(),
+  subirEvidencias: vi.fn(),
+  descargarEvidencia: vi.fn(),
+  borrarEvidencia: vi.fn(),
   accionSeguimiento: vi.fn(),
   cerrarOrdenSeguimiento: vi.fn(),
   guardarConfiguracion: vi.fn(),
@@ -81,6 +86,8 @@ if (!window.matchMedia) {
     value: (query: string) => ({ matches: false, media: query, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }),
   })
 }
+if (!URL.createObjectURL)
+  Object.assign(URL, { createObjectURL: () => 'blob:prueba', revokeObjectURL: () => {} })
 if (!('visualViewport' in window))
   Object.defineProperty(window, 'visualViewport', { value: { width: 1440, height: 900, addEventListener: () => {}, removeEventListener: () => {} } })
 
@@ -156,6 +163,8 @@ beforeEach(() => {
   cartera.obtenerNotificaciones.mockResolvedValue({ notificaciones: [notificacion], paginacion: { pagina: 1, por_pagina: 50, total: 1 }, puede_operar: true })
   cartera.obtenerNotificacionesContrato.mockResolvedValue({ notificaciones: [{ ...notificacion, estado: 'Recibida', estado_codigo: 'recibida', entregada: '2026-11-07T18:00:00+00:00', recuperado: 726.49, pagado_total: 900 }], vigente: true })
   cartera.obtenerConfiguracion.mockResolvedValue({ valores: { vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15 }, limites: { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 }, seguimiento_dias: { min: 1, max: 180 } }, puede_editar: true })
+  cartera.obtenerEvidencias.mockResolvedValue({ evidencias: [{ id: 'e1', tipo: 'acta', mime: 'image/jpeg', tamano: 1000, nombre: 'acta.jpg', lat: null, lng: null, tomada_en: null, subida_en: '2026-11-07T18:00:00+00:00' }, { id: 'e2', tipo: 'fachada', mime: 'application/pdf', tamano: 1000, nombre: 'f.pdf', lat: null, lng: null, tomada_en: null, subida_en: '2026-11-07T18:00:00+00:00' }], puede_subir: true, puede_borrar: true })
+  cartera.descargarEvidencia.mockResolvedValue(new Blob(['x'], { type: 'image/jpeg' }))
   cartera.obtenerSeguimiento.mockResolvedValue({ dias: 15, candidatas: [{ id: 'n1', ref: 'NC2610-00012', contrato: 7285, cuenta: '40901818', notificador: 'José Enrique Cota', estado: 'Recibida', estado_codigo: 'recibida', origen: 'legado', emitida: '2026-10-01T18:00:00+00:00', entregada: '2026-10-03T18:00:00+00:00', dias: 35, adeudo_notificado: 1226.49, adeudo_actual: 1480.1 }], ordenes: [], puede_operar: true })
   ordenes.obtenerCatalogo.mockResolvedValue({ tipos: [{ codigo: 'cobranza', nombre: 'Notificación de cobranza', refleja_ticket: true, captura_aqui: false, estados: [{ codigo: 'en_proceso', nombre: 'En proceso', inicial: true, cierra: false, cancela: false }] }] })
   ordenes.obtenerOrdenes.mockResolvedValue({ ordenes: [{ id: 'o1', tipo: { codigo: 'cobranza', nombre: 'Notificación de cobranza' }, estado: { codigo: 'en_proceso', nombre: 'En proceso' }, contrato: 7285, cuenta: '40901818', agente: { id: 'a1', nombre: 'José Enrique Cota' }, observacion: null, entregada_en: null, vence: null, origen: 'collections', abierta_en: '2026-11-06T18:00:00+00:00', cerrada_en: null, datos: null }], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
@@ -179,6 +188,7 @@ describe('pantallas de cartera y del núcleo', () => {
     ['Ordenes', Ordenes, ['Órdenes de trabajo', 'Notificación de cobranza', '40901818']],
     ['Agentes', Agentes, ['Agentes de campo', 'José Enrique Cota', 'Notificación de cobranza', 'Activo']],
     ['Pestaña de cobranza en Soporte', { render: () => h(PestanaCobranzaContrato, { activa: true }) }, ['NC2611-00038', 'Recibida', 'Entregada', '$726.49', 'vigente', 'Notificación y acta']],
+    ['Evidencia de la notificación', { render: () => h(EvidenciaNotificacion, { aviso: 'n1' }) }, ['Evidencia', 'Acta firmada', 'Fachada', 'Subir']],
     ['Puente', Puente, ['Puente con Aquasoft Comercial', 'Crear ticket', 'Pendiente', 'Tickets apagados', '6 nov 11:00']],
   ] as const)('%s se monta con datos reales, sin avisos ni claves sin traducir', async (_nombre, vista, textos) => {
     const w = montar(vista as Component)

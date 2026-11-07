@@ -5,6 +5,7 @@ import { useFichaNotificacion } from '../composables/useNotificaciones'
 import type { EstadoNotificacion, EventoHistorial, Opcion, ResultadoNotificacion } from '../types/cartera'
 import { COLOR_NOTIFICACION, COLOR_TICKET } from '../utils/cartera'
 import DialogoResultado from './DialogoResultado.vue'
+import EvidenciaNotificacion from './EvidenciaNotificacion.vue'
 import { useNotificacion } from '@/composables/useNotificacion'
 import { fecha, fechaHoraCorta, fechaIso } from '@/utils/formato'
 
@@ -242,6 +243,8 @@ async function confirmarCancelacion() {
           </div>
         </div>
       </section>
+
+      <EvidenciaNotificacion :aviso="n.id" />
 
       <section>
         <h3 class="as-seccion">

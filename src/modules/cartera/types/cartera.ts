@@ -204,6 +204,27 @@ export interface EventoHistorial {
 export interface FichaNotificacion extends Notificacion {
   historial: EventoHistorial[]
   puede_operar: boolean
+  evidencias?: number
+}
+
+export type TipoEvidencia = 'acta' | 'fachada' | 'toma' | 'otro'
+
+export interface Evidencia {
+  id: string
+  tipo: TipoEvidencia
+  mime: string
+  tamano: number
+  nombre: string | null
+  lat: number | null
+  lng: number | null
+  tomada_en: string | null
+  subida_en: string | null
+}
+
+export interface RespuestaEvidencias {
+  evidencias: Evidencia[]
+  puede_subir: boolean
+  puede_borrar: boolean
 }
 
 export interface ErrorCaptura {

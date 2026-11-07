@@ -1,10 +1,12 @@
 import type {
   AccionSeguimiento,
+  Evidencia,
   FichaNotificacion,
   RespuestaAccionSeguimiento,
   RespuestaCapturaBloque,
   RespuestaCatalogos,
   RespuestaConfiguracion,
+  RespuestaEvidencias,
   RespuestaGenerar,
   RespuestaLote,
   RespuestaLotes,
@@ -14,6 +16,7 @@ import type {
   RespuestaVistaPrevia,
   ResultadoNotificacion,
   ResumenBusqueda,
+  TipoEvidencia,
 } from '../types/cartera'
 import { rawApi } from '@/services/api'
 
@@ -87,6 +90,27 @@ export function capturarEnBloque(notificaciones: string[], resultado: ResultadoN
 
 export function cancelarNotificacion(id: string, motivo: string): Promise<FichaNotificacion> {
   return rawApi(`${BASE}/notificaciones/${encodeURIComponent(id)}/cancelar`, { method: 'POST', body: { motivo } })
+}
+
+export function obtenerEvidencias(aviso: string, { signal }: OpcionesPeticion = {}): Promise<RespuestaEvidencias> {
+  return rawApi(`${BASE}/notificaciones/${encodeURIComponent(aviso)}/evidencias`, { signal })
+}
+
+export function subirEvidencias(aviso: string, tipo: TipoEvidencia, archivos: File[]): Promise<{ guardadas: Evidencia[] }> {
+  const cuerpo = new FormData()
+
+  cuerpo.append('tipo', tipo)
+  archivos.forEach(a => cuerpo.append('archivos[]', a))
+
+  return rawApi(`${BASE}/notificaciones/${encodeURIComponent(aviso)}/evidencias`, { method: 'POST', body: cuerpo })
+}
+
+export function descargarEvidencia(id: string): Promise<Blob> {
+  return rawApi(`${BASE}/evidencias/${encodeURIComponent(id)}`, { responseType: 'blob' })
+}
+
+export function borrarEvidencia(id: string): Promise<{ ok: boolean }> {
+  return rawApi(`${BASE}/evidencias/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 export function obtenerSeguimiento({ signal }: OpcionesPeticion = {}): Promise<RespuestaSeguimiento> {

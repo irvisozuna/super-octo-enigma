@@ -205,5 +205,23 @@
     "nota": "Qué se hizo",
     "cerrada": "Orden cerrada",
     "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida decide el seguimiento."
+  },
+  "evidencia": {
+    "titulo": "Evidencia",
+    "sinEvidencia": "Sin evidencia todavía. Sube la foto o el escaneo del acta firmada.",
+    "subir": "Subir",
+    "tipo": "Tipo",
+    "archivos": "Fotos o PDF (hasta 10 MB cada uno)",
+    "tipos": {
+      "acta": "Acta firmada",
+      "fachada": "Fachada",
+      "toma": "Toma",
+      "otro": "Otro"
+    },
+    "subidas": "Se subieron {n} archivos",
+    "borrarTitulo": "¿Borrar esta evidencia?",
+    "borrarDetalle": "Se borra el archivo; en la bitácora queda quién lo borró y cuándo.",
+    "borrada": "Evidencia borrada",
+    "abrir": "Abrir"
   }
 }
