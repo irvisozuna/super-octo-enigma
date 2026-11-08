@@ -12,7 +12,7 @@ const ordenesRoutes: RouteRecordRaw[] = [
     path: '/ordenes/agentes',
     name: 'ordenesAgentes',
     component: () => import('./views/Agentes.vue'),
-    meta: { action: 'read', subject: 'ordenes' },
+    meta: { action: 'read', subject: 'agentes' },
   },
   {
     path: '/ordenes/puente',

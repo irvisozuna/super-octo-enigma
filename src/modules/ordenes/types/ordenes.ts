@@ -57,6 +57,15 @@ export interface Agente {
   id: string
   nombre: string
   usuario_id: string | null
+
+  /** Usuario de Aquasoft Comercial con el que entra a la app de campo. */
+  usuario?: string | null
+
+  /** Tiene el permiso de campo de lo que atiende (XEL1-674). */
+  usa_app?: boolean
+
+  /** Último uso de una sesión del usuario (ISO). */
+  ultimo_acceso?: string | null
   usuario_comercial: number | null
   tipos: string[]
   gerencias: number[]
@@ -68,13 +77,18 @@ export interface EdicionAgente {
   nombre: string
   tipos: string[]
   activo: boolean
-  usuario_id: string | null
+
+  /** Usuario de Aquasoft Comercial; `null` quita el usuario. */
+  usuario: string | null
+  usa_app: boolean
 }
 
+/** Resultado de la búsqueda de usuarios: solo usuario y nombre, y de qué agente es si ya está ligado. */
 export interface UsuarioAgente {
-  id: string
+  usuario: string
   nombre: string
-  correo: string | null
+  agente: string | null
+  agente_id: string | null
 }
 
 export interface RespuestaAgentes {

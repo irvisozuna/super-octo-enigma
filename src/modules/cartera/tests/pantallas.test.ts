@@ -168,8 +168,15 @@ beforeEach(() => {
   cartera.obtenerSeguimiento.mockResolvedValue({ dias: 15, candidatas: [{ id: 'n1', ref: 'NC2610-00012', contrato: 7285, cuenta: '40901818', notificador: 'José Enrique Cota', estado: 'Recibida', estado_codigo: 'recibida', origen: 'legado', emitida: '2026-10-01T18:00:00+00:00', entregada: '2026-10-03T18:00:00+00:00', dias: 35, adeudo_notificado: 1226.49, adeudo_actual: 1480.1 }], ordenes: [], puede_operar: true })
   ordenes.obtenerCatalogo.mockResolvedValue({ tipos: [{ codigo: 'cobranza', nombre: 'Notificación de cobranza', refleja_ticket: true, captura_aqui: false, estados: [{ codigo: 'en_proceso', nombre: 'En proceso', inicial: true, cierra: false, cancela: false }] }] })
   ordenes.obtenerOrdenes.mockResolvedValue({ ordenes: [{ id: 'o1', tipo: { codigo: 'cobranza', nombre: 'Notificación de cobranza' }, estado: { codigo: 'en_proceso', nombre: 'En proceso' }, contrato: 7285, cuenta: '40901818', agente: { id: 'a1', nombre: 'José Enrique Cota' }, observacion: null, entregada_en: null, vence: null, origen: 'collections', abierta_en: '2026-11-06T18:00:00+00:00', cerrada_en: null, datos: null }], paginacion: { pagina: 1, por_pagina: 50, total: 1 } })
-  ordenes.obtenerAgentes.mockResolvedValue({ agentes: [{ id: 'a1', nombre: 'José Enrique Cota', usuario_id: null, usuario_comercial: 692, tipos: ['cobranza'], gerencias: [], sectores: [], activo: true }], puede_administrar: true })
-  ordenes.obtenerUsuariosAgente.mockResolvedValue({ usuarios: [{ id: 'u1', nombre: 'campo', correo: 'campo@local.test' }] })
+  ordenes.obtenerAgentes.mockResolvedValue({
+    agentes: [
+      { id: 'a1', nombre: 'José Enrique Cota', usuario_id: 'u1', usuario: 'jcota', usa_app: true, ultimo_acceso: '2026-11-08T13:58:00+00:00', usuario_comercial: 692, tipos: ['cobranza'], gerencias: [], sectores: [], activo: true },
+      { id: 'a2', nombre: 'Ana Karen Ojeda', usuario_id: 'u2', usuario: 'akojeda', usa_app: true, ultimo_acceso: null, usuario_comercial: null, tipos: ['cobranza'], gerencias: [], sectores: [], activo: true },
+      { id: 'a3', nombre: 'Jorge Medina Ruiz', usuario_id: null, usuario: null, usa_app: false, ultimo_acceso: null, usuario_comercial: null, tipos: [], gerencias: [], sectores: [], activo: true },
+    ],
+    puede_administrar: true,
+  })
+  ordenes.obtenerUsuariosAgente.mockResolvedValue({ usuarios: [{ usuario: 'akojeda', nombre: 'Ana Karen Ojeda', agente: null, agente_id: null }] })
   ordenes.obtenerPuente.mockResolvedValue({ tickets_activos: false, conteos: [{ operacion: 'ticket.create', estado: 'pending', n: 2, ultima: '2026-11-06T18:00:00+00:00' }], pendientes: [{ id: 'e1', operacion: 'ticket.create', entidad: 'work_order', entidad_id: 'o1', estado: 'pending', intentos: 0, error: null, disponible_en: null, actualizada: '2026-11-06T18:00:00+00:00' }] })
 })
 
@@ -187,7 +194,7 @@ describe('pantallas de cartera y del núcleo', () => {
     ['Configuracion', Configuracion, ['Configuración de cartera', 'Vigencia de la notificación', 'Días sin pago para pasar a seguimiento']],
     ['Seguimiento', Seguimiento, ['Seguimiento', 'Entregadas hace 15 días', 'NC2610-00012', '$1,480.10', 'Notificado $1,226.49', 'Sin pago']],
     ['Ordenes', Ordenes, ['Órdenes de trabajo', 'Notificación de cobranza', '40901818']],
-    ['Agentes', Agentes, ['Agentes de campo', 'José Enrique Cota', 'Notificación de cobranza', 'Activo']],
+    ['Agentes', Agentes, ['Agentes de campo', 'José Enrique Cota', 'jcota', 'Notificación de cobranza', 'Activa · ', 'Falta su primer ingreso', 'Sin usuario', 'Activo']],
     ['Pestaña de cobranza en Soporte', { render: () => h(PestanaCobranzaContrato, { activa: true }) }, ['NC2611-00038', 'Recibida', 'Entregada', '$726.49', 'vigente', 'Notificación y acta']],
     ['Evidencia de la notificación', { render: () => h(EvidenciaNotificacion, { aviso: 'n1' }) }, ['Evidencia', 'Acta firmada', 'Fachada', 'Subir']],
     ['Puente', Puente, ['Puente con Aquasoft Comercial', 'Crear ticket', 'Pendiente', 'Tickets apagados', '6 nov 11:00']],

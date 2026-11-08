@@ -47,11 +47,11 @@ describe('agentes de campo', () => {
 
     await a.cargar()
 
-    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true, usuario_id: null })
-    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true, usuario_id: null })
+    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false })
+    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false })
     expect(a.agentes.value.map(x => x.id)).toEqual(['a', 'b'])
 
-    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false, usuario_id: 'u1' })).toBeNull()
+    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false, usuario: 'akojeda', usa_app: true })).toBeNull()
     expect(a.errorGuardar.value).not.toBeNull()
   })
 })

@@ -1,53 +1,141 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAgentes } from '../composables/useOrdenes'
-import { obtenerCatalogo, obtenerUsuariosAgente } from '../services/ordenesApi'
+import { cerrarSesionAgente, obtenerCatalogo, obtenerUsuariosAgente } from '../services/ordenesApi'
 import type { Agente, EdicionAgente, TipoOrden, UsuarioAgente } from '../types/ordenes'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useNotificacion } from '@/composables/useNotificacion'
+import { fechaHoraCorta } from '@/utils/formato'
 
-/* Agentes de campo del núcleo: los ven quienes leen órdenes y los dan de alta o editan quienes las administran. */
+/*
+ * Agentes de campo del núcleo (pantalla AgentesWeb del prototipo, XEL1-674): los ve quien lee órdenes; los da de
+ * alta el supervisor de campo o quien administra órdenes, con su acceso a la app en un solo paso.
+ */
 const { t } = useI18n()
 const notificar = useNotificacion()
 const a = useAgentes()
 const tipos = ref<TipoOrden[]>([])
 const editando = ref<Agente | null>(null)
 const abierto = ref(false)
-const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true, usuario_id: null })
-const usuarios = ref<UsuarioAgente[]>([])
-const opcionesUsuario = computed(() => usuarios.value.map(u => ({ value: u.id, title: u.correo ? `${u.nombre} · ${u.correo}` : u.nombre })))
+const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true, usuario: null, usa_app: false })
 
 const opcionesTipo = computed(() => tipos.value.map(x => ({ value: x.codigo, title: x.nombre })))
 const nombreTipo = (codigo: string) => tipos.value.find(x => x.codigo === codigo)?.nombre ?? codigo
 
 const columnas: ColumnaTabla<Agente>[] = [
-  { clave: 'nombre', titulo: t('ordenes.agentes.nombre'), formato: 'texto', anchoMin: 240 },
+  { clave: 'nombre', titulo: t('ordenes.agentes.nombre'), formato: 'personalizado', anchoMin: 240 },
   { clave: 'tipos', titulo: t('ordenes.agentes.tipos'), formato: 'personalizado', ordenable: false, anchoMin: 200 },
-  { clave: 'usuario_comercial', titulo: t('ordenes.agentes.comercial'), formato: 'entero', ancho: 200 },
-  { clave: 'usuario_id', titulo: t('ordenes.agentes.app'), formato: 'personalizado', ancho: 220 },
+  { clave: 'usa_app', titulo: t('ordenes.agentes.app'), formato: 'personalizado', ancho: 240 },
   { clave: 'activo', titulo: t('ordenes.agentes.activo'), formato: 'personalizado', ancho: 120 },
 ]
 
+/** Cómo está su acceso a la app, como en el prototipo. */
+function estadoApp(f: Agente): { texto: string; color: string } {
+  if (!f.usuario)
+    return { texto: t('ordenes.agentes.sinUsuario'), color: 'secondary' }
+  if (!f.usa_app)
+    return { texto: t('ordenes.agentes.appSinAcceso'), color: 'secondary' }
+  if (!f.ultimo_acceso)
+    return { texto: t('ordenes.agentes.appSinIngreso'), color: 'warning' }
+
+  return { texto: t('ordenes.agentes.appActiva', { cuando: fechaHoraCorta(f.ultimo_acceso) }), color: 'success' }
+}
+
+// Búsqueda de usuarios en el servidor: solo nombre y usuario, al menos 2 letras
+const busqueda = ref('')
+const resultados = ref<UsuarioAgente[]>([])
+const buscando = ref(false)
+let temporizador: ReturnType<typeof setTimeout> | undefined
+let peticion: AbortController | undefined
+
+const opcionesUsuario = computed(() => {
+  const lista = resultados.value.map(u => ({
+    value: u.usuario,
+    title: `${u.nombre} · ${u.usuario}`,
+    subtitle: u.agente && u.agente_id !== editando.value?.id ? t('ordenes.agentes.deOtro', { agente: u.agente }) : undefined,
+    disabled: !!u.agente && u.agente_id !== editando.value?.id,
+  }))
+
+  // El usuario ya ligado siempre se puede ver aunque no salga en la búsqueda actual
+  if (edicion.usuario && !lista.some(o => o.value === edicion.usuario))
+    lista.unshift({ value: edicion.usuario, title: edicion.usuario, subtitle: undefined, disabled: false })
+
+  return lista
+})
+
+watch(busqueda, q => {
+  clearTimeout(temporizador)
+
+  const texto = (q ?? '').trim()
+  if (texto.length < 2 || texto === edicion.usuario) {
+    resultados.value = resultados.value.filter(u => u.usuario === edicion.usuario)
+
+    return
+  }
+  temporizador = setTimeout(async () => {
+    peticion?.abort()
+    peticion = new AbortController()
+    buscando.value = true
+    try {
+      resultados.value = (await obtenerUsuariosAgente(texto, { signal: peticion.signal })).usuarios
+    }
+    catch {
+      // Una búsqueda cancelada o fallida deja la lista anterior; el guardado avisa si algo no cuadra
+    }
+    finally {
+      buscando.value = false
+    }
+  }, 300)
+})
+
+const faltaUsuario = computed(() => edicion.usa_app && !edicion.usuario)
+
 function abrir(agente: Agente | null) {
   editando.value = agente
-  Object.assign(edicion, agente ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo, usuario_id: agente.usuario_id } : { nombre: '', tipos: [], activo: true, usuario_id: null })
+  Object.assign(edicion, agente
+    ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo, usuario: agente.usuario ?? null, usa_app: !!agente.usa_app }
+    : { nombre: '', tipos: [], activo: true, usuario: null, usa_app: true })
+  resultados.value = []
+  busqueda.value = ''
   a.errorGuardar.value = null
   abierto.value = true
 }
 
 async function guardar() {
-  if (await a.guardar(editando.value?.id ?? null, edicion)) {
+  // Sin acceso a la app el usuario puede quedarse ligado; con acceso, el usuario es obligatorio
+  if (await a.guardar(editando.value?.id ?? null, { ...edicion, usuario: edicion.usuario || null })) {
     abierto.value = false
     notificar.exito(t('ordenes.agentes.guardado'))
+  }
+}
+
+// «Cerrar sesión en su teléfono»
+const confirmarCierre = ref(false)
+const cerrando = ref(false)
+
+async function cerrarSesion() {
+  if (!editando.value)
+    return
+  cerrando.value = true
+  try {
+    const r = await cerrarSesionAgente(editando.value.id)
+
+    confirmarCierre.value = false
+    notificar.exito(t('ordenes.agentes.sesionCerrada', { n: r.sesiones_cerradas }))
+    await a.cargar()
+  }
+  catch (e) {
+    notificar.error(e)
+  }
+  finally {
+    cerrando.value = false
   }
 }
 
 onMounted(async () => {
   tipos.value = (await obtenerCatalogo().catch(() => null))?.tipos ?? []
   await a.cargar()
-  if (a.puedeAdministrar.value)
-    usuarios.value = (await obtenerUsuariosAgente().catch(() => null))?.usuarios ?? []
 })
 </script>
 
@@ -89,11 +177,27 @@ onMounted(async () => {
       @fila="(f: Record<string, unknown>) => abrir(f as unknown as Agente)"
       @reintentar="a.cargar()"
     >
+      <template #celda-nombre="{ fila }">
+        <div>{{ fila.nombre }}</div>
+        <div
+          v-if="fila.usuario"
+          class="text-body-2 text-medium-emphasis"
+        >
+          {{ fila.usuario }}
+        </div>
+      </template>
       <template #celda-tipos="{ fila }">
         {{ fila.tipos.map(nombreTipo).join(', ') || '—' }}
       </template>
-      <template #celda-usuario_id="{ fila }">
-        {{ usuarios.find(u => u.id === fila.usuario_id)?.nombre ?? (fila.usuario_id ? '✓' : '—') }}
+      <template #celda-usa_app="{ fila }">
+        <VChip
+          size="small"
+          label
+          variant="tonal"
+          :color="estadoApp(fila).color"
+        >
+          {{ estadoApp(fila).texto }}
+        </VChip>
       </template>
       <template #celda-activo="{ fila }">
         <VChip
@@ -113,7 +217,7 @@ onMounted(async () => {
       tamano="sm"
       :cargando="a.guardando.value"
       :texto-confirmar="t('ordenes.agentes.guardar')"
-      :desactivar-confirmar="!edicion.nombre.trim()"
+      :desactivar-confirmar="!edicion.nombre.trim() || faltaUsuario"
       @confirmar="guardar"
     >
       <VAlert
@@ -139,21 +243,74 @@ onMounted(async () => {
         chips
         class="mb-3"
       />
-      <VAutocomplete
-        v-model="edicion.usuario_id"
-        :items="opcionesUsuario"
-        :label="t('ordenes.agentes.usuario')"
-        :hint="t('ordenes.agentes.usuarioAyuda')"
+
+      <VSwitch
+        v-model="edicion.usa_app"
+        :label="t('ordenes.agentes.usaApp')"
+        :hint="t('ordenes.agentes.usaAppAyuda')"
         persistent-hint
-        clearable
         class="mb-3"
       />
+      <template v-if="edicion.usa_app">
+        <VAutocomplete
+          v-model="edicion.usuario"
+          v-model:search="busqueda"
+          :items="opcionesUsuario"
+          :label="t('ordenes.agentes.buscarUsuario')"
+          :hint="t('ordenes.agentes.buscarUsuarioAyuda')"
+          :loading="buscando"
+          :no-data-text="busqueda.trim().length < 2 ? t('ordenes.agentes.escribeDos') : t('ordenes.agentes.sinResultados')"
+          :error-messages="faltaUsuario ? t('ordenes.agentes.faltaUsuario') : undefined"
+          persistent-hint
+          no-filter
+          clearable
+          class="mb-2"
+        />
+        <p class="text-body-2 text-medium-emphasis mb-3">
+          {{ t('ordenes.agentes.soloSusVisitas') }}
+        </p>
+      </template>
+
       <VSwitch
         v-model="edicion.activo"
         :label="t('ordenes.agentes.activo')"
         hide-details
         density="compact"
       />
+
+      <VAlert
+        v-if="editando?.usuario"
+        variant="tonal"
+        color="secondary"
+        density="compact"
+        class="mt-4"
+      >
+        <div class="text-subtitle-2 mb-1">
+          {{ t('ordenes.agentes.telefono') }}
+        </div>
+        <div class="text-body-2 mb-2">
+          {{ t('ordenes.agentes.telefonoTexto') }}
+        </div>
+        <VBtn
+          variant="outlined"
+          size="small"
+          prepend-icon="tabler-logout"
+          @click="confirmarCierre = true"
+        >
+          {{ t('ordenes.agentes.cerrarSesion') }}
+        </VBtn>
+      </VAlert>
+    </AsDialogo>
+
+    <AsDialogo
+      v-model:abierto="confirmarCierre"
+      :titulo="t('ordenes.agentes.cerrarSesionTitulo', { usuario: editando?.usuario ?? '' })"
+      tamano="sm"
+      :cargando="cerrando"
+      :texto-confirmar="t('ordenes.agentes.cerrarSesion')"
+      @confirmar="cerrarSesion"
+    >
+      {{ t('ordenes.agentes.cerrarSesionTexto') }}
     </AsDialogo>
   </div>
 </template>

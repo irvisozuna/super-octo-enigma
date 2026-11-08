@@ -23,9 +23,14 @@ export function obtenerAgentes({ signal }: OpcionesPeticion = {}): Promise<Respu
   return rawApi('/work-orders/agentes', { signal })
 }
 
-/** Usuarios de la empresa para ligar a un agente (la app de campo entra con ese usuario). */
-export function obtenerUsuariosAgente({ signal }: OpcionesPeticion = {}): Promise<{ usuarios: UsuarioAgente[] }> {
-  return rawApi('/work-orders/agentes/usuarios', { signal })
+/** Busca usuarios para ligar a un agente (la app de campo entra con ese usuario). Pide al menos 2 letras. */
+export function obtenerUsuariosAgente(q: string, { signal }: OpcionesPeticion = {}): Promise<{ usuarios: UsuarioAgente[] }> {
+  return rawApi(`/work-orders/agentes/usuarios?q=${encodeURIComponent(q)}`, { signal })
+}
+
+/** «Cerrar sesión en su teléfono»: revoca las sesiones del usuario del agente. */
+export function cerrarSesionAgente(id: string): Promise<{ sesiones_cerradas: number }> {
+  return rawApi(`/work-orders/agentes/${encodeURIComponent(id)}/cerrar-sesion`, { method: 'POST' })
 }
 
 export function guardarAgente(id: string | null, datos: EdicionAgente): Promise<Agente> {

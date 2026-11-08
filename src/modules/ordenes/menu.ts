@@ -5,8 +5,10 @@ const ordenesMenu: VerticalNavItems = [
   {
     title: 'Órdenes de campo',
     icon: { icon: 'tabler-clipboard-list' },
+
+    // El grupo lo ve también el supervisor de campo, que solo administra agentes (XEL1-674)
     action: 'read',
-    subject: 'ordenes',
+    subject: 'agentes',
     children: [
       {
         title: 'Órdenes de trabajo',
@@ -18,7 +20,7 @@ const ordenesMenu: VerticalNavItems = [
         title: 'Agentes de campo',
         to: 'ordenesAgentes',
         action: 'read',
-        subject: 'ordenes',
+        subject: 'agentes',
       },
       {
         title: 'Puente con Comercial',
