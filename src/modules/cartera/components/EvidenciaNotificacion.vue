@@ -15,6 +15,16 @@ const dialogo = useDialogo()
 const notificar = useNotificacion()
 const ev = useEvidencia()
 const tipo = ref<TipoEvidencia>('acta')
+
+/** La foto abierta en grande dentro de la ficha; los PDF se siguen abriendo en otra pestaña. */
+const visor = ref<Evidencia | null>(null)
+
+function ver(e: Evidencia) {
+  if (e.mime.startsWith('image/') && ev.miniaturas.value[e.id])
+    visor.value = e
+  else
+    ev.abrir(e)
+}
 const archivos = ref<File[]>([])
 const TIPOS: TipoEvidencia[] = ['acta', 'fachada', 'toma', 'otro']
 
@@ -73,7 +83,7 @@ onBeforeUnmount(() => ev.liberar())
           type="button"
           class="evidencia__vista"
           :aria-label="`${t('cartera.evidencia.abrir')} ${t(`cartera.evidencia.tipos.${e.tipo}`)}`"
-          @click="ev.abrir(e)"
+          @click="ver(e)"
         >
           <img
             v-if="ev.miniaturas.value[e.id]"
@@ -91,8 +101,14 @@ onBeforeUnmount(() => ev.liberar())
             <div class="as-valor">
               {{ t(`cartera.evidencia.tipos.${e.tipo}`) }}
             </div>
-            <div class="as-secundario as-num">
-              {{ fechaHoraCorta(e.subida_en) }}
+            <div class="as-secundario as-num d-flex align-center gap-1">
+              {{ fechaHoraCorta(e.tomada_en ?? e.subida_en) }}
+              <VIcon
+                v-if="e.lat != null && e.lng != null"
+                icon="tabler-map-pin"
+                size="14"
+                :aria-label="t('cartera.evidencia.conUbicacion')"
+              />
             </div>
           </div>
           <VBtn
@@ -141,10 +157,53 @@ onBeforeUnmount(() => ev.liberar())
         {{ t('cartera.evidencia.subir') }}
       </VBtn>
     </div>
+    <VDialog
+      :model-value="visor !== null"
+      max-width="960"
+      @update:model-value="(v: boolean) => { if (!v) visor = null }"
+    >
+      <VCard v-if="visor">
+        <VCardTitle class="d-flex align-center justify-space-between">
+          {{ t(`cartera.evidencia.tipos.${visor.tipo}`) }}
+          <VBtn
+            icon="tabler-x"
+            variant="text"
+            size="small"
+            :aria-label="t('cartera.evidencia.cerrar')"
+            @click="visor = null"
+          />
+        </VCardTitle>
+        <VCardText>
+          <img
+            :src="ev.miniaturas.value[visor.id]"
+            :alt="t(`cartera.evidencia.tipos.${visor.tipo}`)"
+            class="evidencia__grande"
+          >
+          <div class="as-secundario as-num mt-2">
+            {{ visor.tomada_en ? t('cartera.evidencia.tomada', { fecha: fechaHoraCorta(visor.tomada_en) }) : t('cartera.evidencia.subidaEl', { fecha: fechaHoraCorta(visor.subida_en) }) }}
+            <template v-if="visor.lat != null && visor.lng != null">
+              · <a
+                :href="`https://www.google.com/maps?q=${visor.lat},${visor.lng}`"
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{ t('cartera.evidencia.verMapa') }}</a>
+            </template>
+          </div>
+        </VCardText>
+      </VCard>
+    </VDialog>
   </section>
 </template>
 
 <style scoped>
+.evidencia__grande {
+  display: block;
+  border-radius: var(--as-radio-md);
+  margin-inline: auto;
+  max-block-size: 70vh;
+  max-inline-size: 100%;
+}
+
 .evidencia__rejilla {
   display: grid;
   gap: var(--as-sp-3);

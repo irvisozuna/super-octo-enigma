@@ -211,12 +211,29 @@ export interface EventoHistorial {
   antes: Record<string, unknown> | null
   despues: Record<string, unknown> | null
   fecha: string
+
+  /** El resultado se capturó desde la app de campo. */
+  app?: boolean
+}
+
+/** La captura del resultado desde la app de campo (XEL1-679). */
+export interface CapturaCampo {
+  en: string | null
+  lat: number | null
+  lng: number | null
+  precision_m: number | null
+  distancia_m: number | null
+  lejos: boolean
 }
 
 export interface FichaNotificacion extends Notificacion {
   historial: EventoHistorial[]
   puede_operar: boolean
   evidencias?: number
+  titular?: string | null
+  toma?: { lat: number; lng: number } | null
+  captura_campo?: CapturaCampo | null
+  umbral_lejos_m?: number
 }
 
 export type TipoEvidencia = 'acta' | 'fachada' | 'toma' | 'otro'

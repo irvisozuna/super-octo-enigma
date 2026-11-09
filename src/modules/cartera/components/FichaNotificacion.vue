@@ -5,6 +5,7 @@ import { useFichaNotificacion } from '../composables/useNotificaciones'
 import type { EstadoNotificacion, EventoHistorial, Opcion, ResultadoNotificacion } from '../types/cartera'
 import { COLOR_NOTIFICACION, COLOR_TICKET } from '../utils/cartera'
 import DialogoResultado from './DialogoResultado.vue'
+import CapturaCampo from './CapturaCampo.vue'
 import EvidenciaNotificacion from './EvidenciaNotificacion.vue'
 import { useNotificacion } from '@/composables/useNotificacion'
 import { fecha, fechaHoraCorta, fechaIso } from '@/utils/formato'
@@ -44,7 +45,17 @@ function textoEvento(e: EventoHistorial): string {
   const base = t(clave) === clave ? e.accion : t(clave)
   const estado = e.despues?.estado ? ` · ${props.resultados.find(r => r.codigo === e.despues?.estado)?.nombre ?? e.despues.estado}` : ''
 
-  return `${base}${e.accion === 'estado' ? estado : ''}`
+  // Fotos (XEL1-679): el tipo viene en el «después» al subir y en el «antes» al borrar
+  const tipo = (e.despues?.tipo ?? e.antes?.tipo) as string | undefined
+  const foto = tipo ? ` · ${t(`cartera.evidencia.tipos.${tipo}`)}` : ''
+
+  return `${base}${e.accion === 'estado' ? estado : ''}${e.accion.includes('evidencia') ? foto : ''}`
+}
+
+function quienEvento(e: EventoHistorial): string {
+  const usuario = e.usuario ?? t('cartera.ficha.sistema')
+
+  return e.app ? t('cartera.ficha.desdeApp', { usuario }) : t('cartera.ficha.por', { usuario })
 }
 
 async function guardarResultado(datos: { resultado: ResultadoNotificacion; fecha: string; observacion: string | null }) {
@@ -72,7 +83,7 @@ async function confirmarCancelacion() {
     :abierto="abierto"
     :sobrelinea="t('cartera.ficha.sobrelinea')"
     :titulo="n ? `${t('cartera.comun.cuenta')} ${n.cuenta ?? '—'}` : ''"
-    :subtitulo="n?.ref"
+    :subtitulo="n ? [n.titular, n.ref].filter(Boolean).join(' · ') : undefined"
     tamano="md"
     :cargando="f.cargando.value"
     @update:abierto="(v: boolean) => emit('update:abierto', v)"
@@ -251,6 +262,12 @@ async function confirmarCancelacion() {
         </div>
       </section>
 
+      <CapturaCampo
+        :captura="n.captura_campo"
+        :toma="n.toma"
+        :umbral="n.umbral_lejos_m"
+      />
+
       <EvidenciaNotificacion :aviso="n.id" />
 
       <section>
@@ -272,7 +289,7 @@ async function confirmarCancelacion() {
               {{ textoEvento(e) }}
             </div>
             <div class="as-secundario as-num">
-              {{ fechaHoraCorta(e.fecha) }} · {{ t('cartera.ficha.por', { usuario: e.usuario ?? t('cartera.ficha.sistema') }) }}
+              {{ fechaHoraCorta(e.fecha) }} · {{ quienEvento(e) }}
             </div>
             <div
               v-if="e.despues?.observacion"
@@ -342,6 +359,11 @@ async function confirmarCancelacion() {
 </template>
 
 <style scoped>
+/* Cada sección de la ficha (datos, captura en campo, evidencia, historial) separada de la anterior */
+section + section {
+  margin-block-start: var(--as-sp-6);
+}
+
 /* Dos cifras: con tres, un adeudo de seis dígitos o la fecha completa no cabían en el panel (XEL1-678) */
 .ficha__cifras {
   display: grid;

@@ -159,8 +159,11 @@
     "accion": {
       "abrir": "Generada",
       "estado": "Resultado capturado",
-      "cancelar": "Cancelada"
+      "cancelar": "Cancelada",
+      "evidencia": "Foto subida",
+      "borrar_evidencia": "Foto borrada"
     },
+    "desdeApp": "desde la app de campo · {usuario}",
     "mesesAdeudo": "{n} mes de adeudo | {n} meses de adeudo",
     "por": "por {usuario}",
     "sistema": "el sistema"
@@ -218,6 +221,22 @@
     "cerrada": "Orden cerrada",
     "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida decide el seguimiento."
   },
+  "campo": {
+    "titulo": "Captura en campo",
+    "soloToma": "Ubicación de la toma",
+    "app": "App de campo",
+    "hora": "Hora en el teléfono",
+    "gps": "GPS",
+    "precision": "± {n} m",
+    "conGps": "Con ubicación",
+    "sinGps": "Sin ubicación del teléfono",
+    "distancia": "Distancia a la toma",
+    "metros": "A {n} m de la toma",
+    "lejos": "Lejos: a {n} m (más de {umbral} m)",
+    "tomaSinCoordenada": "La toma no tiene coordenada en el padrón",
+    "toma": "Toma",
+    "aqui": "Donde se capturó"
+  },
   "evidencia": {
     "titulo": "Evidencia",
     "sinEvidencia": "Sin evidencia todavía. Sube la foto o el escaneo del acta firmada.",
@@ -234,6 +253,11 @@
     "borrarTitulo": "¿Borrar esta evidencia?",
     "borrarDetalle": "Se borra el archivo; en la bitácora queda quién lo borró y cuándo.",
     "borrada": "Evidencia borrada",
-    "abrir": "Abrir"
+    "abrir": "Abrir",
+    "cerrar": "Cerrar",
+    "conUbicacion": "Con ubicación",
+    "tomada": "Tomada el {fecha}",
+    "subidaEl": "Subida el {fecha}",
+    "verMapa": "Ver dónde se tomó"
   }
 }

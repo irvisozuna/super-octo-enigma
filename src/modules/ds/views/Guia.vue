@@ -512,6 +512,24 @@ async function confirmarDemo() {
         />
       </section>
 
+      <!-- Mapa de ubicación -->
+      <section class="as-tarjeta pa-4 mb-4">
+        <h2 class="as-seccion">
+          <span>Mapa de ubicación (<code>AsMapaUbicacion</code>) con un segundo punto</span>
+        </h2>
+        <p class="as-secundario">
+          La toma (azul) y dónde se capturó (ámbar), con una línea entre los dos; el mapa encuadra ambos. Sin
+          <code>segundo</code> es el mapa de un solo punto.
+        </p>
+        <AsMapaUbicacion
+          :lat="23.0631"
+          :lng="-109.6985"
+          :segundo="{ lat: 23.0650, lng: -109.6985, etiqueta: 'Donde se capturó' }"
+          :altura="260"
+          etiqueta="Toma"
+        />
+      </section>
+
       <!-- Panel y diálogo -->
       <section class="as-tarjeta pa-4 mb-4">
         <h2 class="as-seccion">

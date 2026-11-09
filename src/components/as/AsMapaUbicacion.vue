@@ -20,7 +20,13 @@ const props = withDefaults(defineProps<{
 
   /** Texto del marcador (título accesible y tooltip). */
   etiqueta?: string
-}>(), { altura: 420, zoom: 16 })
+
+  /**
+   * Un segundo punto opcional (por ejemplo, dónde se capturó frente a la toma): otro color, una línea entre los dos y
+   * el mapa encuadra ambos.
+   */
+  segundo?: { lat: number; lng: number; etiqueta?: string } | null
+}>(), { altura: 420, zoom: 16, segundo: null })
 
 const { t } = useI18n()
 const tokens = useTokensTema()
@@ -28,12 +34,18 @@ const contenedor = ref<HTMLElement | null>(null)
 const satelite = ref(false)
 let mapa: maplibregl.Map | null = null
 let marcador: maplibregl.Marker | null = null
+let marcador2: maplibregl.Marker | null = null
+
+/** El estilo ya cargó: hasta entonces no se pueden agregar fuentes (isStyleLoaded sigue en falso mientras bajan teselas). */
+let cargado = false
 let observador: ResizeObserver | null = null
 let detenerTema: (() => void) | null = null
 
 const valida = computed(() => coordenadaValida(props.lat, props.lng))
 const centro = computed<[number, number]>(() => [props.lng as number, props.lat as number])
 const alturaCss = computed(() => (typeof props.altura === 'number' ? `${props.altura}px` : props.altura))
+
+const segundoValido = computed(() => props.segundo && coordenadaValida(props.segundo.lat, props.segundo.lng) ? props.segundo : null)
 
 function ponerMarcador() {
   if (!mapa)
@@ -42,6 +54,36 @@ function ponerMarcador() {
   marcador = new maplibregl.Marker({ color: tokens.hex('primary') }).setLngLat(centro.value).addTo(mapa)
   if (props.etiqueta)
     marcador.getElement().setAttribute('title', props.etiqueta)
+  ponerSegundo()
+}
+
+function ponerSegundo() {
+  if (!mapa || !cargado)
+    return
+  marcador2?.remove()
+  marcador2 = null
+
+  const s = segundoValido.value
+
+  const linea = s
+    ? { type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: [centro.value, [s.lng, s.lat]] } }
+    : { type: 'FeatureCollection' as const, features: [] }
+
+  const fuente = mapa.getSource('union') as maplibregl.GeoJSONSource | undefined
+  if (fuente)
+    fuente.setData(linea)
+  else
+    mapa.addSource('union', { type: 'geojson', data: linea })
+  if (!mapa.getLayer('union'))
+    mapa.addLayer({ id: 'union', type: 'line', source: 'union', paint: { 'line-color': tokens.hex('warning'), 'line-width': 2, 'line-dasharray': [2, 2] } })
+  if (!s)
+    return
+  marcador2 = new maplibregl.Marker({ color: tokens.hex('warning'), scale: 0.8 }).setLngLat([s.lng, s.lat]).addTo(mapa)
+  if (s.etiqueta)
+    marcador2.getElement().setAttribute('title', s.etiqueta)
+  const caja = new maplibregl.LngLatBounds(centro.value, centro.value).extend([s.lng, s.lat])
+
+  mapa.fitBounds(caja, { padding: 48, maxZoom: props.zoom, duration: 0 })
 }
 
 function iniciar() {
@@ -61,6 +103,7 @@ function iniciar() {
   mapa.on('load', () => {
     if (!mapa)
       return
+    cargado = true
 
     // Satélite debajo de las etiquetas de calles, oculto hasta que se pida
     const primeraEtiqueta = mapa.getStyle().layers.find(c => c.type === 'symbol')?.id
@@ -82,6 +125,9 @@ function destruir() {
   detenerTema = null
   marcador?.remove()
   marcador = null
+  marcador2?.remove()
+  marcador2 = null
+  cargado = false
   mapa?.remove()
   mapa = null
 }
@@ -107,7 +153,10 @@ watch(centro, c => {
     return
   mapa.setCenter(c)
   marcador?.setLngLat(c)
+  ponerSegundo()
 })
+
+watch(segundoValido, () => ponerSegundo())
 
 onBeforeUnmount(destruir)
 </script>
