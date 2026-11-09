@@ -92,6 +92,23 @@ export const COLOR_NOTIFICACION: Record<EstadoNotificacion, string> = {
   sin_estado: 'secondary',
 }
 
+/** Cómo se agrupa un resultado en mapas y monitor de campo (XEL1-680, XEL1-681). */
+export type GrupoResultado = 'entregada' | 'noEntregada' | 'proceso' | 'otro'
+
+const ENTREGADA: EstadoNotificacion[] = ['recibida', 'firmada']
+const NO_ENTREGADA: EstadoNotificacion[] = ['no_entregada', 'rechazada', 'usuario_no_localizado', 'toma_no_localizada', 'duplicidad']
+
+export function grupoResultado(estado: string | null | undefined): GrupoResultado {
+  if (estado && ENTREGADA.includes(estado as EstadoNotificacion))
+    return 'entregada'
+  if (estado && NO_ENTREGADA.includes(estado as EstadoNotificacion))
+    return 'noEntregada'
+
+  return estado === 'en_proceso' ? 'proceso' : 'otro'
+}
+
+export const TOKEN_GRUPO: Record<GrupoResultado, string> = { entregada: 'success', noEntregada: 'error', proceso: 'warning', otro: 'secondary' }
+
 export const COLOR_TICKET: Record<EstadoTicket, string> = { creado: 'success', pendiente: 'warning', fallido: 'error' }
 
 /** La notificación se puede capturar o cancelar desde aquí (sigue en proceso y no es del módulo viejo en uso). */

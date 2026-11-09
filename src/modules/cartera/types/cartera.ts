@@ -348,3 +348,61 @@ export interface RespuestaAccionSeguimiento {
   errores: { id: string; motivo: string }[]
   lote?: { id: string; ref: string | null }
 }
+
+// Monitor de campo (XEL1-681) ---------------------------------------------------------------------------------------
+
+/** Una visita: hora del teléfono si se capturó en la app, hora del cierre si se capturó en la web. */
+export interface VisitaCampo {
+  notificacion_id: string
+  agente_id: string | null
+  ref: string
+  cuenta: string | null
+  resultado: string
+  en: string
+  lat: number | null
+  lng: number | null
+  precision_m: number | null
+  distancia_m: number | null
+  lejos: boolean
+  app: boolean
+}
+
+export interface AgenteMonitor {
+  id: string
+  nombre: string
+  usa_app: boolean
+  por_visitar: number
+  visitas: number
+  entregadas: number
+  desde_app: number
+  lejos: number
+  primera: string | null
+  ultima: string | null
+  ultima_posicion: { lat: number; lng: number; en: string } | null
+}
+
+export interface RespuestaMonitorCampo {
+  indicadores: {
+    activos: number
+    notificadores: number
+    visitas: number
+    entregadas: number
+    pct_entregadas: number | null
+    desde_app: number
+    lejos: number
+    por_visitar: number
+  }
+  agentes: AgenteMonitor[]
+  puntos: VisitaCampo[]
+  umbral_lejos_m: number
+  desde: string
+  hasta: string
+  generado_en: string
+}
+
+export interface RespuestaJornada {
+  agente: { id: string; nombre: string }
+  visitas: VisitaCampo[]
+  desde: string
+  hasta: string
+}

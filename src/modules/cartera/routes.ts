@@ -27,6 +27,12 @@ const carteraRoutes: RouteRecordRaw[] = [
     meta: { action: 'read', subject: 'cartera' },
   },
   {
+    path: '/cartera/monitor',
+    name: 'carteraMonitor',
+    component: () => import('./views/MonitorCampo.vue'),
+    meta: { action: 'read', subject: 'cartera' },
+  },
+  {
     path: '/cartera/seguimiento',
     name: 'carteraSeguimiento',
     component: () => import('./views/Seguimiento.vue'),

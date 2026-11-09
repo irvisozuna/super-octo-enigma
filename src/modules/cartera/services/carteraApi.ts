@@ -9,8 +9,10 @@ import type {
   RespuestaConfiguracion,
   RespuestaEvidencias,
   RespuestaGenerar,
+  RespuestaJornada,
   RespuestaLote,
   RespuestaLotes,
+  RespuestaMonitorCampo,
   RespuestaNotificaciones,
   RespuestaNotificacionesContrato,
   RespuestaSeguimiento,
@@ -132,4 +134,13 @@ export function obtenerConfiguracion({ signal }: OpcionesPeticion = {}): Promise
 
 export function guardarConfiguracion(valores: Partial<Record<'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias', number>>): Promise<RespuestaConfiguracion> {
   return rawApi(`${BASE}/configuracion`, { method: 'PUT', body: valores })
+}
+
+/** Monitor de campo (XEL1-681): del día `desde` al `hasta` de Los Cabos (sin fechas, hoy). */
+export function obtenerMonitorCampo(desde: string, hasta: string, { signal }: OpcionesPeticion = {}): Promise<RespuestaMonitorCampo> {
+  return rawApi('/collections/monitoreo', { params: { desde, hasta }, signal })
+}
+
+export function obtenerJornada(agente: string, desde: string, hasta: string, { signal }: OpcionesPeticion = {}): Promise<RespuestaJornada> {
+  return rawApi(`/collections/monitoreo/agentes/${encodeURIComponent(agente)}`, { params: { desde, hasta }, signal })
 }

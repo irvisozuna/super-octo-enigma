@@ -27,6 +27,12 @@ const carteraMenu: VerticalNavItems = [
         subject: 'cartera',
       },
       {
+        title: 'Monitor de campo',
+        to: 'carteraMonitor',
+        action: 'read',
+        subject: 'cartera',
+      },
+      {
         title: 'Seguimiento',
         to: 'carteraSeguimiento',
         action: 'read',
