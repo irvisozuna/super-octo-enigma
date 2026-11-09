@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSeguimiento } from '../composables/useSeguimiento'
 import { obtenerCatalogos } from '../services/carteraApi'
 import type { AccionSeguimiento, CandidataSeguimiento, OrdenSeguimiento } from '../types/cartera'
+import { filtrarCandidatas, filtrarOrdenes, filtrosSeguimientoActivos, filtrosSeguimientoIniciales } from '../utils/seguimiento'
+import type { OrdenSeguimientoBandeja } from '../utils/seguimiento'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useNotificacion } from '@/composables/useNotificacion'
-import { fecha, fechaHoraCorta, moneda } from '@/utils/formato'
+import { entero, fecha, fechaHoraCorta, moneda } from '@/utils/formato'
 
 /*
  * Seguimiento (XEL1-659): las notificaciones entregadas que no se pagaron y el siguiente paso con cada una. Las órdenes
@@ -25,14 +27,50 @@ const cierre = ref<{ orden: OrdenSeguimiento; estado: 'atendida' | 'cancelada' }
 const nota = ref('')
 
 const puedeOperar = computed(() => s.datos.value?.puede_operar ?? false)
-const todas = computed(() => s.candidatas.value.length > 0 && s.seleccion.value.size === s.candidatas.value.length)
+
+// Buscador, filtros y orden (XEL1-682): la bandeja llega completa y se filtra aquí
+const filtros = reactive(filtrosSeguimientoIniciales())
+const visibles = computed(() => filtrarCandidatas(s.candidatas.value, filtros))
+const ordenesVisibles = computed(() => filtrarOrdenes(s.ordenes.value, filtros.texto))
+const activos = computed(() => filtrosSeguimientoActivos(filtros))
+const unicos = (valores: (string | null)[]) => [...new Set(valores.filter((v): v is string => !!v))].sort((a, b) => a.localeCompare(b))
+const opcionesNotificador = computed(() => unicos(s.candidatas.value.map(c => c.notificador)))
+
+const opcionesResultado = computed(() => {
+  const vistos = new Map<string, string>()
+
+  s.candidatas.value.forEach(c => vistos.set(c.estado_codigo, c.estado))
+
+  return [...vistos].map(([value, title]) => ({ value, title }))
+})
+
+const opcionesDias = [30, 60, 90, 180, 365].map(n => ({ value: n, title: t('cartera.seguimiento.diasMas', { n }) }))
+const opcionesOrigen = computed(() => [{ value: 'atencion', title: t('cartera.comun.origenAtencion') }, { value: 'legado', title: t('cartera.comun.origenLegado') }])
+
+const opcionesOrden: { value: OrdenSeguimientoBandeja; title: string }[] = [
+  { value: 'dias', title: t('cartera.seguimiento.ordenDias') },
+  { value: 'adeudo', title: t('cartera.seguimiento.ordenAdeudo') },
+  { value: 'recientes', title: t('cartera.seguimiento.ordenRecientes') },
+  { value: 'notificador', title: t('cartera.seguimiento.ordenNotificador') },
+]
+
+function limpiar() {
+  Object.assign(filtros, { ...filtrosSeguimientoIniciales(), orden: filtros.orden })
+}
+
+/** «Marcar todas» marca solo las que se ven con los filtros. */
+const todas = computed(() => visibles.value.length > 0 && visibles.value.every(c => s.seleccion.value.has(c.id)))
+
+function marcarVisibles(marcar: boolean) {
+  s.seleccion.value = marcar ? new Set([...s.seleccion.value, ...visibles.value.map(c => c.id)]) : new Set()
+}
 const NOMBRE_ACCION: Record<AccionSeguimiento, string> = { orden: 'cartera.seguimiento.orden', segunda: 'cartera.seguimiento.segunda', descartada: 'cartera.seguimiento.descartar' }
 const listoAccion = computed(() => !!motivo.value.trim() && (accion.value !== 'segunda' || !!notificador.value))
 
 const columnas: ColumnaTabla<CandidataSeguimiento>[] = [
   { clave: 'marca', titulo: '', formato: 'personalizado', ordenable: false, ancho: 48 },
   { clave: 'ref', titulo: t('cartera.comun.referencia'), formato: 'personalizado', ancho: 150 },
-  { clave: 'cuenta', titulo: t('cartera.comun.cuenta'), formato: 'personalizado', ancho: 120 },
+  { clave: 'cuenta', titulo: t('cartera.comun.cuenta'), formato: 'personalizado', anchoMin: 220 },
   { clave: 'notificador', titulo: t('cartera.comun.notificador'), formato: 'texto', truncar: true, anchoMin: 180 },
   { clave: 'entregada', titulo: t('cartera.seguimiento.entregada'), formato: 'personalizado', ancho: 150 },
   { clave: 'dias', titulo: t('cartera.seguimiento.dias'), formato: 'entero', ancho: 80 },
@@ -146,10 +184,79 @@ onMounted(async () => {
         </VChip>
       </VChipGroup>
 
+      <AsBarraFiltros
+        class="mb-3"
+        :activos="activos"
+        @limpiar="limpiar"
+      >
+        <VTextField
+          v-model="filtros.texto"
+          :label="t('cartera.seguimiento.buscar')"
+          prepend-inner-icon="tabler-search"
+          clearable
+          class="as-filtro--lg"
+          @click:clear="filtros.texto = ''"
+        />
+        <template v-if="vista === 'sin_pago'">
+          <VAutocomplete
+            v-model="filtros.notificador"
+            :items="opcionesNotificador"
+            :label="t('cartera.comun.notificador')"
+            clearable
+            class="as-filtro--md"
+          />
+          <VSelect
+            v-model="filtros.resultado"
+            :items="opcionesResultado"
+            :label="t('cartera.seguimiento.resultado')"
+            clearable
+            class="as-filtro--sm"
+          />
+          <VSelect
+            v-model="filtros.diasMin"
+            :items="opcionesDias"
+            :label="t('cartera.seguimiento.diasDesde')"
+            clearable
+            class="as-filtro--sm"
+          />
+          <VTextField
+            :model-value="filtros.adeudoMin ?? ''"
+            type="number"
+            min="0"
+            :label="t('cartera.seguimiento.adeudoMin')"
+            prefix="$"
+            clearable
+            class="as-filtro--sm"
+            @update:model-value="(v: string | number | null) => filtros.adeudoMin = v === null || v === '' ? null : Math.max(0, Number(v))"
+          />
+          <VSelect
+            v-model="filtros.origen"
+            :items="opcionesOrigen"
+            :label="t('cartera.notificaciones.origen')"
+            clearable
+            class="as-filtro--sm"
+          />
+          <VSelect
+            v-model="filtros.orden"
+            :items="opcionesOrden"
+            :label="t('cartera.seguimiento.ordenar')"
+            prepend-inner-icon="tabler-arrows-sort"
+            class="as-filtro--md"
+          />
+        </template>
+      </AsBarraFiltros>
+
+      <p
+        v-if="activos && vista === 'sin_pago'"
+        class="as-secundario as-num mb-2"
+      >
+        {{ t('cartera.seguimiento.seMuestran', { n: entero(visibles.length), total: entero(s.candidatas.value.length) }) }}
+      </p>
+
       <AsTablaDatos
         v-if="vista === 'sin_pago'"
         :columnas="puedeOperar ? columnas : columnas.slice(1)"
-        :filas="s.candidatas.value"
+        :filas="visibles"
         clave-fila="id"
         densidad="media"
         :cargando="s.cargando.value"
@@ -165,11 +272,11 @@ onMounted(async () => {
           <VCheckbox
             :model-value="todas"
             :indeterminate="!todas && s.seleccion.value.size > 0"
-            :disabled="!s.candidatas.value.length"
+            :disabled="!visibles.length"
             density="compact"
             hide-details
-            :label="t('cartera.notificar.marcarTodas')"
-            @update:model-value="(v: boolean | null) => s.marcarTodas(!!v)"
+            :label="activos ? t('cartera.seguimiento.marcarVisibles', { n: entero(visibles.length) }) : t('cartera.notificar.marcarTodas')"
+            @update:model-value="(v: boolean | null) => marcarVisibles(!!v)"
           />
         </template>
         <template #celda-marca="{ fila }">
@@ -188,6 +295,13 @@ onMounted(async () => {
         </template>
         <template #celda-cuenta="{ fila }">
           <span class="as-num">{{ fila.cuenta ?? fila.contrato }}</span>
+          <div
+            v-if="fila.titular"
+            class="as-secundario text-truncate seguimiento__titular"
+            :title="fila.titular"
+          >
+            {{ fila.titular }}
+          </div>
         </template>
         <template #celda-entregada="{ fila }">
           <span class="as-num">{{ fecha(fila.entregada) }}</span>
@@ -203,7 +317,7 @@ onMounted(async () => {
       <AsTablaDatos
         v-else
         :columnas="columnasOrdenes"
-        :filas="s.ordenes.value"
+        :filas="ordenesVisibles"
         clave-fila="id"
         densidad="media"
         :cargando="s.cargando.value"
@@ -324,6 +438,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.seguimiento__titular {
+  max-inline-size: 22rem;
+}
+
 .seguimiento__barra {
   position: sticky;
   z-index: 2;

@@ -325,6 +325,7 @@ export interface CandidataSeguimiento {
   dias: number
   adeudo_notificado: number
   adeudo_actual: number
+  titular?: string | null
 }
 
 export interface OrdenSeguimiento {
