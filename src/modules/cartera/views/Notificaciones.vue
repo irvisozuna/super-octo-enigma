@@ -221,7 +221,7 @@ onBeforeUnmount(() => n.detener())
       v-if="n.seleccion.value.size"
       class="notificaciones__barra"
     >
-      <span>{{ t('cartera.notificaciones.marcadas', { n: n.seleccion.value.size }) }}</span>
+      <span>{{ t('cartera.notificaciones.marcadas', { n: n.seleccion.value.size }, n.seleccion.value.size) }}</span>
       <AsBtnPrimario
         prepend-icon="tabler-clipboard-check"
         @click="capturando = true"
@@ -275,6 +275,9 @@ onBeforeUnmount(() => n.detener())
   border: var(--as-borde);
   border-radius: var(--as-radio, 8px);
   background: rgb(var(--v-theme-surface));
+
+  /* Flota sobre la tabla al quedar fija abajo; sin sombra parecía un renglón más */
+  box-shadow: var(--as-sombra-flotante);
   gap: var(--as-sp-3);
   inset-block-end: var(--as-sp-3);
   margin-block-start: var(--as-sp-3);

@@ -249,7 +249,7 @@ onMounted(async () => {
         v-if="vista === 'sin_pago' && s.seleccion.value.size"
         class="seguimiento__barra"
       >
-        <span>{{ t('cartera.seguimiento.marcadas', { n: s.seleccion.value.size, importe: moneda(s.totalMarcado.value) }) }}</span>
+        <span>{{ t('cartera.seguimiento.marcadas', { n: s.seleccion.value.size, importe: moneda(s.totalMarcado.value) }, s.seleccion.value.size) }}</span>
         <div class="d-flex flex-wrap gap-2">
           <AsBtnSecundario
             prepend-icon="tabler-x"
@@ -334,6 +334,9 @@ onMounted(async () => {
   border: var(--as-borde);
   border-radius: var(--as-radio, 8px);
   background: rgb(var(--v-theme-surface));
+
+  /* Flota sobre la tabla al quedar fija abajo; sin sombra parecía un renglón más */
+  box-shadow: var(--as-sombra-flotante);
   gap: var(--as-sp-3);
   inset-block-end: var(--as-sp-3);
   margin-block-start: var(--as-sp-3);

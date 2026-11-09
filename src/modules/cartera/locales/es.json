@@ -145,7 +145,7 @@
     "hasta": "Hasta",
     "origen": "Origen",
     "sinFilas": "No hay notificaciones con estos filtros",
-    "marcadas": "{n} marcadas",
+    "marcadas": "{n} marcada | {n} marcadas",
     "capturar": "Capturar resultado",
     "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida captura resultados."
   },
@@ -225,7 +225,7 @@
     "adeudoNotificado": "Notificado {importe}",
     "sinCandidatas": "No hay notificaciones entregadas sin pago",
     "sinOrdenes": "No hay órdenes de seguimiento abiertas",
-    "marcadas": "{n} marcadas · {importe}",
+    "marcadas": "{n} marcada · {importe} | {n} marcadas · {importe}",
     "orden": "Orden de seguimiento",
     "segunda": "Segunda notificación",
     "descartar": "Descartar",
