@@ -122,10 +122,25 @@ function verJornada(a: AgenteMonitor) {
   jornadaAbierta.value = true
 }
 
+/*
+ * Una visita de la jornada abre su ficha en lugar de la jornada (dos paneles laterales se encimaban y la ficha quedaba
+ * atrás); al cerrar la ficha se regresa a la jornada.
+ */
+let volverAJornada = false
+
 function verNotificacion(id: string) {
+  volverAJornada = jornadaAbierta.value
+  jornadaAbierta.value = false
   fichaId.value = id
   fichaAbierta.value = true
 }
+
+watch(fichaAbierta, abierta => {
+  if (!abierta && volverAJornada) {
+    volverAJornada = false
+    jornadaAbierta.value = true
+  }
+})
 
 const columnas: ColumnaTabla<AgenteMonitor>[] = [
   { clave: 'nombre', titulo: t('cartera.monitor.notificador'), formato: 'personalizado', anchoMin: 180 },
