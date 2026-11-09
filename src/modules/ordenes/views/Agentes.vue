@@ -6,7 +6,7 @@ import { cerrarSesionAgente, obtenerCatalogo, obtenerUsuariosAgente } from '../s
 import type { Agente, EdicionAgente, TipoOrden, UsuarioAgente } from '../types/ordenes'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useNotificacion } from '@/composables/useNotificacion'
-import { fechaHoraCorta } from '@/utils/formato'
+import { entero, fechaHoraCorta } from '@/utils/formato'
 
 /*
  * Agentes de campo del núcleo (pantalla AgentesWeb del prototipo, XEL1-674): los ve quien lee órdenes; los da de
@@ -25,7 +25,10 @@ const nombreTipo = (codigo: string) => tipos.value.find(x => x.codigo === codigo
 
 const columnas: ColumnaTabla<Agente>[] = [
   { clave: 'nombre', titulo: t('ordenes.agentes.nombre'), formato: 'personalizado', anchoMin: 240 },
-  { clave: 'tipos', titulo: t('ordenes.agentes.tipos'), formato: 'personalizado', ordenable: false, anchoMin: 200 },
+  { clave: 'tipos', titulo: t('ordenes.agentes.tipos'), formato: 'personalizado', ordenable: false, anchoMin: 180 },
+  { clave: 'carga.abiertas', titulo: t('ordenes.agentes.abiertas'), formato: 'personalizado', ancho: 110, alineacion: 'end' },
+  { clave: 'carga.cerradas_hoy', titulo: t('ordenes.agentes.hoy'), formato: 'personalizado', ancho: 110, alineacion: 'end' },
+  { clave: 'carga.ultima_captura', titulo: t('ordenes.agentes.ultima'), formato: 'personalizado', ancho: 150 },
   { clave: 'usa_app', titulo: t('ordenes.agentes.app'), formato: 'personalizado', ancho: 240 },
   { clave: 'activo', titulo: t('ordenes.agentes.activo'), formato: 'personalizado', ancho: 120 },
 ]
@@ -188,6 +191,19 @@ onMounted(async () => {
       </template>
       <template #celda-tipos="{ fila }">
         {{ fila.tipos.map(nombreTipo).join(', ') || '—' }}
+      </template>
+      <!-- Carga (XEL1-680) -->
+      <template #celda-carga.abiertas="{ fila }">
+        <span class="as-num">{{ entero(fila.carga?.abiertas ?? 0) }}</span>
+      </template>
+      <template #celda-carga.cerradas_hoy="{ fila }">
+        <span
+          class="as-num"
+          :class="{ 'as-secundario': !fila.carga?.cerradas_hoy }"
+        >{{ entero(fila.carga?.cerradas_hoy ?? 0) }}</span>
+      </template>
+      <template #celda-carga.ultima_captura="{ fila }">
+        <span class="as-num">{{ fechaHoraCorta(fila.carga?.ultima_captura) }}</span>
       </template>
       <template #celda-usa_app="{ fila }">
         <VChip

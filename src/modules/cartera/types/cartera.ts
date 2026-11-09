@@ -122,6 +122,21 @@ export interface Lote {
   documento: EstadoDocumento
   documento_error: string | null
   generado_en: string | null
+
+  /** Solo en la lista de lotes (XEL1-680). */
+  avance?: AvanceLote
+}
+
+export interface AvanceLote {
+  total: number
+  capturadas: number
+  entregadas: number
+}
+
+/** Solo en el detalle del lote (XEL1-680). */
+export interface ResumenLote extends AvanceLote {
+  por_estado: Partial<Record<EstadoNotificacion, number>>
+  adeudo: number
 }
 
 export interface RespuestaGenerar {
@@ -178,10 +193,15 @@ export interface Notificacion {
   notificador?: string | null
   lote?: string | null
   lote_ref?: string | null
+  titular?: string | null
+
+  /** Solo en el detalle del lote, para el mapa del recorrido. */
+  toma?: { lat: number; lng: number } | null
 }
 
 export interface RespuestaLote extends Lote {
   notificaciones: Notificacion[]
+  resumen?: ResumenLote
 }
 
 export interface RespuestaLotes {
@@ -193,6 +213,9 @@ export interface RespuestaNotificaciones {
   notificaciones: Notificacion[]
   paginacion: Paginacion
   puede_operar: boolean
+
+  /** Cuántas hay en cada estado con los demás filtros (sin el de estado), para los contadores (XEL1-680). */
+  conteos?: Partial<Record<EstadoNotificacion, number>>
 }
 
 export interface NotificacionContrato extends Notificacion {

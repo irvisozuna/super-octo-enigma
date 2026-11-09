@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from 'vue'
 import { cancelarNotificacion, capturarEnBloque, capturarResultado, descargarDocumentoNotificacion, obtenerNotificacion, obtenerNotificaciones } from '../services/carteraApi'
-import type { FichaNotificacion, FiltrosNotificaciones, Notificacion, Paginacion, RespuestaCapturaBloque, ResultadoNotificacion } from '../types/cartera'
+import type { EstadoNotificacion, FichaNotificacion, FiltrosNotificaciones, Notificacion, Paginacion, RespuestaCapturaBloque, ResultadoNotificacion } from '../types/cartera'
 import { descargarArchivo, esCapturable, filtrosNotificacionesIniciales, parametrosNotificaciones } from '../utils/cartera'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
@@ -11,6 +11,7 @@ export function useNotificaciones(porPagina = 50) {
   const filas = ref<Notificacion[]>([])
   const paginacion = ref<Paginacion>({ pagina: 1, por_pagina: porPagina, total: 0 })
   const puedeOperar = ref(false)
+  const conteos = ref<Partial<Record<EstadoNotificacion, number>>>({})
   const cargando = ref(false)
   const error = ref<ErrorReporte | null>(null)
   const seleccion = ref<Set<string>>(new Set())
@@ -29,6 +30,7 @@ export function useNotificaciones(porPagina = 50) {
       filas.value = r.notificaciones
       paginacion.value = r.paginacion
       puedeOperar.value = r.puede_operar
+      conteos.value = r.conteos ?? {}
       error.value = null
 
       // La selección solo conserva lo que sigue a la vista y se puede capturar
@@ -71,7 +73,7 @@ export function useNotificaciones(porPagina = 50) {
     controlador?.abort()
   }
 
-  return { filtros, filas, paginacion, puedeOperar, cargando, error, seleccion, capturables, activos, cargar, aplicar, limpiar, alternar, marcarTodas, detener }
+  return { filtros, filas, paginacion, puedeOperar, conteos, cargando, error, seleccion, capturables, activos, cargar, aplicar, limpiar, alternar, marcarTodas, detener }
 }
 
 /** Captura del mismo resultado para varias notificaciones; devuelve cuántas y cuáles no se pudieron. */

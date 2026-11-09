@@ -112,9 +112,32 @@
     "armandoDetalle": "El PDF se está armando; esta página se actualiza sola.",
     "rearmado": "El PDF se volverá a armar",
     "capturarBloque": "Capturar resultado",
-    "volver": "Lotes"
+    "volver": "Lotes",
+    "cuentas": "Cuentas",
+    "avance": "Avance",
+    "avanceTexto": "{capturadas} de {total} · {entregadas} entregadas",
+    "avanceA11y": "{capturadas} de {total} capturadas",
+    "descripcionLote": "{notificador} · {n} cuenta · {fecha} | {notificador} · {n} cuentas · {fecha}",
+    "kpiAvance": "Capturadas",
+    "kpiAvanceApoyo": "{p} del lote",
+    "kpiEntregadas": "Entregadas",
+    "kpiEntregadasApoyo": "{p} del lote",
+    "kpiPendientes": "Por visitar",
+    "kpiAdeudo": "Adeudo notificado",
+    "filtrosLote": "Se generó con:",
+    "mapaA11y": "Mapa del recorrido del lote con {n} tomas",
+    "sinCoordenada": "{n} cuenta sin coordenada de la toma | {n} cuentas sin coordenada de la toma",
+    "grupo": {
+      "entregada": "Entregada",
+      "noEntregada": "No entregada",
+      "proceso": "Por visitar",
+      "otro": "Otro"
+    }
   },
   "notificaciones": {
+    "lote": "Lote",
+    "porEstado": "Notificaciones por estado",
+    "totalConteos": "{n} en total:",
     "titulo": "Notificaciones",
     "descripcion": "Todas las notificaciones de cobranza, con su resultado. Marca varias para capturar el mismo resultado.",
     "buscarCuenta": "Cuenta",

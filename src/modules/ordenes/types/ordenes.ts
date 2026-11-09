@@ -34,6 +34,22 @@ export interface Orden {
   datos: { motivo_nombre?: string; notificacion?: string; domicilio?: string[] } | null
 }
 
+export interface EventoOrden {
+  accion: string
+  usuario: string | null
+  antes: Record<string, unknown> | null
+  despues: Record<string, unknown> | null
+  fecha: string
+}
+
+/** Detalle de una orden (XEL1-680): dónde se capturó, si se capturó con GPS, y su bitácora. */
+export interface FichaOrden extends Orden {
+  lat: number | null
+  lng: number | null
+  historial: EventoOrden[]
+  puede_operar: boolean
+}
+
 export interface Paginacion {
   pagina: number
   por_pagina: number
@@ -71,6 +87,9 @@ export interface Agente {
   gerencias: number[]
   sectores: number[]
   activo: boolean
+
+  /** Órdenes abiertas, cerradas hoy y la última que cerró (XEL1-680). */
+  carga?: { abiertas: number; cerradas_hoy: number; ultima_captura: string | null }
 }
 
 export interface EdicionAgente {

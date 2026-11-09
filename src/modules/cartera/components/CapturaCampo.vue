@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CapturaCampo } from '../types/cartera'
 import { TOKEN_TOMA_LEJOS } from '@/utils/estados'
@@ -15,6 +15,9 @@ const props = defineProps<{
   toma: { lat: number; lng: number } | null | undefined
   umbral: number | undefined
 }>()
+
+// MapLibre se baja solo cuando hay un mapa que mostrar
+const AsMapaUbicacion = defineAsyncComponent(() => import('@/components/as/AsMapaUbicacion.vue'))
 
 const { t } = useI18n()
 

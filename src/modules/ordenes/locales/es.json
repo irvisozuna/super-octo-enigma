@@ -18,11 +18,28 @@
     "cerrada_ok": "Orden cerrada",
     "notificacion": "Notificación {ref}"
   },
+  "ficha": {
+    "sobrelinea": "Orden de trabajo",
+    "entregada": "Entregada",
+    "motivo": "Motivo",
+    "dondeSeCapturo": "Dónde se capturó",
+    "historial": "Historial",
+    "por": "por {usuario}",
+    "sistema": "el sistema",
+    "accion": {
+      "abrir": "Abierta",
+      "estado": "Cambio de estado",
+      "cancelar": "Cancelada"
+    }
+  },
   "agentes": {
     "titulo": "Agentes de campo",
     "descripcion": "Quién sale a campo, qué atiende y con qué usuario entra a la app. Lo administran el supervisor de campo y Sistemas.",
     "nombre": "Nombre",
     "tipos": "Atiende",
+    "abiertas": "Abiertas",
+    "hoy": "Cerradas hoy",
+    "ultima": "Última captura",
     "activo": "Activo",
     "inactivo": "Inactivo",
     "comercial": "Usuario en Aquasoft Comercial",

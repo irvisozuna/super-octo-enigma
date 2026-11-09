@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import DialogoResultado from '../components/DialogoResultado.vue'
@@ -8,22 +8,26 @@ import TablaNotificaciones from '../components/TablaNotificaciones.vue'
 import { useLote } from '../composables/useLotes'
 import { useCapturaBloque } from '../composables/useNotificaciones'
 import { obtenerCatalogos } from '../services/carteraApi'
-import type { Notificacion, Opcion, ResultadoNotificacion } from '../types/cartera'
+import type { ItemCatalogo, Notificacion, Opcion, RespuestaCatalogos, ResultadoNotificacion } from '../types/cartera'
 import { esCapturable } from '../utils/cartera'
 import { useNotificacion } from '@/composables/useNotificacion'
 import { can } from '@layouts/plugins/casl'
-import { fechaHoraCorta, fechaIso } from '@/utils/formato'
+import { entero, fechaHoraCorta, fechaIso, moneda, porcentaje } from '@/utils/formato'
 
 /*
  * Un lote: su PDF (lista, notificaciones y actas) y sus notificaciones. Al regresar el notificador se marcan las
  * entregadas y se captura el mismo resultado en bloque; cada una se abre en su ficha para capturarla aparte.
  */
+// MapLibre se baja solo al abrir un lote (y no se carga en las pruebas de pantallas, que corren sin WebGL)
+const MapaLote = defineAsyncComponent(() => import('../components/MapaLote.vue'))
+
 const { t } = useI18n()
 const route = useRoute()
 const notificar = useNotificacion()
 const l = useLote()
 const bloque = useCapturaBloque()
 const resultados = ref<Opcion<ResultadoNotificacion>[]>([])
+const catalogos = ref<RespuestaCatalogos | null>(null)
 const seleccion = ref<Set<string>>(new Set())
 const fichaId = ref<string | null>(null)
 const fichaAbierta = ref(false)
@@ -33,6 +37,53 @@ const lote = computed(() => l.lote.value)
 const notificaciones = computed(() => lote.value?.notificaciones ?? [])
 const puedeOperar = computed(() => can('operate', 'cartera-operar'))
 const marcadas = computed(() => notificaciones.value.filter(f => seleccion.value.has(f.id)))
+const resumen = computed(() => lote.value?.resumen ?? null)
+const avance = computed(() => resumen.value?.total ? resumen.value.capturadas / resumen.value.total * 100 : 0)
+const entregadas = computed(() => resumen.value?.total ? resumen.value.entregadas / resumen.value.total * 100 : 0)
+
+/*
+ * Los filtros con que se generó el lote (XEL1-680), en palabras: los de catálogo con sus nombres y los de rango con su
+ * valor. Lo que no se reconoce no se pinta.
+ */
+const LISTAS: { clave: string; etiqueta: string; items: (c: RespuestaCatalogos) => ItemCatalogo[] }[] = [
+  { clave: 'gerencias', etiqueta: 'gerencias', items: c => c.gerencias },
+  { clave: 'sistemas', etiqueta: 'sistemas', items: c => c.sistemas },
+  { clave: 'sectores', etiqueta: 'sectores', items: c => c.sectores },
+  { clave: 'colonias', etiqueta: 'colonias', items: c => c.colonias },
+  { clave: 'tipos_contrato', etiqueta: 'tiposContrato', items: c => c.tipos_contrato },
+  { clave: 'giros', etiqueta: 'giros', items: c => c.giros },
+  { clave: 'estatus', etiqueta: 'estatus', items: c => c.estatus },
+]
+
+const RANGOS: { clave: string; etiqueta: string; moneda?: boolean }[] = [
+  { clave: 'meses_desde', etiqueta: 'mesesDesde' },
+  { clave: 'meses_hasta', etiqueta: 'mesesHasta' },
+  { clave: 'importe_desde', etiqueta: 'importeDesde', moneda: true },
+  { clave: 'importe_hasta', etiqueta: 'importeHasta', moneda: true },
+  { clave: 'ultimo_pago_dias', etiqueta: 'ultimoPagoDias' },
+  { clave: 'ultimo_pago_importe_max', etiqueta: 'ultimoPagoImporte', moneda: true },
+]
+
+const filtrosLote = computed(() => {
+  const f = lote.value?.filtros ?? {}
+  const c = catalogos.value
+  const out: string[] = []
+  for (const lista of LISTAS) {
+    const ids = Array.isArray(f[lista.clave]) ? f[lista.clave] as number[] : []
+    if (!ids.length)
+      continue
+    const nombres = c ? lista.items(c).filter(i => ids.includes(i.id)).map(i => i.nombre) : []
+
+    out.push(`${t(`cartera.notificar.${lista.etiqueta}`)}: ${nombres.length ? nombres.join(', ') : entero(ids.length)}`)
+  }
+  for (const r of RANGOS) {
+    const v = f[r.clave]
+    if (v !== null && v !== undefined && v !== '')
+      out.push(`${t(`cartera.notificar.${r.etiqueta}`)}: ${r.moneda ? moneda(v) : entero(v)}`)
+  }
+
+  return out
+})
 
 const minimo = computed(() => {
   const dias = marcadas.value.map(f => f.emitida).filter((x): x is string => !!x).map(x => fechaIso(new Date(x)))
@@ -82,7 +133,8 @@ watch(() => route.params.id, id => {
 
 onMounted(async () => {
   l.cargar(String(route.params.id))
-  resultados.value = (await obtenerCatalogos().catch(() => null))?.resultados ?? []
+  catalogos.value = await obtenerCatalogos().catch(() => null)
+  resultados.value = catalogos.value?.resultados ?? []
 })
 onBeforeUnmount(() => l.detener())
 </script>
@@ -91,7 +143,7 @@ onBeforeUnmount(() => l.detener())
   <div>
     <AsEncabezadoPagina
       :titulo="lote?.ref ?? t('cartera.comun.lote')"
-      :descripcion="lote ? `${lote.notificador ?? '—'} · ${lote.cuentas} · ${fechaHoraCorta(lote.generado_en)}` : undefined"
+      :descripcion="lote ? t('cartera.lotes.descripcionLote', { notificador: lote.notificador ?? '—', n: entero(lote.cuentas), fecha: fechaHoraCorta(lote.generado_en) }, lote.cuentas) : undefined"
       :volver="{ texto: t('cartera.lotes.volver'), to: { name: 'carteraLotes' } }"
     >
       <template #acciones>
@@ -151,6 +203,60 @@ onBeforeUnmount(() => l.detener())
         {{ l.errorAccion.value.mensaje }}
       </VAlert>
 
+      <!-- Avance del lote (XEL1-680) -->
+      <div
+        v-if="resumen"
+        class="lote__cifras mb-4"
+      >
+        <AsIndicador
+          :etiqueta="t('cartera.lotes.kpiAvance')"
+          :valor="`${entero(resumen.capturadas)} / ${entero(resumen.total)}`"
+          formato="texto"
+          :progreso="avance"
+          :color-progreso="avance === 100 ? 'success' : 'primary'"
+          :apoyo="t('cartera.lotes.kpiAvanceApoyo', { p: porcentaje(avance, 0) })"
+        />
+        <AsIndicador
+          :etiqueta="t('cartera.lotes.kpiEntregadas')"
+          :valor="resumen.entregadas"
+          color="success"
+          :apoyo="t('cartera.lotes.kpiEntregadasApoyo', { p: porcentaje(entregadas, 0) })"
+        />
+        <AsIndicador
+          :etiqueta="t('cartera.lotes.kpiPendientes')"
+          :valor="resumen.por_estado.en_proceso ?? 0"
+          :color="(resumen.por_estado.en_proceso ?? 0) > 0 ? 'warning' : undefined"
+        />
+        <AsIndicador
+          :etiqueta="t('cartera.lotes.kpiAdeudo')"
+          :valor="resumen.adeudo"
+          formato="moneda"
+        />
+      </div>
+
+      <div
+        v-if="filtrosLote.length"
+        class="lote__filtros mb-4"
+      >
+        <span class="as-etiqueta">{{ t('cartera.lotes.filtrosLote') }}</span>
+        <VChip
+          v-for="f in filtrosLote"
+          :key="f"
+          size="small"
+          label
+          variant="tonal"
+        >
+          {{ f }}
+        </VChip>
+      </div>
+
+      <MapaLote
+        v-if="notificaciones.length"
+        :notificaciones="notificaciones"
+        class="mb-4"
+        @ver="id => { fichaId = id; fichaAbierta = true }"
+      />
+
       <TablaNotificaciones
         :filas="notificaciones"
         :seleccion="seleccion"
@@ -203,6 +309,19 @@ onBeforeUnmount(() => l.detener())
 </template>
 
 <style scoped>
+.lote__cifras {
+  display: grid;
+  gap: var(--as-sp-3);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.lote__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--as-sp-2);
+}
+
 .lote__barra {
   position: sticky;
   z-index: 2;

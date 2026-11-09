@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AsEstado from './AsEstado.vue'
 import { ATRIBUCION_SATELITE, ESTILO_CALLES, SATELITE, coordenadaValida } from './mapa'
@@ -157,6 +157,12 @@ watch(centro, c => {
 })
 
 watch(segundoValido, () => ponerSegundo())
+
+// Montado como componente asíncrono, el nextTick del watch puede correr antes de que exista el contenedor
+onMounted(() => {
+  if (valida.value)
+    iniciar()
+})
 
 onBeforeUnmount(destruir)
 </script>

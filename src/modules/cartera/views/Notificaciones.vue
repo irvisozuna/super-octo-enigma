@@ -6,10 +6,11 @@ import DialogoResultado from '../components/DialogoResultado.vue'
 import FichaNotificacion from '../components/FichaNotificacion.vue'
 import TablaNotificaciones from '../components/TablaNotificaciones.vue'
 import { useCapturaBloque, useNotificaciones } from '../composables/useNotificaciones'
-import { obtenerCatalogos } from '../services/carteraApi'
-import type { EstadoNotificacion, Notificacion, RespuestaCatalogos } from '../types/cartera'
+import { obtenerCatalogos, obtenerLotes } from '../services/carteraApi'
+import type { EstadoNotificacion, Lote, Notificacion, RespuestaCatalogos } from '../types/cartera'
+import { COLOR_NOTIFICACION } from '../utils/cartera'
 import { useNotificacion } from '@/composables/useNotificacion'
-import { fechaIso } from '@/utils/formato'
+import { entero, fechaIso } from '@/utils/formato'
 
 /*
  * Notificaciones: la lista general (nuevas e importadas) con filtros, su ficha y la captura en bloque de las marcadas.
@@ -26,6 +27,8 @@ const capturando = ref(false)
 const cuenta = ref('')
 
 const resultados = computed(() => catalogos.value?.resultados ?? [])
+const lotes = ref<Lote[]>([])
+const opcionesLote = computed(() => lotes.value.map(l => ({ value: l.id, title: [l.ref, l.notificador].filter(Boolean).join(' · ') })))
 
 const estados = computed(() => [
   { value: 'en_proceso', title: 'En proceso' },
@@ -33,6 +36,20 @@ const estados = computed(() => [
   { value: 'vencida', title: 'Vencida' },
   { value: 'cancelada', title: 'Cancelada' },
 ])
+
+/*
+ * Contadores por estado con los demás filtros (XEL1-680): tocar uno filtra por ese estado y tocarlo otra vez lo quita.
+ * Solo salen los estados que tienen algo, en el orden de la lista de estados.
+ */
+const contadores = computed(() => estados.value
+  .map(e => ({ ...e, n: n.conteos.value[e.value as EstadoNotificacion] ?? 0 }))
+  .filter(e => e.n > 0))
+
+const totalConteos = computed(() => contadores.value.reduce((s, e) => s + e.n, 0))
+
+function alternarEstado(codigo: string) {
+  n.aplicar({ estado: n.filtros.estado === codigo ? null : codigo as EstadoNotificacion })
+}
 
 const notificadores = computed(() => (catalogos.value?.notificadores ?? []).map(a => ({ value: a.id, title: a.nombre })))
 const origenes = computed(() => [{ value: 'atencion', title: t('cartera.comun.origenAtencion') }, { value: 'legado', title: t('cartera.comun.origenLegado') }])
@@ -77,6 +94,8 @@ onMounted(async () => {
   Object.assign(n.filtros, { lote, estado })
   await Promise.all([n.cargar(1), obtenerCatalogos().then(c => {
     catalogos.value = c
+  }).catch(() => null), obtenerLotes(1, 100).then(r => {
+    lotes.value = r.lotes
   }).catch(() => null)])
 })
 onBeforeUnmount(() => n.detener())
@@ -122,6 +141,14 @@ onBeforeUnmount(() => n.detener())
         class="as-filtro--md"
         @update:model-value="(v: EstadoNotificacion | null) => n.aplicar({ estado: v })"
       />
+      <VAutocomplete
+        :model-value="n.filtros.lote"
+        :items="opcionesLote"
+        :label="t('cartera.notificaciones.lote')"
+        clearable
+        class="as-filtro--md"
+        @update:model-value="(v: string | null) => n.aplicar({ lote: v })"
+      />
       <VSelect
         :model-value="n.filtros.notificador"
         :items="notificadores"
@@ -153,6 +180,27 @@ onBeforeUnmount(() => n.detener())
         @update:model-value="(v: 'atencion' | 'legado' | null) => n.aplicar({ origen: v })"
       />
     </AsBarraFiltros>
+
+    <div
+      v-if="contadores.length"
+      class="notificaciones__conteos mb-3"
+      role="group"
+      :aria-label="t('cartera.notificaciones.porEstado')"
+    >
+      <span class="as-secundario as-num me-1">{{ t('cartera.notificaciones.totalConteos', { n: entero(totalConteos) }) }}</span>
+      <VChip
+        v-for="c in contadores"
+        :key="c.value"
+        size="small"
+        label
+        :variant="n.filtros.estado === c.value ? 'flat' : 'tonal'"
+        :color="COLOR_NOTIFICACION[c.value as EstadoNotificacion] ?? 'secondary'"
+        :aria-pressed="n.filtros.estado === c.value"
+        @click="alternarEstado(c.value)"
+      >
+        {{ c.title }} <span class="as-num ms-1">{{ entero(c.n) }}</span>
+      </VChip>
+    </div>
 
     <TablaNotificaciones
       :filas="n.filas.value"
@@ -210,6 +258,13 @@ onBeforeUnmount(() => n.detener())
 </template>
 
 <style scoped>
+.notificaciones__conteos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--as-sp-2);
+}
+
 .notificaciones__barra {
   position: sticky;
   z-index: 2;

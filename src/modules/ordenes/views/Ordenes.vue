@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import FichaOrden from '../components/FichaOrden.vue'
 import { useOrdenes } from '../composables/useOrdenes'
-import type { Orden } from '../types/ordenes'
+import { obtenerAgentes } from '../services/ordenesApi'
+import type { Agente, Orden } from '../types/ordenes'
 import type { ColumnaTabla } from '@/components/as/tipos'
 import { useNotificacion } from '@/composables/useNotificacion'
 import { can } from '@layouts/plugins/casl'
@@ -17,6 +19,15 @@ const notificar = useNotificacion()
 const o = useOrdenes()
 const cuenta = ref('')
 const cierre = ref<Orden | null>(null)
+const fichaId = ref<string | null>(null)
+const fichaAbierta = ref(false)
+const agentes = ref<Agente[]>([])
+const opcionesAgente = computed(() => agentes.value.map(a => ({ value: a.id, title: a.nombre })))
+
+function ver(f: Orden) {
+  fichaId.value = f.id
+  fichaAbierta.value = true
+}
 const estadoCierre = ref<string | null>(null)
 const observacion = ref('')
 const puedeOperar = computed(() => can('operate', 'ordenes-operar'))
@@ -38,7 +49,7 @@ async function confirmarCierre() {
 
 const tipos = computed(() => o.tipos.value.map(x => ({ value: x.codigo, title: x.nombre })))
 const estados = computed(() => (o.tipos.value.find(x => x.codigo === o.filtros.tipo)?.estados ?? []).map(s => ({ value: s.codigo, title: s.nombre })))
-const activos = computed(() => [o.filtros.tipo, o.filtros.estado, o.filtros.cuenta, o.filtros.abiertas].filter(v => v !== null && v !== '').length)
+const activos = computed(() => [o.filtros.tipo, o.filtros.estado, o.filtros.agente, o.filtros.cuenta, o.filtros.abiertas].filter(v => v !== null && v !== '').length)
 
 const columnas: ColumnaTabla<Orden>[] = [
   { clave: 'tipo.nombre', titulo: t('ordenes.ordenes.tipo'), formato: 'personalizado', ancho: 200 },
@@ -55,7 +66,12 @@ function limpiar() {
   o.aplicar({ tipo: null, estado: null, agente: null, cuenta: '', abiertas: null })
 }
 
-onMounted(() => o.iniciar())
+onMounted(() => {
+  o.iniciar()
+  obtenerAgentes().then(r => {
+    agentes.value = r.agentes
+  }).catch(() => null)
+})
 </script>
 
 <template>
@@ -86,6 +102,14 @@ onMounted(() => o.iniciar())
         class="as-filtro--md"
         @update:model-value="(v: string | null) => o.aplicar({ estado: v })"
       />
+      <VAutocomplete
+        :model-value="o.filtros.agente"
+        :items="opcionesAgente"
+        :label="t('ordenes.ordenes.agente')"
+        clearable
+        class="as-filtro--md"
+        @update:model-value="(v: string | null) => o.aplicar({ agente: v })"
+      />
       <VTextField
         v-model="cuenta"
         :label="t('ordenes.ordenes.cuenta')"
@@ -114,6 +138,8 @@ onMounted(() => o.iniciar())
       :vacio-titulo="t('ordenes.ordenes.sinFilas')"
       vacio-detalle=""
       vacio-icono="tabler-clipboard-list"
+      clic-fila
+      @fila="(f: Record<string, unknown>) => ver(f as unknown as Orden)"
       @update:pagina="(p: number) => o.cargar(p)"
       @reintentar="o.cargar()"
     >
@@ -158,7 +184,7 @@ onMounted(() => o.iniciar())
           v-if="puedeOperar && !fila.cerrada_en && o.estadosDeCierre(fila.tipo.codigo).length"
           size="small"
           variant="text"
-          @click="abrirCierre(fila)"
+          @click.stop="abrirCierre(fila)"
         >
           {{ t('ordenes.ordenes.cerrar') }}
         </VBtn>
@@ -170,6 +196,11 @@ onMounted(() => o.iniciar())
         <span class="as-num">{{ fechaHoraCorta(fila.cerrada_en) }}</span>
       </template>
     </AsTablaDatos>
+
+    <FichaOrden
+      :id="fichaId"
+      v-model:abierto="fichaAbierta"
+    />
 
     <AsDialogo
       :abierto="cierre !== null"

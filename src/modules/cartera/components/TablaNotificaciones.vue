@@ -106,7 +106,16 @@ const textoTicket = (f: Notificacion) => f.ticket.estado === 'creado'
       </div>
     </template>
     <template #celda-cuenta="{ fila }">
-      <span class="as-num">{{ fila.cuenta ?? '—' }}</span>
+      <div
+        class="text-truncate celda-larga"
+        :title="fila.titular ?? undefined"
+      >
+        <span class="as-num">{{ fila.cuenta ?? '—' }}</span>
+        <span
+          v-if="fila.titular"
+          class="as-secundario"
+        > · {{ fila.titular }}</span>
+      </div>
       <div
         class="as-secundario text-truncate celda-larga"
         :title="fila.domicilio.join('; ')"
