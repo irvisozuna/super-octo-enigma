@@ -41,8 +41,8 @@ const estados = computed(() => (o.tipos.value.find(x => x.codigo === o.filtros.t
 const activos = computed(() => [o.filtros.tipo, o.filtros.estado, o.filtros.cuenta, o.filtros.abiertas].filter(v => v !== null && v !== '').length)
 
 const columnas: ColumnaTabla<Orden>[] = [
-  { clave: 'tipo.nombre', titulo: t('ordenes.ordenes.tipo'), formato: 'texto', ancho: 200 },
-  { clave: 'cuenta', titulo: t('ordenes.ordenes.cuenta'), formato: 'personalizado', ancho: 120 },
+  { clave: 'tipo.nombre', titulo: t('ordenes.ordenes.tipo'), formato: 'personalizado', ancho: 200 },
+  { clave: 'cuenta', titulo: t('ordenes.ordenes.cuenta'), formato: 'personalizado', anchoMin: 200 },
   { clave: 'estado', titulo: t('ordenes.ordenes.estado'), formato: 'personalizado', ancho: 200 },
   { clave: 'agente.nombre', titulo: t('ordenes.ordenes.agente'), formato: 'texto', anchoMin: 200 },
   { clave: 'abierta_en', titulo: t('ordenes.ordenes.abierta'), formato: 'personalizado', ancho: 160 },
@@ -119,6 +119,16 @@ onMounted(() => o.iniciar())
     >
       <template #celda-cuenta="{ fila }">
         <span class="as-num">{{ fila.cuenta ?? '—' }}</span>
+        <div
+          v-if="fila.datos?.domicilio?.length"
+          class="as-secundario text-truncate celda-larga"
+          :title="fila.datos.domicilio.join('; ')"
+        >
+          {{ fila.datos.domicilio[0] }}
+        </div>
+      </template>
+      <template #celda-tipo.nombre="{ fila }">
+        <span class="text-no-wrap">{{ fila.tipo.nombre }}</span>
       </template>
       <template #celda-estado="{ fila }">
         <VChip
@@ -136,15 +146,8 @@ onMounted(() => o.iniciar())
           {{ fila.datos.motivo_nombre }}<span v-if="fila.datos.notificacion"> · {{ t('ordenes.ordenes.notificacion', { ref: fila.datos.notificacion }) }}</span>
         </div>
         <div
-          v-if="fila.datos?.domicilio?.length"
-          class="as-secundario text-truncate"
-          :title="fila.datos.domicilio.join('; ')"
-        >
-          {{ fila.datos.domicilio.join('; ') }}
-        </div>
-        <div
           v-if="fila.observacion"
-          class="as-secundario mt-1 text-truncate"
+          class="as-secundario mt-1 text-truncate celda-media"
           :title="fila.observacion"
         >
           {{ fila.observacion }}
@@ -203,3 +206,14 @@ onMounted(() => o.iniciar())
     </AsDialogo>
   </div>
 </template>
+
+<style scoped>
+/* Sin tope, un domicilio u observación larga ensancha la columna y empuja al agente fuera de la vista (XEL1-678) */
+.celda-larga {
+  max-inline-size: 24rem;
+}
+
+.celda-media {
+  max-inline-size: 16rem;
+}
+</style>

@@ -161,6 +161,7 @@
       "estado": "Resultado capturado",
       "cancelar": "Cancelada"
     },
+    "mesesAdeudo": "{n} mes de adeudo | {n} meses de adeudo",
     "por": "por {usuario}",
     "sistema": "el sistema"
   },

@@ -108,14 +108,19 @@ const textoTicket = (f: Notificacion) => f.ticket.estado === 'creado'
     <template #celda-cuenta="{ fila }">
       <span class="as-num">{{ fila.cuenta ?? '—' }}</span>
       <div
-        class="as-secundario text-truncate"
+        class="as-secundario text-truncate celda-larga"
         :title="fila.domicilio.join('; ')"
       >
         {{ fila.domicilio[0] ?? '' }}
       </div>
     </template>
     <template #celda-notificador="{ fila }">
-      {{ fila.notificador ?? '—' }}
+      <div
+        class="text-truncate celda-media"
+        :title="fila.notificador ?? undefined"
+      >
+        {{ fila.notificador ?? '—' }}
+      </div>
       <div
         v-if="fila.lote_ref"
         class="as-secundario as-num"
@@ -159,5 +164,14 @@ const textoTicket = (f: Notificacion) => f.ticket.estado === 'creado'
 <style scoped>
 .tabla-notificaciones :deep(td) {
   vertical-align: top;
+}
+
+/* Sin tope, un domicilio largo ensancha la columna y empuja adeudo, estado y vence fuera de la vista (XEL1-678) */
+.celda-larga {
+  max-inline-size: 26rem;
+}
+
+.celda-media {
+  max-inline-size: 13rem;
 }
 </style>

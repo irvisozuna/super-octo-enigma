@@ -94,8 +94,18 @@ async function confirmarCancelacion() {
       v-if="n"
       #subencabezado
     >
-      <div class="as-secundario mb-2">
-        {{ n.domicilio.join('; ') || '—' }}
+      <!-- Ubicación de la toma y, abajo, la dirección por partes del padrón (no son el mismo dato repetido) -->
+      <div class="mb-2">
+        <div class="as-valor">
+          {{ n.domicilio[0] ?? '—' }}
+        </div>
+        <div
+          v-for="(linea, i) in n.domicilio.slice(1)"
+          :key="i"
+          class="as-secundario"
+        >
+          {{ linea }}
+        </div>
       </div>
       <div class="d-flex flex-wrap gap-1">
         <VChip
@@ -166,10 +176,7 @@ async function confirmarCancelacion() {
           :etiqueta="t('cartera.comun.adeudo')"
           :valor="n.adeudo"
           formato="moneda"
-        />
-        <AsIndicador
-          :etiqueta="t('cartera.comun.meses')"
-          :valor="n.meses"
+          :apoyo="n.meses != null ? t('cartera.ficha.mesesAdeudo', { n: n.meses }, n.meses) : undefined"
         />
         <AsIndicador
           :etiqueta="t('cartera.comun.vence')"
@@ -219,7 +226,7 @@ async function confirmarCancelacion() {
               {{ t('cartera.ficha.entregada') }}
             </dt>
             <dd class="as-valor as-num mb-0">
-              {{ fecha(n.entregada) }}
+              {{ fechaHoraCorta(n.entregada) }}
             </dd>
           </div>
           <div class="as-dato">
@@ -335,9 +342,10 @@ async function confirmarCancelacion() {
 </template>
 
 <style scoped>
+/* Dos cifras: con tres, un adeudo de seis dígitos o la fecha completa no cabían en el panel (XEL1-678) */
 .ficha__cifras {
   display: grid;
   gap: var(--as-sp-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 </style>
