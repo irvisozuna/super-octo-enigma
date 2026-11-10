@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfiguracion } from '../composables/useConfiguracion'
+import type { Configuracion } from '../types/cartera'
 import { useNotificacion } from '@/composables/useNotificacion'
 
 /* Configuración de cartera por empresa: la ve quien lee cartera y la cambia quien la administra. */
@@ -10,8 +11,9 @@ const notificar = useNotificacion()
 const c = useConfiguracion()
 
 const editable = computed(() => c.datos.value?.puede_editar ?? false)
-const limite = (clave: 'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias') => c.datos.value?.limites[clave] ?? { min: 1, max: 1 }
-const regla = (clave: 'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias') => () => c.invalido.value === clave ? t('cartera.configuracion.fueraLimites', limite(clave)) : true
+type Clave = keyof Configuracion
+const limite = (clave: Clave) => c.datos.value?.limites[clave] ?? { min: 1, max: 1 }
+const regla = (clave: Clave) => () => c.invalido.value === clave ? t('cartera.configuracion.fueraLimites', limite(clave)) : true
 
 async function guardar() {
   if (await c.guardar())
@@ -97,6 +99,32 @@ onMounted(() => c.cargar())
         persistent-hint
         :readonly="!editable"
         :rules="[regla('seguimiento_dias')]"
+        class="mb-5"
+      />
+      <VTextField
+        v-if="c.claves.value.includes('revisita_intentos')"
+        v-model.number="c.edicion.revisita_intentos"
+        type="number"
+        :min="limite('revisita_intentos').min"
+        :max="limite('revisita_intentos').max"
+        :label="t('cartera.configuracion.revisita')"
+        :hint="t('cartera.configuracion.revisitaAyuda')"
+        persistent-hint
+        :readonly="!editable"
+        :rules="[regla('revisita_intentos')]"
+        class="mb-5"
+      />
+      <VSwitch
+        v-if="c.claves.value.includes('ticket_qr')"
+        v-model="c.edicion.ticket_qr"
+        :true-value="1"
+        :false-value="0"
+        color="primary"
+        inset
+        :label="t('cartera.configuracion.ticketQr')"
+        :hint="t('cartera.configuracion.ticketQrAyuda')"
+        persistent-hint
+        :readonly="!editable"
         class="mb-5"
       />
       <div

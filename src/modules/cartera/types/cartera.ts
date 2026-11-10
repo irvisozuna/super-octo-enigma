@@ -19,6 +19,12 @@ export interface Configuracion {
   vigencia_dias: number
   capacidad_lote: number
   seguimiento_dias: number
+
+  /** Intentos seguidos sin entregar después de los cuales ya no se revisita (XEL1-686). */
+  revisita_intentos: number
+
+  /** 1 = el comprobante impreso lleva el QR de consulta de adeudo (XEL1-684). */
+  ticket_qr: number
 }
 
 export interface RespuestaCatalogos {
@@ -328,6 +334,27 @@ export interface CandidataSeguimiento {
   titular?: string | null
 }
 
+/** Una no entregada que sigue debiendo (XEL1-686): se vuelve a intentar en otro lote o se descarta. */
+export interface RevisitaSeguimiento {
+  id: string
+  ref: string
+  contrato: number
+  cuenta: string | null
+  notificador: string | null
+  estado: string
+  estado_codigo: EstadoNotificacion
+  origen: 'atencion' | 'legado'
+  emitida: string
+  intento_en: string | null
+  intentos: number
+  agotada: boolean
+  adeudo_notificado: number
+  adeudo_actual: number
+  titular?: string | null
+}
+
+export type AccionRevisita = 'revisita' | 'descartada'
+
 export interface OrdenSeguimiento {
   id: string
   cuenta: string | null
@@ -340,6 +367,8 @@ export interface OrdenSeguimiento {
 export interface RespuestaSeguimiento {
   dias: number
   candidatas: CandidataSeguimiento[]
+  revisitas: RevisitaSeguimiento[]
+  revisita_intentos: number
   ordenes: OrdenSeguimiento[]
   puede_operar: boolean
 }

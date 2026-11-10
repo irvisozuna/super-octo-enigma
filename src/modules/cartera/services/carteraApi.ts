@@ -1,5 +1,7 @@
 import type {
+  AccionRevisita,
   AccionSeguimiento,
+  Configuracion,
   Evidencia,
   FichaNotificacion,
   OrdenVistaPrevia,
@@ -124,6 +126,10 @@ export function accionSeguimiento(notificaciones: string[], accion: AccionSeguim
   return rawApi(`${BASE}/seguimiento`, { method: 'POST', body: { notificaciones, accion, motivo, notificador: notificador || undefined } })
 }
 
+export function accionRevisita(notificaciones: string[], accion: AccionRevisita, motivo: string, notificador?: string | null): Promise<RespuestaAccionSeguimiento> {
+  return rawApi(`${BASE}/seguimiento/revisitas`, { method: 'POST', body: { notificaciones, accion, motivo, notificador: notificador || undefined } })
+}
+
 export function cerrarOrdenSeguimiento(id: string, estado: 'atendida' | 'cancelada', nota: string): Promise<{ id: string; estado: string; cerrada_en: string }> {
   return rawApi(`${BASE}/seguimiento/ordenes/${encodeURIComponent(id)}`, { method: 'POST', body: { estado, nota } })
 }
@@ -132,7 +138,7 @@ export function obtenerConfiguracion({ signal }: OpcionesPeticion = {}): Promise
   return rawApi(`${BASE}/configuracion`, { signal })
 }
 
-export function guardarConfiguracion(valores: Partial<Record<'vigencia_dias' | 'capacidad_lote' | 'seguimiento_dias', number>>): Promise<RespuestaConfiguracion> {
+export function guardarConfiguracion(valores: Partial<Configuracion>): Promise<RespuestaConfiguracion> {
   return rawApi(`${BASE}/configuracion`, { method: 'PUT', body: valores })
 }
 

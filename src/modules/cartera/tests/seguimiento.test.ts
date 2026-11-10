@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { CandidataSeguimiento, OrdenSeguimiento } from '../types/cartera'
-import { filtrarCandidatas, filtrarOrdenes, filtrosSeguimientoActivos, filtrosSeguimientoIniciales } from '../utils/seguimiento'
+import type { CandidataSeguimiento, OrdenSeguimiento, RevisitaSeguimiento } from '../types/cartera'
+import { filtrarCandidatas, filtrarOrdenes, filtrarRevisitas, filtrosSeguimientoActivos, filtrosSeguimientoIniciales } from '../utils/seguimiento'
+import { diaHoraCorta } from '@/utils/formato'
 
 // XEL1-682: buscador, filtros y orden de la bandeja de Seguimiento
 
@@ -78,5 +79,57 @@ describe('filtrarOrdenes', () => {
     expect(filtrarOrdenes(ordenes, 'llamar').map(x => x.id)).toEqual(['1'])
     expect(filtrarOrdenes(ordenes, 'nc-2').map(x => x.id)).toEqual(['2'])
     expect(filtrarOrdenes(ordenes, '')).toHaveLength(2)
+  })
+})
+
+// XEL1-686: la bandeja «Por revisitar»
+
+const r = (id: string, extra: Partial<RevisitaSeguimiento>): RevisitaSeguimiento => ({
+  id,
+  ref: `NC-${id}`,
+  contrato: Number(id),
+  cuenta: `400${id}`,
+  notificador: 'Brando',
+  estado: 'No entregada',
+  estado_codigo: 'no_entregada',
+  origen: 'atencion',
+  emitida: '2026-10-01T00:00:00+00:00',
+  intento_en: '2026-11-02T17:30:00+00:00',
+  intentos: 1,
+  agotada: false,
+  adeudo_notificado: 1000,
+  adeudo_actual: 1000,
+  titular: null,
+  ...extra,
+})
+
+describe('filtrarRevisitas', () => {
+  const revisitas = [
+    r('1', { intento_en: '2026-11-05T17:30:00+00:00', adeudo_actual: 500 }),
+    r('2', { intento_en: '2026-11-01T17:30:00+00:00', adeudo_actual: 9000, agotada: true, intentos: 3 }),
+    r('3', { intento_en: '2026-11-03T17:30:00+00:00', adeudo_actual: 3000, estado_codigo: 'usuario_no_localizado', titular: 'Ana Núñez' }),
+  ]
+
+  const idsR = (l: RevisitaSeguimiento[]) => l.map(x => x.id)
+  const f = filtrosSeguimientoIniciales()
+
+  it('el intento más viejo primero y las que agotaron intentos al final, en cualquier orden', () => {
+    expect(idsR(filtrarRevisitas(revisitas, f))).toEqual(['3', '1', '2'])
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, orden: 'adeudo' }))).toEqual(['3', '1', '2'])
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, orden: 'recientes' }))).toEqual(['1', '3', '2'])
+  })
+
+  it('busca, filtra por resultado y adeudo, e ignora los días desde la entrega', () => {
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, texto: 'nunez' }))).toEqual(['3'])
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, resultado: 'no_entregada' }))).toEqual(['1', '2'])
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, adeudoMin: 1000 }))).toEqual(['3', '2'])
+    expect(idsR(filtrarRevisitas(revisitas, { ...f, diasMin: 365 }))).toHaveLength(3)
+  })
+})
+
+describe('diaHoraCorta', () => {
+  it('lleva el día de la semana, en la hora de Los Cabos', () => {
+    // 17:30 UTC es 10:30 en Los Cabos, lunes 2 de noviembre de 2026
+    expect(diaHoraCorta('2026-11-02T17:30:00+00:00')).toBe('lun 2 nov 10:30')
   })
 })

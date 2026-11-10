@@ -271,6 +271,25 @@ describe('useConfiguracion', () => {
     expect(api.guardarConfiguracion).toHaveBeenCalledWith({ vigencia_dias: 60 })
     expect(c.cambios.value).toEqual({})
   })
+
+  it('con un servidor que ya trae revisitas y QR los edita y manda; sin ellos no los toca (XEL1-684, XEL1-686)', async () => {
+    const limites = { vigencia_dias: { min: 1, max: 365 }, capacidad_lote: { min: 1, max: 500 }, seguimiento_dias: { min: 1, max: 180 }, revisita_intentos: { min: 1, max: 10 }, ticket_qr: { min: 0, max: 1 } }
+    const valores = { vigencia_dias: 90, capacidad_lote: 45, seguimiento_dias: 15, revisita_intentos: 3, ticket_qr: 0 }
+
+    api.obtenerConfiguracion.mockResolvedValue({ valores, limites, puede_editar: true })
+    api.guardarConfiguracion.mockResolvedValue({ valores: { ...valores, ticket_qr: 1 }, limites, puede_editar: true })
+
+    const c = useConfiguracion()
+
+    await c.cargar()
+    expect(c.claves.value).toContain('ticket_qr')
+    c.edicion.revisita_intentos = 11
+    expect(c.invalido.value).toBe('revisita_intentos')
+    c.edicion.revisita_intentos = 3
+    c.edicion.ticket_qr = 1
+    expect(await c.guardar()).toBe(true)
+    expect(api.guardarConfiguracion).toHaveBeenLastCalledWith({ ticket_qr: 1 })
+  })
 })
 
 describe('useSeguimiento', () => {

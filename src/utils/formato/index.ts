@@ -207,6 +207,11 @@ export function fechaHora(valor: unknown, opciones: OpcionesFormato = {}): strin
   return conFecha(valor, opciones, d => `${fecha(d)} ${hora(d)}`)
 }
 
+/** "lun 7 oct 09:33": cuándo fue algo, con el día de la semana (p. ej. para volver en otro horario). */
+export function diaHoraCorta(valor: unknown, opciones: OpcionesFormato = {}): string {
+  return conFecha(valor, opciones, d => `${formatoFecha({ weekday: 'short' }).format(d).replace('.', '')} ${fechaHoraCorta(d)}`)
+}
+
 /** "7 oct 09:33": para listas densas. */
 export function fechaHoraCorta(valor: unknown, opciones: OpcionesFormato = {}): string {
   return conFecha(valor, opciones, d => `${fechaCorta(d)} ${hora(d)}`)

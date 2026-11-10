@@ -193,7 +193,7 @@
   },
   "configuracion": {
     "titulo": "Configuración de cartera",
-    "descripcion": "Vigencia de las notificaciones y tamaño sugerido del lote.",
+    "descripcion": "Vigencia de las notificaciones, tamaño sugerido del lote, seguimiento, revisitas y el comprobante impreso.",
     "vigencia": "Vigencia de la notificación (días)",
     "vigenciaAyuda": "Mientras la notificación esté vigente la cuenta no entra en otro lote. Aplica a las que se generen después del cambio.",
     "capacidad": "Notificaciones sugeridas por lote",
@@ -203,7 +203,11 @@
     "guardado": "Configuración guardada",
     "soloLectura": "Solo quien administra cartera vencida puede cambiar la configuración.",
     "seguimiento": "Días sin pago para pasar a seguimiento",
-    "seguimientoAyuda": "Desde la fecha de entrega. Al cumplirlos, la notificación aparece en Seguimiento si no se ha recuperado nada."
+    "seguimientoAyuda": "Desde la fecha de entrega. Al cumplirlos, la notificación aparece en Seguimiento si no se ha recuperado nada.",
+    "revisita": "Intentos de revisita",
+    "revisitaAyuda": "Intentos seguidos sin entregar (no entregada o usuario no localizado) después de los cuales la notificación ya no se revisita, solo se descarta.",
+    "ticketQr": "QR de consulta de adeudo en el comprobante",
+    "ticketQrAyuda": "El ticket que se imprime en campo lleva un QR a la consulta de adeudo del portal con la cuenta ya puesta. Aplica a las listas que la app baje después del cambio."
   },
   "contrato": {
     "pestana": "Cobranza",
@@ -215,7 +219,7 @@
   },
   "seguimiento": {
     "titulo": "Seguimiento",
-    "descripcion": "Notificaciones entregadas que no se han pagado. Decide el siguiente paso: una orden de seguimiento, una segunda notificación o descartarla.",
+    "descripcion": "Notificaciones entregadas que no se han pagado y las que no se pudieron entregar. Decide el siguiente paso: una orden de seguimiento, otra notificación o descartarla.",
     "sinPago": "Sin pago",
     "enSeguimiento": "En seguimiento",
     "regla": "Entregadas hace {dias} días o más, sin nada recuperado y que siguen debiendo hoy.",
@@ -254,7 +258,15 @@
     "cerrarTitulo": "{accion} · cuenta {cuenta}",
     "nota": "Qué se hizo",
     "cerrada": "Orden cerrada",
-    "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida decide el seguimiento."
+    "soloLectura": "Puedes consultar, pero solo quien opera cartera vencida decide el seguimiento.",
+    "porRevisitar": "Por revisitar",
+    "reglaRevisita": "No entregadas o con el usuario no localizado que siguen debiendo hoy. Ve el día y la hora del último intento para volver en otro horario. Después de {n} intentos seguidos solo se descartan.",
+    "ultimoIntento": "Último intento",
+    "intentos": "Intento {n} de {max}",
+    "agotada": "Agotó {n} intentos",
+    "agotadasMarcadas": "{n} agotó intentos: solo se descarta | {n} agotaron intentos: solo se descartan",
+    "revisitar": "Revisitar",
+    "sinRevisitas": "No hay notificaciones por revisitar"
   },
   "monitor": {
     "titulo": "Monitor de campo",

@@ -1,4 +1,4 @@
-import type { CandidataSeguimiento, OrdenSeguimiento } from '../types/cartera'
+import type { CandidataSeguimiento, OrdenSeguimiento, RevisitaSeguimiento } from '../types/cartera'
 
 /*
  * Buscador, filtros y orden de la bandeja de Seguimiento (XEL1-682). La bandeja llega completa, así que se filtra aquí,
@@ -63,4 +63,29 @@ export function filtrarCandidatas(lista: CandidataSeguimiento[], f: FiltrosSegui
 
 export function filtrarOrdenes(lista: OrdenSeguimiento[], texto: string): OrdenSeguimiento[] {
   return lista.filter(o => coincide(texto, [o.cuenta, o.contrato, o.notificacion?.ref, o.motivo]))
+}
+
+/**
+ * La bandeja «Por revisitar» (XEL1-686) con los mismos filtros, menos los días desde la entrega. «Más días» es el
+ * intento más viejo primero; las que agotaron intentos van al final.
+ */
+export function filtrarRevisitas(lista: RevisitaSeguimiento[], f: FiltrosSeguimiento): RevisitaSeguimiento[] {
+  const filtradas = lista.filter(r =>
+    coincide(f.texto, [r.cuenta, r.contrato, r.ref, r.titular, r.notificador])
+    && (!f.notificador || r.notificador === f.notificador)
+    && (!f.resultado || r.estado_codigo === f.resultado)
+    && (!f.origen || r.origen === f.origen)
+    && (f.adeudoMin === null || r.adeudo_actual >= f.adeudoMin))
+
+  const cuando = (r: RevisitaSeguimiento) => r.intento_en ?? ''
+  const antiguas = (a: RevisitaSeguimiento, b: RevisitaSeguimiento) => cuando(a).localeCompare(cuando(b)) || b.adeudo_actual - a.adeudo_actual
+
+  const por: Record<OrdenSeguimientoBandeja, (a: RevisitaSeguimiento, b: RevisitaSeguimiento) => number> = {
+    dias: antiguas,
+    adeudo: (a, b) => b.adeudo_actual - a.adeudo_actual || antiguas(a, b),
+    recientes: (a, b) => cuando(b).localeCompare(cuando(a)) || antiguas(a, b),
+    notificador: (a, b) => (a.notificador ?? '').localeCompare(b.notificador ?? '') || antiguas(a, b),
+  }
+
+  return [...filtradas].sort((a, b) => Number(a.agotada) - Number(b.agotada) || por[f.orden](a, b))
 }
