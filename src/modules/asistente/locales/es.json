@@ -18,7 +18,7 @@
   "guardar": "Guardar",
   "cancelar": "Cancelar",
   "bienvenida": "Pregunte por cifras de reportes y tableros, el avance de lecturas o cómo se calcula un indicador.",
-  "placeholder": "Escriba su pregunta",
+  "placeholder": "Escribe tu pregunta",
   "enviar": "Enviar",
   "detener": "Detener",
   "nivel": {
@@ -76,20 +76,21 @@
   "contexto": {
     "sobre": "Sobre: {titulo}",
     "quitar": "Quitar el reporte de la pregunta",
-    "bienvenida": "Pregunte sobre «{titulo}» con los filtros que tiene puestos.",
+    "bienvenida": "Pregúntame sobre «{titulo}» con los filtros que tienes puestos.",
     "etiqueta": "Contexto: {titulo}",
     "general": "Operación general",
     "reportes": "Sobre un reporte"
   },
   "preguntar": "Preguntar",
-  "placeholderSeguimiento": "Pregunte algo más sobre esta respuesta",
+  "placeholderSeguimiento": "Pregunta algo más sobre esta respuesta",
   "verTodas": "Ver todas",
   "opcionesConversacion": "Opciones de «{titulo}»",
   "inicio": {
     "hola": "Hola,",
     "holaSinNombre": "Hola",
-    "subtitulo": "Pregúnteme por cifras, reportes, lecturas o cualquier análisis de la operación.",
-    "aviso": "Las cifras salen de los reportes de Atención con sus permisos. Cada respuesta indica su fuente: revísela antes de usarla en un documento oficial."
+    "subtitulo": "Pregúntame por cifras, reportes, lecturas o cualquier análisis de tu operación.",
+    "aviso": "Las cifras salen de los reportes de Atención con tus permisos. Cada respuesta indica su fuente: revísala antes de usarla en un documento oficial.",
+    "ayudaModos": "el asistente decide si basta el dato o hace falta un análisis. Rápida responde con la cifra; Análisis compara periodos y explica la variación."
   },
   "respuesta": {
     "copiar": "Copiar",
@@ -105,5 +106,20 @@
     "fuente": "Fuente: {nombre}",
     "corte": "corte {fecha}",
     "abrir": "Abrir reporte"
+  },
+  "buscador": {
+    "abrir": "Buscar",
+    "placeholder": "Buscar en conversaciones, reportes o ayuda",
+    "placeholderReportes": "Buscar reportes y tableros",
+    "conversaciones": "Conversaciones",
+    "reportes": "Reportes y tableros",
+    "ayuda": "Ayuda",
+    "preguntar": "Preguntar al asistente: «{pregunta}»",
+    "sinResultados": "Sin resultados"
+  },
+  "corte": {
+    "texto": "Datos al corte de {hora}",
+    "ayuda": "Última sincronización con Aquasoft Comercial",
+    "atrasadas": "Sin sincronizar desde hace más de un día: {lista}"
   }
 }

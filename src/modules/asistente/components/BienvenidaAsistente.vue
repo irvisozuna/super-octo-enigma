@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useAsistenteStore } from '../stores/asistenteStore'
 import { SUGERENCIAS, SUGERENCIAS_REPORTE, TEMAS } from '../utils/sugerencias'
 import CompositorPregunta from './CompositorPregunta.vue'
+import { primerNombre } from '@/utils/usuario'
 
 /*
  * Inicio del asistente (XEL1-721). En pantalla completa: saludo, la caja grande para preguntar y cuatro temas con
@@ -16,13 +17,11 @@ const store = useAsistenteStore()
 const { contexto, enviando } = storeToRefs(store)
 const { t } = useI18n()
 
-/** Primer nombre del usuario, de la sesión; sin nombre, un saludo sin él. */
+/** Primer nombre del usuario de la sesión; sin nombre, un saludo sin él. */
 const nombre = computed(() => {
   const datos = useCookie<{ name?: string; username?: string } | null>('userData').value
-  const completo = (datos?.name || datos?.username || '').trim()
-  const primero = completo.split(/\s+/)[0] ?? ''
 
-  return primero && primero.toLowerCase() !== 'admin' ? primero.charAt(0).toUpperCase() + primero.slice(1).toLowerCase() : ''
+  return primerNombre(datos?.name || datos?.username)
 })
 </script>
 

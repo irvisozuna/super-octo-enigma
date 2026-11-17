@@ -97,6 +97,9 @@ export interface EstadoAsistente {
   preguntas_restantes: number
   consumo_mensual_pct: number | null
   consulta_cuentas: boolean
+
+  /** Última sincronización con Aquasoft Comercial (ISO, UTC) y fuentes con más de un día sin sincronizar. */
+  corte?: { al: string; atrasadas: { fuente: string; al: string }[] } | null
 }
 
 /** Mensaje en pantalla: el que se está transmitiendo lleva el avance de las consultas. */

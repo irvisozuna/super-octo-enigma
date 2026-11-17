@@ -6,12 +6,14 @@ import { themeConfig } from '@themeConfig'
 // Components
 import Footer from '@/layouts/components/Footer.vue'
 import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
-import NavSearchBar from '@/layouts/components/NavSearchBar.vue'
+import BuscadorGlobal from '@/layouts/components/BuscadorGlobal.vue'
 import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
 import BotonAsistente from '@/modules/asistente/components/BotonAsistente.vue'
 import PanelAsistente from '@/modules/asistente/components/PanelAsistente.vue'
+import CorteDatos from '@/modules/asistente/components/CorteDatos.vue'
+import HistorialNav from '@/modules/asistente/components/HistorialNav.vue'
 import NavBarI18n from '@core/components/I18n.vue'
 
 // @layouts plugin
@@ -24,6 +26,11 @@ const { isAdmin } = useCurrentUser()
 
 <template>
   <VerticalNavLayout :nav-items="navItems">
+    <!-- Historial del asistente dentro del menú, solo en su pantalla (XEL1-721) -->
+    <template #after-vertical-nav-items>
+      <HistorialNav />
+    </template>
+
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">
@@ -38,9 +45,15 @@ const { isAdmin } = useCurrentUser()
           />
         </IconBtn>
 
-        <NavSearchBar class="ms-lg-n3" />
+        <!-- Buscador de conversaciones y reportes (⌘K) y corte de los datos (XEL1-721) -->
+        <BuscadorGlobal />
 
         <VSpacer />
+
+        <CorteDatos
+          v-if="$can('use', 'asistente')"
+          class="me-3 d-none d-md-flex"
+        />
 
         <NavBarI18n
           v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"

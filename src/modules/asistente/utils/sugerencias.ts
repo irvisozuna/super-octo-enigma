@@ -21,7 +21,7 @@ export const TEMAS = [
     titulo: 'Cifras y reportes',
     descripcion: 'Ingresos, cobros y comparativos',
     icono: 'tabler-chart-bar',
-    preguntas: ['¿Cuánto se cobró ayer?', 'Compara el ingreso de agosto contra septiembre'],
+    preguntas: ['¿Cuánto se cobró ayer?', 'Compara el ingreso de agosto vs septiembre'],
   },
   {
     titulo: 'Lecturas',
@@ -31,14 +31,14 @@ export const TEMAS = [
   },
   {
     titulo: 'Facturación',
-    descripcion: 'Informes, presentaciones y montos',
+    descripcion: 'Estatus, presentaciones y montos',
     icono: 'tabler-file-invoice',
-    preguntas: ['Genera un informe de la facturación del mes pasado', 'Prepara una presentación de la facturación del primer semestre'],
+    preguntas: ['Genera un informe de la facturación', 'Prepara la presentación de la facturación'],
   },
   {
     titulo: 'Indicadores',
     descripcion: 'Cálculos, tendencias y alertas',
     icono: 'tabler-bolt',
-    preguntas: ['¿Qué es la eficiencia comercial?', '¿Cómo va la eficiencia comercial este año?'],
+    preguntas: ['¿Qué es la eficiencia comercial?', '¿Cómo se calcula un indicador?'],
   },
 ]

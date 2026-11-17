@@ -78,6 +78,10 @@ const verticalNavAttrs = computed(() => {
         <template #before-nav-items>
           <slot name="before-vertical-nav-items" />
         </template>
+        <!-- Contenido debajo del menú (el historial del asistente, XEL1-721) -->
+        <template #after-nav-items>
+          <slot name="after-vertical-nav-items" />
+        </template>
       </VerticalNav>
     </component>
     <div class="layout-content-wrapper">

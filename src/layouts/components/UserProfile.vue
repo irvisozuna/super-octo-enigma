@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+import { iniciales } from '@/utils/usuario'
 import type { UserProfileMenuItem } from '@/types/types'
 import { cerrarSesion } from '@/utils/sesion'
 
@@ -7,6 +8,7 @@ const { isAdmin } = useCurrentUser()
 
 // TODO: Get type from backend
 const userData = useCookie<any>('userData')
+const inicialesUsuario = computed(() => iniciales(userData.value?.name || userData.value?.username))
 
 // Revoca el token en la API y luego borra la sesión local (XEL1-514)
 const logout = () => cerrarSesion()
@@ -67,6 +69,10 @@ const filteredUserProfileList = computed(() => {
         v-if="userData && userData.avatar"
         :src="userData.avatar"
       />
+      <span
+        v-else-if="inicialesUsuario"
+        class="text-body-2 font-weight-semibold"
+      >{{ inicialesUsuario }}</span>
       <VIcon
         v-else
         icon="tabler-user"
@@ -99,6 +105,10 @@ const filteredUserProfileList = computed(() => {
                       v-if="userData && userData.avatar"
                       :src="userData.avatar"
                     />
+                    <span
+                      v-else-if="inicialesUsuario"
+                      class="text-body-2 font-weight-semibold"
+                    >{{ inicialesUsuario }}</span>
                     <VIcon
                       v-else
                       icon="tabler-user"

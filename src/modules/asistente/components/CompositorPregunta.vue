@@ -32,7 +32,7 @@ watch(texto, async () => {
 })
 
 const MODOS: { valor: NivelRespuesta; icono: string }[] = [
-  { valor: 'auto', icono: 'tabler-sparkles' },
+  { valor: 'auto', icono: 'tabler-check' },
   { valor: 'rapido', icono: 'tabler-bolt' },
   { valor: 'analisis', icono: 'tabler-chart-bar' },
 ]
@@ -283,7 +283,7 @@ function alTeclear(e: KeyboardEvent) {
       v-if="variante === 'grande'"
       class="compositor__ayuda"
     >
-      <strong>{{ t(`asistente.nivel.${nivel}`) }}:</strong> {{ t(`asistente.nivel.descripcion.${nivel}`) }}
+      <strong>{{ t('asistente.nivel.auto') }}:</strong> {{ t('asistente.inicio.ayudaModos') }}
     </p>
     <p
       v-if="aviso"
