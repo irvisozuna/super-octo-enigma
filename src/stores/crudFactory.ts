@@ -111,6 +111,12 @@ export function createCrudStore<T>(config: CrudStoreConfig<T>) {
     async function handleApiError(err: any, defaultKey: string) {
       const { showError } = useNotification()
 
+      // "No encontrado" no es una falla: la pantalla que buscó lo explica en su lugar, sin aviso rojo (XEL1-723)
+      if (err?.status === 404 && err?.body?.codigo === 'NO_ENCONTRADO') {
+        error.value = err
+        throw err
+      }
+
       if (err instanceof Error && ((err as any).status === 422 || (err as any).status === 400) && (err as any).errors) {
         const validationErrors = Object.values((err as any).errors).flat().join('\n')
 

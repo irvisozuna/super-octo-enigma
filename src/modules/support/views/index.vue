@@ -35,6 +35,9 @@ const activa = ref(0)
 const cuenta = ref('')
 const cargando = ref(false)
 const error = ref<ErrorReporte | null>(null)
+
+/** Número de cuenta que se buscó y no existe en Aquasoft Comercial (XEL1-723). */
+const noEncontrada = ref<string | null>(null)
 const busquedaAbierta = ref(false)
 
 const pestanas: Pestana[] = [
@@ -54,13 +57,19 @@ async function buscar() {
     return
   cargando.value = true
   error.value = null
+  noEncontrada.value = null
   try {
     await store.getContract(q)
     activa.value = 0
     cuenta.value = ''
   }
   catch (e) {
-    error.value = normalizarError(e)
+    // Cuenta que no existe: no es una falla, es el número (XEL1-723)
+    const http = e as { status?: number; body?: { codigo?: string } }
+    if (http?.status === 404 && http.body?.codigo === 'NO_ENCONTRADO')
+      noEncontrada.value = q
+    else
+      error.value = normalizarError(e)
   }
   finally {
     cargando.value = false
@@ -129,7 +138,15 @@ watch(() => route.query.cuenta, (nueva, anterior) => {
     </VCard>
 
     <AsEstado
-      v-if="error"
+      v-if="noEncontrada"
+      tipo="vacio"
+      class="mb-4"
+      icono="tabler-user-question"
+      :titulo="t('support.buscar.noEncontradaTitulo', { cuenta: noEncontrada })"
+      :detalle="t('support.buscar.noEncontradaDetalle')"
+    />
+    <AsEstado
+      v-else-if="error"
       tipo="error"
       class="mb-4"
       :error="error"

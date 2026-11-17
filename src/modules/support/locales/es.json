@@ -9,7 +9,9 @@
     "avanzada": "Búsqueda avanzada",
     "vacioTitulo": "Ningún contrato abierto",
     "ayuda": "Escribe el número de cuenta y pulsa Enter, o usa la búsqueda avanzada por nombre, medidor, RFC o dirección.",
-    "noEncontrado": "No se encontró el contrato {cuenta}."
+    "noEncontrado": "No se encontró el contrato {cuenta}.",
+    "noEncontradaTitulo": "No encontramos la cuenta {cuenta}",
+    "noEncontradaDetalle": "Revise el número o use la búsqueda avanzada por nombre, medidor, RFC o dirección."
   },
   "ficha": {
     "cuenta": "Cuenta",
