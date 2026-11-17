@@ -14,6 +14,7 @@ export interface SolicitudPregunta {
   mensaje: string
   conversacion_id?: string
   nivel?: NivelRespuesta
+  contexto?: { tipo: 'reporte'; clave: string; filtros: Record<string, unknown> }
 }
 
 /** Error del chat antes de empezar a transmitir (permiso, cupo, tope, agente caído). */

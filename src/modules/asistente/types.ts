@@ -8,6 +8,7 @@ export type EventoChat =
   | { type: 'tool-result'; payload: { id: number; toolName: string; ok: boolean } }
   | { type: 'tool-progress'; payload: { id: number; toolName: string; secciones: number; tipo?: TipoDocumento } }
   | { type: 'thinking'; payload: Record<string, never> }
+  | { type: 'verificacion'; payload: Verificacion }
   | { type: 'error'; payload: { error: { message: string } } }
   | { type: 'truncated'; payload: { motivo: MotivoCorte } }
   | { type: 'done' }
@@ -39,6 +40,22 @@ export interface PasoGuardado {
 /** Por qué una respuesta quedó incompleta (XEL1-711): tope de longitud o de pasos del modelo. */
 export type MotivoCorte = 'longitud' | 'pasos'
 
+/** Lo que el usuario tiene en pantalla al preguntar desde un reporte (XEL1-717). */
+export interface ContextoPantalla {
+  tipo: 'reporte'
+  clave: string
+  titulo: string
+  filtros: Record<string, unknown>
+  resumen?: string
+}
+
+/** Sello de cifras (XEL1-719): cuántas cifras salieron de las consultas y cuáles no. */
+export interface Verificacion {
+  total: number
+  verificadas: number
+  sin_verificar: string[]
+}
+
 /** Informe o presentación que armó el asistente (XEL1-712). */
 export interface DocumentoAsistente {
   id: string
@@ -46,6 +63,7 @@ export interface DocumentoAsistente {
   titulo: string
   creado: string
   secciones: number
+  verificacion?: Verificacion | null
 }
 
 export interface ConversacionResumen {
@@ -63,6 +81,7 @@ export interface MensajeGuardado {
   cortada?: MotivoCorte
   pasos?: PasoGuardado[]
   duracion_ms?: number
+  verificacion?: Verificacion
   fecha: string
 }
 
@@ -95,4 +114,5 @@ export interface MensajeChat {
   nivel?: NivelAgente
   inicio?: number
   duracionMs?: number
+  verificacion?: Verificacion
 }

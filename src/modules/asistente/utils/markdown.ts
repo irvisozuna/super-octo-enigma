@@ -21,6 +21,59 @@ export type Bloque =
   | { tipo: 'tabla'; encabezados: Linea[][]; alineaciones: Alineacion[]; filas: Linea[][][] }
   | { tipo: 'separador' }
   | { tipo: 'bloqueCodigo'; texto: string }
+  | { tipo: 'grafica'; grafica: GraficaChat }
+  | { tipo: 'graficaPendiente' }
+  | { tipo: 'graficaInvalida' }
+
+/** Gráfica que el asistente escribe en un bloque ```grafica con JSON (XEL1-718). Solo datos: nada se ejecuta. */
+export interface GraficaChat {
+  tipo: 'barras' | 'linea'
+  titulo?: string
+  unidad?: string
+  etiquetas: string[]
+  series: { nombre: string; valores: number[] }[]
+}
+
+const MAX_PUNTOS = 36
+const MAX_SERIES = 4
+
+/** Valida y limpia el JSON de una gráfica; null si no se puede dibujar. */
+export function interpretarGrafica(texto: string): GraficaChat | null {
+  let datos: unknown
+  try {
+    datos = JSON.parse(texto)
+  }
+  catch {
+    return null
+  }
+  if (!datos || typeof datos !== 'object' || Array.isArray(datos))
+    return null
+  const d = datos as Record<string, unknown>
+  const etiquetas = Array.isArray(d.etiquetas) ? d.etiquetas.map(e => String(e).slice(0, 40)).slice(0, MAX_PUNTOS) : []
+  const numeros = (v: unknown) => (Array.isArray(v) && v.every(n => typeof n === 'number' && Number.isFinite(n)) ? (v as number[]) : null)
+
+  const crudas = Array.isArray(d.series)
+    ? d.series
+    : (numeros(d.valores) ? [{ nombre: typeof d.titulo === 'string' ? d.titulo : '', valores: d.valores }] : [])
+
+  const series = crudas.slice(0, MAX_SERIES).map(s => {
+    const serie = (s ?? {}) as Record<string, unknown>
+    const valores = numeros(serie.valores)
+
+    return valores && valores.length === etiquetas.length ? { nombre: String(serie.nombre ?? '').slice(0, 60), valores } : null
+  })
+
+  if (etiquetas.length < 2 || series.length === 0 || series.includes(null))
+    return null
+
+  return {
+    tipo: d.tipo === 'linea' ? 'linea' : 'barras',
+    titulo: typeof d.titulo === 'string' ? d.titulo.slice(0, 120) : undefined,
+    unidad: typeof d.unidad === 'string' ? d.unidad.slice(0, 12) : undefined,
+    etiquetas,
+    series: series as GraficaChat['series'],
+  }
+}
 
 /** Ruta interna de la aplicación: empieza con una sola diagonal y no trae esquema ni caracteres de control. */
 export function esRutaInterna(destino: string): boolean {
@@ -114,12 +167,22 @@ export function interpretarMarkdown(texto: string): Bloque[] {
     if (linea.trim().startsWith('```')) {
       cerrarParrafo()
 
+      const lenguaje = linea.trim().slice(3).trim().toLowerCase()
       const codigo: string[] = []
 
       i++
       while (i < lineas.length && !lineas[i].trim().startsWith('```'))
         codigo.push(lineas[i++])
-      bloques.push({ tipo: 'bloqueCodigo', texto: codigo.join('\n') })
+      const cerrado = i < lineas.length
+      if (lenguaje === 'grafica') {
+        // Mientras llega por el stream el bloque está abierto: se avisa en lugar de pintar algo a medias
+        const grafica = cerrado ? interpretarGrafica(codigo.join('\n')) : null
+
+        bloques.push(!cerrado ? { tipo: 'graficaPendiente' } : grafica ? { tipo: 'grafica', grafica } : { tipo: 'graficaInvalida' })
+      }
+      else {
+        bloques.push({ tipo: 'bloqueCodigo', texto: codigo.join('\n') })
+      }
       continue
     }
 

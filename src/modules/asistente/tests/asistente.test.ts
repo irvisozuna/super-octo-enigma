@@ -4,7 +4,7 @@ import { idsDocumentos, nombreArchivo } from '../utils/documentos'
 import { etiquetaHerramienta, fuentesConsultadas } from '../utils/herramientas'
 import { agruparPasos, duracion, reloj, resumenPasos } from '../utils/pasos'
 import type { PasoChat } from '../types'
-import { esRutaInterna, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
+import { esRutaInterna, interpretarGrafica, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
 import { crearLectorSse, interpretarBloque } from '../utils/sse'
 
 describe('lector SSE del asistente', () => {
@@ -176,5 +176,30 @@ describe('avance por pasos (XEL1-714)', () => {
     expect(interpretarBloque('data: {"type":"conversation","payload":{"id":"c1","nivel":"analisis"}}')).toEqual({ type: 'conversation', payload: { id: 'c1', nivel: 'analisis' } })
     expect(interpretarBloque('data: {"type":"tool-start","payload":{"id":"x","toolName":"a"}}')).toBeNull()
     expect(interpretarBloque('data: {"type":"tool-result","payload":{"id":1,"toolName":"a"}}')).toBeNull()
+  })
+})
+
+describe('gráficas en el chat (XEL1-718)', () => {
+  const json = '{"tipo":"linea","titulo":"Eficiencia","unidad":"%","etiquetas":["Ene","Feb","Mar"],"series":[{"nombre":"Eficiencia","valores":[76.6,75.4,74.6]}]}'
+
+  it('dibuja solo un bloque grafica completo y válido', () => {
+    expect(interpretarMarkdown(`Así va:\n\n\`\`\`grafica\n${json}\n\`\`\``).at(-1)).toEqual({
+      tipo: 'grafica',
+      grafica: { tipo: 'linea', titulo: 'Eficiencia', unidad: '%', etiquetas: ['Ene', 'Feb', 'Mar'], series: [{ nombre: 'Eficiencia', valores: [76.6, 75.4, 74.6] }] },
+    })
+    expect(interpretarMarkdown('```grafica\n{"tipo":"bar')).toEqual([{ tipo: 'graficaPendiente' }])
+    expect(interpretarMarkdown('```grafica\n{no es json}\n```')).toEqual([{ tipo: 'graficaInvalida' }])
+  })
+
+  it('rechaza datos que no cuadran o que no son números', () => {
+    expect(interpretarGrafica('{"etiquetas":["a","b"],"series":[{"nombre":"x","valores":[1]}]}')).toBeNull()
+    expect(interpretarGrafica('{"etiquetas":["a","b"],"series":[{"nombre":"x","valores":["1,000",2]}]}')).toBeNull()
+    expect(interpretarGrafica('{"etiquetas":["a","b"],"valores":[1,2],"tipo":"<script>"}')).toMatchObject({ tipo: 'barras', series: [{ valores: [1, 2] }] })
+  })
+
+  it('lee el sello de cifras (XEL1-719)', () => {
+    expect(interpretarBloque('data: {"type":"verificacion","payload":{"total":3,"verificadas":2,"sin_verificar":["$80,123,456.00",5]}}'))
+      .toEqual({ type: 'verificacion', payload: { total: 3, verificadas: 2, sin_verificar: ['$80,123,456.00'] } })
+    expect(interpretarBloque('data: {"type":"verificacion","payload":{"total":"3"}}')).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import EstadoError from '../components/comunes/EstadoError.vue'
 import EstadoVacio from '../components/comunes/EstadoVacio.vue'
 import IndicadorActualizado from '../components/comunes/IndicadorActualizado.vue'
@@ -16,12 +17,17 @@ import { normalizarError } from '../services/errores'
 import { useExportacionesStore } from '../stores/exportacionesStore'
 import type { AlcanceExportacion, FormatoExportacion } from '../types/exportacion'
 import type { FiltroDef } from '../types/reporte'
+import { useAsistenteStore } from '@/modules/asistente'
+import { useAbility } from '@/plugins/casl/composables/useAbility'
 
 const props = defineProps<{
   clave: string
 }>()
 
 const { t } = useI18n()
+const route = useRoute()
+const ability = useAbility()
+const asistente = useAsistenteStore()
 
 const reporte = useReporte(toRef(props, 'clave'))
 const filtros = useFiltros(computed(() => reporte.config.value?.filtros ?? []))
@@ -93,11 +99,33 @@ function buscar(def: FiltroDef, texto: string) {
   filtros.cargarOpciones(def, texto)
 }
 
+/** Filtros de la dirección (`?filtros=` con JSON), como los deja un enlace del asistente (XEL1-717). */
+function filtrosDeRuta(): Record<string, unknown> {
+  const crudo = route.query.filtros
+  if (typeof crudo !== 'string' || crudo.length > 2000)
+    return {}
+  try {
+    const valores: unknown = JSON.parse(crudo)
+
+    return valores && typeof valores === 'object' && !Array.isArray(valores) ? valores as Record<string, unknown> : {}
+  }
+  catch {
+    return {}
+  }
+}
+
 async function iniciar() {
   await reporte.cargarConfig()
   if (!reporte.config.value)
     return
   filtros.aplicarDefaults()
+
+  // En el orden de las definiciones: el padre antes que el hijo, que si no se limpiaría por la cascada
+  const deRuta = filtrosDeRuta()
+  for (const def of filtros.defs.value) {
+    if (def.key in deRuta)
+      filtros.establecer(def.key, deRuta[def.key])
+  }
   filtros.cargarTodasLasOpciones()
   if (filtros.completo.value)
     await reporte.consultar(filtros.aPayload())
@@ -108,6 +136,28 @@ onMounted(() => {
   iniciar()
 })
 watch(() => props.clave, iniciar)
+watch(() => route.query.filtros, (nuevo, anterior) => {
+  if (nuevo !== anterior)
+    iniciar()
+})
+
+/** "Preguntar a la IA" con este reporte y sus filtros (XEL1-717). */
+const puedePreguntar = computed(() => ability.can('use', 'asistente') && !!reporte.config.value)
+
+function preguntarIA() {
+  const config = reporte.config.value
+  if (!config)
+    return
+  const aplicados = reporte.filtrosAplicados.value ?? filtros.aPayload()
+
+  const resumen = filtros.defs.value
+    .filter(def => !def.oculto && aplicados[def.key] !== undefined)
+    .map(def => filtros.etiqueta(def, aplicados[def.key]))
+    .filter(texto => texto && texto !== '…')
+    .join(' · ')
+
+  asistente.preguntarSobre({ tipo: 'reporte', clave: props.clave, titulo: config.titulo, filtros: aplicados, resumen })
+}
 </script>
 
 <template>
@@ -143,6 +193,15 @@ watch(() => props.clave, iniciar)
           :cargando="reporte.cargando.value"
           @actualizar="reporte.actualizar"
         />
+        <VBtn
+          v-if="puedePreguntar"
+          variant="tonal"
+          color="primary"
+          prepend-icon="tabler-sparkles"
+          @click="preguntarIA"
+        >
+          {{ t('asistente.preguntarIA') }}
+        </VBtn>
         <VBtn
           v-if="hayAyuda"
           variant="text"

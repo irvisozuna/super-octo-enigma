@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAsistenteStore } from '../stores/asistenteStore'
-import { SUGERENCIAS } from '../utils/sugerencias'
+import { SUGERENCIAS, SUGERENCIAS_REPORTE } from '../utils/sugerencias'
 import MensajeChat from './MensajeChat.vue'
 
 /*
@@ -11,7 +11,8 @@ import MensajeChat from './MensajeChat.vue'
  * la respuesta, salvo que el usuario haya subido a leer algo anterior.
  */
 const store = useAsistenteStore()
-const { mensajes, vacia, avance, cargandoMensajes } = storeToRefs(store)
+const { mensajes, vacia, avance, cargandoMensajes, contexto } = storeToRefs(store)
+const sugerencias = computed(() => (contexto.value ? SUGERENCIAS_REPORTE : SUGERENCIAS))
 const { t } = useI18n()
 
 const fin = ref<HTMLElement | null>(null)
@@ -58,11 +59,11 @@ watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, mensaje
         color="primary"
       />
       <p class="text-body-1 mb-0">
-        {{ t('asistente.bienvenida') }}
+        {{ contexto ? t('asistente.contexto.bienvenida', { titulo: contexto.titulo }) : t('asistente.bienvenida') }}
       </p>
       <div class="chat-sugerencias">
         <VChip
-          v-for="sugerencia in SUGERENCIAS"
+          v-for="sugerencia in sugerencias"
           :key="sugerencia"
           variant="outlined"
           size="small"

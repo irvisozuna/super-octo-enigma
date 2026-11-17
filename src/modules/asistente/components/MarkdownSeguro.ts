@@ -3,6 +3,7 @@ import type { PropType, VNode } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Alineacion, Bloque, Linea } from '../utils/markdown'
 import { interpretarMarkdown } from '../utils/markdown'
+import GraficaChat from './GraficaChat.vue'
 
 /*
  * Pinta la respuesta del asistente con nodos de Vue (sin v-html): ver utils/markdown. Los enlaces internos van con
@@ -45,6 +46,12 @@ function bloque(b: Bloque): VNode {
   }
   if (b.tipo === 'separador')
     return h('hr', { class: 'md-separador' })
+  if (b.tipo === 'grafica')
+    return h(GraficaChat, { grafica: b.grafica })
+  if (b.tipo === 'graficaPendiente')
+    return h('p', { class: 'md-nota' }, 'Preparando la gráfica…')
+  if (b.tipo === 'graficaInvalida')
+    return h('p', { class: 'md-nota' }, 'No se pudo dibujar la gráfica.')
 
   return h('pre', { class: 'md-pre' }, h('code', b.texto))
 }

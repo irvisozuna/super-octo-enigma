@@ -7,7 +7,7 @@ import type { NivelRespuesta } from '../types'
 
 /* Caja de la pregunta: Enter envía, Mayús+Enter hace salto de línea; mientras contesta, el botón la detiene. */
 const store = useAsistenteStore()
-const { enviando, nivel, estado, sinCupo } = storeToRefs(store)
+const { enviando, nivel, estado, sinCupo, contexto } = storeToRefs(store)
 const { t } = useI18n()
 
 const texto = ref('')
@@ -47,6 +47,24 @@ function alTeclear(e: KeyboardEvent) {
 
 <template>
   <div class="chat-compositor">
+    <div
+      v-if="contexto"
+      class="chat-compositor__contexto"
+    >
+      <VChip
+        size="small"
+        color="primary"
+        variant="tonal"
+        prepend-icon="tabler-report-analytics"
+        closable
+        :close-label="t('asistente.contexto.quitar')"
+        @click:close="contexto = null"
+      >
+        <span class="chat-compositor__contexto-texto">
+          {{ t('asistente.contexto.sobre', { titulo: contexto.titulo }) }}<template v-if="contexto.resumen"> · {{ contexto.resumen }}</template>
+        </span>
+      </VChip>
+    </div>
     <VTextarea
       v-model="texto"
       :placeholder="t('asistente.placeholder')"
@@ -129,6 +147,18 @@ function alTeclear(e: KeyboardEvent) {
 </template>
 
 <style scoped>
+.chat-compositor__contexto {
+  margin-block-end: var(--as-sp-2);
+  max-inline-size: 100%;
+}
+
+.chat-compositor__contexto-texto {
+  overflow: hidden;
+  max-inline-size: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chat-compositor {
   display: flex;
   flex-direction: column;
@@ -159,8 +189,8 @@ function alTeclear(e: KeyboardEvent) {
 }
 
 .chat-compositor__legal {
+  margin: 0;
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   font-size: var(--as-fs-xs);
-  margin: 0;
 }
 </style>

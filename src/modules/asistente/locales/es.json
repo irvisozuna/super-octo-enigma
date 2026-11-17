@@ -60,5 +60,17 @@
     "analizando": "Analizando los resultados",
     "preparando": "Preparando la respuesta",
     "escribiendo": "Escribiendo la respuesta"
+  },
+  "sello": {
+    "todas": "{n} de {total} cifras verificadas con las consultas",
+    "algunas": "{n} de {total} cifras verificadas",
+    "revisar": "Estas cifras no aparecen en lo que consultó; revíselas antes de usarlas:",
+    "ayuda": "Atención comparó cada cifra con los resultados de los reportes y cálculos de esta conversación. No revisa la interpretación."
+  },
+  "preguntarIA": "Preguntar a la IA",
+  "contexto": {
+    "sobre": "Sobre: {titulo}",
+    "quitar": "Quitar el reporte de la pregunta",
+    "bienvenida": "Pregunte sobre «{titulo}» con los filtros que tiene puestos."
   }
 }

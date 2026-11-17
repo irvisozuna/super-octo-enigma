@@ -6,6 +6,7 @@ import { idsDocumentos } from '../utils/documentos'
 import { fuentesConsultadas } from '../utils/herramientas'
 import MarkdownSeguro from './MarkdownSeguro'
 import ProgresoRespuesta from './ProgresoRespuesta.vue'
+import SelloCifras from './SelloCifras.vue'
 import TarjetaDocumento from './TarjetaDocumento.vue'
 
 /* Un mensaje del chat: la pregunta a la derecha; la respuesta con formato, el avance y lo que consultó. */
@@ -37,6 +38,10 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
     <MarkdownSeguro
       v-if="mensaje.texto"
       :texto="mensaje.texto"
+    />
+    <SelloCifras
+      v-if="mensaje.verificacion && !transmitiendo"
+      :verificacion="mensaje.verificacion"
     />
     <TarjetaDocumento
       v-for="id in documentos"
@@ -212,6 +217,12 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
 
 .chat-respuesta :deep(.md-tabla tbody tr:last-child td) {
   border-block-end: 0;
+}
+
+.chat-respuesta :deep(.md-nota) {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-sm);
+  margin-block: 0 var(--as-sp-2);
 }
 
 .chat-respuesta :deep(.md-separador) {

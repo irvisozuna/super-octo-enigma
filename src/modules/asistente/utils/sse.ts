@@ -47,6 +47,8 @@ export function interpretarBloque(bloque: string): EventoChat | null {
     return { type, payload: { id, toolName: herramienta, secciones: payload.secciones, ...(payload.tipo === 'presentacion' || payload.tipo === 'informe' ? { tipo: payload.tipo } : {}) } }
   if (type === 'thinking')
     return { type, payload: {} }
+  if (type === 'verificacion' && typeof payload.total === 'number' && typeof payload.verificadas === 'number' && Array.isArray(payload.sin_verificar))
+    return { type, payload: { total: payload.total, verificadas: payload.verificadas, sin_verificar: payload.sin_verificar.filter((c): c is string => typeof c === 'string').slice(0, 8) } }
   if (type === 'truncated' && (payload.motivo === 'longitud' || payload.motivo === 'pasos'))
     return { type, payload: { motivo: payload.motivo } }
   if (type === 'error') {

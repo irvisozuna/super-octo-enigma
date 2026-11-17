@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import * as api from '../services/asistenteApi'
 import type { DocumentoAsistente } from '../types'
 import { descargarHtml, nombreArchivo } from '../utils/documentos'
+import SelloCifras from './SelloCifras.vue'
 import VisorDocumento from './VisorDocumento.vue'
 import AsDialogo from '@/components/as/AsDialogo.vue'
 import { useNotificacion } from '@/composables/useNotificacion'
@@ -63,6 +64,11 @@ async function descargar() {
         {{ esPresentacion ? t('asistente.documento.presentacion') : t('asistente.documento.informe') }}
         · {{ t('asistente.documento.secciones', { n: documento.secciones }, documento.secciones) }}
       </div>
+      <SelloCifras
+        v-if="documento.verificacion && documento.verificacion.total > 0"
+        :verificacion="documento.verificacion"
+        compacto
+      />
     </div>
     <div class="tarjeta-documento__acciones">
       <VBtn

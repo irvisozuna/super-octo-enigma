@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import * as api from '../services/asistenteApi'
-import type { ConversacionResumen, EstadoAsistente, MensajeChat, MensajeGuardado, NivelRespuesta, PasoChat } from '../types'
+import type { ContextoPantalla, ConversacionResumen, EstadoAsistente, MensajeChat, MensajeGuardado, NivelRespuesta, PasoChat } from '../types'
 import { etiquetaHerramienta } from '../utils/herramientas'
 
 /*
@@ -14,7 +14,7 @@ const nuevoId = () => `m${++siguienteId}`
 function desdeGuardado(m: MensajeGuardado): MensajeChat {
   const pasos: PasoChat[] = (m.pasos ?? []).map((p, i) => ({ id: i, herramienta: p.herramienta, detalle: p.detalle, estado: p.ok === false ? 'error' : 'listo' }))
 
-  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada, pasos, duracionMs: m.duracion_ms }
+  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada, pasos, duracionMs: m.duracion_ms, verificacion: m.verificacion }
 }
 
 /** El paso con ese número; si llegó antes el final que el inicio, lo crea. */
@@ -40,6 +40,7 @@ export const useAsistenteStore = defineStore('asistente', () => {
   const avance = ref('')
   const nivel = ref<NivelRespuesta>('auto')
   const estado = ref<EstadoAsistente | null>(null)
+  const contexto = ref<ContextoPantalla | null>(null)
   let controlador: AbortController | null = null
 
   const vacia = computed(() => mensajes.value.length === 0)
@@ -69,12 +70,21 @@ export const useAsistenteStore = defineStore('asistente', () => {
     actualId.value = null
     titulo.value = ''
     mensajes.value = []
+    contexto.value = null
+  }
+
+  /** Conversación nueva sobre lo que el usuario tiene en pantalla (XEL1-717). */
+  function preguntarSobre(ctx: ContextoPantalla) {
+    nueva()
+    contexto.value = ctx
+    panelAbierto.value = true
   }
 
   async function abrir(id: string) {
     if (id === actualId.value)
       return
     detener()
+    contexto.value = null
     cargandoMensajes.value = true
     try {
       const detalle = await api.obtenerConversacion(id)
@@ -106,7 +116,12 @@ export const useAsistenteStore = defineStore('asistente', () => {
     const nuevaConversacion = actualId.value === null
     try {
       await api.preguntar(
-        { mensaje: pregunta, conversacion_id: actualId.value ?? undefined, nivel: nivel.value },
+        {
+          mensaje: pregunta,
+          conversacion_id: actualId.value ?? undefined,
+          nivel: nivel.value,
+          contexto: contexto.value ? { tipo: contexto.value.tipo, clave: contexto.value.clave, filtros: contexto.value.filtros } : undefined,
+        },
         evento => {
           if (evento.type === 'conversation') {
             actualId.value = evento.payload.id
@@ -137,6 +152,9 @@ export const useAsistenteStore = defineStore('asistente', () => {
           }
           else if (evento.type === 'thinking') {
             respuesta.fase = 'analizando'
+          }
+          else if (evento.type === 'verificacion') {
+            respuesta.verificacion = evento.payload
           }
           else if (evento.type === 'text-delta') {
             respuesta.texto += evento.payload.text
@@ -214,11 +232,13 @@ export const useAsistenteStore = defineStore('asistente', () => {
     avance,
     nivel,
     estado,
+    contexto,
     vacia,
     sinCupo,
     cargarConversaciones,
     cargarEstado,
     nueva,
+    preguntarSobre,
     abrir,
     enviar,
     detener,
