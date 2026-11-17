@@ -2,6 +2,8 @@ import { createMongoAbility } from '@casl/ability'
 import { describe, expect, it } from 'vitest'
 import { idsDocumentos, nombreArchivo } from '../utils/documentos'
 import { etiquetaHerramienta, fuentesConsultadas } from '../utils/herramientas'
+import { agruparPasos, duracion, reloj, resumenPasos } from '../utils/pasos'
+import type { PasoChat } from '../types'
 import { esRutaInterna, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
 import { crearLectorSse, interpretarBloque } from '../utils/sse'
 
@@ -127,5 +129,52 @@ describe('interruptor del asistente', () => {
       { action: 'use', subject: 'asistente', inverted: true },
     ]).can('use', 'asistente')).toBe(false)
     expect(createMongoAbility([{ action: 'read', subject: 'Profile' }]).can('use', 'asistente')).toBe(false)
+  })
+})
+
+describe('avance por pasos (XEL1-714)', () => {
+  const informe = 'Informe mensual por entidad'
+
+  const pasos: PasoChat[] = [
+    { id: 0, herramienta: 'catalogo', estado: 'listo' },
+    { id: 1, herramienta: 'describir_reporte', detalle: informe, estado: 'listo' },
+    { id: 2, herramienta: 'consultar_reporte', detalle: informe, estado: 'error' },
+    { id: 3, herramienta: 'consultar_reporte', detalle: informe, estado: 'listo' },
+    { id: 4, herramienta: 'calcular', estado: 'listo' },
+    { id: 5, herramienta: 'calcular', estado: 'listo' },
+    { id: 6, herramienta: 'generar_documento', estado: 'en_curso', tipo: 'presentacion', secciones: 4 },
+  ]
+
+  it('agrupa los pasos repetidos y dice en qué va', () => {
+    const grupos = agruparPasos(pasos)
+
+    expect(grupos.map(g => g.texto)).toEqual(['Buscó el reporte indicado', 'Revisó columnas y filtros', 'Consultó el reporte', 'Hizo 2 cálculos', 'Redactando la presentación'])
+    expect(grupos[2]).toMatchObject({ detalle: informe, veces: 2, fallidos: 1, nota: '2 consultas · 1 no se completó y se reintentó' })
+    expect(grupos[4]).toMatchObject({ enCurso: true, nota: 'Va en la sección 4' })
+  })
+
+  it('resume en una línea lo que hizo, sin los pasos de preparación', () => {
+    const listos = pasos.map(p => ({ ...p, estado: p.estado === 'en_curso' ? 'listo' as const : p.estado }))
+
+    expect(resumenPasos(listos, 72_000)).toBe(`Consultó ${informe} (2 veces) · 2 cálculos · Armó la presentación · 1 min 12 s`)
+    expect(resumenPasos([], 3_000)).toBe('3 s')
+  })
+
+  it('muestra el tiempo como reloj y como duración', () => {
+    expect(reloj(47_400)).toBe('0:47')
+    expect(reloj(125_000)).toBe('2:05')
+    expect(duracion(45_000)).toBe('45 s')
+    expect(duracion(120_000)).toBe('2 min')
+  })
+
+  it('lee los eventos de avance y descarta los que no tienen la forma esperada', () => {
+    expect(interpretarBloque('data: {"type":"tool-start","payload":{"id":0,"toolName":"consultar_reporte"}}')).toEqual({ type: 'tool-start', payload: { id: 0, toolName: 'consultar_reporte' } })
+    expect(interpretarBloque('data: {"type":"tool-call","payload":{"id":0,"toolName":"consultar_reporte","detalle":"Ingresos","args":{"x":1}}}')).toEqual({ type: 'tool-call', payload: { id: 0, toolName: 'consultar_reporte', detalle: 'Ingresos' } })
+    expect(interpretarBloque('data: {"type":"tool-result","payload":{"id":0,"toolName":"consultar_reporte","ok":false,"result":[1]}}')).toEqual({ type: 'tool-result', payload: { id: 0, toolName: 'consultar_reporte', ok: false } })
+    expect(interpretarBloque('data: {"type":"tool-progress","payload":{"id":2,"toolName":"generar_documento","secciones":3,"tipo":"informe"}}')).toEqual({ type: 'tool-progress', payload: { id: 2, toolName: 'generar_documento', secciones: 3, tipo: 'informe' } })
+    expect(interpretarBloque('data: {"type":"thinking","payload":{}}')).toEqual({ type: 'thinking', payload: {} })
+    expect(interpretarBloque('data: {"type":"conversation","payload":{"id":"c1","nivel":"analisis"}}')).toEqual({ type: 'conversation', payload: { id: 'c1', nivel: 'analisis' } })
+    expect(interpretarBloque('data: {"type":"tool-start","payload":{"id":"x","toolName":"a"}}')).toBeNull()
+    expect(interpretarBloque('data: {"type":"tool-result","payload":{"id":1,"toolName":"a"}}')).toBeNull()
   })
 })

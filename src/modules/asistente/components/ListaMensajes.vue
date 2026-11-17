@@ -30,7 +30,7 @@ function contenedorDesplazable(el: HTMLElement | null): HTMLElement | null {
 
 let siguiendo = true
 
-watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, avance.value], async ([cantidad], anterior) => {
+watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, mensajes.value.at(-1)?.pasos.length, avance.value], async ([cantidad], anterior) => {
   const contenedor = contenedorDesplazable(fin.value)
   const nuevoMensaje = cantidad !== anterior?.[0]
   if (contenedor && !nuevoMensaje)
@@ -77,7 +77,6 @@ watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, avance.
         v-for="mensaje in mensajes"
         :key="mensaje.id"
         :mensaje="mensaje"
-        :avance="avance"
       />
     </template>
     <div

@@ -51,5 +51,14 @@
     "ayudaPdf": "Para PDF, elija «Guardar como PDF» en la impresora.",
     "ayudaPresentacion": "Avance con las flechas o la rueda del ratón.",
     "noDisponible": "No se pudo abrir el documento."
+  },
+  "progreso": {
+    "trabajando": "Trabajando en su respuesta",
+    "tiempo": "Tiempo transcurrido: {tiempo}",
+    "avisoAnalisis": "Las respuestas de análisis suelen tardar de 1 a 2 minutos.",
+    "entendiendo": "Entendiendo la pregunta",
+    "analizando": "Analizando los resultados",
+    "preparando": "Preparando la respuesta",
+    "escribiendo": "Escribiendo la respuesta"
   }
 }

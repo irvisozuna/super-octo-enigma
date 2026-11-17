@@ -30,12 +30,23 @@ export function interpretarBloque(bloque: string): EventoChat | null {
   if (!payload || typeof payload !== 'object')
     return null
 
+  const id = typeof payload.id === 'number' && Number.isInteger(payload.id) && payload.id >= 0 ? payload.id : undefined
+  const herramienta = typeof payload.toolName === 'string' ? payload.toolName : undefined
+
   if (type === 'conversation' && typeof payload.id === 'string')
-    return { type, payload: { id: payload.id } }
+    return { type, payload: { id: payload.id, ...(payload.nivel === 'analisis' || payload.nivel === 'rapido' ? { nivel: payload.nivel } : {}) } }
   if (type === 'text-delta' && typeof payload.text === 'string')
     return { type, payload: { text: payload.text } }
-  if (type === 'tool-call' && typeof payload.toolName === 'string')
-    return { type, payload: { toolName: payload.toolName } }
+  if (type === 'tool-call' && herramienta)
+    return { type, payload: { toolName: herramienta, ...(id !== undefined ? { id } : {}), ...(typeof payload.detalle === 'string' ? { detalle: payload.detalle } : {}) } }
+  if (type === 'tool-start' && herramienta && id !== undefined)
+    return { type, payload: { id, toolName: herramienta } }
+  if (type === 'tool-result' && herramienta && id !== undefined && typeof payload.ok === 'boolean')
+    return { type, payload: { id, toolName: herramienta, ok: payload.ok } }
+  if (type === 'tool-progress' && herramienta && id !== undefined && typeof payload.secciones === 'number')
+    return { type, payload: { id, toolName: herramienta, secciones: payload.secciones, ...(payload.tipo === 'presentacion' || payload.tipo === 'informe' ? { tipo: payload.tipo } : {}) } }
+  if (type === 'thinking')
+    return { type, payload: {} }
   if (type === 'truncated' && (payload.motivo === 'longitud' || payload.motivo === 'pasos'))
     return { type, payload: { motivo: payload.motivo } }
   if (type === 'error') {

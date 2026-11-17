@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import * as api from '../services/asistenteApi'
-import type { ConversacionResumen, EstadoAsistente, MensajeChat, MensajeGuardado, NivelRespuesta } from '../types'
+import type { ConversacionResumen, EstadoAsistente, MensajeChat, MensajeGuardado, NivelRespuesta, PasoChat } from '../types'
 import { etiquetaHerramienta } from '../utils/herramientas'
 
 /*
@@ -12,7 +12,20 @@ let siguienteId = 0
 const nuevoId = () => `m${++siguienteId}`
 
 function desdeGuardado(m: MensajeGuardado): MensajeChat {
-  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada }
+  const pasos: PasoChat[] = (m.pasos ?? []).map((p, i) => ({ id: i, herramienta: p.herramienta, detalle: p.detalle, estado: p.ok === false ? 'error' : 'listo' }))
+
+  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada, pasos, duracionMs: m.duracion_ms }
+}
+
+/** El paso con ese número; si llegó antes el final que el inicio, lo crea. */
+function paso(respuesta: MensajeChat, id: number, herramienta: string): PasoChat {
+  let encontrado = respuesta.pasos.find(p => p.id === id)
+  if (!encontrado) {
+    encontrado = { id, herramienta, estado: 'en_curso' }
+    respuesta.pasos.push(encontrado)
+  }
+
+  return encontrado
 }
 
 export const useAsistenteStore = defineStore('asistente', () => {
@@ -80,8 +93,8 @@ export const useAsistenteStore = defineStore('asistente', () => {
     if (!pregunta || enviando.value)
       return
 
-    mensajes.value.push({ id: nuevoId(), rol: 'usuario', texto: pregunta, herramientas: [], estado: 'listo' })
-    mensajes.value.push({ id: nuevoId(), rol: 'asistente', texto: '', herramientas: [], estado: 'transmitiendo' })
+    mensajes.value.push({ id: nuevoId(), rol: 'usuario', texto: pregunta, herramientas: [], estado: 'listo', pasos: [] })
+    mensajes.value.push({ id: nuevoId(), rol: 'asistente', texto: '', herramientas: [], estado: 'transmitiendo', pasos: [], inicio: Date.now() })
 
     // El objeto reactivo (no el literal): así cada cambio se pinta mientras llega
     const respuesta = mensajes.value[mensajes.value.length - 1]
@@ -97,13 +110,37 @@ export const useAsistenteStore = defineStore('asistente', () => {
         evento => {
           if (evento.type === 'conversation') {
             actualId.value = evento.payload.id
+            respuesta.nivel = evento.payload.nivel
+          }
+          else if (evento.type === 'tool-start') {
+            paso(respuesta, evento.payload.id, evento.payload.toolName)
+            respuesta.fase = undefined
+            avance.value = etiquetaHerramienta(evento.payload.toolName)
           }
           else if (evento.type === 'tool-call') {
             respuesta.herramientas.push(evento.payload.toolName)
+
+            const id = evento.payload.id ?? respuesta.pasos.length
+            const p = paso(respuesta, id, evento.payload.toolName)
+            if (evento.payload.detalle)
+              p.detalle = evento.payload.detalle
             avance.value = etiquetaHerramienta(evento.payload.toolName)
+          }
+          else if (evento.type === 'tool-result') {
+            paso(respuesta, evento.payload.id, evento.payload.toolName).estado = evento.payload.ok ? 'listo' : 'error'
+          }
+          else if (evento.type === 'tool-progress') {
+            const p = paso(respuesta, evento.payload.id, evento.payload.toolName)
+
+            p.secciones = evento.payload.secciones
+            p.tipo = evento.payload.tipo ?? p.tipo
+          }
+          else if (evento.type === 'thinking') {
+            respuesta.fase = 'analizando'
           }
           else if (evento.type === 'text-delta') {
             respuesta.texto += evento.payload.text
+            respuesta.fase = undefined
             avance.value = 'Escribiendo'
           }
           else if (evento.type === 'truncated') {
@@ -129,6 +166,13 @@ export const useAsistenteStore = defineStore('asistente', () => {
       }
     }
     finally {
+      // Lo que quedó en curso (se detuvo o falló) ya no está en curso
+      respuesta.pasos.forEach(p => {
+        if (p.estado === 'en_curso')
+          p.estado = respuesta.estado === 'listo' ? 'listo' : 'error'
+      })
+      respuesta.fase = undefined
+      respuesta.duracionMs = respuesta.inicio ? Date.now() - respuesta.inicio : undefined
       enviando.value = false
       avance.value = ''
       controlador = null

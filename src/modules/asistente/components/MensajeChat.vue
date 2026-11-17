@@ -5,17 +5,18 @@ import type { MensajeChat } from '../types'
 import { idsDocumentos } from '../utils/documentos'
 import { fuentesConsultadas } from '../utils/herramientas'
 import MarkdownSeguro from './MarkdownSeguro'
+import ProgresoRespuesta from './ProgresoRespuesta.vue'
 import TarjetaDocumento from './TarjetaDocumento.vue'
 
 /* Un mensaje del chat: la pregunta a la derecha; la respuesta con formato, el avance y lo que consultó. */
 const props = defineProps<{
   mensaje: MensajeChat
-  avance?: string
 }>()
 
 const { t } = useI18n()
 
-const fuentes = computed(() => fuentesConsultadas(props.mensaje.herramientas))
+// Mensajes guardados antes del avance por pasos (XEL1-714) solo traen las herramientas
+const fuentes = computed(() => (props.mensaje.pasos.length ? [] : fuentesConsultadas(props.mensaje.herramientas)))
 const transmitiendo = computed(() => props.mensaje.estado === 'transmitiendo')
 const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 'asistente' ? [] : idsDocumentos(props.mensaje.texto)))
 </script>
@@ -32,6 +33,7 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
     class="chat-respuesta"
     :aria-busy="transmitiendo"
   >
+    <ProgresoRespuesta :mensaje="mensaje" />
     <MarkdownSeguro
       v-if="mensaje.texto"
       :texto="mensaje.texto"
@@ -51,18 +53,6 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
         size="16"
       />
       <span>{{ t(`asistente.cortada.${mensaje.cortada}`) }}</span>
-    </div>
-    <div
-      v-if="transmitiendo && avance"
-      class="chat-avance"
-      role="status"
-    >
-      <VProgressCircular
-        indeterminate
-        size="14"
-        width="2"
-      />
-      <span>{{ avance }}…</span>
     </div>
     <div
       v-if="mensaje.estado === 'error'"
@@ -116,7 +106,6 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
   min-inline-size: 0;
 }
 
-.chat-avance,
 .chat-nota,
 .chat-error {
   display: flex;
@@ -125,7 +114,6 @@ const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 
   gap: var(--as-sp-2);
 }
 
-.chat-avance,
 .chat-nota {
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
