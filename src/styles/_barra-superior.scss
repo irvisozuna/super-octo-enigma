@@ -1,0 +1,26 @@
+// Barra superior sin recuadro (XEL1-721, diseño "Rediseño del Asistente"): el buscador, el corte de datos, los avisos
+// y la cuenta van directo sobre el fondo de la página. La plantilla la pinta como tarjeta flotante (fondo blanco,
+// sombra al desplazar y desenfoque); aquí lleva el color del fondo, así al desplazar tapa el contenido sin verse caja.
+html .layout-wrapper.layout-nav-type-vertical .layout-navbar {
+  background-color: rgb(var(--v-theme-background));
+
+  &.navbar-blur::after {
+    display: none;
+  }
+
+  .navbar-content-container,
+  &.navbar-blur .navbar-content-container {
+    border-radius: 0;
+    backdrop-filter: none;
+    background-color: rgb(var(--v-theme-background));
+    box-shadow: none;
+    padding-inline: 0;
+  }
+}
+
+// Barra fija: pegada al borde con relleno en lugar de flotar a 16 px, para que al desplazar el contenido no se asome
+// por encima de ella
+html .layout-wrapper.layout-nav-type-vertical.layout-navbar-sticky .layout-navbar {
+  inset-block-start: 0;
+  padding-block-start: 1rem;
+}
