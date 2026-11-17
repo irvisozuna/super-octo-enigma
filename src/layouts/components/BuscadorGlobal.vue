@@ -73,7 +73,7 @@ watch(abierto, async si => {
 
   // El diálogo se monta con animación: se espera a que exista el campo para darle el foco
   for (let i = 0; i < 10 && !campo.value; i++)
-    await new Promise(r => setTimeout(r, 30))
+    await new Promise(resolve => setTimeout(resolve, 30))
   await nextTick()
   campo.value?.focus()
 })
