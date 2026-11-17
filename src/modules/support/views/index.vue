@@ -13,6 +13,8 @@ import NotesTab from '../components/NotesTab.vue'
 import PaymentHistoryTab from '../components/PaymentHistoryTab.vue'
 import ReadingsTab from '../components/ReadingsTab.vue'
 import WorkOrdersTab from '../components/WorkOrdersTab.vue'
+import PestanaCobranzaContrato from '@/modules/cartera/components/PestanaCobranzaContrato.vue'
+import { can } from '@layouts/plugins/casl'
 import { useContractStore } from '@/modules/support/stores/contractStore'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
@@ -49,6 +51,9 @@ const pestanas: Pestana[] = [
   { icono: 'tabler-file-like', titulo: t('tabs.agreements'), componente: markRaw(AgreementsTab) },
   { icono: 'tabler-adjustments', titulo: t('tabs.settings'), componente: markRaw(AdjustmentsTab) },
   { icono: 'tabler-note', titulo: t('tabs.notes'), componente: markRaw(NotesTab) },
+
+  // Notificaciones de cobranza (XEL1-658): solo con permiso de ver cartera vencida
+  ...(can('read', 'cartera') ? [{ icono: 'tabler-file-invoice', titulo: t('cartera.contrato.pestana'), componente: markRaw(PestanaCobranzaContrato) }] : []),
 ]
 
 async function buscar() {
