@@ -1,10 +1,10 @@
 {
   "menu": {
-    "asistente": "Asistente"
+    "asistente": "NuvIA"
   },
-  "titulo": "Asistente",
+  "titulo": "NuvIA",
   "sobrelinea": "Inteligencia artificial",
-  "abrirPanel": "Preguntar al asistente",
+  "abrirPanel": "Preguntar a NuvIA",
   "pantallaCompleta": "Abrir en pantalla completa",
   "nueva": "Nueva conversación",
   "nuevaCorta": "Nueva",
@@ -28,7 +28,7 @@
     "analisis": "Análisis",
     "ayuda": "Automática elige según la pregunta. Análisis tarda más y sirve para comparar o explicar variaciones.",
     "descripcion": {
-      "auto": "el asistente decide si basta el dato o hace falta un análisis.",
+      "auto": "NuvIA decide si basta el dato o hace falta un análisis.",
       "rapido": "responde con la cifra y su fuente.",
       "analisis": "compara periodos y explica la variación; tarda más."
     }
@@ -38,7 +38,7 @@
   "aviso": "Las cifras salen de los reportes de Atención con sus permisos. Revise la fuente antes de usarlas en un documento oficial.",
   "restantes": "Le quedan {n} preguntas en esta hora.",
   "sinCupo": "Llegó al límite de preguntas de esta hora.",
-  "consumoAlto": "Se ha usado el {pct} % del consumo mensual del asistente.",
+  "consumoAlto": "Se ha usado el {pct} % del consumo mensual de NuvIA.",
   "tu": "Usted",
   "error": "No se pudo completar la respuesta.",
   "cortada": {
@@ -46,7 +46,7 @@
     "pasos": "La respuesta se cortó porque la consulta necesitó demasiados pasos. Intente con un periodo más corto o una pregunta más concreta."
   },
   "documento": {
-    "titulo": "Documento del asistente",
+    "titulo": "Documento de NuvIA",
     "presentacion": "Presentación",
     "informe": "Informe",
     "secciones": "{n} sección | {n} secciones",
@@ -72,7 +72,7 @@
     "revisar": "Estas cifras no aparecen en lo que consultó; revíselas antes de usarlas:",
     "ayuda": "Atención comparó cada cifra con los resultados de los reportes y cálculos de esta conversación. No revisa la interpretación."
   },
-  "preguntarIA": "Preguntar a la IA",
+  "preguntarIA": "Preguntar a NuvIA",
   "contexto": {
     "sobre": "Sobre: {titulo}",
     "quitar": "Quitar el reporte de la pregunta",
@@ -90,7 +90,7 @@
     "holaSinNombre": "Hola",
     "subtitulo": "Pregúntame por cifras, reportes, lecturas o cualquier análisis de tu operación.",
     "aviso": "Las cifras salen de los reportes de Atención con tus permisos. Cada respuesta indica su fuente: revísala antes de usarla en un documento oficial.",
-    "ayudaModos": "el asistente decide si basta el dato o hace falta un análisis. Rápida responde con la cifra; Análisis compara periodos y explica la variación."
+    "ayudaModos": "NuvIA decide si basta el dato o hace falta un análisis. Rápida responde con la cifra; Análisis compara periodos y explica la variación."
   },
   "respuesta": {
     "copiar": "Copiar",
@@ -112,7 +112,7 @@
     "conversaciones": "Conversaciones",
     "reportes": "Reportes y tableros",
     "ayuda": "Ayuda",
-    "preguntar": "Preguntar al asistente: «{pregunta}»",
+    "preguntar": "Preguntar a NuvIA: «{pregunta}»",
     "sinResultados": "Sin resultados",
     "cuentas": "Cuentas",
     "abrirCuenta": "Abrir la cuenta {cuenta}",

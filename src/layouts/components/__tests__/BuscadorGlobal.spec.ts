@@ -91,7 +91,7 @@ describe('buscador de la barra superior según permisos (XEL1-722)', () => {
     const texto = await buscar(w, '120045')
 
     expect(texto).toContain('Abrir la cuenta 120045')
-    expect(texto).not.toContain('Preguntar al asistente')
+    expect(texto).not.toContain('Preguntar a NuvIA')
     expect(texto).not.toContain('Reportes y tableros')
 
     // Enter con un número de cuenta abre la cuenta en Soporte
@@ -110,7 +110,7 @@ describe('buscador de la barra superior según permisos (XEL1-722)', () => {
     const texto = await buscar(w, '120045')
 
     expect(texto).not.toContain('Abrir la cuenta')
-    expect(texto).not.toContain('Preguntar al asistente')
+    expect(texto).not.toContain('Preguntar a NuvIA')
   })
 
   it('con asistente: cuentas, reportes, conversaciones y preguntar', async () => {
@@ -118,7 +118,7 @@ describe('buscador de la barra superior según permisos (XEL1-722)', () => {
 
     expect(w.find('.buscador-global').text()).toContain('Buscar cuentas, reportes, conversaciones o ayuda')
     expect(await buscar(w, 'cobró')).toContain('¿Cuánto se cobró ayer?')
-    expect(await buscar(w, 'cartera')).toContain('Preguntar al asistente: «cartera»')
+    expect(await buscar(w, 'cartera')).toContain('Preguntar a NuvIA: «cartera»')
     expect(await buscar(w, '120045')).toContain('Abrir la cuenta 120045')
   })
 })
