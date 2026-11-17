@@ -14,7 +14,7 @@ const nuevoId = () => `m${++siguienteId}`
 function desdeGuardado(m: MensajeGuardado): MensajeChat {
   const pasos: PasoChat[] = (m.pasos ?? []).map((p, i) => ({ id: i, herramienta: p.herramienta, detalle: p.detalle, estado: p.ok === false ? 'error' : 'listo' }))
 
-  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada, pasos, duracionMs: m.duracion_ms, verificacion: m.verificacion }
+  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada, pasos, duracionMs: m.duracion_ms, verificacion: m.verificacion, nivel: m.nivel }
 }
 
 /** El paso con ese número; si llegó antes el final que el inicio, lo crea. */

@@ -6,9 +6,13 @@ import { useExportacionesStore } from '../../stores/exportacionesStore'
 import type { Ejecucion } from '../../types/exportacion'
 import { tamanoLegible } from '../../utils/exportaciones'
 import { tiempoRelativo } from '../../utils/formato'
+import { useAsistenteStore } from '@/modules/asistente'
 
 const { t } = useI18n()
 const store = useExportacionesStore()
+
+// Con el panel del asistente abierto el botón flotante quedaría encima de su caja de preguntas (XEL1-721)
+const asistente = useAsistenteStore()
 const abierto = ref(false)
 const mensaje = ref<string | null>(null)
 
@@ -46,7 +50,7 @@ async function reintentar(ejecucion: Ejecucion) {
 
 <template>
   <div
-    v-if="store.visibles.length"
+    v-if="store.visibles.length && !asistente.panelAbierto"
     class="tareas-exportacion"
   >
     <VMenu

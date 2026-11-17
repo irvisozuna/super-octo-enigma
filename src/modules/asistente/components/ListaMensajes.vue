@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { nextTick, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAsistenteStore } from '../stores/asistenteStore'
-import { SUGERENCIAS, SUGERENCIAS_REPORTE } from '../utils/sugerencias'
+import BienvenidaAsistente from './BienvenidaAsistente.vue'
 import MensajeChat from './MensajeChat.vue'
+
+/** En pantalla completa el inicio lleva la caja grande y los temas; en el panel, solo saludo y sugerencias. */
+withDefaults(defineProps<{ inicio?: 'pagina' | 'panel' }>(), { inicio: 'panel' })
 
 /*
  * Mensajes de la conversación actual, o la bienvenida con preguntas sugeridas si está vacía. Baja sola mientras llega
  * la respuesta, salvo que el usuario haya subido a leer algo anterior.
  */
 const store = useAsistenteStore()
-const { mensajes, vacia, avance, cargandoMensajes, contexto } = storeToRefs(store)
-const sugerencias = computed(() => (contexto.value ? SUGERENCIAS_REPORTE : SUGERENCIAS))
-const { t } = useI18n()
+const { mensajes, vacia, avance, cargandoMensajes } = storeToRefs(store)
 
 const fin = ref<HTMLElement | null>(null)
 
@@ -49,35 +49,16 @@ watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, mensaje
       indeterminate
       height="2"
     />
-    <div
+    <BienvenidaAsistente
       v-else-if="vacia"
-      class="chat-bienvenida"
-    >
-      <VIcon
-        icon="tabler-sparkles"
-        size="28"
-        color="primary"
-      />
-      <p class="text-body-1 mb-0">
-        {{ contexto ? t('asistente.contexto.bienvenida', { titulo: contexto.titulo }) : t('asistente.bienvenida') }}
-      </p>
-      <div class="chat-sugerencias">
-        <VChip
-          v-for="sugerencia in sugerencias"
-          :key="sugerencia"
-          variant="outlined"
-          size="small"
-          @click="store.enviar(sugerencia)"
-        >
-          {{ sugerencia }}
-        </VChip>
-      </div>
-    </div>
+      :compacta="inicio === 'panel'"
+    />
     <template v-else>
       <MensajeChat
-        v-for="mensaje in mensajes"
+        v-for="(mensaje, i) in mensajes"
         :key="mensaje.id"
         :mensaje="mensaje"
+        :ultimo="i === mensajes.length - 1"
       />
     </template>
     <div
@@ -91,27 +72,6 @@ watch(() => [mensajes.value.length, mensajes.value.at(-1)?.texto.length, mensaje
 .chat-lista {
   display: flex;
   flex-direction: column;
-  gap: var(--as-sp-4);
-}
-
-.chat-bienvenida {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--as-sp-3);
-  padding-block: var(--as-sp-4);
-}
-
-.chat-sugerencias {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--as-sp-2);
-}
-
-.chat-sugerencias :deep(.v-chip) {
-  block-size: auto;
-  min-block-size: 28px;
-  padding-block: 4px;
-  white-space: normal;
+  gap: var(--as-sp-5);
 }
 </style>

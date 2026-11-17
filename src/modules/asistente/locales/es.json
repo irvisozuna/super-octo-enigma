@@ -26,7 +26,12 @@
     "auto": "Automática",
     "rapido": "Rápida",
     "analisis": "Análisis",
-    "ayuda": "Automática elige según la pregunta. Análisis tarda más y sirve para comparar o explicar variaciones."
+    "ayuda": "Automática elige según la pregunta. Análisis tarda más y sirve para comparar o explicar variaciones.",
+    "descripcion": {
+      "auto": "el asistente decide si basta el dato o hace falta un análisis.",
+      "rapido": "responde con la cifra y su fuente.",
+      "analisis": "compara periodos y explica la variación; tarda más."
+    }
   },
   "consulto": "Consultó: {fuentes}",
   "detenido": "Respuesta detenida.",
@@ -71,6 +76,34 @@
   "contexto": {
     "sobre": "Sobre: {titulo}",
     "quitar": "Quitar el reporte de la pregunta",
-    "bienvenida": "Pregunte sobre «{titulo}» con los filtros que tiene puestos."
+    "bienvenida": "Pregunte sobre «{titulo}» con los filtros que tiene puestos.",
+    "etiqueta": "Contexto: {titulo}",
+    "general": "Operación general",
+    "reportes": "Sobre un reporte"
+  },
+  "preguntar": "Preguntar",
+  "placeholderSeguimiento": "Pregunte algo más sobre esta respuesta",
+  "verTodas": "Ver todas",
+  "opcionesConversacion": "Opciones de «{titulo}»",
+  "inicio": {
+    "hola": "Hola,",
+    "holaSinNombre": "Hola",
+    "subtitulo": "Pregúnteme por cifras, reportes, lecturas o cualquier análisis de la operación.",
+    "aviso": "Las cifras salen de los reportes de Atención con sus permisos. Cada respuesta indica su fuente: revísela antes de usarla en un documento oficial."
+  },
+  "respuesta": {
+    "copiar": "Copiar",
+    "copiada": "Respuesta copiada",
+    "noCopiada": "No se pudo copiar la respuesta",
+    "exportar": "Exportar",
+    "comoInforme": "Como informe",
+    "comoPresentacion": "Como presentación",
+    "pedir": {
+      "informe": "Convierte tu respuesta anterior en un informe descargable",
+      "presentacion": "Convierte tu respuesta anterior en una presentación descargable"
+    },
+    "fuente": "Fuente: {nombre}",
+    "corte": "corte {fecha}",
+    "abrir": "Abrir reporte"
   }
 }

@@ -24,6 +24,77 @@ export type Bloque =
   | { tipo: 'grafica'; grafica: GraficaChat }
   | { tipo: 'graficaPendiente' }
   | { tipo: 'graficaInvalida' }
+  | { tipo: 'cifras'; cifras: CifraChat[] }
+  | { tipo: 'fuente'; fuente: FuenteChat }
+  | { tipo: 'sugerencias'; sugerencias: string[] }
+
+/** Cifra principal de una respuesta, en un bloque ```cifra (XEL1-721): va grande arriba de la tarjeta. */
+export interface CifraChat {
+  etiqueta: string
+  valor: string
+  detalle?: string
+}
+
+/** Fuente de una respuesta, en un bloque ```fuente: va en el pie de la tarjeta con "Abrir reporte". */
+export interface FuenteChat {
+  nombre: string
+  filtros?: string
+  datos_al?: string
+  ruta?: string
+}
+
+const textoCorto = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined)
+
+function json(crudo: string): unknown {
+  try {
+    return JSON.parse(crudo)
+  }
+  catch {
+    return null
+  }
+}
+
+/** Una o hasta tres cifras principales; null si no tienen etiqueta y valor. */
+export function interpretarCifras(crudo: string): CifraChat[] | null {
+  const datos = json(crudo)
+  const lista = (Array.isArray(datos) ? datos : [datos]).slice(0, 3)
+
+  const cifras = lista.map(c => {
+    const d = (c ?? {}) as Record<string, unknown>
+    const etiqueta = textoCorto(d.etiqueta, 80)
+    const valor = textoCorto(d.valor, 40)
+
+    return etiqueta && valor ? { etiqueta, valor, ...(textoCorto(d.detalle, 160) ? { detalle: textoCorto(d.detalle, 160) } : {}) } : null
+  })
+
+  return cifras.length && cifras.every(Boolean) ? cifras as CifraChat[] : null
+}
+
+/** Fuente con su ruta solo si es interna de Atención. */
+export function interpretarFuente(crudo: string): FuenteChat | null {
+  const d = json(crudo) as Record<string, unknown> | null
+  const nombre = d && typeof d === 'object' && !Array.isArray(d) ? textoCorto(d.nombre, 150) : undefined
+  if (!d || !nombre)
+    return null
+  const ruta = textoCorto(d.ruta, 900)
+
+  return {
+    nombre,
+    ...(textoCorto(d.filtros, 300) ? { filtros: textoCorto(d.filtros, 300) } : {}),
+    ...(textoCorto(d.datos_al, 60) ? { datos_al: textoCorto(d.datos_al, 60) } : {}),
+    ...(ruta && esRutaInterna(ruta) ? { ruta } : {}),
+  }
+}
+
+/** Preguntas de seguimiento: hasta tres textos cortos. */
+export function interpretarSugerencias(crudo: string): string[] | null {
+  const datos = json(crudo)
+  if (!Array.isArray(datos))
+    return null
+  const lista = datos.map(s => textoCorto(s, 90)).filter((s): s is string => Boolean(s)).slice(0, 3)
+
+  return lista.length ? lista : null
+}
 
 /** Gráfica que el asistente escribe en un bloque ```grafica con JSON (XEL1-718). Solo datos: nada se ejecuta. */
 export interface GraficaChat {
@@ -174,7 +245,26 @@ export function interpretarMarkdown(texto: string): Bloque[] {
       while (i < lineas.length && !lineas[i].trim().startsWith('```'))
         codigo.push(lineas[i++])
       const cerrado = i < lineas.length
-      if (lenguaje === 'grafica') {
+      if (lenguaje === 'cifra' || lenguaje === 'fuente' || lenguaje === 'sugerencias') {
+        // Mientras llegan o si vienen mal formados no se pintan: la respuesta sigue legible sin ellos
+        const crudo = codigo.join('\n')
+        if (cerrado && lenguaje === 'cifra') {
+          const cifras = interpretarCifras(crudo)
+          if (cifras)
+            bloques.push({ tipo: 'cifras', cifras })
+        }
+        else if (cerrado && lenguaje === 'fuente') {
+          const fuente = interpretarFuente(crudo)
+          if (fuente)
+            bloques.push({ tipo: 'fuente', fuente })
+        }
+        else if (cerrado) {
+          const sugerencias = interpretarSugerencias(crudo)
+          if (sugerencias)
+            bloques.push({ tipo: 'sugerencias', sugerencias })
+        }
+      }
+      else if (lenguaje === 'grafica') {
         // Mientras llega por el stream el bloque está abierto: se avisa en lugar de pintar algo a medias
         const grafica = cerrado ? interpretarGrafica(codigo.join('\n')) : null
 

@@ -52,6 +52,8 @@ function bloque(b: Bloque): VNode {
     return h('p', { class: 'md-nota' }, 'Preparando la gráfica…')
   if (b.tipo === 'graficaInvalida')
     return h('p', { class: 'md-nota' }, 'No se pudo dibujar la gráfica.')
+  if (b.tipo === 'cifras' || b.tipo === 'fuente' || b.tipo === 'sugerencias')
+    return h('span', { hidden: true }) // los pinta la tarjeta de respuesta
 
   return h('pre', { class: 'md-pre' }, h('code', b.texto))
 }
@@ -59,10 +61,13 @@ function bloque(b: Bloque): VNode {
 export default defineComponent({
   name: 'MarkdownSeguro',
   props: {
-    texto: { type: String as PropType<string>, required: true },
+    texto: { type: String as PropType<string>, default: '' },
+
+    /** Bloques ya interpretados (la tarjeta de respuesta separa antes cifras, fuente y sugerencias). */
+    bloques: { type: Array as PropType<Bloque[]>, default: undefined },
   },
   setup(props) {
-    const bloques = computed(() => interpretarMarkdown(props.texto))
+    const bloques = computed(() => props.bloques ?? interpretarMarkdown(props.texto))
 
     return () => h('div', { class: 'md' }, bloques.value.map(bloque))
   },

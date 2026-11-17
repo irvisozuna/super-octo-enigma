@@ -1,25 +1,35 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { storeToRefs } from 'pinia'
 import CompositorPregunta from '../components/CompositorPregunta.vue'
 import ListaMensajes from '../components/ListaMensajes.vue'
 import { useAsistenteStore } from '../stores/asistenteStore'
+import { agruparConversaciones } from '../utils/historial'
 import type { ConversacionResumen } from '../types'
 import AsDialogo from '@/components/as/AsDialogo.vue'
 import { useDialogo } from '@/composables/useDialogo'
 import { useNotificacion } from '@/composables/useNotificacion'
 
-/* Pantalla completa del asistente: historial a la izquierda (arriba, plegable, en celular) y el chat. */
+/*
+ * Pantalla completa del asistente (XEL1-721): historial agrupado por fecha a la izquierda (arriba y plegable en celular)
+ * y, a la derecha, el inicio (saludo, caja grande y temas) o la conversación con la caja de seguimiento.
+ */
 const store = useAsistenteStore()
-const { conversaciones, cargandoConversaciones, actualId, titulo, enviando } = storeToRefs(store)
+const { conversaciones, cargandoConversaciones, actualId, titulo, enviando, vacia, cargandoMensajes } = storeToRefs(store)
 const { t } = useI18n()
 const { smAndDown } = useDisplay()
 const dialogo = useDialogo()
 const notificar = useNotificacion()
 
 const historialAbierto = ref(false)
+
+/** Primeras conversaciones a la vista; "Ver todas" muestra el resto. */
+const VISIBLES = 12
+const verTodas = ref(false)
+const grupos = computed(() => agruparConversaciones(verTodas.value ? conversaciones.value : conversaciones.value.slice(0, VISIBLES)))
+const hayMas = computed(() => !verTodas.value && conversaciones.value.length > VISIBLES)
 const renombrando = ref<ConversacionResumen | null>(null)
 const nuevoTitulo = ref('')
 
@@ -90,7 +100,7 @@ async function borrar(c: ConversacionResumen) {
         </VBtn>
         <span
           v-else
-          class="as-sobrelinea"
+          class="asistente-historial__etiqueta"
         >{{ t('asistente.historial') }}</span>
         <VBtn
           prepend-icon="tabler-plus"
@@ -107,32 +117,45 @@ async function borrar(c: ConversacionResumen) {
         indeterminate
         height="2"
       />
-      <VList
+      <nav
         v-if="conversaciones.length"
-        density="compact"
-        nav
         class="asistente-historial__lista"
+        :aria-label="t('asistente.historial')"
       >
-        <VListItem
-          v-for="c in conversaciones"
-          :key="c.id"
-          :active="c.id === actualId"
-          :disabled="enviando && c.id !== actualId"
-          @click="abrir(c.id)"
+        <div
+          v-for="g in grupos"
+          :key="g.titulo"
+          class="asistente-historial__grupo"
         >
-          <VListItemTitle class="text-body-2">
-            {{ c.titulo }}
-          </VListItemTitle>
-          <template #append>
+          <span class="asistente-historial__fecha">{{ g.titulo }}</span>
+          <div
+            v-for="c in g.conversaciones"
+            :key="c.id"
+            class="asistente-historial__item"
+            :class="{ 'asistente-historial__item--activa': c.id === actualId }"
+          >
+            <button
+              type="button"
+              class="asistente-historial__abrir"
+              :aria-current="c.id === actualId ? 'page' : undefined"
+              :disabled="enviando && c.id !== actualId"
+              @click="abrir(c.id)"
+            >
+              <span class="asistente-historial__titulo">{{ c.titulo }}</span>
+              <span
+                v-if="c.cuando"
+                class="asistente-historial__cuando"
+              >{{ c.cuando }}</span>
+            </button>
             <VMenu location="bottom end">
               <template #activator="{ props: activador }">
                 <VBtn
                   v-bind="activador"
-                  icon="tabler-dots-vertical"
+                  icon="tabler-dots"
                   variant="text"
                   size="x-small"
-                  :aria-label="t('asistente.historial')"
-                  @click.stop
+                  class="asistente-historial__menu"
+                  :aria-label="t('asistente.opcionesConversacion', { titulo: c.titulo })"
                 />
               </template>
               <VList density="compact">
@@ -149,9 +172,17 @@ async function borrar(c: ConversacionResumen) {
                 />
               </VList>
             </VMenu>
-          </template>
-        </VListItem>
-      </VList>
+          </div>
+        </div>
+        <button
+          v-if="hayMas"
+          type="button"
+          class="asistente-historial__ver-todas"
+          @click="verTodas = true"
+        >
+          {{ t('asistente.verTodas') }}
+        </button>
+      </nav>
       <p
         v-else-if="!cargandoConversaciones"
         class="text-body-2 text-medium-emphasis px-2"
@@ -161,20 +192,27 @@ async function borrar(c: ConversacionResumen) {
     </aside>
 
     <section class="asistente-chat">
-      <header class="asistente-chat__encabezado">
-        <div class="as-sobrelinea">
-          {{ t('asistente.sobrelinea') }}
+      <template v-if="vacia && !cargandoMensajes">
+        <div class="asistente-chat__inicio">
+          <ListaMensajes inicio="pagina" />
         </div>
-        <h1 class="asistente-chat__titulo">
-          {{ titulo || t('asistente.titulo') }}
-        </h1>
-      </header>
-      <div class="asistente-chat__mensajes">
-        <ListaMensajes />
-      </div>
-      <div class="asistente-chat__compositor">
-        <CompositorPregunta />
-      </div>
+      </template>
+      <template v-else>
+        <header
+          v-if="titulo"
+          class="asistente-chat__encabezado"
+        >
+          <h1 class="asistente-chat__titulo">
+            {{ titulo }}
+          </h1>
+        </header>
+        <div class="asistente-chat__mensajes">
+          <ListaMensajes inicio="pagina" />
+        </div>
+        <div class="asistente-chat__compositor">
+          <CompositorPregunta />
+        </div>
+      </template>
     </section>
 
     <AsDialogo
@@ -202,7 +240,7 @@ async function borrar(c: ConversacionResumen) {
   display: grid;
   block-size: calc(100dvh - 140px);
   gap: var(--as-sp-4);
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   min-block-size: 480px;
 }
 
@@ -210,11 +248,12 @@ async function borrar(c: ConversacionResumen) {
   display: flex;
   flex-direction: column;
   border: var(--as-borde);
-  border-radius: var(--as-radio-lg);
+  border-radius: 16px;
   background: rgb(var(--v-theme-surface));
-  gap: var(--as-sp-2);
+  gap: var(--as-sp-3);
   min-block-size: 0;
-  padding: var(--as-sp-3);
+  padding-block: var(--as-sp-4);
+  padding-inline: var(--as-sp-3);
 }
 
 .asistente-historial__encabezado {
@@ -222,58 +261,160 @@ async function borrar(c: ConversacionResumen) {
   align-items: center;
   justify-content: space-between;
   gap: var(--as-sp-2);
+  padding-inline: var(--as-sp-2) var(--as-sp-1);
+}
+
+.asistente-historial__etiqueta {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-xs);
+  font-weight: var(--as-peso-semi);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .asistente-historial__lista {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--as-sp-2);
   min-block-size: 0;
-  padding: 0;
+  overflow-y: auto;
+}
+
+.asistente-historial__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asistente-historial__fecha {
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-xs);
+  font-weight: var(--as-peso-medio);
+  padding-block: var(--as-sp-1);
+  padding-inline: var(--as-sp-2);
+}
+
+.asistente-historial__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.asistente-historial__item:hover,
+.asistente-historial__item--activa {
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.asistente-historial__abrir {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  padding: var(--as-sp-2);
+  border: 0;
+  background: none;
+  color: rgb(var(--v-theme-on-surface));
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--as-fs-sm);
+  gap: var(--as-sp-2);
+  min-inline-size: 0;
+  text-align: start;
+}
+
+.asistente-historial__item--activa .asistente-historial__abrir {
+  font-weight: var(--as-peso-medio);
+}
+
+.asistente-historial__abrir:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.asistente-historial__titulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asistente-historial__cuando {
+  flex-shrink: 0;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: var(--as-fs-xs);
+}
+
+.asistente-historial__menu {
+  margin-inline-end: 2px;
+  opacity: 0;
+}
+
+.asistente-historial__item--activa .asistente-historial__menu,
+.asistente-historial__item:hover .asistente-historial__menu,
+.asistente-historial__item:focus-within .asistente-historial__menu {
+  opacity: 1;
+}
+
+.asistente-historial__ver-todas {
+  align-self: flex-start;
+  padding: var(--as-sp-2);
+  border: 0;
+  background: none;
+  color: rgb(var(--v-theme-primary));
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--as-fs-sm);
+  font-weight: var(--as-peso-medio);
 }
 
 .asistente-chat {
   display: flex;
   flex-direction: column;
-  border: var(--as-borde);
-  border-radius: var(--as-radio-lg);
-  background: rgb(var(--v-theme-surface));
   min-block-size: 0;
 }
 
+.asistente-chat__inicio {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding-block: var(--as-sp-8) var(--as-sp-6);
+  padding-inline: var(--as-sp-6);
+}
+
 .asistente-chat__encabezado {
-  border-block-end: var(--as-borde);
-  padding-block: var(--as-sp-3);
-  padding-inline: var(--as-sp-5);
+  inline-size: 100%;
+  margin-inline: auto;
+  max-inline-size: 880px;
+  padding-block: 0 var(--as-sp-3);
+  padding-inline: var(--as-sp-2);
 }
 
 .asistente-chat__titulo {
-  font-size: var(--as-fs-lg);
-  font-weight: var(--as-peso-semi);
+  overflow: hidden;
   margin: 0;
+  font-size: var(--as-fs-md);
+  font-weight: var(--as-peso-semi);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .asistente-chat__mensajes {
   flex: 1 1 auto;
-  overflow-y: auto;
   min-block-size: 0;
+  overflow-y: auto;
   overscroll-behavior: contain;
-  padding-block: var(--as-sp-4);
-  padding-inline: var(--as-sp-5);
+  padding-block: var(--as-sp-2) var(--as-sp-4);
+  padding-inline: var(--as-sp-2);
 }
 
-.asistente-chat__mensajes > * {
+.asistente-chat__mensajes > *,
+.asistente-chat__compositor > * {
   margin-inline: auto;
-  max-inline-size: 860px;
+  max-inline-size: 880px;
 }
 
 .asistente-chat__compositor {
-  border-block-start: var(--as-borde);
-  padding-block: var(--as-sp-3);
-  padding-inline: var(--as-sp-5);
-}
-
-.asistente-chat__compositor > * {
-  margin-inline: auto;
-  max-inline-size: 860px;
+  padding-block: var(--as-sp-2) 0;
+  padding-inline: var(--as-sp-2);
 }
 
 @media (max-width: 959px) {
@@ -294,10 +435,9 @@ async function borrar(c: ConversacionResumen) {
     display: none;
   }
 
-  .asistente-chat__encabezado,
-  .asistente-chat__mensajes,
-  .asistente-chat__compositor {
-    padding-inline: var(--as-sp-3);
+  .asistente-chat__inicio {
+    padding-block: var(--as-sp-4);
+    padding-inline: var(--as-sp-1);
   }
 }
 </style>

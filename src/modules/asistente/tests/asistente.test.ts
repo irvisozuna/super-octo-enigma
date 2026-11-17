@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { idsDocumentos, nombreArchivo } from '../utils/documentos'
 import { etiquetaHerramienta, fuentesConsultadas } from '../utils/herramientas'
 import { agruparPasos, duracion, reloj, resumenPasos } from '../utils/pasos'
+import { separarRespuesta, textoParaCopiar } from '../utils/respuesta'
+import { agruparConversaciones } from '../utils/historial'
 import type { PasoChat } from '../types'
 import { esRutaInterna, interpretarGrafica, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
 import { crearLectorSse, interpretarBloque } from '../utils/sse'
@@ -201,5 +203,59 @@ describe('gráficas en el chat (XEL1-718)', () => {
     expect(interpretarBloque('data: {"type":"verificacion","payload":{"total":3,"verificadas":2,"sin_verificar":["$80,123,456.00",5]}}'))
       .toEqual({ type: 'verificacion', payload: { total: 3, verificadas: 2, sin_verificar: ['$80,123,456.00'] } })
     expect(interpretarBloque('data: {"type":"verificacion","payload":{"total":"3"}}')).toBeNull()
+  })
+})
+
+describe('tarjeta de respuesta (XEL1-721)', () => {
+  const respuesta = [
+    '```cifra',
+    '{"etiqueta":"Cobrado ayer · 16/11/2026","valor":"$1,234,567.89","detalle":"4.2 % más que el lunes anterior"}',
+    '```',
+    '',
+    'Fue un **buen día** de cobro.',
+    '',
+    '```fuente',
+    '{"nombre":"Ingresos recibidos en caja","filtros":"16/11/2026","datos_al":"17/11/2026 12:33","ruta":"/reportes/ingresos_caja"}',
+    '```',
+    '',
+    '```sugerencias',
+    '["Comparar con el mes pasado","Desglosar por gerencia"]',
+    '```',
+  ].join('\n')
+
+  it('separa la cifra principal, el cuerpo, la fuente y las sugerencias', () => {
+    const partes = separarRespuesta(respuesta)
+
+    expect(partes.cifras).toEqual([{ etiqueta: 'Cobrado ayer · 16/11/2026', valor: '$1,234,567.89', detalle: '4.2 % más que el lunes anterior' }])
+    expect(partes.cuerpo.map(b => b.tipo)).toEqual(['parrafo'])
+    expect(partes.fuentes).toEqual([{ nombre: 'Ingresos recibidos en caja', filtros: '16/11/2026', datos_al: '17/11/2026 12:33', ruta: '/reportes/ingresos_caja' }])
+    expect(partes.sugerencias).toEqual(['Comparar con el mes pasado', 'Desglosar por gerencia'])
+  })
+
+  it('descarta rutas externas y bloques mal formados o a medio llegar', () => {
+    expect(separarRespuesta('```fuente\n{"nombre":"X","ruta":"https://malo.com"}\n```').fuentes).toEqual([{ nombre: 'X' }])
+    expect(separarRespuesta('```cifra\n{"valor":"$1"}\n```').cifras).toEqual([])
+    expect(separarRespuesta('```cifra\n{"etiqueta":"a","val').cifras).toEqual([])
+    expect(separarRespuesta('```sugerencias\n"no es lista"\n```').sugerencias).toEqual([])
+  })
+
+  it('copia la respuesta en texto plano', () => {
+    expect(textoParaCopiar(respuesta)).toBe('Cobrado ayer · 16/11/2026: $1,234,567.89 (4.2 % más que el lunes anterior)\n\nFue un buen día de cobro.\n\nFuente: Ingresos recibidos en caja · 16/11/2026 · datos al 17/11/2026 12:33')
+  })
+
+  it('agrupa el historial por fecha', () => {
+    const ahora = new Date(2026, 10, 17, 13, 0)
+    const c = (id: string, fecha: Date) => ({ id, titulo: id, mensajes: 2, actualizada: fecha.toISOString() })
+
+    const grupos = agruparConversaciones([
+      c('hoy', new Date(2026, 10, 17, 10, 24)),
+      c('ayer', new Date(2026, 10, 16, 18, 0)),
+      c('semana', new Date(2026, 10, 13, 9, 0)),
+      c('vieja', new Date(2026, 9, 2, 9, 0)),
+    ], ahora)
+
+    expect(grupos.map(g => [g.titulo, g.conversaciones[0].id, g.conversaciones[0].cuando])).toEqual([
+      ['Hoy', 'hoy', '10:24'], ['Ayer', 'ayer', '16 nov'], ['Esta semana', 'semana', '13 nov'], ['Anteriores', 'vieja', '2 oct'],
+    ])
   })
 })

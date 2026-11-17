@@ -82,6 +82,7 @@ export interface MensajeGuardado {
   pasos?: PasoGuardado[]
   duracion_ms?: number
   verificacion?: Verificacion
+  nivel?: NivelAgente
   fecha: string
 }
 
