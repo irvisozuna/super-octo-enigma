@@ -8,11 +8,12 @@ import { useAsistenteStore } from '@/modules/asistente'
 import { obtenerMenu } from '@/modules/reportes/services/reportesApi'
 import type { ElementoMenu } from '@/modules/reportes/types/api'
 import { useAbility } from '@/plugins/casl/composables/useAbility'
+import { buscadorVisible, pareceCuenta, textoBuscador } from '@/utils/buscador'
 
 /*
- * Buscador de la barra superior (XEL1-721): conversaciones del asistente y reportes o tableros; si no hay lo que busca,
- * ofrece preguntarle al asistente. Se abre con clic o con ⌘K / Ctrl+K. Sustituye al buscador de la plantilla, que
- * buscaba páginas de demostración.
+ * Buscador de la barra superior (XEL1-721, XEL1-722). Busca solo lo que el usuario puede ver: cuentas (abre Soporte),
+ * reportes y tableros, y sus conversaciones del asistente; si no hay lo que busca, ofrece preguntarle al asistente.
+ * Sin ninguno de esos permisos no aparece. Se abre con clic o con ⌘K / Ctrl+K.
  */
 const { t } = useI18n()
 const router = useRouter()
@@ -27,7 +28,18 @@ const reportes = ref<ElementoMenu[]>([])
 const cargando = ref(false)
 const campo = ref<HTMLInputElement | null>(null)
 
-const usaAsistente = computed(() => ability.can('use', 'asistente'))
+const permisos = computed(() => ({
+  cuentas: ability.can('read', 'supports'),
+  reportes: ability.can('read', 'reportes'),
+  asistente: ability.can('use', 'asistente'),
+}))
+
+const usaAsistente = computed(() => permisos.value.asistente)
+const visible = computed(() => buscadorVisible(permisos.value))
+const placeholder = computed(() => textoBuscador(permisos.value))
+
+/** La cuenta que se abriría en Soporte, si el texto parece un número de cuenta. */
+const cuenta = computed(() => (permisos.value.cuentas && pareceCuenta(consulta.value) ? consulta.value.trim() : ''))
 const esMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
 const normalizar = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
@@ -42,7 +54,7 @@ const resultadosConversaciones = computed(() => {
 
 const resultadosReportes = computed(() => {
   const q = normalizar(consulta.value.trim())
-  if (!q)
+  if (!q || !permisos.value.reportes)
     return []
 
   return reportes.value.filter(r => normalizar(`${r.titulo} ${r.descripcion ?? ''}`).includes(q)).slice(0, 6)
@@ -51,9 +63,12 @@ const resultadosReportes = computed(() => {
 async function cargar() {
   cargando.value = true
   try {
-    const tareas: Promise<unknown>[] = [obtenerMenu().then(m => {
-      reportes.value = m.categorias.flatMap(c => c.elementos).filter(e => e.tipo === 'reporte' || e.tipo === 'tablero')
-    })]
+    const tareas: Promise<unknown>[] = []
+    if (permisos.value.reportes) {
+      tareas.push(obtenerMenu().then(m => {
+        reportes.value = m.categorias.flatMap(c => c.elementos).filter(e => e.tipo === 'reporte' || e.tipo === 'tablero')
+      }))
+    }
 
     if (usaAsistente.value && !conversaciones.value.length)
       tareas.push(asistente.cargarConversaciones())
@@ -68,7 +83,7 @@ watch(abierto, async si => {
   if (!si)
     return
   consulta.value = ''
-  if (!reportes.value.length)
+  if (!reportes.value.length && !cargando.value)
     cargar()
 
   // El diálogo se monta con animación: se espera a que exista el campo para darle el foco
@@ -93,6 +108,15 @@ function abrirReporte(r: ElementoMenu) {
   router.push(r.tipo === 'tablero' ? `/reportes/tableros/${r.key}` : `/reportes/${r.key}`)
 }
 
+function abrirCuenta() {
+  if (!cuenta.value)
+    return
+  const numero = cuenta.value
+
+  cerrar()
+  router.push({ path: '/supports', query: { cuenta: numero } })
+}
+
 async function preguntar() {
   const pregunta = consulta.value.trim()
   if (!pregunta)
@@ -103,8 +127,13 @@ async function preguntar() {
   asistente.enviar(pregunta)
 }
 
-/** Enter abre el primer resultado; si no hay, le pregunta al asistente. */
+/** Enter abre la cuenta si es un número de cuenta; si no, el primer resultado; si no hay, le pregunta al asistente. */
 function alEnter() {
+  if (cuenta.value) {
+    abrirCuenta()
+
+    return
+  }
   const conversacion = resultadosConversaciones.value[0]
   const reporte = resultadosReportes.value[0]
   if (consulta.value.trim() && conversacion && normalizar(conversacion.titulo).includes(normalizar(consulta.value.trim())))
@@ -116,6 +145,8 @@ function alEnter() {
 }
 
 function atajo(e: KeyboardEvent) {
+  if (!visible.value)
+    return
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault()
     abierto.value = !abierto.value
@@ -128,14 +159,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', atajo))
 
 <template>
   <IconBtn
-    v-if="smAndDown"
+    v-if="visible && smAndDown"
     :aria-label="t('asistente.buscador.abrir')"
     @click="abierto = true"
   >
     <VIcon icon="tabler-search" />
   </IconBtn>
   <button
-    v-else
+    v-else-if="visible"
     type="button"
     class="buscador-global"
     @click="abierto = true"
@@ -145,11 +176,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', atajo))
       size="18"
       class="buscador-global__icono"
     />
-    <span class="buscador-global__texto">{{ usaAsistente ? t('asistente.buscador.placeholder') : t('asistente.buscador.placeholderReportes') }}</span>
+    <span class="buscador-global__texto">{{ placeholder }}</span>
     <kbd class="buscador-global__atajo">{{ esMac ? '⌘' : 'Ctrl' }} K</kbd>
   </button>
 
   <VDialog
+    v-if="visible"
     v-model="abierto"
     max-width="640"
     location="top"
@@ -171,7 +203,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', atajo))
           v-model="consulta"
           type="search"
           autofocus
-          :placeholder="usaAsistente ? t('asistente.buscador.placeholder') : t('asistente.buscador.placeholderReportes')"
+          :placeholder="placeholder"
           @keydown.enter.prevent="alEnter"
           @keydown.esc="cerrar"
         >
@@ -187,6 +219,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', atajo))
         density="compact"
         class="buscador-dialogo__lista"
       >
+        <template v-if="cuenta">
+          <VListSubheader>{{ t('asistente.buscador.cuentas') }}</VListSubheader>
+          <VListItem
+            prepend-icon="tabler-user-search"
+            :title="t('asistente.buscador.abrirCuenta', { cuenta })"
+            :subtitle="t('asistente.buscador.enSoporte')"
+            @click="abrirCuenta"
+          />
+        </template>
         <template v-if="resultadosConversaciones.length">
           <VListSubheader>{{ t('asistente.buscador.conversaciones') }}</VListSubheader>
           <VListItem
@@ -217,8 +258,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', atajo))
           />
         </template>
         <VListItem
-          v-if="consulta.trim() && !resultadosConversaciones.length && !resultadosReportes.length && !usaAsistente && !cargando"
-          :title="t('asistente.buscador.sinResultados')"
+          v-if="consulta.trim() && !cuenta && !resultadosConversaciones.length && !resultadosReportes.length && !usaAsistente && !cargando"
+          :title="permisos.cuentas ? t('asistente.buscador.sinResultadosCuenta') : t('asistente.buscador.sinResultados')"
           disabled
         />
       </VList>

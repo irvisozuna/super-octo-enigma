@@ -109,13 +109,15 @@
   },
   "buscador": {
     "abrir": "Buscar",
-    "placeholder": "Buscar en conversaciones, reportes o ayuda",
-    "placeholderReportes": "Buscar reportes y tableros",
     "conversaciones": "Conversaciones",
     "reportes": "Reportes y tableros",
     "ayuda": "Ayuda",
     "preguntar": "Preguntar al asistente: «{pregunta}»",
-    "sinResultados": "Sin resultados"
+    "sinResultados": "Sin resultados",
+    "cuentas": "Cuentas",
+    "abrirCuenta": "Abrir la cuenta {cuenta}",
+    "enSoporte": "En Soporte",
+    "sinResultadosCuenta": "Sin resultados. Para una cuenta, escriba su número."
   },
   "corte": {
     "texto": "Datos al corte de {hora}",

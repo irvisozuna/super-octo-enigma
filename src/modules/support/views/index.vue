@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, onMounted, ref } from 'vue'
+import { markRaw, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -67,12 +67,19 @@ async function buscar() {
   }
 }
 
-onMounted(() => {
+/** Abre la cuenta de la dirección (`?cuenta=`), al entrar y cuando cambia estando ya aquí (buscador global, XEL1-722). */
+function cuentaDeRuta() {
   const q = typeof route.query.cuenta === 'string' ? route.query.cuenta.trim() : ''
   if (q) {
     cuenta.value = q
     buscar()
   }
+}
+
+onMounted(cuentaDeRuta)
+watch(() => route.query.cuenta, (nueva, anterior) => {
+  if (nueva !== anterior)
+    cuentaDeRuta()
 })
 </script>
 
