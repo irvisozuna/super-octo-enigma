@@ -12,6 +12,16 @@ const asistenteRoutes: RouteRecordRaw[] = [
       subject: 'asistente',
     },
   },
+  {
+    // Informe o presentación que armó el asistente (XEL1-712); el servidor solo lo da a quien lo pidió
+    path: '/asistente/documentos/:id',
+    name: 'asistente-documento',
+    component: () => import('./views/DocumentoPagina.vue'),
+    meta: {
+      action: 'use',
+      subject: 'asistente',
+    },
+  },
 ]
 
 export default asistenteRoutes

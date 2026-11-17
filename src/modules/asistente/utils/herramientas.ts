@@ -8,6 +8,8 @@ const ETIQUETAS: Record<string, string> = {
   monitoreo_resumen: 'Consultando el monitoreo de lecturas',
   explicar_regla: 'Revisando las definiciones',
   ficha_cuenta: 'Consultando la cuenta',
+  calcular: 'Calculando',
+  generar_documento: 'Armando el documento',
 }
 
 export function etiquetaHerramienta(nombre: string): string {

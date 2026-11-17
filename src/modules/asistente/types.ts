@@ -5,9 +5,22 @@ export type EventoChat =
   | { type: 'text-delta'; payload: { text: string } }
   | { type: 'tool-call'; payload: { toolName: string } }
   | { type: 'error'; payload: { error: { message: string } } }
+  | { type: 'truncated'; payload: { motivo: MotivoCorte } }
   | { type: 'done' }
 
 export type NivelRespuesta = 'auto' | 'rapido' | 'analisis'
+
+/** Por qué una respuesta quedó incompleta (XEL1-711): tope de longitud o de pasos del modelo. */
+export type MotivoCorte = 'longitud' | 'pasos'
+
+/** Informe o presentación que armó el asistente (XEL1-712). */
+export interface DocumentoAsistente {
+  id: string
+  tipo: 'presentacion' | 'informe'
+  titulo: string
+  creado: string
+  secciones: number
+}
 
 export interface ConversacionResumen {
   id: string
@@ -21,6 +34,7 @@ export interface MensajeGuardado {
   rol: 'usuario' | 'asistente'
   texto: string
   herramientas?: string[]
+  cortada?: MotivoCorte
   fecha: string
 }
 
@@ -45,4 +59,5 @@ export interface MensajeChat {
   herramientas: string[]
   estado: 'transmitiendo' | 'listo' | 'error' | 'detenido'
   error?: string
+  cortada?: MotivoCorte
 }

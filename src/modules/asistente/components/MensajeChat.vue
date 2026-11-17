@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MensajeChat } from '../types'
+import { idsDocumentos } from '../utils/documentos'
 import { fuentesConsultadas } from '../utils/herramientas'
 import MarkdownSeguro from './MarkdownSeguro'
+import TarjetaDocumento from './TarjetaDocumento.vue'
 
 /* Un mensaje del chat: la pregunta a la derecha; la respuesta con formato, el avance y lo que consultó. */
 const props = defineProps<{
@@ -15,6 +17,7 @@ const { t } = useI18n()
 
 const fuentes = computed(() => fuentesConsultadas(props.mensaje.herramientas))
 const transmitiendo = computed(() => props.mensaje.estado === 'transmitiendo')
+const documentos = computed(() => (transmitiendo.value || props.mensaje.rol !== 'asistente' ? [] : idsDocumentos(props.mensaje.texto)))
 </script>
 
 <template>
@@ -33,6 +36,22 @@ const transmitiendo = computed(() => props.mensaje.estado === 'transmitiendo')
       v-if="mensaje.texto"
       :texto="mensaje.texto"
     />
+    <TarjetaDocumento
+      v-for="id in documentos"
+      :id="id"
+      :key="id"
+    />
+    <div
+      v-if="mensaje.cortada && !transmitiendo"
+      class="chat-aviso"
+      role="status"
+    >
+      <VIcon
+        icon="tabler-alert-triangle"
+        size="16"
+      />
+      <span>{{ t(`asistente.cortada.${mensaje.cortada}`) }}</span>
+    </div>
     <div
       v-if="transmitiendo && avance"
       class="chat-avance"
@@ -113,6 +132,23 @@ const transmitiendo = computed(() => props.mensaje.estado === 'transmitiendo')
 
 .chat-error {
   color: rgb(var(--v-theme-error));
+}
+
+.chat-aviso {
+  display: flex;
+  align-items: flex-start;
+  border-radius: var(--as-radio-md);
+  background: rgba(var(--v-theme-warning), 0.12);
+  color: rgb(var(--v-theme-on-surface));
+  font-size: var(--as-fs-sm);
+  gap: var(--as-sp-2);
+  padding-block: var(--as-sp-2);
+  padding-inline: var(--as-sp-3);
+}
+
+.chat-aviso .v-icon {
+  color: rgb(var(--v-theme-warning));
+  margin-block-start: 2px;
 }
 
 .chat-respuesta :deep(.md > :first-child) {

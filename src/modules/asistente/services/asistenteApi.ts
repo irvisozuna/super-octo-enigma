@@ -1,4 +1,4 @@
-import type { ConversacionDetalle, ConversacionResumen, EstadoAsistente, EventoChat, NivelRespuesta } from '../types'
+import type { ConversacionDetalle, ConversacionResumen, DocumentoAsistente, EstadoAsistente, EventoChat, NivelRespuesta } from '../types'
 import { crearLectorSse } from '../utils/sse'
 import { rawApi } from '@/services/api'
 import { sesionVencida } from '@/utils/sesion'
@@ -80,4 +80,14 @@ export function renombrarConversacion(id: string, titulo: string): Promise<{ ok:
 
 export function borrarConversacion(id: string): Promise<{ ok: boolean }> {
   return rawApi(`${BASE}/conversaciones/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+/** Datos de un informe o presentación del asistente para su tarjeta (XEL1-712). */
+export function obtenerDocumento(id: string): Promise<DocumentoAsistente> {
+  return rawApi(`${BASE}/documentos/${encodeURIComponent(id)}`)
+}
+
+/** HTML del documento, armado por Atención con su plantilla (sin scripts). */
+export function htmlDocumento(id: string): Promise<string> {
+  return rawApi(`${BASE}/documentos/${encodeURIComponent(id)}/html`, { headers: { Accept: 'text/html' }, responseType: 'text' })
 }

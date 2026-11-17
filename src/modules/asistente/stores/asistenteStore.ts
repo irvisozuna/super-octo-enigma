@@ -12,7 +12,7 @@ let siguienteId = 0
 const nuevoId = () => `m${++siguienteId}`
 
 function desdeGuardado(m: MensajeGuardado): MensajeChat {
-  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo' }
+  return { id: nuevoId(), rol: m.rol, texto: m.texto, herramientas: m.herramientas ?? [], estado: 'listo', cortada: m.cortada }
 }
 
 export const useAsistenteStore = defineStore('asistente', () => {
@@ -105,6 +105,9 @@ export const useAsistenteStore = defineStore('asistente', () => {
           else if (evento.type === 'text-delta') {
             respuesta.texto += evento.payload.text
             avance.value = 'Escribiendo'
+          }
+          else if (evento.type === 'truncated') {
+            respuesta.cortada = evento.payload.motivo
           }
           else if (evento.type === 'error') {
             respuesta.estado = 'error'

@@ -36,6 +36,8 @@ export function interpretarBloque(bloque: string): EventoChat | null {
     return { type, payload: { text: payload.text } }
   if (type === 'tool-call' && typeof payload.toolName === 'string')
     return { type, payload: { toolName: payload.toolName } }
+  if (type === 'truncated' && (payload.motivo === 'longitud' || payload.motivo === 'pasos'))
+    return { type, payload: { motivo: payload.motivo } }
   if (type === 'error') {
     const mensaje = (payload.error as { message?: unknown } | undefined)?.message
 

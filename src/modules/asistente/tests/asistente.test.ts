@@ -1,6 +1,7 @@
 import { createMongoAbility } from '@casl/ability'
 import { describe, expect, it } from 'vitest'
-import { fuentesConsultadas } from '../utils/herramientas'
+import { idsDocumentos, nombreArchivo } from '../utils/documentos'
+import { etiquetaHerramienta, fuentesConsultadas } from '../utils/herramientas'
 import { esRutaInterna, interpretarLinea, interpretarMarkdown } from '../utils/markdown'
 import { crearLectorSse, interpretarBloque } from '../utils/sse'
 
@@ -25,6 +26,32 @@ describe('lector SSE del asistente', () => {
     expect(interpretarBloque('data: {"type":"text-delta","payload":{"text":5}}')).toBeNull()
     expect(interpretarBloque(': comentario')).toBeNull()
     expect(interpretarBloque('data: {"type":"error","payload":{}}')).toEqual({ type: 'error', payload: { error: { message: '' } } })
+  })
+
+  it('deja pasar el aviso de respuesta cortada solo con un motivo conocido (XEL1-711)', () => {
+    expect(interpretarBloque('data: {"type":"truncated","payload":{"motivo":"longitud"}}')).toEqual({ type: 'truncated', payload: { motivo: 'longitud' } })
+    expect(interpretarBloque('data: {"type":"truncated","payload":{"motivo":"pasos"}}')).toEqual({ type: 'truncated', payload: { motivo: 'pasos' } })
+    expect(interpretarBloque('data: {"type":"truncated","payload":{"motivo":"<b>"}}')).toBeNull()
+  })
+})
+
+describe('documentos del asistente (XEL1-712)', () => {
+  it('encuentra los documentos enlazados en una respuesta, sin repetir', () => {
+    const id = '0f8c2b1e-5d3a-4c7b-9e21-6a4f8d2c1b30'
+    const texto = `Listo: [Ver presentación: Facturación](/asistente/documentos/${id}).\nOtra vez: /asistente/documentos/${id.toUpperCase()}`
+
+    expect(idsDocumentos(texto)).toEqual([id])
+    expect(idsDocumentos('[Abrir](/asistente/documentos/no-es-uuid)')).toEqual([])
+  })
+
+  it('arma el nombre del archivo igual que el servidor', () => {
+    expect(nombreArchivo('Facturación en m³ · Primer semestre 2026')).toBe('facturacion-en-m3-primer-semestre-2026.html')
+    expect(nombreArchivo('¿?')).toBe('documento-asistente.html')
+  })
+
+  it('nombra el avance de las herramientas nuevas', () => {
+    expect(etiquetaHerramienta('generar_documento')).toBe('Armando el documento')
+    expect(etiquetaHerramienta('calcular')).toBe('Calculando')
   })
 })
 

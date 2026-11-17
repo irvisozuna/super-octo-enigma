@@ -35,5 +35,21 @@
   "sinCupo": "Llegó al límite de preguntas de esta hora.",
   "consumoAlto": "Se ha usado el {pct} % del consumo mensual del asistente.",
   "tu": "Usted",
-  "error": "No se pudo completar la respuesta."
+  "error": "No se pudo completar la respuesta.",
+  "cortada": {
+    "longitud": "La respuesta se cortó porque era demasiado larga. Pida una parte más corta, o pida un informe o una presentación para descargar.",
+    "pasos": "La respuesta se cortó porque la consulta necesitó demasiados pasos. Intente con un periodo más corto o una pregunta más concreta."
+  },
+  "documento": {
+    "titulo": "Documento del asistente",
+    "presentacion": "Presentación",
+    "informe": "Informe",
+    "secciones": "{n} sección | {n} secciones",
+    "vistaPrevia": "Vista previa",
+    "descargar": "Descargar",
+    "imprimir": "Imprimir o guardar PDF",
+    "ayudaPdf": "Para PDF, elija «Guardar como PDF» en la impresora.",
+    "ayudaPresentacion": "Avance con las flechas o la rueda del ratón.",
+    "noDisponible": "No se pudo abrir el documento."
+  }
 }
