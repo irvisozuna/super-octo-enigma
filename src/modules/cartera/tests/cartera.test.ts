@@ -52,6 +52,7 @@ const catalogos: RespuestaCatalogos = {
   configuracion: { vigencia_dias: 90, capacidad_lote: 2, seguimiento_dias: 15 },
   corte: '2026-11-06',
   puede_operar: true,
+  generacion_activa: true,
 }
 
 const cuenta = (contrato: number, adeudo = 100): CuentaCandidata => ({
@@ -162,6 +163,8 @@ describe('useNotificar', () => {
 
     const n = useNotificar()
 
+    n.catalogos.value = catalogos
+
     await n.verCuentas()
     expect([...n.seleccion.value]).toEqual([3, 1])
     expect(n.totalSeleccionado.value).toBe(150)
@@ -194,6 +197,8 @@ describe('useNotificar', () => {
 
     const n = useNotificar()
 
+    n.catalogos.value = catalogos
+
     await n.verCuentas()
     n.notificador.value = 'a1'
     expect(n.puedeGenerar.value).toBe(true)
@@ -201,6 +206,27 @@ describe('useNotificar', () => {
     expect(n.puedeGenerar.value).toBe(false)
     expect(await n.generar()).toBeNull()
     expect(api.generarLote).not.toHaveBeenCalled()
+  })
+
+  // XEL1-774: con la generación apagada en el servidor (o si no lo dice) no se genera aunque todo lo demás esté listo
+  it('con la generación apagada no deja generar', async () => {
+    api.vistaPrevia.mockResolvedValue({ resumen: {}, cuentas: [cuenta(1)], capacidad_sugerida: 45 })
+
+    const n = useNotificar()
+
+    n.catalogos.value = { ...catalogos, generacion_activa: false }
+
+    await n.verCuentas()
+    n.notificador.value = 'a1'
+    expect(n.generacionActiva.value).toBe(false)
+    expect(n.puedeGenerar.value).toBe(false)
+    expect(await n.generar()).toBeNull()
+    expect(api.generarLote).not.toHaveBeenCalled()
+
+    n.catalogos.value = { ...catalogos, generacion_activa: undefined }
+    expect(n.puedeGenerar.value).toBe(false)
+    n.catalogos.value = catalogos
+    expect(n.puedeGenerar.value).toBe(true)
   })
 })
 

@@ -26,6 +26,7 @@
   "notificar": {
     "titulo": "Notificar",
     "descripcion": "Busca las cuentas con adeudo, revisa la lista y genera el lote para un notificador.",
+    "generacionApagada": "La generación de lotes se habilita al iniciar el piloto. Mientras tanto puedes buscar, contar y revisar la lista.",
     "territorio": "Territorio",
     "gerencias": "Gerencia",
     "sistemas": "Sistema",

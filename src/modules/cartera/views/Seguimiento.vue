@@ -86,7 +86,9 @@ const listoAccion = computed(() => !!motivo.value.trim() && ((accion.value !== '
 const marcadasAccion = computed(() => vista.value === 'revisitar' ? s.seleccionRevisita.value.size : s.seleccion.value.size)
 
 /** Revisitar no aplica si todas las marcadas agotaron intentos. */
-const puedeRevisitar = computed(() => s.seleccionRevisita.value.size > s.agotadasMarcadas.value)
+// XEL1-774: la segunda notificación y la revisita crean un lote; se apagan junto con la generación
+const generacionActiva = computed(() => s.datos.value?.generacion_activa === true)
+const puedeRevisitar = computed(() => generacionActiva.value && s.seleccionRevisita.value.size > s.agotadasMarcadas.value)
 
 const columnas: ColumnaTabla<CandidataSeguimiento>[] = [
   { clave: 'marca', titulo: '', formato: 'personalizado', ordenable: false, ancho: 48 },
@@ -501,6 +503,8 @@ onMounted(async () => {
           </AsBtnSecundario>
           <AsBtnPrimario
             prepend-icon="tabler-file-plus"
+            :disabled="!generacionActiva"
+            :title="generacionActiva ? undefined : t('cartera.notificar.generacionApagada')"
             @click="abrirAccion('segunda')"
           >
             {{ t('cartera.seguimiento.segunda') }}
@@ -529,6 +533,7 @@ onMounted(async () => {
           <AsBtnPrimario
             prepend-icon="tabler-repeat"
             :disabled="!puedeRevisitar"
+            :title="generacionActiva ? undefined : t('cartera.notificar.generacionApagada')"
             @click="abrirAccion('revisita')"
           >
             {{ t('cartera.seguimiento.revisitar') }}

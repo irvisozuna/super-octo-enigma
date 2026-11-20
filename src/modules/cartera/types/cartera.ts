@@ -40,6 +40,9 @@ export interface RespuestaCatalogos {
   configuracion: Configuracion
   corte: string | null
   puede_operar: boolean
+
+  /** XEL1-774: apagada hasta el piloto; sin ella no se generan lotes (ni segundas notificaciones ni revisitas). */
+  generacion_activa?: boolean
 }
 
 export type NuncaHaPagado = 'incluir' | 'excluir' | 'solo'
@@ -371,6 +374,9 @@ export interface RespuestaSeguimiento {
   revisita_intentos: number
   ordenes: OrdenSeguimiento[]
   puede_operar: boolean
+
+  /** XEL1-774: sin ella no hay segunda notificación ni revisita (crean lote). */
+  generacion_activa?: boolean
 }
 
 export interface RespuestaAccionSeguimiento {

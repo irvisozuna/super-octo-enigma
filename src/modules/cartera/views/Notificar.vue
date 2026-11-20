@@ -230,6 +230,16 @@ onBeforeUnmount(() => n.detener())
     </div>
 
     <VAlert
+      v-if="n.catalogos.value && !n.generacionActiva.value"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-3"
+      data-test="generacion-apagada"
+    >
+      {{ t('cartera.notificar.generacionApagada') }}
+    </VAlert>
+    <VAlert
       v-if="excluidas"
       type="info"
       variant="tonal"

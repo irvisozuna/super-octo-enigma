@@ -34,7 +34,10 @@ export function useNotificar(espera = 400) {
   const seleccionadas = computed(() => cuentas.value.filter(c => seleccion.value.has(c.contrato)))
   const totalSeleccionado = computed(() => seleccionadas.value.reduce((s, c) => s + c.adeudo, 0))
   const excedeCapacidad = computed(() => seleccion.value.size > capacidad.value)
-  const puedeGenerar = computed(() => listaVigente.value && seleccion.value.size > 0 && !!notificador.value && !generando.value)
+
+  // XEL1-774: si el servidor no lo dice, se toma como apagada; el servidor rechaza igual
+  const generacionActiva = computed(() => catalogos.value?.generacion_activa === true)
+  const puedeGenerar = computed(() => generacionActiva.value && listaVigente.value && seleccion.value.size > 0 && !!notificador.value && !generando.value)
 
   async function iniciar() {
     try {
@@ -170,6 +173,7 @@ export function useNotificar(espera = 400) {
     seleccionadas,
     totalSeleccionado,
     excedeCapacidad,
+    generacionActiva,
     puedeGenerar,
     iniciar,
     contar,
