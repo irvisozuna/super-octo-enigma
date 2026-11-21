@@ -82,6 +82,7 @@ export const COLOR_NOTIFICACION: Record<EstadoNotificacion, string> = {
   en_proceso: 'warning',
   recibida: 'success',
   firmada: 'success',
+  estrados: 'success',
   no_entregada: 'error',
   usuario_no_localizado: 'error',
   toma_no_localizada: 'error',
@@ -95,7 +96,8 @@ export const COLOR_NOTIFICACION: Record<EstadoNotificacion, string> = {
 /** Cómo se agrupa un resultado en mapas y monitor de campo (XEL1-680, XEL1-681). */
 export type GrupoResultado = 'entregada' | 'noEntregada' | 'proceso' | 'otro'
 
-const ENTREGADA: EstadoNotificacion[] = ['recibida', 'firmada']
+// Notificado por estrados cuenta como entregada (XEL1-778), igual que en NoticeStatus::DELIVERED
+const ENTREGADA: EstadoNotificacion[] = ['recibida', 'firmada', 'estrados']
 const NO_ENTREGADA: EstadoNotificacion[] = ['no_entregada', 'rechazada', 'usuario_no_localizado', 'toma_no_localizada', 'duplicidad']
 
 export function grupoResultado(estado: string | null | undefined): GrupoResultado {

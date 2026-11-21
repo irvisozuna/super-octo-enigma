@@ -7,7 +7,7 @@ import { useNotificar } from '../composables/useNotificar'
 import { useSeguimiento } from '../composables/useSeguimiento'
 import { useEvidencia } from '../composables/useEvidencia'
 import type { CuentaCandidata, ItemCatalogo, Notificacion, RespuestaCatalogos } from '../types/cartera'
-import { cuerpoBusqueda, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
+import { COLOR_NOTIFICACION, cuerpoBusqueda, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, grupoResultado, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
 
 const api = vi.hoisted(() => ({
   obtenerCatalogos: vi.fn(),
@@ -120,6 +120,13 @@ describe('reglas puras', () => {
     expect(hijosDe(catalogos.sistemas, []).map(i => i.id)).toEqual([10, 20])
     expect(hijosDe(catalogos.sistemas, [2]).map(i => i.id)).toEqual([20])
     expect(recortar([10, 20], hijosDe(catalogos.sistemas, [2]))).toEqual([20])
+  })
+
+  it('notificado por estrados cuenta como entregada (XEL1-778)', () => {
+    expect(grupoResultado('estrados')).toBe('entregada')
+    expect(grupoResultado('firmada')).toBe('entregada')
+    expect(grupoResultado('usuario_no_localizado')).toBe('noEntregada')
+    expect(COLOR_NOTIFICACION.estrados).toBe('success')
   })
 
   it('parámetros de la lista y qué se puede capturar', () => {

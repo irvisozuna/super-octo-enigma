@@ -177,6 +177,7 @@ export type ResultadoNotificacion =
   | 'rechazada'
   | 'recibida'
   | 'firmada'
+  | 'estrados'
 
 export type EstadoNotificacion = 'en_proceso' | ResultadoNotificacion | 'cancelada' | 'vencida' | 'sin_estado'
 
