@@ -18,10 +18,12 @@ const a = useAgentes()
 const tipos = ref<TipoOrden[]>([])
 const editando = ref<Agente | null>(null)
 const abierto = ref(false)
-const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true, usuario: null, usa_app: false })
+const edicion = reactive<EdicionAgente>({ nombre: '', tipos: [], activo: true, usuario: null, usa_app: false, gerencias: [] })
 
 const opcionesTipo = computed(() => tipos.value.map(x => ({ value: x.codigo, title: x.nombre })))
 const nombreTipo = (codigo: string) => tipos.value.find(x => x.codigo === codigo)?.nombre ?? codigo
+const opcionesGerencia = computed(() => a.gerencias.value.map(g => ({ value: g.id, title: g.nombre })))
+const nombreGerencia = (id: number) => a.gerencias.value.find(g => g.id === id)?.nombre ?? String(id)
 
 const columnas: ColumnaTabla<Agente>[] = [
   { clave: 'nombre', titulo: t('ordenes.agentes.nombre'), formato: 'personalizado', anchoMin: 240 },
@@ -97,8 +99,8 @@ const faltaUsuario = computed(() => edicion.usa_app && !edicion.usuario)
 function abrir(agente: Agente | null) {
   editando.value = agente
   Object.assign(edicion, agente
-    ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo, usuario: agente.usuario ?? null, usa_app: !!agente.usa_app }
-    : { nombre: '', tipos: [], activo: true, usuario: null, usa_app: true })
+    ? { nombre: agente.nombre, tipos: [...agente.tipos], activo: agente.activo, usuario: agente.usuario ?? null, usa_app: !!agente.usa_app, gerencias: [...(agente.gerencias ?? [])] }
+    : { nombre: '', tipos: [], activo: true, usuario: null, usa_app: true, gerencias: [] })
   resultados.value = []
   busqueda.value = ''
   a.errorGuardar.value = null
@@ -190,7 +192,13 @@ onMounted(async () => {
         </div>
       </template>
       <template #celda-tipos="{ fila }">
-        {{ fila.tipos.map(nombreTipo).join(', ') || '—' }}
+        <div>{{ fila.tipos.map(nombreTipo).join(', ') || '—' }}</div>
+        <div
+          v-if="fila.gerencias?.length"
+          class="text-body-2 text-medium-emphasis"
+        >
+          {{ fila.gerencias.map(nombreGerencia).join(', ') }}
+        </div>
       </template>
       <!-- Carga (XEL1-680) -->
       <template #celda-carga.abiertas="{ fila }">
@@ -257,6 +265,17 @@ onMounted(async () => {
         :label="t('ordenes.agentes.tipos')"
         multiple
         chips
+        class="mb-3"
+      />
+      <VSelect
+        v-model="edicion.gerencias"
+        :items="opcionesGerencia"
+        :label="t('ordenes.agentes.gerencias')"
+        :hint="t('ordenes.agentes.gerenciasAyuda')"
+        persistent-hint
+        multiple
+        chips
+        clearable
         class="mb-3"
       />
 

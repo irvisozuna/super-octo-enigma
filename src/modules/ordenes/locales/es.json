@@ -37,6 +37,8 @@
     "descripcion": "Quién sale a campo, qué atiende y con qué usuario entra a la app. Lo administran el supervisor de campo y Sistemas.",
     "nombre": "Nombre",
     "tipos": "Atiende",
+    "gerencias": "Gerencias",
+    "gerenciasAyuda": "Dónde trabaja. Queda anotado; no cambia a quién se le asignan los avisos.",
     "abiertas": "Abiertas",
     "hoy": "Cerradas hoy",
     "ultima": "Última captura",

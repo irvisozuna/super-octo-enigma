@@ -100,6 +100,9 @@ export interface EdicionAgente {
   /** Usuario de Aquasoft Comercial; `null` quita el usuario. */
   usuario: string | null
   usa_app: boolean
+
+  /** Gerencias donde trabaja (XEL1-786); solo queda anotado. */
+  gerencias: number[]
 }
 
 /** Resultado de la búsqueda de usuarios: solo usuario y nombre, y de qué agente es si ya está ligado. */
@@ -113,6 +116,14 @@ export interface UsuarioAgente {
 export interface RespuestaAgentes {
   agentes: Agente[]
   puede_administrar: boolean
+
+  /** Gerencias activas del padrón, para la ficha del agente (XEL1-786). */
+  gerencias?: GerenciaAgente[]
+}
+
+export interface GerenciaAgente {
+  id: number
+  nombre: string
 }
 
 export interface ConteoPuente {

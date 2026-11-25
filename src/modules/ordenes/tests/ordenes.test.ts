@@ -47,12 +47,29 @@ describe('agentes de campo', () => {
 
     await a.cargar()
 
-    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false })
-    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false })
+    await a.guardar(null, { nombre: '  Ana ', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false, gerencias: [3] })
+    expect(api.guardarAgente).toHaveBeenCalledWith(null, { nombre: 'Ana', tipos: ['cobranza'], activo: true, usuario: null, usa_app: false, gerencias: [3] })
     expect(a.agentes.value.map(x => x.id)).toEqual(['a', 'b'])
 
-    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false, usuario: 'akojeda', usa_app: true })).toBeNull()
+    expect(await a.guardar('a', { nombre: 'Ana', tipos: [], activo: false, usuario: 'akojeda', usa_app: true, gerencias: [] })).toBeNull()
     expect(a.errorGuardar.value).not.toBeNull()
+  })
+
+  it('trae las gerencias y al desactivar a uno lo pasa abajo de los activos (XEL1-786)', async () => {
+    api.obtenerAgentes.mockResolvedValue({
+      agentes: [{ id: 'b', nombre: 'Beto', tipos: [], activo: true }, { id: 'z', nombre: 'Zoe', tipos: [], activo: true }],
+      puede_administrar: true,
+      gerencias: [{ id: 3, nombre: 'San José' }],
+    })
+    api.guardarAgente.mockResolvedValueOnce({ id: 'b', nombre: 'Beto', tipos: [], activo: false })
+
+    const a = useAgentes()
+
+    await a.cargar()
+    expect(a.gerencias.value).toEqual([{ id: 3, nombre: 'San José' }])
+
+    await a.guardar('b', { nombre: 'Beto', tipos: [], activo: false, usuario: null, usa_app: false, gerencias: [] })
+    expect(a.agentes.value.map(x => x.id)).toEqual(['z', 'b'])
   })
 })
 

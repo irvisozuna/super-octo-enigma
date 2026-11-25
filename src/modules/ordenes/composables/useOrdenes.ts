@@ -1,6 +1,6 @@
 import { reactive, ref } from 'vue'
 import { cambiarEstadoOrden, guardarAgente, obtenerAgentes, obtenerCatalogo, obtenerOrdenes, obtenerPuente } from '../services/ordenesApi'
-import type { Agente, EdicionAgente, FiltrosOrdenes, Orden, Paginacion, RespuestaPuente, TipoOrden } from '../types/ordenes'
+import type { Agente, EdicionAgente, FiltrosOrdenes, GerenciaAgente, Orden, Paginacion, RespuestaPuente, TipoOrden } from '../types/ordenes'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
 
@@ -102,8 +102,14 @@ export function useOrdenes(porPagina = 50) {
 }
 
 /** Agentes de campo: lista y alta o edición (solo quien administra órdenes). */
+/** Activos primero y luego por nombre, como los manda el servidor (XEL1-786). */
+export function ordenAgentes(x: Agente, y: Agente): number {
+  return Number(y.activo) - Number(x.activo) || x.nombre.localeCompare(y.nombre)
+}
+
 export function useAgentes() {
   const agentes = ref<Agente[]>([])
+  const gerencias = ref<GerenciaAgente[]>([])
   const puedeAdministrar = ref(false)
   const cargando = ref(false)
   const guardando = ref(false)
@@ -116,6 +122,7 @@ export function useAgentes() {
       const r = await obtenerAgentes()
 
       agentes.value = r.agentes
+      gerencias.value = r.gerencias ?? []
       puedeAdministrar.value = r.puede_administrar
       error.value = null
     }
@@ -135,7 +142,7 @@ export function useAgentes() {
       const i = agentes.value.findIndex(x => x.id === a.id)
 
       i >= 0 ? agentes.value.splice(i, 1, a) : agentes.value.push(a)
-      agentes.value.sort((x, y) => x.nombre.localeCompare(y.nombre))
+      agentes.value.sort(ordenAgentes)
 
       return a
     }
@@ -149,7 +156,7 @@ export function useAgentes() {
     }
   }
 
-  return { agentes, puedeAdministrar, cargando, guardando, error, errorGuardar, cargar, guardar }
+  return { agentes, gerencias, puedeAdministrar, cargando, guardando, error, errorGuardar, cargar, guardar }
 }
 
 /** Estado del puente hacia Aquasoft Comercial (solo Sistemas). */
