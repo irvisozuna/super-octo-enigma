@@ -40,7 +40,7 @@ const listas: { clave: keyof FiltrosBusqueda; etiqueta: string; items: () => Ite
   { clave: 'sistemas', etiqueta: 'sistemas', items: () => n.sistemas.value },
   { clave: 'sectores', etiqueta: 'sectores', items: () => n.sectores.value },
   { clave: 'colonias', etiqueta: 'colonias', items: () => catalogo.value?.colonias ?? [] },
-  { clave: 'tipos_contrato', etiqueta: 'tiposContrato', items: () => catalogo.value?.tipos_contrato ?? [] },
+  { clave: 'tipos_contrato', etiqueta: 'tiposContrato', items: () => n.tiposContrato.value },
   { clave: 'giros', etiqueta: 'giros', items: () => catalogo.value?.giros ?? [] },
   { clave: 'estatus', etiqueta: 'estatus', items: () => catalogo.value?.estatus ?? [] },
 ]

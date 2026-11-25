@@ -8,6 +8,9 @@ export interface ItemCatalogo {
   nombre: string
   padre: number | null
   activo: boolean
+
+  /** Solo tipos de contrato: gerencias donde se usa, según el padrón (XEL1-787). */
+  gerencias?: number[]
 }
 
 export interface Opcion<T = string> {

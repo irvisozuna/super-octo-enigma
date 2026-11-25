@@ -7,7 +7,7 @@ import { useNotificar } from '../composables/useNotificar'
 import { useSeguimiento } from '../composables/useSeguimiento'
 import { useEvidencia } from '../composables/useEvidencia'
 import type { CuentaCandidata, ItemCatalogo, Notificacion, RespuestaCatalogos } from '../types/cartera'
-import { COLOR_NOTIFICACION, cuerpoBusqueda, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, grupoResultado, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
+import { COLOR_NOTIFICACION, cuerpoBusqueda, deGerencias, esCapturable, filtrosActivos, filtrosBusquedaIniciales, filtrosNotificacionesIniciales, grupoResultado, hijosDe, parametrosNotificaciones, recortar } from '../utils/cartera'
 
 const api = vi.hoisted(() => ({
   obtenerCatalogos: vi.fn(),
@@ -120,6 +120,21 @@ describe('reglas puras', () => {
     expect(hijosDe(catalogos.sistemas, []).map(i => i.id)).toEqual([10, 20])
     expect(hijosDe(catalogos.sistemas, [2]).map(i => i.id)).toEqual([20])
     expect(recortar([10, 20], hijosDe(catalogos.sistemas, [2]))).toEqual([20])
+  })
+
+  it('tipo de contrato muestra solo los de la gerencia elegida y recorta lo que ya no aplica (XEL1-787)', () => {
+    const tipos = [
+      { id: 1, codigo: null, nombre: 'COM-CSL', padre: null, activo: true, gerencias: [1] },
+      { id: 2, codigo: null, nombre: 'COMERCIAL-SJC', padre: null, activo: true, gerencias: [2] },
+      { id: 3, codigo: null, nombre: 'COMERCIAL', padre: null, activo: true, gerencias: [1, 2] },
+      { id: 4, codigo: null, nombre: 'SIN CUENTAS', padre: null, activo: true, gerencias: [] },
+      { id: 5, codigo: null, nombre: 'API ANTERIOR', padre: null, activo: true },
+    ]
+
+    expect(deGerencias(tipos, []).map(i => i.id)).toEqual([1, 2, 3, 4, 5])
+    expect(deGerencias(tipos, [2]).map(i => i.id)).toEqual([2, 3, 5])
+    expect(deGerencias(tipos, [1, 2]).map(i => i.id)).toEqual([1, 2, 3, 5])
+    expect(recortar([1, 3], deGerencias(tipos, [2]))).toEqual([3])
   })
 
   it('notificado por estrados cuenta como entregada (XEL1-778)', () => {

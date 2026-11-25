@@ -53,6 +53,13 @@ export function hijosDe(items: ItemCatalogo[], padres: number[]): ItemCatalogo[]
   return padres.length ? items.filter(i => i.padre !== null && padres.includes(i.padre)) : items
 }
 
+/**
+ * Tipos de contrato de las gerencias elegidas; sin gerencia, todos. Un tipo sin el dato (API anterior) se conserva.
+ */
+export function deGerencias(items: ItemCatalogo[], gerencias: number[]): ItemCatalogo[] {
+  return gerencias.length ? items.filter(i => !i.gerencias || i.gerencias.some(g => gerencias.includes(g))) : items
+}
+
 /** Quita de la selección lo que ya no está entre las opciones (al cambiar el padre). */
 export function recortar(seleccion: number[], opciones: ItemCatalogo[]): number[] {
   const validos = new Set(opciones.map(o => o.id))

@@ -1,7 +1,7 @@
 import { computed, reactive, ref } from 'vue'
 import { contarCuentas, generarLote, obtenerCatalogos, vistaPrevia } from '../services/carteraApi'
 import type { CuentaCandidata, FiltrosBusqueda, OrdenVistaPrevia, RespuestaCatalogos, RespuestaGenerar, ResumenBusqueda } from '../types/cartera'
-import { cuerpoBusqueda, filtrosBusquedaIniciales, hijosDe, recortar } from '../utils/cartera'
+import { cuerpoBusqueda, deGerencias, filtrosBusquedaIniciales, hijosDe, recortar } from '../utils/cartera'
 import { normalizarError } from '@/services/errores'
 import type { ErrorReporte } from '@/services/errores'
 
@@ -31,6 +31,7 @@ export function useNotificar(espera = 400) {
 
   const sistemas = computed(() => hijosDe(catalogos.value?.sistemas ?? [], filtros.gerencias))
   const sectores = computed(() => hijosDe(catalogos.value?.sectores ?? [], filtros.sistemas))
+  const tiposContrato = computed(() => deGerencias(catalogos.value?.tipos_contrato ?? [], filtros.gerencias))
   const seleccionadas = computed(() => cuentas.value.filter(c => seleccion.value.has(c.contrato)))
   const totalSeleccionado = computed(() => seleccionadas.value.reduce((s, c) => s + c.adeudo, 0))
   const excedeCapacidad = computed(() => seleccion.value.size > capacidad.value)
@@ -73,6 +74,7 @@ export function useNotificar(espera = 400) {
     Object.assign(filtros, parcial)
     filtros.sistemas = recortar(filtros.sistemas, sistemas.value)
     filtros.sectores = recortar(filtros.sectores, sectores.value)
+    filtros.tipos_contrato = recortar(filtros.tipos_contrato, tiposContrato.value)
     listaVigente.value = false
     if (temporizador)
       clearTimeout(temporizador)
@@ -170,6 +172,7 @@ export function useNotificar(espera = 400) {
     orden,
     sistemas,
     sectores,
+    tiposContrato,
     seleccionadas,
     totalSeleccionado,
     excedeCapacidad,
